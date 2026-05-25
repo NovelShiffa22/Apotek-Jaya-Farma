@@ -1,6 +1,8 @@
-import { Link } from '@inertiajs/react';
+import React, { useState } from 'react';
+import axios from 'axios';
+import { Link, router } from '@inertiajs/react';
 import Header from '../../components/Header';
-import { CheckCircle2, AlertTriangle, ShoppingCart, ArrowLeft, Star, AlertCircle, XCircle, Image as ImageIcon } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, ShoppingCart, ArrowLeft, Star, AlertCircle, XCircle, Image as ImageIcon, Loader2 } from 'lucide-react';
 
 interface RecommendationResult {
   id: number;
@@ -22,14 +24,42 @@ interface Props {
   total_found?: number;
 }
 
-// Helper baru: Kartu horizontal yang ringkas tanpa gambar raksasa
-const renderRecommendationCard = (product: RecommendationResult, index: number, isTopRecommendation: boolean) => {
-  const isNotRecommended = product.kategori_rekomendasi === 'tidak disarankan' || product.status === 'tidak disarankan';
+// Komponen Kartu Recommendation yang memiliki local state (isProcessing) sendiri
+const RecommendationCard = ({ product, isTopRecommendation }: { product: RecommendationResult, isTopRecommendation: boolean }) => {
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Konversi skor ke format persentase yang rapi
-  const percentageScore = product.skor_kecocokan > 0
-    ? Math.min(Math.round(product.skor_kecocokan * 45 + 50), 99)
-    : 0;
+  const isNotRecommended = product.kategori_rekomendasi === 'tidak disarankan' || product.status === 'tidak disarankan';
+  
+  // Konversi skor ke format persentase
+  const percentageScore = product.skor_kecocokan > 0 
+      ? Math.min(Math.round(product.skor_kecocokan * 45 + 50), 99) 
+      : 0;
+
+  // Handler integrasi Cart menggunakan Axios agar tidak memicu redirect halaman (mencegah 405 Not Found)
+  const handleAddToCart = async () => {
+      if (isNotRecommended) return;
+      
+      setIsProcessing(true);
+      try {
+          const response = await axios.post('/cart/add', { 
+              product_id: product.id, 
+              quantity: 1 
+          });
+          
+          // Emit event lokal agar Navbar menangkap total cart terbaru tanpa harus reload Inertia
+          if (response.data.cartCount !== undefined) {
+              window.dispatchEvent(new CustomEvent('cartUpdated', { detail: response.data.cartCount }));
+          }
+
+          // Gunakan state notifikasi yang lebih estetis jika memungkinkan, tapi sementara pakai alert
+          alert(response.data.message || 'Obat berhasil ditambahkan ke keranjang!');
+      } catch (error: any) {
+          const errorMessage = error.response?.data?.message || 'Gagal menambahkan ke keranjang.';
+          alert('Gagal: ' + errorMessage);
+      } finally {
+          setIsProcessing(false);
+      }
+  };
 
   return (
     <div key={product.id} className={`flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl border border-gray-100 gap-4 mb-3 last:mb-0 shadow-sm hover:shadow-md transition-shadow ${isNotRecommended ? 'bg-red-50' : 'bg-white'}`}>
@@ -82,16 +112,22 @@ const renderRecommendationCard = (product: RecommendationResult, index: number, 
                 )}
             </div>
             
+            {/* Tombol yang reaktif terhadap state loading & not recommended */}
             <button 
-                disabled={isNotRecommended}
+                onClick={handleAddToCart}
+                disabled={isNotRecommended || isProcessing}
                 className={`px-4 py-2 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${
-                    isNotRecommended 
-                    ? 'bg-red-100 text-red-400 cursor-not-allowed border border-red-200' 
+                    isNotRecommended || isProcessing
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200' 
                     : 'bg-[#006a3f] text-white hover:bg-emerald-800'
                 }`}
             >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 110 4 2 2 0 010-4z" /></svg>
-                {isNotRecommended ? 'Dilarang' : 'Tambah'}
+                {isProcessing ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <ShoppingCart size={14} strokeWidth={2} />
+                )}
+                {isNotRecommended ? 'Dilarang' : isProcessing ? 'Memproses' : 'Tambah'}
             </button>
         </div>
 
@@ -100,7 +136,7 @@ const renderRecommendationCard = (product: RecommendationResult, index: number, 
 };
 
 export default function Hasil({ results = [], input_usia }: Props) {
-
+  
   // Logika filtering kategori yang sesuai dengan Controller
   const recommended = results.filter(p => p.kategori_rekomendasi === 'direkomendasikan' || p.status === 'direkomendasikan');
   const considered = results.filter(p => p.kategori_rekomendasi === 'dipertimbangkan' || p.status === 'dipertimbangkan');
@@ -131,10 +167,11 @@ export default function Hasil({ results = [], input_usia }: Props) {
                 Direkomendasikan
               </h3>
             </div>
-            {/* Hanya mencetak produk jika ada, kalau tidak ada biarkan Box kosong (hanya header) */}
             {recommended.length > 0 && (
-              <div className="flex flex-col divide-y divide-gray-100">
-                {recommended.map((product, idx) => renderRecommendationCard(product, idx, idx === 0))}
+              <div className="flex flex-col p-4 bg-gray-50/30">
+                {recommended.map((product, idx) => (
+                  <RecommendationCard key={product.id} product={product} isTopRecommendation={idx === 0} />
+                ))}
               </div>
             )}
           </div>
@@ -148,8 +185,10 @@ export default function Hasil({ results = [], input_usia }: Props) {
               </h3>
             </div>
             {considered.length > 0 && (
-              <div className="flex flex-col divide-y divide-gray-100">
-                {considered.map((product, idx) => renderRecommendationCard(product, idx, false))}
+              <div className="flex flex-col p-4 bg-gray-50/30">
+                {considered.map((product, idx) => (
+                  <RecommendationCard key={product.id} product={product} isTopRecommendation={false} />
+                ))}
               </div>
             )}
           </div>
@@ -163,8 +202,10 @@ export default function Hasil({ results = [], input_usia }: Props) {
               </h3>
             </div>
             {notRecommended.length > 0 && (
-              <div className="flex flex-col divide-y divide-gray-100">
-                {notRecommended.map((product, idx) => renderRecommendationCard(product, idx, false))}
+              <div className="flex flex-col p-4 bg-gray-50/30">
+                {notRecommended.map((product, idx) => (
+                  <RecommendationCard key={product.id} product={product} isTopRecommendation={false} />
+                ))}
               </div>
             )}
           </div>
@@ -172,7 +213,7 @@ export default function Hasil({ results = [], input_usia }: Props) {
         </div>
 
         <div className="mt-10 flex justify-center">
-          <Link
+          <Link 
             href="/recommendation"
             className="flex items-center gap-2 px-6 py-3 rounded-full font-['Inter',sans-serif] text-[14px] font-bold text-[#6e7a70] bg-white border border-[#e5e7eb] hover:border-[#006a3f] hover:text-[#006a3f] transition-all"
           >
