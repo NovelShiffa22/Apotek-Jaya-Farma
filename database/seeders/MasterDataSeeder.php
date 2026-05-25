@@ -45,7 +45,7 @@ class MasterDataSeeder extends Seeder
         ]);
 
         // 2. Seeding Data Symptoms
-        $symptoms = ['Demam', 'Batuk Kering', 'Flu', 'Pusing', 'Nyeri Otot'];
+        $symptoms = ['Demam', 'Batuk Kering', 'Flu', 'Pusing', 'Nyeri Otot', 'Lemas', 'Sesak Napas', 'Mual'];
         $symptomData = [];
         foreach ($symptoms as $symptom) {
             $symptomData[] = [
@@ -139,6 +139,82 @@ class MasterDataSeeder extends Seeder
                 'is_active' => true,
                 'created_at' => $now,
                 'updated_at' => $now,
+            ],
+        ]);
+
+        // 4. Seeding Data Relasi Medis (Product - Symptoms Pivot)
+        DB::table('product_symptoms')->insert([
+            // Paracetamol (ID 1)
+            [
+                'product_id' => 1, 
+                'symptom_id' => 1, // Demam
+                'bobot_relevansi' => 0.90, 
+                'created_at' => $now, 
+                'updated_at' => $now
+            ], 
+            [
+                'product_id' => 1, 
+                'symptom_id' => 4, // Pusing
+                'bobot_relevansi' => 0.80, 
+                'created_at' => $now, 
+                'updated_at' => $now
+            ],
+
+            // Sanmol Tablet (ID 2)
+            [
+                'product_id' => 2, 
+                'symptom_id' => 1, // Demam
+                'bobot_relevansi' => 0.95, 
+                'created_at' => $now, 
+                'updated_at' => $now
+            ],
+
+            // Woods Peppermint (ID 3)
+            [
+                'product_id' => 3, 
+                'symptom_id' => 2, // Batuk Kering
+                'bobot_relevansi' => 0.90, 
+                'created_at' => $now, 
+                'updated_at' => $now
+            ], 
+            [
+                'product_id' => 3, 
+                'symptom_id' => 3, // Flu
+                'bobot_relevansi' => 0.75, 
+                'created_at' => $now, 
+                'updated_at' => $now
+            ],
+            [
+                'product_id' => 3, 
+                'symptom_id' => 7, // Sesak Napas
+                'bobot_relevansi' => 0.85, 
+                'created_at' => $now, 
+                'updated_at' => $now
+            ],
+
+            // Enervon-C Multivitamin (ID 4)
+            [
+                'product_id' => 4, 
+                'symptom_id' => 6, // Lemas
+                'bobot_relevansi' => 0.95, 
+                'created_at' => $now, 
+                'updated_at' => $now
+            ],
+            [
+                'product_id' => 4, 
+                'symptom_id' => 8, // Mual
+                'bobot_relevansi' => 0.60, 
+                'created_at' => $now, 
+                'updated_at' => $now
+            ],
+
+            // Ibuprofen 400mg (ID 5)
+            [
+                'product_id' => 5, 
+                'symptom_id' => 5, // Nyeri Otot
+                'bobot_relevansi' => 0.95, 
+                'created_at' => $now, 
+                'updated_at' => $now
             ],
         ]);
     }

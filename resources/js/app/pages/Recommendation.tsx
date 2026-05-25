@@ -3,22 +3,25 @@ import { useForm } from '@inertiajs/react';
 import Header from '../components/Header';
 import { CheckCircle2, AlertCircle, XCircle, Thermometer, Wind, Droplet, Brain, FileText, Baby, Frown, Activity } from 'lucide-react';
 
-const localSymptomsData = [
-  { id: 1, label: 'Demam', icon: Thermometer },
-  { id: 2, label: 'Batuk Kering', icon: Wind },
-  { id: 3, label: 'Pilek', icon: Droplet },
-  { id: 4, label: 'Sakit Tenggorokan', icon: FileText },
-  { id: 5, label: 'Pusing', icon: Brain },
-  { id: 6, label: 'Lemas', icon: Activity },
-  { id: 7, label: 'Sesak Napas', icon: Wind },
-  { id: 8, label: 'Mual', icon: Frown },
-];
+const iconMap: Record<string, any> = {
+  'demam': Thermometer,
+  'batuk-kering': Wind,
+  'pilek': Droplet,
+  'flu': Droplet,
+  'sakit-tenggorokan': FileText,
+  'pusing': Brain,
+  'lemas': Activity,
+  'sesak-napas': Wind,
+  'mual': Frown,
+  'nyeri-otot': Activity,
+};
 
-export default function Recommendation({ masterSymptoms }: { masterSymptoms?: any[] }) {
+export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms?: any[] }) {
   const [currentStep, setCurrentStep] = useState(1);
-
-  // Jika masterSymptoms dari Laravel dikirim, pakai itu. Kalau tidak, fallback ke lokal.
-  const displaySymptoms = masterSymptoms && masterSymptoms.length > 0 ? masterSymptoms : localSymptomsData;
+  const displaySymptoms = masterSymptoms;
+  
+  // Debug log untuk memastikan props masuk dari backend
+  console.log("Gejala dari Backend:", masterSymptoms);
 
   const { data, setData, post, processing, errors } = useForm({
     symptoms: [] as (number | string)[],
@@ -42,7 +45,13 @@ export default function Recommendation({ masterSymptoms }: { masterSymptoms?: an
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    post('/rekomendasi/proses');
+    console.log("Data dikirim:", data);
+    
+    post('/rekomendasi/proses', {
+      onError: (errors) => {
+        console.error("Validasi gagal dari backend:", errors);
+      }
+    });
   };
 
   return (
@@ -121,14 +130,15 @@ export default function Recommendation({ masterSymptoms }: { masterSymptoms?: an
 
               {/* Icon Grid */}
               <div className="grid grid-cols-4 gap-4 mb-8">
-                {displaySymptoms.map((symptom: any) => {
-                  const Icon = symptom.icon || Activity;
+                {displaySymptoms.length > 0 ? displaySymptoms.map((symptom: any) => {
+                  const Icon = (symptom.slug && iconMap[symptom.slug]) ? iconMap[symptom.slug] : Activity;
                   const symptomId = symptom.id;
                   const isSelected = data.symptoms.includes(symptomId);
-                  const label = symptom.nama_gejala || symptom.label;
+                  const label = symptom.nama_gejala;
 
                   return (
                     <button
+                      type="button"
                       key={symptomId}
                       onClick={() => toggleSymptom(symptomId)}
                       className={`p-6 rounded-xl border-2 transition-all duration-200 ${
@@ -145,7 +155,11 @@ export default function Recommendation({ masterSymptoms }: { masterSymptoms?: an
                       </p>
                     </button>
                   );
-                })}
+                }) : (
+                  <p className="col-span-4 text-center py-6 text-[#6e7a70]">
+                    Data gejala belum tersedia di sistem.
+                  </p>
+                )}
               </div>
 
               <button

@@ -9,6 +9,16 @@ use Inertia\Inertia;
 class RecommendationController extends Controller
 {
     /**
+     * Menampilkan halaman form input gejala (Langkah 1 & 2).
+     */
+    public function index()
+    {
+        return Inertia::render('Recommendation', [
+            'masterSymptoms' => \App\Models\Symptom::all()
+        ]);
+    }
+
+    /**
      * Memproses input gejala dan usia, lalu memberikan rekomendasi obat cerdas.
      */
     public function process(Request $request)

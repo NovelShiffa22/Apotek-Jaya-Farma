@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import Header from '../../components/Header';
-import { CheckCircle2, AlertTriangle, ShoppingCart, ArrowLeft, Star } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, ShoppingCart, ArrowLeft, Star, AlertCircle, XCircle, Image as ImageIcon } from 'lucide-react';
 
 interface RecommendationResult {
   id: number;
@@ -11,7 +11,8 @@ interface RecommendationResult {
   gambar?: string;
   aturan_pakai: string;
   skor_kecocokan: number;
-  kategori_rekomendasi: 'direkomendasikan' | 'dipertimbangkan' | 'tidak disarankan';
+  kategori_rekomendasi?: string;
+  status?: string;
   alasan?: string;
 }
 
@@ -21,169 +22,161 @@ interface Props {
   total_found?: number;
 }
 
+// Helper baru: Kartu horizontal yang ringkas tanpa gambar raksasa
+const renderRecommendationCard = (product: RecommendationResult, index: number, isTopRecommendation: boolean) => {
+  const isNotRecommended = product.kategori_rekomendasi === 'tidak disarankan' || product.status === 'tidak disarankan';
+
+  // Konversi skor ke format persentase yang rapi
+  const percentageScore = product.skor_kecocokan > 0
+    ? Math.min(Math.round(product.skor_kecocokan * 45 + 50), 99)
+    : 0;
+
+  return (
+    <div key={product.id} className={`flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl border border-gray-100 gap-4 mb-3 last:mb-0 shadow-sm hover:shadow-md transition-shadow ${isNotRecommended ? 'bg-red-50' : 'bg-white'}`}>
+        
+        {/* SISI KIRI: Ikon Gambar & Detail Informasi Obat */}
+        <div className="flex items-start gap-4 flex-1 w-full">
+            {/* Placeholder Gambar Obat */}
+            <div className="w-14 h-14 flex-shrink-0 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center text-gray-400 overflow-hidden">
+                {product.gambar ? (
+                  <img src={product.gambar} alt={product.nama_obat} className="w-full h-full object-cover" />
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                )}
+            </div>
+            
+            {/* Teks Informasi Detail Obat */}
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold text-gray-900 text-base truncate">{product.nama_obat}</h4>
+                  {isTopRecommendation && (
+                    <span className="bg-[#006a3f] text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">
+                      Terbaik
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`text-xs font-semibold uppercase tracking-wider ${isNotRecommended ? 'text-red-600' : 'text-emerald-600'}`}>{product.jenis_obat || 'Bebas'}</span>
+                    <span className="text-gray-300 text-xs">•</span>
+                    <span className="text-xs text-gray-500">{product.kategori || 'Analgesik'}</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1.5 line-clamp-2 leading-relaxed">
+                    <span className="font-medium text-gray-700">Aturan Pakai:</span> {product.aturan_pakai || 'Sesuai petunjuk dokter.'}
+                </p>
+                {isNotRecommended && product.alasan && (
+                  <p className="text-[11px] font-semibold text-red-700 mt-1 bg-red-100/80 px-2 py-0.5 rounded-sm inline-block w-fit">
+                    ⚠️ {product.alasan}
+                  </p>
+                )}
+            </div>
+        </div>
+
+        {/* SISI KANAN: Harga, Skor Kecocokan, dan Tombol Aksi */}
+        <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-2 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-gray-100 flex-shrink-0 min-w-[140px]">
+            <div className="text-left md:text-right">
+                <p className="text-lg font-bold text-gray-900">Rp {(product.harga || 0).toLocaleString('id-ID')}</p>
+                {!isNotRecommended ? (
+                  <p className="text-xs text-gray-500 mt-0.5">Kecocokan: <span className="font-bold text-[#006a3f]">{percentageScore}%</span></p>
+                ) : (
+                  <p className="text-[10px] font-bold text-red-600 uppercase mt-0.5">DILARANG KLINIS</p>
+                )}
+            </div>
+            
+            <button 
+                disabled={isNotRecommended}
+                className={`px-4 py-2 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${
+                    isNotRecommended 
+                    ? 'bg-red-100 text-red-400 cursor-not-allowed border border-red-200' 
+                    : 'bg-[#006a3f] text-white hover:bg-emerald-800'
+                }`}
+            >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 110 4 2 2 0 010-4z" /></svg>
+                {isNotRecommended ? 'Dilarang' : 'Tambah'}
+            </button>
+        </div>
+
+    </div>
+  );
+};
+
 export default function Hasil({ results = [], input_usia }: Props) {
+
+  // Logika filtering kategori yang sesuai dengan Controller
+  const recommended = results.filter(p => p.kategori_rekomendasi === 'direkomendasikan' || p.status === 'direkomendasikan');
+  const considered = results.filter(p => p.kategori_rekomendasi === 'dipertimbangkan' || p.status === 'dipertimbangkan');
+  const notRecommended = results.filter(p => p.kategori_rekomendasi === 'tidak disarankan' || p.status === 'tidak disarankan');
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
       <Header />
 
-      <main className="max-w-[1000px] mx-auto px-8 py-12">
-        {/* Header Section */}
-        <div className="text-center mb-12">
-          <h1 className="font-['Roboto_Condensed',sans-serif] font-bold text-[40px] tracking-tight text-[#171d19] mb-4">
-            Hasil Analisis Rekomendasi Obat
+      <main className="max-w-[800px] mx-auto px-6 py-12">
+        <div className="text-center mb-10">
+          <h1 className="font-['Roboto_Condensed',sans-serif] font-bold text-[36px] tracking-tight text-[#171d19] mb-3">
+            Hasil Analisis Rekomendasi
           </h1>
-          <p className="font-['Inter',sans-serif] text-[16px] text-[#3e4a41] max-w-[600px] mx-auto leading-relaxed">
-            Berdasarkan keluhan medis dan profil usia {input_usia ? <span className="font-bold text-[#006a3f]">{input_usia} Tahun</span> : ''} yang Anda berikan, berikut adalah daftar obat yang dianalisis oleh sistem pakar kami.
+          <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] max-w-[500px] mx-auto leading-relaxed">
+            Daftar obat yang disarankan berdasarkan keluhan medis dan profil usia {input_usia ? <span className="font-bold text-[#006a3f]">{input_usia} Tahun</span> : ''} Anda.
           </p>
         </div>
 
-        {/* Results List */}
-        <div className="space-y-6">
-          {results.length > 0 ? (
-            results.map((product, index) => {
-              const isTopRecommendation = index === 0 && product.kategori_rekomendasi !== 'tidak disarankan';
-              const isNotRecommended = product.kategori_rekomendasi === 'tidak disarankan';
+        {/* Struktur 3 Box Selalu Muncul */}
+        <div className="space-y-8">
 
-              // Konversi persentase buatan untuk tampilan UI (skor relevansi asli * modifier)
-              const percentageScore = product.skor_kecocokan > 0 
-                  ? Math.min(Math.round(product.skor_kecocokan * 45 + 50), 99) 
-                  : 0;
-
-              return (
-                <div 
-                  key={product.id}
-                  className={`relative overflow-hidden rounded-2xl border-2 transition-all duration-300 ${
-                    isTopRecommendation 
-                      ? 'border-[#006a3f] bg-emerald-50/40 shadow-[0_8px_30px_rgba(0,106,63,0.12)]'
-                      : isNotRecommended
-                        ? 'border-red-200 bg-red-50/60 shadow-sm'
-                        : 'border-[#f1f5f9] bg-white hover:border-[#bdcabe] hover:shadow-md'
-                  }`}
-                >
-                  {/* Top Badge untuk Index 0 */}
-                  {isTopRecommendation && (
-                    <div className="absolute top-0 left-0 bg-[#006a3f] text-white px-5 py-2 rounded-br-2xl flex items-center gap-1.5 z-10 shadow-sm">
-                      <Star size={14} className="fill-current text-yellow-300" />
-                      <span className="font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase">
-                        Rekomendasi Terbaik
-                      </span>
-                    </div>
-                  )}
-
-                  <div className={`p-6 sm:p-8 flex flex-col sm:flex-row gap-6 sm:gap-8 relative z-0 ${isTopRecommendation ? 'pt-10' : ''}`}>
-                    
-                    {/* Image Box */}
-                    <div className="w-full sm:w-[160px] flex-shrink-0">
-                      <div className="aspect-square rounded-2xl bg-white border border-[#e5e7eb] flex items-center justify-center p-2 overflow-hidden shadow-sm">
-                        {product.gambar ? (
-                          <img src={product.gambar} alt={product.nama_obat} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-20 h-20 bg-gradient-to-br from-[#6b8e6f] to-[#8ba68e] rounded-full opacity-20" />
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Content Details */}
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
-                        <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
-                          <div>
-                            <p className="font-['Inter',sans-serif] text-[12px] font-bold text-[#006a3f] uppercase tracking-wider mb-1.5">
-                              {product.kategori} • {product.jenis_obat}
-                            </p>
-                            <h3 className="font-['Roboto_Condensed',sans-serif] font-bold text-[26px] text-[#171d19] leading-tight">
-                              {product.nama_obat}
-                            </h3>
-                          </div>
-                          
-                          {/* Score Circle (Tampil jika direkomendasikan/dipertimbangkan) */}
-                          {!isNotRecommended && (
-                            <div className="flex flex-col items-end">
-                              <div className="flex items-center gap-2.5">
-                                <div className="text-right">
-                                  <p className="font-['Inter',sans-serif] text-[11px] text-[#6e7a70] uppercase font-bold tracking-wider">
-                                    Skor Kecocokan
-                                  </p>
-                                  <p className="font-['Roboto_Condensed',sans-serif] text-[26px] font-bold text-[#006a3f]">
-                                    {percentageScore}%
-                                  </p>
-                                </div>
-                                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                                  <CheckCircle2 className="text-[#006a3f]" size={22} />
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] leading-relaxed mb-4">
-                          <span className="font-semibold text-[#171d19]">Aturan Pakai: </span> 
-                          {product.aturan_pakai}
-                        </p>
-
-                        {/* Medical Alert Box (Warna kemerahan jika 'tidak disarankan') */}
-                        {isNotRecommended && (
-                          <div className="mt-4 mb-4 bg-red-100/90 border border-red-300 rounded-xl p-4 flex gap-3.5 items-start shadow-sm">
-                            <AlertTriangle className="text-red-700 flex-shrink-0 mt-0.5" size={22} />
-                            <div>
-                              <p className="font-['Inter',sans-serif] text-[15px] font-bold text-red-800 mb-1">
-                                Perhatian Klinis: Tidak Disarankan
-                              </p>
-                              <p className="font-['Inter',sans-serif] text-[14px] text-red-700 font-medium leading-relaxed">
-                                {product.alasan || 'Obat ini mengandung risiko kesehatan jika dikonsumsi pada profil Anda saat ini.'}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Footer: Price & CTA */}
-                      <div className="flex items-center justify-between mt-6 pt-6 border-t border-[#e5e7eb]/70">
-                        <p className="font-['Roboto_Condensed',sans-serif] font-bold text-[28px] text-[#171d19]">
-                          Rp {Number(product.harga).toLocaleString('id-ID')}
-                        </p>
-                        
-                        {/* Tombol Cart dinonaktifkan jika obat berbahaya */}
-                        <button 
-                          disabled={isNotRecommended}
-                          className={`flex items-center gap-2.5 px-6 py-3.5 rounded-xl font-['Inter',sans-serif] text-[15px] font-bold transition-all duration-300 ${
-                            isNotRecommended 
-                              ? 'bg-red-200/50 text-red-400 cursor-not-allowed border border-red-200'
-                              : 'bg-[#006a3f] text-white hover:bg-[#005632] hover:shadow-lg hover:-translate-y-1'
-                          }`}
-                        >
-                          <ShoppingCart size={18} />
-                          {isNotRecommended ? 'Dilarang Membeli' : 'Tambah ke Keranjang'}
-                        </button>
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className="text-center py-24 bg-white rounded-2xl border border-[#f1f5f9] shadow-sm">
-              <div className="w-20 h-20 bg-[#f5f7f6] rounded-full mx-auto mb-5 flex items-center justify-center">
-                <AlertTriangle className="text-[#6e7a70]" size={32} />
-              </div>
-              <h3 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold text-[#171d19] mb-3">
-                Tidak Ada Obat yang Ditemukan
+          {/* Box 1: Direkomendasikan */}
+          <div className="bg-white rounded-xl border border-emerald-200 shadow-sm overflow-hidden">
+            <div className="bg-emerald-50 border-b border-emerald-100 px-6 py-4 flex items-center gap-3">
+              <CheckCircle2 className="text-emerald-600" size={20} />
+              <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-emerald-800">
+                Direkomendasikan
               </h3>
-              <p className="font-['Inter',sans-serif] text-[16px] text-[#6e7a70] max-w-[450px] mx-auto leading-relaxed">
-                Sistem pakar kami tidak dapat menemukan obat yang aman dan sesuai dengan kombinasi gejala spesifik yang Anda alami. Segera hubungi dokter spesialis terdekat.
-              </p>
             </div>
-          )}
+            {/* Hanya mencetak produk jika ada, kalau tidak ada biarkan Box kosong (hanya header) */}
+            {recommended.length > 0 && (
+              <div className="flex flex-col divide-y divide-gray-100">
+                {recommended.map((product, idx) => renderRecommendationCard(product, idx, idx === 0))}
+              </div>
+            )}
+          </div>
+
+          {/* Box 2: Dipertimbangkan */}
+          <div className="bg-white rounded-xl border border-amber-200 shadow-sm overflow-hidden">
+            <div className="bg-amber-50 border-b border-amber-100 px-6 py-4 flex items-center gap-3">
+              <AlertCircle className="text-amber-600" size={20} />
+              <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-amber-800">
+                Dipertimbangkan
+              </h3>
+            </div>
+            {considered.length > 0 && (
+              <div className="flex flex-col divide-y divide-gray-100">
+                {considered.map((product, idx) => renderRecommendationCard(product, idx, false))}
+              </div>
+            )}
+          </div>
+
+          {/* Box 3: Tidak Disarankan */}
+          <div className="bg-white rounded-xl border border-red-200 shadow-sm overflow-hidden">
+            <div className="bg-red-50 border-b border-red-100 px-6 py-4 flex items-center gap-3">
+              <XCircle className="text-red-600" size={20} />
+              <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-red-800">
+                Tidak Disarankan
+              </h3>
+            </div>
+            {notRecommended.length > 0 && (
+              <div className="flex flex-col divide-y divide-gray-100">
+                {notRecommended.map((product, idx) => renderRecommendationCard(product, idx, false))}
+              </div>
+            )}
+          </div>
+
         </div>
 
-        {/* Back Link */}
-        <div className="mt-12 flex justify-center">
-          <Link 
+        <div className="mt-10 flex justify-center">
+          <Link
             href="/recommendation"
-            className="flex items-center gap-2 px-6 py-3 rounded-full font-['Inter',sans-serif] text-[15px] font-bold text-[#6e7a70] bg-white border-2 border-[#e5e7eb] hover:border-[#006a3f] hover:text-[#006a3f] hover:shadow-md transition-all duration-300"
+            className="flex items-center gap-2 px-6 py-3 rounded-full font-['Inter',sans-serif] text-[14px] font-bold text-[#6e7a70] bg-white border border-[#e5e7eb] hover:border-[#006a3f] hover:text-[#006a3f] transition-all"
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft size={16} />
             Kembali ke Form Gejala
           </Link>
         </div>

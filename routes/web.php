@@ -6,6 +6,7 @@ use App\Http\Controllers\RecommendationController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Models\Symptom;
 
 // Halaman Utama / Landing Page
 Route::get('/', function () {
@@ -19,10 +20,7 @@ Route::get('/product/{id}', function ($id) {
 });
 
 // Menampilkan halaman form input gejala
-Route::get('/recommendation', function () {
-    return Inertia::render('Recommendation');
-});
-
+Route::get('/recommendation', [RecommendationController::class, 'index'])->name('rekomendasi.index');
 // Memproses kueri data gejala & menghitung skor rekomendasi obat
 Route::post('/rekomendasi/proses', [RecommendationController::class, 'process'])->name('rekomendasi.process');
 
