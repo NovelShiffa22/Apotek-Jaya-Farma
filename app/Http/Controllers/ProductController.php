@@ -17,7 +17,7 @@ class ProductController extends Controller
         // Anda juga bisa menambahkan ->where('is_active', true) jika hanya ingin produk yang aktif
         $products = Product::with('category')->get();
 
-        return Inertia::render('Katalog/Index', [
+        return Inertia::render('Catalog', [
             'products' => $products
         ]);
     }
