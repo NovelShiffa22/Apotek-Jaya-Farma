@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Header from '../components/Header';
-import { User, MapPin, Package } from 'lucide-react';
+import { User, MapPin, Package, LogOut } from 'lucide-react';
+import { usePage, Link } from '@inertiajs/react';
 
 const orderHistory = [
   { id: 'ORD-001', date: '2026-04-25', total: 45000, status: 'selesai' },
@@ -10,7 +11,9 @@ const orderHistory = [
 ];
 
 export default function Profile() {
-  const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders'>('orders');
+  const { auth } = usePage().props as any;
+  const user = auth?.user;
+  const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders'>('profile');
 
   const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
     diproses: { label: 'Diproses', bg: 'bg-amber-50', text: 'text-amber-700' },
@@ -53,6 +56,17 @@ export default function Profile() {
                     </span>
                   </button>
                 ))}
+                <Link
+                  href={route('logout')}
+                  method="post"
+                  as="button"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all bg-transparent hover:bg-red-50 text-[#ba1a1a] hover:border-red-200 mt-4 text-left"
+                >
+                  <LogOut size={18} />
+                  <span className="font-['Inter',sans-serif] text-[14px] font-medium">
+                    Keluar
+                  </span>
+                </Link>
               </nav>
             </div>
           </div>
@@ -71,7 +85,7 @@ export default function Profile() {
                     </label>
                     <input
                       type="text"
-                      defaultValue="John Doe"
+                      defaultValue={user?.name}
                       className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                     />
                   </div>
@@ -81,7 +95,7 @@ export default function Profile() {
                     </label>
                     <input
                       type="email"
-                      defaultValue="john.doe@email.com"
+                      defaultValue={user?.email}
                       className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                     />
                   </div>
@@ -91,7 +105,7 @@ export default function Profile() {
                     </label>
                     <input
                       type="tel"
-                      defaultValue="+62 812-3456-7890"
+                      defaultValue={user?.phone || ''}
                       className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                     />
                   </div>

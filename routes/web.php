@@ -31,19 +31,25 @@ Route::get('/cart', function () {
 
 Route::get('/profile', function () {
     return Inertia::render('Profile');
-});
+})->middleware(['auth', 'role:user']);
 
 Route::get('/pharmacist', function () {
     return Inertia::render('PharmacistDashboard');
-});
+})->middleware(['auth', 'role:pharmacist']);
 
 Route::get('/admin', function () {
     return Inertia::render('AdminDashboard');
-});
+})->middleware(['auth', 'role:admin']);
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    $user = auth()->user();
+    if ($user->role === 'admin') {
+        return redirect('/admin');
+    } elseif ($user->role === 'pharmacist') {
+        return redirect('/pharmacist');
+    }
+    return redirect('/');
+})->middleware(['auth'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
