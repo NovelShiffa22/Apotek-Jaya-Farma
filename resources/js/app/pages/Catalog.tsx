@@ -1,11 +1,10 @@
 import { useState } from 'react';
-// import { useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
-import { products } from '../data/products';
+// import { products } from '../data/products'; // Di-comment agar tidak bentrok dengan data database
 import { SlidersHorizontal } from 'lucide-react';
 
-export default function Catalog() {
+export default function Catalog({ products = [] }: { products?: any[] }) {
   const searchParams = new URLSearchParams(window.location.search);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(['all']);
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
@@ -49,8 +48,8 @@ export default function Catalog() {
     );
   };
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredProducts = products.filter((product: any) => {
+    const matchesSearch = product.nama_obat?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
   });
 
@@ -156,8 +155,18 @@ export default function Catalog() {
           <div className="col-span-9">
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-3 gap-6">
-                {filteredProducts.map(product => (
-                  <ProductCard key={product.id} {...product} />
+                {filteredProducts.map((product: any) => (
+                  <ProductCard 
+                    key={product.id} 
+                    id={product.id.toString()}
+                    nama_obat={product.nama_obat}
+                    harga={Number(product.harga)}
+                    jenis_obat={product.jenis_obat}
+                    gambar={product.gambar}
+                    deskripsi={product.deskripsi || product.indikasi}
+                    kategori_nama={product.category?.nama_kategori}
+                    stok={product.stok}
+                  />
                 ))}
               </div>
             ) : (
