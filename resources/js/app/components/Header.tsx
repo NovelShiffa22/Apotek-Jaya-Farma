@@ -1,11 +1,22 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { Search, MessageCircle, User, ShoppingCart, Bell } from 'lucide-react';
 import { useState } from 'react';
+import { Search, MessageCircle, User, ShoppingCart } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
-export default function Header({ cartCount = 0 }: { cartCount?: number }) {
+export default function Header() {
+  const { cartCount: initialCartCount = 0 } = usePage().props as { cartCount?: number };
   const [searchQuery, setSearchQuery] = useState('');
   const { auth } = usePage().props as any;
   const user = auth?.user;
+  const [cartCount, setCartCount] = useState(initialCartCount);
+
+  // Dengarkan event update tanpa harus reload halaman
+  useEffect(() => {
+    const handleCartUpdate = (e: any) => setCartCount(e.detail);
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

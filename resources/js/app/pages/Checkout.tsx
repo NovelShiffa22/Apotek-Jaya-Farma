@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { Link } from '@inertiajs/react';
 import Header from '../components/Header';
-import { Upload, Check } from 'lucide-react';
+import { Upload, Check, ShoppingCart, ArrowLeft, Image as ImageIcon } from 'lucide-react';
 
-export default function Checkout() {
+export default function Checkout({ cart = {}, total = 0 }: { cart?: Record<string, any>, total?: number }) {
   const [deliveryMethod, setDeliveryMethod] = useState('pickup');
   const [prescriptionUploaded, setPrescriptionUploaded] = useState(false);
   const [paymentUploaded, setPaymentUploaded] = useState(false);
@@ -32,18 +33,56 @@ export default function Checkout() {
               <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] tracking-[-0.6px] text-[#171d19] mb-6 font-semibold">
                 Ringkasan Pesanan
               </h2>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center pb-4 border-b border-[#f1f5f9]">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9] rounded-xl"></div>
-                    <div>
-                      <p className="font-['Roboto_Condensed',sans-serif] text-[18px] text-[#171d19] font-medium">Paracetamol 500mg</p>
-                      <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">Qty: 2</p>
-                    </div>
+              
+              {Object.keys(cart).length === 0 ? (
+                <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <ShoppingCart size={32} className="text-gray-400" />
                   </div>
-                  <p className="font-['Roboto_Condensed',sans-serif] text-[18px] text-[#171d19] font-semibold">Rp 30.000</p>
+                  <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-gray-800 mb-2">Keranjang Belanja Kosong</h3>
+                  <p className="font-['Inter',sans-serif] text-[14px] text-gray-500 mb-6 max-w-[300px] mx-auto">
+                    Anda belum memasukkan obat apa pun ke dalam keranjang.
+                  </p>
+                  <Link href="/catalog" className="inline-flex items-center gap-2 bg-[#006a3f] text-white px-6 py-2.5 rounded-lg font-medium hover:bg-[#005632] transition-colors">
+                    <ArrowLeft size={16} /> Kembali Belanja
+                  </Link>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  {Object.values(cart).map((item: any) => (
+                    <div key={item.id} className="flex justify-between items-center pb-4 border-b border-[#f1f5f9] last:border-0 last:pb-0">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 bg-gray-50 border border-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <ImageIcon className="text-gray-300" size={24} />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-['Roboto_Condensed',sans-serif] text-[18px] text-[#171d19] font-medium leading-tight">
+                            {item.name}
+                          </p>
+                          <p className="font-['Inter',sans-serif] text-[12px] text-emerald-600 font-semibold uppercase tracking-wider mb-1 mt-0.5">
+                            {item.category}
+                          </p>
+                          <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
+                            Qty: <span className="font-bold text-gray-800">{item.quantity}</span>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-['Roboto_Condensed',sans-serif] text-[18px] text-[#171d19] font-semibold">
+                          Rp {(item.price * item.quantity).toLocaleString('id-ID')}
+                        </p>
+                        <p className="font-['Inter',sans-serif] text-[11px] text-gray-400 mt-0.5">
+                          Rp {Number(item.price).toLocaleString('id-ID')} / item
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Delivery Method */}
@@ -178,7 +217,9 @@ export default function Checkout() {
               <div className="space-y-4 mb-6 pb-6 border-b border-[#f1f5f9]">
                 <div className="flex justify-between">
                   <p className="font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">Subtotal Produk</p>
-                  <p className="font-['Inter',sans-serif] text-[14px] text-[#171d19] font-medium">Rp 30.000</p>
+                  <p className="font-['Inter',sans-serif] text-[14px] text-[#171d19] font-medium">
+                    Rp {total.toLocaleString('id-ID')}
+                  </p>
                 </div>
                 <div className="flex justify-between">
                   <p className="font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">Biaya Pengiriman</p>
@@ -191,7 +232,7 @@ export default function Checkout() {
               <div className="flex justify-between items-baseline mb-8">
                 <p className="font-['Roboto_Condensed',sans-serif] text-[18px] text-[#171d19] font-semibold">Total</p>
                 <p className="font-['Roboto_Condensed',sans-serif] text-[32px] text-[#006a3f] font-semibold tracking-[-0.8px]">
-                  Rp {(30000 + selectedMethod.price).toLocaleString('id-ID')}
+                  Rp {(total + selectedMethod.price).toLocaleString('id-ID')}
                 </p>
               </div>
 

@@ -1,55 +1,57 @@
 import { useState } from 'react';
+import { useForm } from '@inertiajs/react';
 import Header from '../components/Header';
 import { CheckCircle2, AlertCircle, XCircle, Thermometer, Wind, Droplet, Brain, FileText, Baby, Frown, Activity } from 'lucide-react';
 
-const symptomsData = [
-  { id: 'demam', label: 'Demam', icon: Thermometer },
-  { id: 'batuk-kering', label: 'Batuk Kering', icon: Wind },
-  { id: 'pilek', label: 'Pilek', icon: Droplet },
-  { id: 'sakit-tenggorokan', label: 'Sakit Tenggorokan', icon: FileText },
-  { id: 'pusing', label: 'Pusing', icon: Brain },
-  { id: 'lemas', label: 'Lemas', icon: Activity },
-  { id: 'sesak-napas', label: 'Sesak Napas', icon: Wind },
-  { id: 'mual', label: 'Mual', icon: Frown },
-];
+const iconMap: Record<string, any> = {
+  'demam': Thermometer,
+  'batuk-kering': Wind,
+  'pilek': Droplet,
+  'flu': Droplet,
+  'sakit-tenggorokan': FileText,
+  'pusing': Brain,
+  'lemas': Activity,
+  'sesak-napas': Wind,
+  'mual': Frown,
+  'nyeri-otot': Activity,
+};
 
-export default function Recommendation() {
+export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms?: any[] }) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-  const [ageInput, setAgeInput] = useState('');
-  const [gender, setGender] = useState('');
-  const [showResults, setShowResults] = useState(false);
+  const displaySymptoms = masterSymptoms;
+  
+  // Debug log untuk memastikan props masuk dari backend
+  console.log("Gejala dari Backend:", masterSymptoms);
 
-  const toggleSymptom = (symptomId: string) => {
-    setSelectedSymptoms(prev =>
-      prev.includes(symptomId)
-        ? prev.filter(s => s !== symptomId)
-        : [...prev, symptomId]
-    );
+  const { data, setData, post, processing, errors } = useForm({
+    symptoms: [] as (number | string)[],
+    usia: '',
+    jenis_kelamin: ''
+  });
+
+  const toggleSymptom = (symptomId: number | string) => {
+    const newSymptoms = data.symptoms.includes(symptomId)
+      ? data.symptoms.filter(s => s !== symptomId)
+      : [...data.symptoms, symptomId];
+    
+    setData('symptoms', newSymptoms);
   };
 
   const handleNext = () => {
-    if (currentStep === 1 && selectedSymptoms.length > 0) {
+    if (currentStep === 1 && data.symptoms.length > 0) {
       setCurrentStep(2);
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setShowResults(true);
-  };
-
-  const recommendations = {
-    recommended: [
-      { name: 'Paracetamol 500mg', reason: 'Efektif untuk demam dan sakit kepala', price: 15000 },
-      { name: 'Vitamin C 1000mg', reason: 'Meningkatkan daya tahan tubuh', price: 85000 },
-    ],
-    considered: [
-      { name: 'Ibuprofen 400mg', reason: 'Alternatif untuk nyeri dan demam', price: 20000 },
-    ],
-    notRecommended: [
-      { name: 'Aspirin', reason: 'Tidak direkomendasikan untuk usia di bawah 18 tahun', price: 18000 },
-    ]
+    console.log("Data dikirim:", data);
+    
+    post('/rekomendasi/proses', {
+      onError: (errors) => {
+        console.error("Validasi gagal dari backend:", errors);
+      }
+    });
   };
 
   return (
@@ -68,7 +70,7 @@ export default function Recommendation() {
             </p>
           </div>
 
-          {/* Step Indicator - From Figma */}
+          {/* Step Indicator */}
           <div className="flex items-center justify-center mb-12">
             {/* Step 1 */}
             <div className="flex items-center">
@@ -121,33 +123,50 @@ export default function Recommendation() {
                 </div>
               </div>
 
-              {/* Icon Grid - From Figma */}
+              {/* Error Validation for Symptoms (if any) */}
+              {errors.symptoms && (
+                <div className="mb-4 text-red-500 text-sm">{errors.symptoms}</div>
+              )}
+
+              {/* Icon Grid */}
               <div className="grid grid-cols-4 gap-4 mb-8">
-                {symptomsData.map(symptom => (
-                  <button
-                    key={symptom.id}
-                    onClick={() => toggleSymptom(symptom.id)}
-                    className={`p-6 rounded-xl border-2 transition-all duration-200 ${
-                      selectedSymptoms.includes(symptom.id)
-                        ? 'border-[#006a3f] bg-[rgba(0,106,63,0.05)]'
-                        : 'border-[#bdcabe] hover:border-[#006a3f] bg-white'
-                    }`}
-                  >
-                    <symptom.icon className={`w-8 h-8 mx-auto mb-3 ${
-                      selectedSymptoms.includes(symptom.id) ? 'text-[#006a3f]' : 'text-[#3e4a41]'
-                    }`} />
-                    <p className="font-['Inter',sans-serif] text-[14px] text-[#171d19] text-center">
-                      {symptom.label}
-                    </p>
-                  </button>
-                ))}
+                {displaySymptoms.length > 0 ? displaySymptoms.map((symptom: any) => {
+                  const Icon = (symptom.slug && iconMap[symptom.slug]) ? iconMap[symptom.slug] : Activity;
+                  const symptomId = symptom.id;
+                  const isSelected = data.symptoms.includes(symptomId);
+                  const label = symptom.nama_gejala;
+
+                  return (
+                    <button
+                      type="button"
+                      key={symptomId}
+                      onClick={() => toggleSymptom(symptomId)}
+                      className={`p-6 rounded-xl border-2 transition-all duration-200 ${
+                        isSelected
+                          ? 'border-[#006a3f] bg-[rgba(0,106,63,0.05)]'
+                          : 'border-[#bdcabe] hover:border-[#006a3f] bg-white'
+                      }`}
+                    >
+                      <Icon className={`w-8 h-8 mx-auto mb-3 ${
+                        isSelected ? 'text-[#006a3f]' : 'text-[#3e4a41]'
+                      }`} />
+                      <p className="font-['Inter',sans-serif] text-[14px] text-[#171d19] text-center">
+                        {label}
+                      </p>
+                    </button>
+                  );
+                }) : (
+                  <p className="col-span-4 text-center py-6 text-[#6e7a70]">
+                    Data gejala belum tersedia di sistem.
+                  </p>
+                )}
               </div>
 
               <button
                 onClick={handleNext}
-                disabled={selectedSymptoms.length === 0}
+                disabled={data.symptoms.length === 0}
                 className={`w-full py-4 rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium transition-all ${
-                  selectedSymptoms.length > 0
+                  data.symptoms.length > 0
                     ? 'bg-[#006a3f] text-white hover:bg-[#005632] hover:shadow-lg'
                     : 'bg-[#e5e7eb] text-[#9ca3af] cursor-not-allowed'
                 }`}
@@ -158,13 +177,13 @@ export default function Recommendation() {
           )}
 
           {/* Step 2: Age & Gender */}
-          {currentStep === 2 && !showResults && (
+          {currentStep === 2 && (
             <div className="bg-white rounded-2xl p-10 border border-[#f1f5f9] shadow-sm">
               <div className="flex items-start gap-3 mb-8">
                 <div className="w-5 h-5 bg-[#2d5f9f] rounded flex-shrink-0 mt-0.5" />
                 <div>
                   <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-semibold text-[#171d19] mb-2">
-                    Berapa usia Anda?
+                    Identitas Singkat
                   </h2>
                   <p className="font-['Inter',sans-serif] text-[14px] text-[#3e4a41]">
                     Usia sangat menentukan jenis dan dosis obat yang tepat.
@@ -177,20 +196,28 @@ export default function Recommendation() {
                   <label className="font-['Inter',sans-serif] text-[12px] font-bold text-[#6e7a70] tracking-wider uppercase block mb-3">
                     USIA (TAHUN)
                   </label>
+                  
+                  {errors.usia && (
+                    <div className="mb-2 text-red-500 text-sm">{errors.usia}</div>
+                  )}
+                  {errors.jenis_kelamin && (
+                    <div className="mb-2 text-red-500 text-sm">{errors.jenis_kelamin}</div>
+                  )}
+
                   <div className="grid grid-cols-3 gap-4">
                     <input
                       type="number"
                       placeholder="Contoh: 25"
-                      value={ageInput}
-                      onChange={(e) => setAgeInput(e.target.value)}
+                      value={data.usia}
+                      onChange={(e) => setData('usia', e.target.value)}
                       className="col-span-1 px-5 py-4 bg-[#f9fafb] rounded-xl font-['Inter',sans-serif] text-[16px] border border-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/30 focus:border-[#006a3f]"
                       required
                     />
                     <button
                       type="button"
-                      onClick={() => setGender('pria')}
+                      onClick={() => setData('jenis_kelamin', 'pria')}
                       className={`px-6 py-4 rounded-xl font-['Inter',sans-serif] text-[16px] font-medium border-2 transition-all ${
-                        gender === 'pria'
+                        data.jenis_kelamin === 'pria'
                           ? 'border-[#006a3f] bg-[rgba(0,106,63,0.05)] text-[#006a3f]'
                           : 'border-[#e5e7eb] bg-white text-[#171d19] hover:border-[#006a3f]'
                       }`}
@@ -199,9 +226,9 @@ export default function Recommendation() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setGender('wanita')}
+                      onClick={() => setData('jenis_kelamin', 'wanita')}
                       className={`px-6 py-4 rounded-xl font-['Inter',sans-serif] text-[16px] font-medium border-2 transition-all ${
-                        gender === 'wanita'
+                        data.jenis_kelamin === 'wanita'
                           ? 'border-[#006a3f] bg-[rgba(0,106,63,0.05)] text-[#006a3f]'
                           : 'border-[#e5e7eb] bg-white text-[#171d19] hover:border-[#006a3f]'
                       }`}
@@ -233,93 +260,16 @@ export default function Recommendation() {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 bg-[#006a3f] text-white px-10 py-4 rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium hover:bg-[#005632] hover:shadow-lg transition-all"
+                    disabled={processing || !data.usia || !data.jenis_kelamin}
+                    className="flex-1 bg-[#006a3f] text-white px-10 py-4 rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium hover:bg-[#005632] hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Lihat Rekomendasi →
+                    {processing ? 'Memproses...' : 'Lihat Rekomendasi →'}
                   </button>
                 </div>
               </form>
             </div>
           )}
 
-          {/* Results */}
-          {showResults && (
-            <div className="space-y-6">
-              <h2 className="font-['Roboto_Condensed',sans-serif] text-[32px] font-semibold text-[#171d19] mb-8">
-                Hasil Rekomendasi
-              </h2>
-
-              {/* Recommended */}
-              <div className="bg-white rounded-2xl p-8 border-2 border-emerald-200 shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
-                    <CheckCircle2 className="text-white" size={22} />
-                  </div>
-                  <h3 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-semibold text-[#171d19]">
-                    Direkomendasikan
-                  </h3>
-                </div>
-                <div className="space-y-4">
-                  {recommendations.recommended.map((item, idx) => (
-                    <div key={idx} className="bg-emerald-50 rounded-xl p-6 border border-emerald-100">
-                      <div className="flex items-start justify-between mb-2">
-                        <p className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">{item.name}</p>
-                        <p className="font-['Inter',sans-serif] text-[16px] text-emerald-600 font-bold">
-                          Rp {item.price.toLocaleString('id-ID')}
-                        </p>
-                      </div>
-                      <p className="font-['Inter',sans-serif] text-[14px] text-[#3e4a41]">{item.reason}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Considered */}
-              <div className="bg-white rounded-2xl p-8 border border-amber-200 shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
-                    <AlertCircle className="text-white" size={22} />
-                  </div>
-                  <h3 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-semibold text-[#171d19]">
-                    Dipertimbangkan
-                  </h3>
-                </div>
-                <div className="space-y-4">
-                  {recommendations.considered.map((item, idx) => (
-                    <div key={idx} className="bg-amber-50 rounded-xl p-6 border border-amber-100">
-                      <div className="flex items-start justify-between mb-2">
-                        <p className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">{item.name}</p>
-                        <p className="font-['Inter',sans-serif] text-[16px] text-amber-600 font-bold">
-                          Rp {item.price.toLocaleString('id-ID')}
-                        </p>
-                      </div>
-                      <p className="font-['Inter',sans-serif] text-[14px] text-[#3e4a41]">{item.reason}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Not Recommended */}
-              <div className="bg-white rounded-2xl p-8 border border-red-200 shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center">
-                    <XCircle className="text-white" size={22} />
-                  </div>
-                  <h3 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-semibold text-[#171d19]">
-                    Tidak Disarankan
-                  </h3>
-                </div>
-                <div className="space-y-4">
-                  {recommendations.notRecommended.map((item, idx) => (
-                    <div key={idx} className="bg-red-50 rounded-xl p-6 border border-red-100">
-                      <p className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19] mb-2">{item.name}</p>
-                      <p className="font-['Inter',sans-serif] text-[14px] text-[#3e4a41]">{item.reason}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </main>
     </div>
