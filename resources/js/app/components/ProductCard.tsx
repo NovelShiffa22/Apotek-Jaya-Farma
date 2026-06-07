@@ -2,30 +2,45 @@ import { Link } from '@inertiajs/react';
 import { ShoppingCart } from 'lucide-react';
 
 interface ProductCardProps {
-  id: string;
-  name: string;
-  price: number;
-  category: 'bebas' | 'keras' | 'terbatas';
+  id: string | number;
+  name?: string;
+  nama_obat?: string;
+  price?: number;
+  harga?: number;
+  category?: 'bebas' | 'keras' | 'terbatas';
+  jenis_obat?: 'bebas' | 'keras' | 'terbatas';
   image?: string;
+  gambar?: string;
+  deskripsi?: string;
+  kategori_nama?: string;
+  stok?: number;
 }
 
-export default function ProductCard({ id, name, price, category, image }: ProductCardProps) {
+export default function ProductCard(props: ProductCardProps) {
+  const { id } = props;
+  const productName = props.nama_obat || props.name || 'Produk';
+  const productPrice = props.harga ?? props.price ?? 0;
+  const productCategory = props.jenis_obat || props.category || 'bebas';
+  const productImage = props.gambar || props.image;
+  const stok = props.stok;
+  const kategoriNama = props.kategori_nama;
+
   const categoryConfig = {
     bebas: { label: 'Obat Bebas', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', dot: 'bg-emerald-500' },
     keras: { label: 'Obat Keras', bgColor: 'bg-red-50', textColor: 'text-red-700', dot: 'bg-red-500' },
     terbatas: { label: 'Obat Terbatas', bgColor: 'bg-amber-50', textColor: 'text-amber-700', dot: 'bg-amber-500' }
   };
 
-  const config = categoryConfig[category];
+  const config = categoryConfig[productCategory];
 
   return (
     <div className="group bg-white rounded-2xl border border-[#f1f5f9] overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-1">
       {/* Product Image */}
       <Link href={`/product/${id}`} className="block relative aspect-square bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9] overflow-hidden">
-        {image ? (
+        {productImage ? (
           <img
-            src={image}
-            alt={name}
+            src={productImage}
+            alt={productName}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
@@ -47,11 +62,25 @@ export default function ProductCard({ id, name, price, category, image }: Produc
 
       {/* Product Info */}
       <div className="p-5">
+        {/* Kategori Label Text (Opsional) */}
+        {kategoriNama && (
+           <p className="font-['Inter',sans-serif] text-[11px] font-semibold text-[#006a3f] uppercase tracking-wider mb-1.5">
+             {kategoriNama}
+           </p>
+        )}
+        
         <Link href={`/product/${id}`}>
-          <h3 className="font-['Roboto_Condensed',sans-serif] font-normal text-[18px] text-[#171d19] tracking-[-0.3px] mb-2 min-h-[50px] leading-tight hover:text-[#006a3f] transition-colors">
-            {name}
+          <h3 className="font-['Roboto_Condensed',sans-serif] font-normal text-[18px] text-[#171d19] tracking-[-0.3px] mb-1 min-h-[50px] leading-tight hover:text-[#006a3f] transition-colors">
+            {productName}
           </h3>
         </Link>
+
+        {/* Info Stok */}
+        {stok !== undefined && (
+          <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70] mb-2">
+            Stok: <span className="font-semibold text-[#171d19]">{stok}</span>
+          </p>
+        )}
 
         {/* Price & CTA */}
         <div className="flex items-center justify-between mt-4">
@@ -60,7 +89,7 @@ export default function ProductCard({ id, name, price, category, image }: Produc
               Harga
             </p>
             <p className="font-['Roboto_Condensed',sans-serif] font-semibold text-[20px] text-[#006a3f]">
-              Rp {price.toLocaleString('id-ID')}
+              Rp {productPrice.toLocaleString('id-ID')}
             </p>
           </div>
 
