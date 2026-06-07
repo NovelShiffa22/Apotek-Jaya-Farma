@@ -15,11 +15,31 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Admin
+        User::create([
+            'name' => 'Admin Jaya Farma',
+            'email' => 'admin@gmail.com',
+            'phone' => '081234567890',
+            'role' => 'admin',
+            'password' => \Illuminate\Support\Facades\Hash::make('11223344'),
+        ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // Pharmacist
+        User::create([
+            'name' => 'Apoteker Jaya Farma',
+            'email' => 'pharmacist@gmail.com',
+            'phone' => '081234567891',
+            'role' => 'pharmacist',
+            'password' => \Illuminate\Support\Facades\Hash::make('11223344'),
+        ]);
+
+        // Standard user
+        User::create([
+            'name' => 'User Biasa',
+            'email' => 'user@gmail.com',
+            'phone' => '081234567892',
+            'role' => 'user',
+            'password' => \Illuminate\Support\Facades\Hash::make('11223344'),
         ]);
     }
 }

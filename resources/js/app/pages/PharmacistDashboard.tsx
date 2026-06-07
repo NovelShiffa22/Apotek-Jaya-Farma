@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { CheckCircle, XCircle, Edit2, Search, Clock, AlertCircle, FileText, User, Calendar } from 'lucide-react';
+import { CheckCircle, XCircle, Edit2, Search, Clock, AlertCircle, FileText, User, Calendar, LogOut } from 'lucide-react';
+import { Link } from '@inertiajs/react';
 
 const pendingPrescriptions = [
   {
@@ -63,27 +64,38 @@ export default function PharmacistDashboard() {
               </p>
             </div>
 
-            {/* Quick Stats */}
-            <div className="flex gap-6">
-              {[
-                { label: 'Pending', value: '3', icon: Clock, color: 'text-amber-600' },
-                { label: 'Today', value: '12', icon: CheckCircle, color: 'text-emerald-600' },
-                { label: 'Rejected', value: '1', icon: XCircle, color: 'text-red-600' }
-              ].map((stat, idx) => (
-                <div key={idx} className="bg-white rounded-xl px-6 py-3 border border-[#e8e8e6] shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <stat.icon className={stat.color} size={20} />
-                    <div>
-                      <p className="font-['Inter',sans-serif] text-[11px] text-[#1a1a1a] opacity-60 uppercase tracking-wider">
-                        {stat.label}
-                      </p>
-                      <p className="font-['Roboto_Condensed',sans-serif] text-[24px] text-[#1a1a1a] font-medium">
-                        {stat.value}
-                      </p>
+            {/* Quick Stats & Actions */}
+            <div className="flex items-center gap-6">
+              <div className="flex gap-4">
+                {[
+                  { label: 'Pending', value: '3', icon: Clock, color: 'text-amber-600' },
+                  { label: 'Today', value: '12', icon: CheckCircle, color: 'text-emerald-600' },
+                  { label: 'Rejected', value: '1', icon: XCircle, color: 'text-red-600' }
+                ].map((stat, idx) => (
+                  <div key={idx} className="bg-white rounded-xl px-5 py-2.5 border border-[#e8e8e6] shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <stat.icon className={stat.color} size={18} />
+                      <div>
+                        <p className="font-['Inter',sans-serif] text-[10px] text-[#1a1a1a] opacity-60 uppercase tracking-wider">
+                          {stat.label}
+                        </p>
+                        <p className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#1a1a1a] font-medium leading-none mt-0.5">
+                          {stat.value}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              <Link
+                href={route('logout')}
+                method="post"
+                as="button"
+                className="flex items-center gap-2 px-5 py-3 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl text-[#ba1a1a] transition-all font-medium font-['Inter',sans-serif] text-[13px] cursor-pointer"
+              >
+                <LogOut size={16} />
+                <span>Keluar</span>
+              </Link>
             </div>
           </div>
         </div>
@@ -149,7 +161,7 @@ export default function PharmacistDashboard() {
               {/* Prescription List */}
               <div className="space-y-3">
                 {pendingPrescriptions.map(rx => {
-                  const priority = priorityConfig[rx.priority];
+                  const priority = priorityConfig[rx.priority as 'high' | 'normal' | 'low'] || priorityConfig.normal;
                   return (
                     <button
                       key={rx.id}
@@ -234,8 +246,14 @@ export default function PharmacistDashboard() {
                       </div>
                     </div>
                   </div>
-                  <span className={`px-4 py-2 rounded-lg text-[12px] font-medium ${priorityConfig[selectedPrescription.priority].bg} ${priorityConfig[selectedPrescription.priority].color} border ${priorityConfig[selectedPrescription.priority].border}`}>
-                    {priorityConfig[selectedPrescription.priority].label} Priority
+                  <span className={`px-4 py-2 rounded-lg text-[12px] font-medium ${
+                    (priorityConfig[selectedPrescription.priority as 'high' | 'normal' | 'low'] || priorityConfig.normal).bg
+                  } ${
+                    (priorityConfig[selectedPrescription.priority as 'high' | 'normal' | 'low'] || priorityConfig.normal).color
+                  } border ${
+                    (priorityConfig[selectedPrescription.priority as 'high' | 'normal' | 'low'] || priorityConfig.normal).border
+                  }`}>
+                    {(priorityConfig[selectedPrescription.priority as 'high' | 'normal' | 'low'] || priorityConfig.normal).label} Priority
                   </span>
                 </div>
 

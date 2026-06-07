@@ -1,10 +1,14 @@
 import { Link, router, usePage } from '@inertiajs/react';
+import { Search, MessageCircle, User, ShoppingCart, Bell } from 'lucide-react';
+import { useState } from 'react';
 import { Search, MessageCircle, User, ShoppingCart } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export default function Header() {
   const { cartCount: initialCartCount = 0 } = usePage().props as { cartCount?: number };
   const [searchQuery, setSearchQuery] = useState('');
+  const { auth } = usePage().props as any;
+  const user = auth?.user;
   const [cartCount, setCartCount] = useState(initialCartCount);
 
   // Dengarkan event update tanpa harus reload halaman
@@ -62,30 +66,57 @@ export default function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <a
-              href="https://wa.me/6281234567890"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-[#006a3f] hover:bg-[#005632] px-6 py-3 rounded-xl flex items-center gap-2 hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)] transition-all duration-300 hover:-translate-y-0.5 group"
-            >
-              <MessageCircle size={18} className="text-white" />
-              <span className="font-['Roboto_Condensed',sans-serif] text-[15px] tracking-[0.3px] text-white font-medium">
-                Konsultasi
-              </span>
-            </a>
+            {user ? (
+              // Authenticated State (Landing Page 2)
+              <>
+                <a
+                  href="https://wa.me/6281234567890"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-[#006a3f] hover:bg-[#005632] px-6 py-3 rounded-xl flex items-center gap-2 hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)] transition-all duration-300 hover:-translate-y-0.5 group"
+                >
+                  <MessageCircle size={18} className="text-white" />
+                  <span className="font-['Roboto_Condensed',sans-serif] text-[15px] tracking-[0.3px] text-white font-medium">
+                    Konsultasi
+                  </span>
+                </a>
 
-            <Link href="/cart" className="relative p-3 hover:bg-[#f9fafb] rounded-xl transition-colors group">
-              <ShoppingCart size={22} className="text-[#171d19] group-hover:text-[#006a3f] transition-colors" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#006a3f] text-white text-[11px] font-['Inter',sans-serif] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
+                <Link href="/cart" className="relative p-3 hover:bg-[#f9fafb] rounded-xl transition-colors group" title="Keranjang">
+                  <ShoppingCart size={22} className="text-[#171d19] group-hover:text-[#006a3f] transition-colors" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-[#006a3f] text-white text-[11px] font-['Inter',sans-serif] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                      {cartCount}
+                    </span>
+                  )}
+                </Link>
 
-            <Link href="/profile" className="p-3 hover:bg-[#f9fafb] rounded-xl transition-colors group">
-              <User size={22} className="text-[#171d19] group-hover:text-[#006a3f] transition-colors" />
-            </Link>
+                <button className="p-3 hover:bg-[#f9fafb] rounded-xl transition-colors group relative" title="Notifikasi">
+                  <Bell size={22} className="text-[#171d19] group-hover:text-[#006a3f] transition-colors" />
+                  <span className="absolute top-3.5 right-3.5 bg-red-500 w-2 h-2 rounded-full" />
+                </button>
+
+                <Link href="/profile" className="p-3 hover:bg-[#f9fafb] rounded-xl transition-colors group" title="Profil">
+                  <User size={22} className="text-[#171d19] group-hover:text-[#006a3f] transition-colors" />
+                </Link>
+              </>
+            ) : (
+              // Guest State (Landing Page 1)
+              <>
+                <Link
+                  href={route('login')}
+                  className="bg-[#006a3f] hover:bg-[#005632] px-6 py-2.5 rounded-lg font-['Inter',sans-serif] font-bold text-[14px] text-white transition-colors"
+                >
+                  Login
+                </Link>
+
+                <Link
+                  href={route('register')}
+                  className="border border-[#171d19] hover:bg-[#f9fafb] px-6 py-2.5 rounded-lg font-['Inter',sans-serif] font-bold text-[14px] text-[#171d19] transition-colors"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

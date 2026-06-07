@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { TrendingUp, ShoppingBag, AlertTriangle, Plus, Edit2, Trash2, Search, Filter, Download, Package, DollarSign, Users, TrendingDown, UserCog, Shield, Mail, Calendar } from 'lucide-react';
+import { TrendingUp, ShoppingBag, AlertTriangle, Plus, Edit2, Trash2, Search, Filter, Download, Package, DollarSign, Users, TrendingDown, UserCog, Shield, Mail, Calendar, LogOut } from 'lucide-react';
+import { Link } from '@inertiajs/react';
 
 const products = [
   { id: '1', name: 'Paracetamol 500mg', stock: 150, price: 15000, category: 'bebas', symptoms: ['Demam', 'Sakit Kepala'], sales: 245 },
@@ -63,6 +64,15 @@ export default function AdminDashboard() {
                 <Plus size={16} />
                 <span className="font-['Inter',sans-serif] text-[13px] font-medium">Tambah Produk</span>
               </button>
+              <Link
+                href={route('logout')}
+                method="post"
+                as="button"
+                className="flex items-center gap-2 px-5 py-2.5 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl text-[#ba1a1a] transition-all font-medium font-['Inter',sans-serif] text-[13px] cursor-pointer"
+              >
+                <LogOut size={16} />
+                <span>Keluar</span>
+              </Link>
             </div>
           </div>
         </div>
@@ -541,7 +551,7 @@ export default function AdminDashboard() {
                         admin: { label: 'Admin', bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', icon: Shield },
                         pharmacist: { label: 'Apoteker', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', icon: UserCog },
                         customer: { label: 'Pelanggan', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', icon: Users }
-                      }[user.role];
+                      }[user.role as 'admin' | 'pharmacist' | 'customer'] || { label: 'Pelanggan', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', icon: Users };
 
                       return (
                         <tr key={user.id} className="border-b border-[#f1f5f9] last:border-0 hover:bg-[#fafaf8] transition-colors">
