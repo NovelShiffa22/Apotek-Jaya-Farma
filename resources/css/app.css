@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    font-family: "Poppins", sans-serif !important;
+  }
+}
+
 .auth-container {
   display: flex;
   flex-direction: column;
