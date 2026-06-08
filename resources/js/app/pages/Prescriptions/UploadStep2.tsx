@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, useForm } from '@inertiajs/react';
 import { FilePlus, MapPin, X, Image as ImageIcon } from 'lucide-react';
 import { useState, useRef } from 'react';
 import Header from '../../components/Header';
@@ -8,29 +8,26 @@ export default function UploadStep2() {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const { data, setData, post, processing, errors } = useForm<{ prescription_file: File | null }>({
+        prescription_file: null,
+    });
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setData('prescription_file', file);
+            
             const reader = new FileReader();
             reader.onload = (e) => {
                 setSelectedImage(e.target?.result as string);
             };
-            reader.readAsDataURL(e.target.files[0]);
+            reader.readAsDataURL(file);
         }
     };
 
-    const handleKirim = () => {
-        const newId = `#RX-${Math.floor(Math.random() * 900000) + 100000}`;
-        const newPrescription = {
-            id: newId,
-            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            fileName: 'resep_baru_upload.png',
-            status: 'Verifikasi'
-        };
-
-        const existing = JSON.parse(localStorage.getItem('mock_prescriptions') || '[]');
-        localStorage.setItem('mock_prescriptions', JSON.stringify([newPrescription, ...existing]));
-
-        router.visit(route('prescriptions.upload.step3', { id: newId.replace('#', '') }));
+    const handleKirim = (e: React.FormEvent) => {
+        e.preventDefault();
+        post(route('prescriptions.store'));
     };
 
     return (
@@ -67,7 +64,7 @@ export default function UploadStep2() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-8">
+                <form onSubmit={handleKirim} method="POST" encType="multipart/form-data" className="grid grid-cols-3 gap-8">
                     {/* Left Column - Upload Box */}
                     <div className="col-span-2 rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
                         <h2 className="mb-2 font-['Poppins',sans-serif] text-xl font-bold text-[#171d19]">
@@ -107,6 +104,7 @@ export default function UploadStep2() {
                                 <>
                                     <input 
                                         type="file" 
+                                        name="prescription_file"
                                         className="hidden" 
                                         ref={fileInputRef} 
                                         accept="image/*,.pdf"
@@ -186,16 +184,17 @@ export default function UploadStep2() {
 
                             <div className="mt-8">
                                 <button 
-                                    onClick={handleKirim}
-                                    className="block w-full rounded-xl bg-[#006a3f] py-3.5 text-center font-['Poppins',sans-serif] text-[14px] font-bold text-white transition-all hover:bg-[#005632] hover:shadow-lg"
+                                    type="submit"
+                                    disabled={processing || !data.prescription_file}
+                                    className="block w-full rounded-xl bg-[#006a3f] py-3.5 text-center font-['Poppins',sans-serif] text-[14px] font-bold text-white transition-all hover:bg-[#005632] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Kirim Resep
+                                    {processing ? 'Memproses...' : 'Kirim Resep'}
                                 </button>
                             </div>
                         </div>
 
                     </div>
-                </div>
+                </form>
 
             </main>
         </div>

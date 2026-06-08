@@ -39,6 +39,7 @@ Route::prefix('prescriptions')->name('prescriptions.')->group(function () {
     Route::get('/upload/step-2', function() { return Inertia::render('Prescriptions/UploadStep2'); })->name('upload.step2');
     Route::get('/upload/step-3', function() { return Inertia::render('Prescriptions/UploadStep3'); })->name('upload.step3');
     Route::get('/{id}', function($id) { return Inertia::render('Prescriptions/Detail', ['id' => $id]); })->name('detail');
+    Route::post('/', [\App\Http\Controllers\PrescriptionController::class, 'store'])->middleware('auth')->name('store');
 });
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');

@@ -1,9 +1,10 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { FileText, Plus, Search, Eye, Filter } from 'lucide-react';
 import { useState, KeyboardEvent } from 'react';
 import Header from '../../components/Header';
 
 export default function PrescriptionIndex({ prescriptions, filters }: { prescriptions: any, filters: any }) {
+    const { flash } = usePage().props as any;
     const [searchQuery, setSearchQuery] = useState(filters?.search || '');
 
     const hasPrescriptions = prescriptions.data.length > 0 || searchQuery !== '';
@@ -36,6 +37,19 @@ export default function PrescriptionIndex({ prescriptions, filters }: { prescrip
         <div className="min-h-screen bg-[#fafaf8]">
             <Header />
             <main className="mx-auto max-w-6xl px-8 py-10">
+                {flash?.success && (
+                    <div className="mb-6 flex items-center justify-between rounded-xl bg-emerald-50 px-6 py-4 border border-emerald-100">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                                <FileText size={16} />
+                            </div>
+                            <p className="font-['Poppins',sans-serif] text-[14px] font-medium text-emerald-800">
+                                {flash.success}
+                            </p>
+                        </div>
+                    </div>
+                )}
+                
                 {!hasPrescriptions ? (
                     // Empty State
                     <div className="flex flex-col items-center justify-center rounded-2xl bg-white p-20 shadow-sm border border-gray-100">
@@ -113,7 +127,7 @@ export default function PrescriptionIndex({ prescriptions, filters }: { prescrip
                                                     {formatDate(prescription.created_at)}
                                                 </td>
                                                 <td className="px-6 py-5 font-['Poppins',sans-serif] text-[14px] font-semibold text-[#006a3f]">
-                                                    {prescription.id}
+                                                    {prescription.kode_resep}
                                                 </td>
                                                 <td className="px-6 py-5">
                                                     <div className="flex items-center gap-3">
