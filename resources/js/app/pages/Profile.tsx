@@ -12,6 +12,13 @@ export default function Profile() {
   const [orderTab, setOrderTab] = useState<string>('Pending');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
+
+  const toggleExpandOrder = (orderId: number) => {
+    setExpandedOrders(prev => 
+      prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
+    );
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -245,9 +252,49 @@ export default function Profile() {
                             
                             {order.items.length > 1 && (
                               <div className="mt-3 pl-[96px]">
-                                <p className="font-['Inter',sans-serif] text-[13px] text-gray-500">
-                                  Lihat +{order.items.length - 1} produk lainnya
-                                </p>
+                                <button 
+                                  onClick={() => toggleExpandOrder(order.id)}
+                                  className="font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 hover:text-[#006a3f] transition-colors"
+                                >
+                                  {expandedOrders.includes(order.id) 
+                                    ? 'Sembunyikan produk' 
+                                    : `Lihat +${order.items.length - 1} produk lainnya`
+                                  }
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Render sisa produk jika di-expand */}
+                            {expandedOrders.includes(order.id) && order.items.length > 1 && (
+                              <div className="mt-4 pt-4 border-t border-dashed border-gray-200 space-y-4 animate-fade-in">
+                                {order.items.slice(1).map((item: any, idx: number) => (
+                                  <Link key={idx} href={`/product/${item.id || item.product_id || 1}`} className="flex items-start gap-4 group">
+                                    <div className="w-20 h-20 bg-gray-100 rounded-xl border border-gray-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                      {item.foto || item.image ? (
+                                        <img 
+                                          src={item.foto || item.image} 
+                                          alt={item.nama || item.name} 
+                                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-1" 
+                                        />
+                                      ) : (
+                                        <Package size={28} className="text-gray-400 group-hover:scale-105 transition-transform duration-300" />
+                                      )}
+                                    </div>
+                                    <div className="flex-1 min-w-0 mt-1">
+                                      <h3 className="font-['Poppins',sans-serif] text-[15px] font-bold text-[#171d19] group-hover:text-[#006a3f] transition-colors truncate">
+                                        {item.nama || item.name || 'Produk Farmasi'}
+                                      </h3>
+                                      <p className="font-['Inter',sans-serif] text-[13px] text-gray-500 mt-1">
+                                        x{item.quantity || 1}
+                                      </p>
+                                    </div>
+                                    <div className="text-right mt-1">
+                                      <p className="font-['Inter',sans-serif] text-[14px] text-[#171d19] font-medium">
+                                        Rp {Number(item.harga || item.price || 0).toLocaleString('id-ID')}
+                                      </p>
+                                    </div>
+                                  </Link>
+                                ))}
                               </div>
                             )}
                           </div>
