@@ -14,15 +14,41 @@ class CartController extends Controller
     public function index()
     {
         $cart = Session::get('cart', []);
-        
-        // Hitung total belanja
-        $total = array_sum(array_map(function($item) {
-            return $item['price'] * $item['quantity'];
-        }, $cart));
+        $cartItems = array_values($cart); // Convert map to array for React
 
-        return \Inertia\Inertia::render('Checkout', [
-            'cart' => $cart,
-            'total' => $total
+        // Format data to match Cart.tsx requirements
+        $formattedItems = array_map(function($item) {
+            return [
+                'id' => $item['id'],
+                'nama' => $item['name'],
+                'jenis_kemasan' => $item['category'] ?? 'Satuan', // Default to category
+                'harga' => $item['price'],
+                'quantity' => $item['quantity'],
+                'foto' => $item['image'],
+            ];
+        }, $cartItems);
+
+        // Get 2 frequently bought items (random active products with stock)
+        $frequentlyBought = Product::where('is_active', true)
+            ->where('stok', '>', 0)
+            ->inRandomOrder()
+            ->limit(2)
+            ->get()
+            ->map(function($product) {
+                return [
+                    'id' => $product->id,
+                    'nama' => $product->nama_obat,
+                    'kategori' => $product->category ? $product->category->nama_kategori : 'Umum',
+                    'harga' => $product->harga,
+                    'foto' => $product->gambar,
+                ];
+            });
+
+        return \Inertia\Inertia::render('Cart', [
+            'cartItems' => $formattedItems,
+            'shippingCost' => 15000,
+            'discount' => 5000,
+            'frequentlyBought' => $frequentlyBought
         ]);
     }
 
@@ -88,8 +114,55 @@ class CartController extends Controller
 
         $msg = "{$product->nama_obat} berhasil ditambahkan ke keranjang.";
         if ($request->wantsJson() || $request->ajax()) {
-            return response()->json(['success' => true, 'message' => $msg]);
+            return redirect()->back()->with('success', $msg);
         }
-        return redirect()->back()->with('success', $msg);
+    }
+
+    /**
+     * Update kuantitas item dalam keranjang.
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $cart = Session::get('cart', []);
+
+        if (isset($cart[$id])) {
+            $product = Product::findOrFail($id);
+            
+            // Proteksi jika kuantitas melebihi stok di database MySQL kalian
+            if ($request->quantity > $product->stok) {
+                return redirect()->back()->with('error', 'Stok tidak mencukupi.');
+            }
+
+            $cart[$id]['quantity'] = $request->quantity;
+            Session::put('cart', $cart);
+
+            // Langsung arahkan kembali agar data props di React otomatis ter-update
+            return redirect()->back()->with('success', 'Kuantitas diperbarui.');
+        }
+
+        return redirect()->back()->with('error', 'Item tidak ditemukan.');
+    }
+
+    /**
+     * Hapus item dari keranjang.
+     */
+    public function remove(Request $request, $id)
+    {
+        $cart = Session::get('cart', []);
+
+        if (isset($cart[$id])) {
+            unset($cart[$id]);
+            Session::put('cart', $cart);
+
+            if ($request->wantsJson() || $request->ajax()) return response()->json(['success' => true]);
+            return redirect()->back()->with('success', 'Item dihapus dari keranjang.');
+        }
+
+        if ($request->wantsJson() || $request->ajax()) return response()->json(['message' => 'Item tidak ditemukan.'], 404);
+        return redirect()->back()->with('error', 'Item tidak ditemukan.');
     }
 }

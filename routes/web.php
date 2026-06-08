@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -29,14 +30,6 @@ Route::post('/rekomendasi/proses', [RecommendationController::class, 'process'])
 // Rute Transaksi & Keranjang
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 
-Route::get('/checkout', function () {
-    return Inertia::render('Checkout');
-})->name('checkout.index');
-
-Route::get('/cart', function () {
-    return Inertia::render('Cart');
-})->name('cart.index');
-
 Route::get('/notifications', function () {
     return Inertia::render('Notifications');
 })->name('notifications.index');
@@ -50,8 +43,21 @@ Route::prefix('prescriptions')->name('prescriptions.')->group(function () {
     Route::get('/{id}', function($id) { return Inertia::render('Prescriptions/Detail', ['id' => $id]); })->name('detail');
 });
 
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout/proses', [CheckoutController::class, 'process'])->name('checkout.proses');
+
+Route::get('/invoice/{id}', [CheckoutController::class, 'invoice'])->name('order.invoice');
+Route::post('/invoice/{id}/simulasi-bayar', [CheckoutController::class, 'simulatePayment'])->name('order.simulate_payment');
+
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
+Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remove');
+
 Route::get('/profile', function () {
-    return Inertia::render('Profile');
+    $orders = \App\Models\VirtualTransaction::where('user_id', auth()->id())->latest()->get();
+    return Inertia::render('Profile', [
+        'orders' => $orders
+    ]);
 })->middleware(['auth', 'role:user']);
 
 // Ruang Portal Kerja Manajemen (Dashboard)

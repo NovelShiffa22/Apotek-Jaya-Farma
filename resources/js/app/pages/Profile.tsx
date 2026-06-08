@@ -3,17 +3,13 @@ import Header from '../components/Header';
 import { User, MapPin, Package, LogOut } from 'lucide-react';
 import { usePage, Link } from '@inertiajs/react';
 
-const orderHistory = [
-  { id: 'ORD-001', date: '2026-04-25', total: 45000, status: 'selesai' },
-  { id: 'ORD-002', date: '2026-04-27', total: 125000, status: 'dikirim' },
-  { id: 'ORD-003', date: '2026-04-28', total: 30000, status: 'disiapkan' },
-  { id: 'ORD-004', date: '2026-04-29', total: 85000, status: 'diproses' },
-];
+
 
 export default function Profile() {
-  const { auth } = usePage().props as any;
+  const { auth, orders = [] } = usePage().props as any;
   const user = auth?.user;
   const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders'>('profile');
+  const [orderTab, setOrderTab] = useState<'Pending' | 'Lunas'>('Pending');
 
   const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
     diproses: { label: 'Diproses', bg: 'bg-amber-50', text: 'text-amber-700' },
@@ -144,12 +140,37 @@ export default function Profile() {
 
             {activeTab === 'orders' && (
               <div>
-                <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-8 font-semibold">
+                <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-6 font-semibold">
                   Riwayat Pesanan
                 </h2>
+                
+                {/* Sub-tabs */}
+                <div className="flex gap-4 mb-8 border-b border-[#f1f5f9]">
+                  <button
+                    onClick={() => setOrderTab('Pending')}
+                    className={`pb-3 px-2 font-['Inter',sans-serif] text-[15px] font-bold transition-all border-b-2 ${
+                      orderTab === 'Pending' ? 'border-[#006a3f] text-[#006a3f]' : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Belum Bayar
+                  </button>
+                  <button
+                    onClick={() => setOrderTab('Lunas')}
+                    className={`pb-3 px-2 font-['Inter',sans-serif] text-[15px] font-bold transition-all border-b-2 ${
+                      orderTab === 'Lunas' ? 'border-[#006a3f] text-[#006a3f]' : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Diproses
+                  </button>
+                </div>
+
                 <div className="space-y-4">
-                  {orderHistory.map(order => {
-                    const config = statusConfig[order.status];
+                  {orders.filter((o: any) => o.status === orderTab).length === 0 ? (
+                    <div className="bg-gray-50 p-8 rounded-2xl text-center text-gray-500 border border-gray-100 font-medium">
+                      Tidak ada pesanan di kategori ini.
+                    </div>
+                  ) : orders.filter((o: any) => o.status === orderTab).map((order: any) => {
+                    const isPending = order.status === 'Pending';
                     return (
                       <div
                         key={order.id}
@@ -157,30 +178,36 @@ export default function Profile() {
                       >
                         <div className="flex items-start justify-between mb-4">
                           <div>
-                            <p className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#171d19] mb-2 font-semibold">
-                              {order.id}
+                            <p className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#171d19] mb-1 font-semibold">
+                              VA: {order.va_number}
                             </p>
                             <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
-                              {new Date(order.date).toLocaleDateString('id-ID', {
+                              {new Date(order.created_at).toLocaleDateString('id-ID', {
                                 day: 'numeric',
                                 month: 'long',
                                 year: 'numeric'
-                              })}
+                              })} • {order.payment_method}
                             </p>
                           </div>
-                          <div className={`${config.bg} px-4 py-2 rounded-full`}>
-                            <p className={`font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase ${config.text}`}>
-                              {config.label}
+                          <div className={`${isPending ? 'bg-amber-50' : 'bg-emerald-50'} px-4 py-2 rounded-full`}>
+                            <p className={`font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase ${isPending ? 'text-amber-700' : 'text-emerald-700'}`}>
+                              {isPending ? 'Belum Bayar' : 'Lunas'}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center justify-between pt-4 border-t border-[#f1f5f9]">
                           <p className="font-['Roboto_Condensed',sans-serif] text-[18px] text-[#171d19] font-semibold">
-                            Total: Rp {order.total.toLocaleString('id-ID')}
+                            Total: Rp {Number(order.total_amount).toLocaleString('id-ID')}
                           </p>
-                          <button className="font-['Inter',sans-serif] text-[14px] font-bold text-[#006a3f] hover:text-[#005632] transition-colors">
-                            Lihat Detail →
-                          </button>
+                          {isPending ? (
+                            <Link href={`/invoice/${order.id}`} className="bg-[#006a3f] text-white px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-[#005632] shadow-md hover:shadow-lg transition-all">
+                              Bayar Sekarang
+                            </Link>
+                          ) : (
+                            <button className="font-['Inter',sans-serif] text-[14px] font-bold text-[#006a3f] hover:text-[#005632] transition-colors">
+                              Lihat Detail →
+                            </button>
+                          )}
                         </div>
                       </div>
                     );
