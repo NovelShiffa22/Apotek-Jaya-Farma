@@ -63,7 +63,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
         stok_minimum: initialData?.stok_minimum || '10',
         gambar: null,
         is_active: initialData?.is_active ?? true,
-        symptom_ids: initialData?.symptom_ids || [],
+        symptom_ids: initialData?.symptoms ? initialData.symptoms.map((s: any) => s.id) : (initialData?.symptom_ids || []),
     });
 
     // Calculate completion percentage
@@ -495,10 +495,10 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                                                 setData('symptom_ids', [...data.symptom_ids, symptom.id]);
                                                             }
                                                         }}
-                                                        className={`rounded-full px-4 py-1.5 text-[13px] font-medium transition-all ${
+                                                        className={`rounded-full px-4 py-1.5 text-[14px] transition-all ${
                                                             isSelected
-                                                                ? 'bg-[#006a3f] text-white border border-[#006a3f]'
-                                                                : 'bg-white text-[#6e7a70] border border-gray-200 hover:border-[#006a3f] hover:text-[#006a3f]'
+                                                                ? 'bg-[#eef5f0] text-[#006a3f] border border-[#006a3f] font-medium'
+                                                                : 'bg-white text-[#171d19] border border-gray-200 hover:border-[#006a3f] hover:text-[#006a3f]'
                                                         }`}
                                                     >
                                                         {symptom.nama_gejala}

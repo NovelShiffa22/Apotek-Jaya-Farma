@@ -109,7 +109,13 @@ class ProductController extends Controller
         $product = Product::create(collect($validated)->except('symptom_ids')->toArray());
 
         if ($request->has('symptom_ids')) {
-            $product->symptoms()->sync($request->symptom_ids);
+            $syncData = [];
+            if (is_array($request->symptom_ids)) {
+                foreach ($request->symptom_ids as $id) {
+                    $syncData[$id] = ['bobot_relevansi' => 1.00];
+                }
+            }
+            $product->symptoms()->sync($syncData);
         }
 
         return redirect()->route('admin.dashboard')->with('success', 'Produk berhasil ditambahkan');
@@ -183,7 +189,13 @@ class ProductController extends Controller
         $product->update(collect($validated)->except('symptom_ids')->toArray());
 
         if ($request->has('symptom_ids')) {
-            $product->symptoms()->sync($request->symptom_ids);
+            $syncData = [];
+            if (is_array($request->symptom_ids)) {
+                foreach ($request->symptom_ids as $id) {
+                    $syncData[$id] = ['bobot_relevansi' => 1.00];
+                }
+            }
+            $product->symptoms()->sync($syncData);
         }
 
         return redirect()->route('admin.dashboard')->with('success', 'Data produk berhasil diperbarui');

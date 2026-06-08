@@ -27,10 +27,11 @@ interface AdminDashboardProps {
     products?: any[];
     categories?: any[];
     users?: any[];
+    symptoms?: any[];
     orders?: any[];
 }
 
-export default function AdminDashboard({ products = [], categories = [], users = [], orders = [] }: AdminDashboardProps) {
+export default function AdminDashboard({ products = [], categories = [], users = [], symptoms = [], orders = [] }: AdminDashboardProps) {
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>(null);
     const [productToDelete, setProductToDelete] = useState<any>(null);
@@ -1192,6 +1193,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 isEdit={!!editingProduct} 
                 initialData={editingProduct} 
                 categories={categories}
+                symptoms={symptoms}
             />
 
             {/* Modal Konfirmasi Hapus Produk Minimalist */}
