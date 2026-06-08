@@ -17,6 +17,7 @@ import {
     TrendingUp,
     UserCog,
     Users,
+    X,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import CreateProduct from './CreateProduct';
@@ -1284,69 +1285,63 @@ export default function AdminDashboard({ products = [], categories = [], users =
 
             {/* Modal Detail Pesanan */}
             {viewingOrder && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-6 overflow-y-auto">
-                    <div className="relative w-full max-w-2xl rounded-3xl bg-white shadow-2xl p-8 my-8">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 overflow-y-auto">
+                    <div className="relative w-full max-w-md rounded-2xl bg-white shadow-xl p-6 my-6">
                         <button
                             onClick={() => setViewingOrder(null)}
-                            className="absolute right-6 top-6 rounded-full bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-900"
+                            className="absolute right-4 top-4 rounded-full bg-gray-100 p-1.5 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-900"
                         >
-                            <X size={20} />
+                            <X size={16} />
                         </button>
                         
-                        <div className="mb-6">
-                            <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-semibold text-[#171d19]">
-                                Detail Pesanan: {viewingOrder.kode_pesanan}
+                        <div className="mb-5">
+                            <h2 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
+                                {viewingOrder.kode_pesanan}
                             </h2>
-                            <p className="font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">
-                                Dibuat pada {new Date(viewingOrder.created_at).toLocaleString('id-ID', {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'})}
+                            <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
+                                {new Date(viewingOrder.created_at).toLocaleString('id-ID', {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'})}
                             </p>
                         </div>
 
-                        <div className="space-y-6">
-                            {/* User & Delivery Info */}
-                            <div className="rounded-2xl border border-[#f1f5f9] bg-[#f9fafb] p-5">
-                                <h3 className="mb-3 font-['Inter',sans-serif] text-[13px] font-bold tracking-wider text-[#6e7a70] uppercase">
-                                    Informasi Pelanggan
-                                </h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">Nama</p>
-                                        <p className="font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19]">{viewingOrder.user?.name || 'Guest'}</p>
+                        <div className="space-y-5">
+                            {/* User Info - Simplified */}
+                            <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] p-4">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-start gap-4">
+                                        <span className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">Pelanggan</span>
+                                        <span className="font-['Inter',sans-serif] text-[12px] font-medium text-[#171d19] text-right">{viewingOrder.user?.name || 'Guest'}</span>
                                     </div>
-                                    <div>
-                                        <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">Metode Pembayaran</p>
-                                        <p className="font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19]">{viewingOrder.payment_method || '-'}</p>
+                                    <div className="flex justify-between items-start gap-4">
+                                        <span className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">Pembayaran</span>
+                                        <span className="font-['Inter',sans-serif] text-[12px] font-medium text-[#171d19] text-right">{viewingOrder.payment_method || '-'}</span>
                                     </div>
-                                    <div className="col-span-2">
-                                        <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">Alamat Pengiriman</p>
-                                        <p className="font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19]">{viewingOrder.address?.alamat_lengkap || 'Ambil di Apotek'}</p>
+                                    <div className="flex justify-between items-start gap-4">
+                                        <span className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70] shrink-0">Alamat</span>
+                                        <span className="font-['Inter',sans-serif] text-[12px] font-medium text-[#171d19] text-right line-clamp-2" title={viewingOrder.address?.alamat_lengkap || 'Ambil di Apotek'}>{viewingOrder.address?.alamat_lengkap || 'Ambil di Apotek'}</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Order Items */}
                             <div>
-                                <h3 className="mb-3 font-['Inter',sans-serif] text-[13px] font-bold tracking-wider text-[#6e7a70] uppercase">
-                                    Item Pesanan
+                                <h3 className="mb-2 font-['Inter',sans-serif] text-[12px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                    Item ({viewingOrder.products?.length || 0})
                                 </h3>
-                                <div className="space-y-3">
+                                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
                                     {viewingOrder.products?.map((item: any, idx: number) => (
-                                        <div key={idx} className="flex items-center justify-between rounded-xl border border-gray-100 p-4">
-                                            <div className="flex items-center gap-4">
+                                        <div key={idx} className="flex items-center justify-between rounded-lg border border-gray-100 p-3">
+                                            <div className="flex items-center gap-3">
                                                 {item.gambar ? (
-                                                    <img src={item.gambar.startsWith('http') ? item.gambar : `/storage/${item.gambar}`} alt={item.nama_obat} className="h-12 w-12 rounded-lg object-cover" />
+                                                    <img src={item.gambar.startsWith('http') ? item.gambar : `/storage/${item.gambar}`} alt={item.nama_obat} className="h-10 w-10 rounded-md object-cover" />
                                                 ) : (
-                                                    <div className="h-12 w-12 rounded-lg bg-gray-100" />
+                                                    <div className="h-10 w-10 rounded-md bg-gray-100" />
                                                 )}
                                                 <div>
-                                                    <p className="font-['Inter',sans-serif] text-[14px] font-semibold text-[#171d19]">{item.nama_obat}</p>
-                                                    <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
+                                                    <p className="font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] line-clamp-1">{item.nama_obat}</p>
+                                                    <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">
                                                         {item.pivot.kuantitas} x Rp {parseFloat(item.pivot.harga_satuan).toLocaleString('id-ID')}
                                                     </p>
                                                 </div>
-                                            </div>
-                                            <div className="font-['Inter',sans-serif] text-[14px] font-semibold text-[#006a3f]">
-                                                Rp {parseFloat(item.pivot.subtotal).toLocaleString('id-ID')}
                                             </div>
                                         </div>
                                     ))}
@@ -1354,13 +1349,11 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             </div>
 
                             {/* Summary */}
-                            <div className="rounded-2xl bg-emerald-50 p-5">
-                                <div className="flex items-center justify-between">
-                                    <span className="font-['Inter',sans-serif] text-[15px] font-medium text-emerald-800">Total Biaya</span>
-                                    <span className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold text-emerald-700">
-                                        Rp {parseFloat(viewingOrder.total_biaya || 0).toLocaleString('id-ID')}
-                                    </span>
-                                </div>
+                            <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+                                <span className="font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19]">Total Pembayaran</span>
+                                <span className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-[#006a3f]">
+                                    Rp {parseFloat(viewingOrder.total_biaya || 0).toLocaleString('id-ID')}
+                                </span>
                             </div>
                         </div>
                     </div>
