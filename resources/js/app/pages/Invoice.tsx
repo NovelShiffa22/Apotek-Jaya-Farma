@@ -92,12 +92,12 @@ export default function Invoice({ transaction }: Props) {
               </div>
             </div>
 
-            <button 
-              onClick={goToHome}
-              className="w-full bg-[#006a3f] text-white rounded-xl py-4 font-bold hover:bg-[#005632] transition-colors"
+            <Link 
+              href="/profile?tab=orders&status=Lunas"
+              className="w-full flex items-center justify-center bg-[#006a3f] text-white rounded-xl py-4 font-bold hover:bg-[#005632] transition-colors"
             >
-              Kembali ke Beranda
-            </button>
+              Lihat Riwayat Pesanan
+            </Link>
           </div>
         ) : (
           // PENDING UI

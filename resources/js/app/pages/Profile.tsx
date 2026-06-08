@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import { User, MapPin, Package, LogOut } from 'lucide-react';
 import { usePage, Link } from '@inertiajs/react';
@@ -10,6 +10,16 @@ export default function Profile() {
   const user = auth?.user;
   const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders'>('profile');
   const [orderTab, setOrderTab] = useState<'Pending' | 'Lunas'>('Pending');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'orders') {
+      setActiveTab('orders');
+      if (params.get('status')) {
+        setOrderTab(params.get('status') as 'Pending' | 'Lunas');
+      }
+    }
+  }, []);
 
   const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
     diproses: { label: 'Diproses', bg: 'bg-amber-50', text: 'text-amber-700' },
