@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
-import { User, MapPin, Package, LogOut } from 'lucide-react';
+import { User, MapPin, Package, LogOut, X } from 'lucide-react';
 import { usePage, Link } from '@inertiajs/react';
 
 
@@ -10,6 +10,8 @@ export default function Profile() {
   const user = auth?.user;
   const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders'>('profile');
   const [orderTab, setOrderTab] = useState<string>('Pending');
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -260,9 +262,12 @@ export default function Profile() {
                             </span>
                           </div>
                           <div className="flex gap-3 justify-end">
-                            <Link href={`/invoice/${order.id}`} className="font-['Inter',sans-serif] text-[14px] font-bold text-gray-600 hover:text-gray-900 border border-gray-200 px-5 py-2.5 rounded-xl transition-colors hover:bg-gray-50">
+                            <button 
+                              onClick={() => { setSelectedOrder(order); setIsModalOpen(true); }}
+                              className="font-['Inter',sans-serif] text-[14px] font-bold text-gray-600 hover:text-gray-900 border border-gray-200 px-5 py-2.5 rounded-xl transition-colors hover:bg-gray-50"
+                            >
                               Lihat Detail
-                            </Link>
+                            </button>
                             {isPending && (
                               <Link href={`/invoice/${order.id}`} className="bg-[#006a3f] text-white px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-[#005632] shadow-sm hover:shadow-md transition-all whitespace-nowrap">
                                 Bayar Sekarang
@@ -279,6 +284,74 @@ export default function Profile() {
           </div>
         </div>
       </main>
+
+      {/* Modal Pop-up Detail */}
+      {isModalOpen && selectedOrder && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all scale-100">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-[#171d19]">
+                Rincian Pesanan #{selectedOrder.id}
+              </h3>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-red-500 transition-colors p-1"
+              >
+                <X size={22} strokeWidth={2.5} />
+              </button>
+            </div>
+            <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+              
+              <div>
+                <h4 className="font-['Inter',sans-serif] text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-3">Daftar Item</h4>
+                <div className="space-y-4">
+                  {selectedOrder.items?.map((item: any, idx: number) => (
+                    <div key={idx} className="flex justify-between items-start text-[14px] font-['Inter',sans-serif]">
+                      <div className="flex-1 pr-4">
+                        <span className="text-[#171d19] font-medium leading-snug block">{item.nama || item.name}</span>
+                        <span className="text-gray-500 text-[13px]">x{item.quantity || 1}</span>
+                      </div>
+                      <span className="font-bold text-[#171d19] whitespace-nowrap">Rp {Number((item.harga || item.price || 0) * (item.quantity || 1)).toLocaleString('id-ID')}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t border-gray-100 pt-5 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">Metode Pembayaran</span>
+                  <span className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19]">{selectedOrder.payment_method || 'Virtual Account'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">Virtual Account</span>
+                  <span className="font-['Inter',sans-serif] text-[14px] font-bold text-indigo-600 tracking-wider">{selectedOrder.va_number}</span>
+                </div>
+                <div className="flex justify-between items-center pt-2">
+                  <span className="font-['Inter',sans-serif] text-[14px] font-bold text-gray-900">Total Pembayaran</span>
+                  <span className="font-['Poppins',sans-serif] text-[18px] font-black text-[#006a3f]">Rp {Number(selectedOrder.total_amount).toLocaleString('id-ID')}</span>
+                </div>
+              </div>
+
+              <div className={`border rounded-xl p-5 ${selectedOrder.status === 'Pending' ? 'bg-amber-50 border-amber-100' : 'bg-emerald-50 border-emerald-100'}`}>
+                <h4 className={`font-['Inter',sans-serif] text-[12px] font-bold uppercase tracking-wider mb-1.5 ${selectedOrder.status === 'Pending' ? 'text-amber-700' : 'text-emerald-700'}`}>Status Pelacakan</h4>
+                <p className={`font-['Inter',sans-serif] text-[14px] font-medium leading-relaxed ${selectedOrder.status === 'Pending' ? 'text-amber-800' : 'text-emerald-800'}`}>
+                  {selectedOrder.status === 'Pending' ? 'Belum Bayar (Menunggu pembayaran Anda)' : 'Diproses (Apotek sedang menyiapkan obat Anda)'}
+                </p>
+              </div>
+
+            </div>
+            <div className="p-5 border-t border-gray-100 bg-white flex justify-end">
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="bg-white border-2 border-gray-200 text-gray-700 px-8 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
