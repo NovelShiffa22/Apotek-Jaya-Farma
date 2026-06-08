@@ -75,28 +75,31 @@ export default function UploadStep2() {
                         </p>
 
                         <div 
-                            className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-16 transition-colors overflow-hidden ${dragActive ? 'border-[#006a3f] bg-emerald-50' : 'border-gray-200 bg-gray-50/50'}`}
+                            className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-12 transition-colors ${dragActive ? 'border-[#006a3f] bg-emerald-50' : 'border-gray-200 bg-gray-50/50'}`}
                             onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                             onDragLeave={() => setDragActive(false)}
                             onDrop={(e) => {
                                 e.preventDefault();
                                 setDragActive(false);
                                 if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                    const file = e.dataTransfer.files[0];
+                                    setData('prescription_file', file);
                                     const reader = new FileReader();
                                     reader.onload = (ev) => setSelectedImage(ev.target?.result as string);
-                                    reader.readAsDataURL(e.dataTransfer.files[0]);
+                                    reader.readAsDataURL(file);
                                 }
                             }}
                         >
                             {selectedImage ? (
-                                <div className="absolute inset-0 w-full h-full p-4">
-                                    <div className="relative w-full h-full rounded-xl overflow-hidden border border-gray-200 shadow-sm">
-                                        <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" />
+                                <div className="relative flex w-full justify-center">
+                                    <div className="relative">
+                                        <img src={selectedImage} alt="Preview" className="w-full max-w-sm h-auto max-h-80 object-contain rounded-xl shadow-sm border border-gray-200 bg-white" />
                                         <button 
-                                            onClick={() => setSelectedImage(null)}
-                                            className="absolute top-4 right-4 bg-white/90 text-red-500 p-2 rounded-full shadow hover:bg-red-50 hover:text-red-600 transition-colors"
+                                            type="button"
+                                            onClick={(e) => { e.preventDefault(); setSelectedImage(null); setData('prescription_file', null); }}
+                                            className="absolute -top-3 -right-3 z-10 bg-red-50 text-red-600 p-1.5 rounded-full shadow-md border-2 border-white hover:bg-red-100 hover:text-red-700 transition-colors"
                                         >
-                                            <X size={20} />
+                                            <X size={18} />
                                         </button>
                                     </div>
                                 </div>
