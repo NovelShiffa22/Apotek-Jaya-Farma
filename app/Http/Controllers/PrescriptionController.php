@@ -42,13 +42,13 @@ class PrescriptionController extends Controller
             $kodeResep = 'RX-' . mt_rand(100000, 999999);
         } while (Prescription::where('kode_resep', $kodeResep)->exists());
 
-        Prescription::create([
+        $prescription = Prescription::create([
             'user_id' => auth()->id(),
             'kode_resep' => $kodeResep,
             'file_foto' => 'storage/' . $path,
             'status_validasi' => 'pending'
         ]);
 
-        return redirect()->route('prescriptions.index')->with('success', 'Resep berhasil diunggah! Mohon tunggu proses verifikasi dari apoteker.');
+        return redirect()->route('prescriptions.upload.step3', ['id' => $prescription->id])->with('success', 'Resep berhasil diunggah! Mohon tunggu proses verifikasi dari apoteker.');
     }
 }
