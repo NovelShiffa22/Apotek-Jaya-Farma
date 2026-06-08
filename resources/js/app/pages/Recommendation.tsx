@@ -191,7 +191,7 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} method="POST" className="space-y-6">
                 <div>
                   <label className="font-['Inter',sans-serif] text-[12px] font-bold text-[#6e7a70] tracking-wider uppercase block mb-3">
                     USIA (TAHUN)

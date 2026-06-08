@@ -24,6 +24,7 @@ Route::get('/products/{id}', [ProductController::class, 'show'])->name('products
 Route::get('/recommendation', [RecommendationController::class, 'index'])->name('rekomendasi.index');
 // Memproses kueri data gejala & menghitung skor rekomendasi obat
 Route::post('/rekomendasi/proses', [RecommendationController::class, 'process'])->name('rekomendasi.process');
+Route::get('/rekomendasi/proses', function() { return redirect()->route('rekomendasi.index'); });
 
 
 // Rute Transaksi & Keranjang
