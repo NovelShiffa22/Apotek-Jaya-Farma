@@ -27,7 +27,12 @@ export default function UploadStep2() {
 
     const handleKirim = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('prescriptions.store'), { forceFormData: true });
+        post(route('prescriptions.store'), { 
+            forceFormData: true,
+            onSuccess: (page) => console.log('Sukses:', page),
+            onError: (errors) => console.log('Error Validasi Frontend:', errors),
+            onFinish: () => console.log('Selesai memproses request')
+        });
     };
 
     return (
