@@ -27,7 +27,7 @@ export default function UploadStep2() {
 
     const handleKirim = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('prescriptions.store'));
+        post(route('prescriptions.store'), { forceFormData: true });
     };
 
     return (
@@ -132,6 +132,11 @@ export default function UploadStep2() {
                                     <p className="mt-6 font-['Poppins',sans-serif] text-[12px] font-medium text-gray-400">
                                         Format: JPG, PNG, PDF (Maks. 5MB)
                                     </p>
+                                    {errors.prescription_file && (
+                                        <p className="mt-2 font-['Poppins',sans-serif] text-[13px] font-bold text-red-500 bg-red-50 px-4 py-2 rounded-lg">
+                                            {errors.prescription_file}
+                                        </p>
+                                    )}
                                 </>
                             )}
                         </div>

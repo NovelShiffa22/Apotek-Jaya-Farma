@@ -27,7 +27,7 @@ class PrescriptionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'prescription_file' => 'required|mimes:jpg,jpeg,png,pdf|max:2048'
+            'prescription_file' => 'required|mimes:jpg,jpeg,png,pdf|max:5120'
         ]);
 
         $file = $request->file('prescription_file');
