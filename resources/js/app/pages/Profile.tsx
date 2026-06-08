@@ -1,18 +1,46 @@
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
-import { User, MapPin, Package, LogOut, X } from 'lucide-react';
-import { usePage, Link } from '@inertiajs/react';
+import { User, MapPin, Package, LogOut, X, CheckCircle2 } from 'lucide-react';
+import { usePage, Link, useForm, router } from '@inertiajs/react';
 
-
-
-export default function Profile() {
-  const { auth, orders = [] } = usePage().props as any;
-  const user = auth?.user;
+export default function Profile({ user, orders = [], addresses = [] }: any) {
   const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders'>('profile');
   const [orderTab, setOrderTab] = useState<string>('Pending');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
+
+  const { data: formAddress, setData: setFormAddress, post: postAddress, processing: processingAddress, reset: resetAddress } = useForm({
+    label: '',
+    alamat_lengkap: '',
+    kota: '',
+    provinsi: '',
+    kode_pos: '',
+    is_default: false,
+  });
+
+  const submitAddress = (e: React.FormEvent) => {
+    e.preventDefault();
+    postAddress(route('address.store'), {
+      onSuccess: () => {
+        setIsAddressModalOpen(false);
+        resetAddress();
+      }
+    });
+  };
+
+  const setUtama = (id: number) => {
+    router.patch(route('address.set_utama', id), {}, {
+      onSuccess: () => {
+        const params = new URLSearchParams(window.location.search);
+        const redirectUrl = params.get('redirect');
+        if (redirectUrl) {
+          router.visit(redirectUrl);
+        }
+      }
+    });
+  };
 
   const toggleExpandOrder = (orderId: number) => {
     setExpandedOrders(prev => 
@@ -22,9 +50,12 @@ export default function Profile() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('tab') === 'orders') {
-      setActiveTab('orders');
-      if (params.get('status')) {
+    if (params.get('tab')) {
+      const tabParam = params.get('tab') as 'profile' | 'address' | 'orders';
+      if (['profile', 'address', 'orders'].includes(tabParam)) {
+        setActiveTab(tabParam);
+      }
+      if (tabParam === 'orders' && params.get('status')) {
         setOrderTab(params.get('status') as string);
       }
     }
@@ -136,25 +167,62 @@ export default function Profile() {
 
             {activeTab === 'address' && (
               <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
-                <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-8 font-semibold">
-                  Alamat Pengiriman
-                </h2>
-                <div className="bg-[#f9fafb] rounded-xl p-6 border border-[#f1f5f9] mb-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <p className="font-['Roboto_Condensed',sans-serif] text-[18px] text-[#171d19] font-semibold">
-                      Alamat Utama
-                    </p>
-                    <span className="px-3 py-1 bg-[#006a3f] text-white rounded-full font-['Inter',sans-serif] text-[11px] font-bold tracking-wider uppercase">
-                      Utama
-                    </span>
-                  </div>
-                  <p className="font-['Inter',sans-serif] text-[14px] text-[#3e4a41] leading-relaxed">
-                    Jl. Merdeka No. 123, Kelurahan Sudirman<br />
-                    Kecamatan Menteng, Jakarta Pusat<br />
-                    DKI Jakarta, 10110
-                  </p>
+                <div className="flex justify-between items-center mb-8">
+                  <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] font-semibold">
+                    Alamat Pengiriman
+                  </h2>
+                  {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('redirect') && (
+                    <Link 
+                      href={new URLSearchParams(window.location.search).get('redirect') as string}
+                      className="flex items-center gap-2 text-[14px] font-bold text-[#006a3f] bg-emerald-50 px-4 py-2.5 rounded-xl hover:bg-emerald-100 transition-colors"
+                    >
+                      <CheckCircle2 size={18} />
+                      Selesai & Kembali
+                    </Link>
+                  )}
                 </div>
-                <button className="font-['Inter',sans-serif] text-[14px] font-bold text-[#006a3f] hover:text-[#005632] transition-colors">
+                
+                {addresses.length === 0 ? (
+                  <div className="bg-[#f9fafb] rounded-xl p-8 border border-[#f1f5f9] mb-6 text-center">
+                    <MapPin className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                    <p className="font-['Inter',sans-serif] text-[15px] text-gray-500">Anda belum menambahkan alamat pengiriman.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 mb-6">
+                    {addresses.map((address: any) => (
+                      <div key={address.id} className={`bg-[#f9fafb] rounded-xl p-6 border ${address.is_default ? 'border-[#006a3f]' : 'border-[#f1f5f9]'}`}>
+                        <div className="flex items-start justify-between mb-3">
+                          <p className="font-['Roboto_Condensed',sans-serif] text-[18px] text-[#171d19] font-semibold flex items-center gap-2">
+                            {address.label}
+                            {address.is_default && (
+                              <span className="px-3 py-1 bg-[#006a3f] text-white rounded-full font-['Inter',sans-serif] text-[11px] font-bold tracking-wider uppercase">
+                                Utama
+                              </span>
+                            )}
+                          </p>
+                          {!address.is_default && (
+                            <button 
+                              onClick={() => setUtama(address.id)}
+                              className="font-['Inter',sans-serif] text-[12px] font-medium px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              Jadikan Utama
+                            </button>
+                          )}
+                        </div>
+                        <p className="font-['Inter',sans-serif] text-[14px] text-[#3e4a41] leading-relaxed">
+                          {address.alamat_lengkap}<br />
+                          {address.kota}, {address.provinsi}<br />
+                          Kode Pos: {address.kode_pos}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                <button 
+                  onClick={() => setIsAddressModalOpen(true)}
+                  className="font-['Inter',sans-serif] text-[14px] font-bold text-[#006a3f] hover:text-[#005632] transition-colors"
+                >
                   + Tambah Alamat Baru
                 </button>
               </div>
@@ -166,7 +234,6 @@ export default function Profile() {
                   Riwayat Pesanan
                 </h2>
                 
-                {/* Sub-tabs */}
                 <div className="flex gap-6 mb-8 border-b border-[#f1f5f9]">
                   {[
                     { id: 'Pending', label: 'Belum Bayar' },
@@ -220,7 +287,6 @@ export default function Profile() {
                           </div>
                         </div>
 
-                        {/* Product Snapshot (Shopee Style) */}
                         {order.items && order.items.length > 0 && (
                           <div className="py-4">
                             <Link href={`/product/${order.items[0].id || order.items[0].product_id || 1}`} className="flex items-start gap-4 group">
@@ -264,7 +330,6 @@ export default function Profile() {
                               </div>
                             )}
 
-                            {/* Render sisa produk jika di-expand */}
                             {expandedOrders.includes(order.id) && order.items.length > 1 && (
                               <div className="mt-4 pt-4 border-t border-dashed border-gray-200 space-y-4 animate-fade-in">
                                 {order.items.slice(1).map((item: any, idx: number) => (
@@ -300,7 +365,6 @@ export default function Profile() {
                           </div>
                         )}
 
-                        {/* Footer Card */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-4 border-t border-[#f1f5f9] gap-4 mt-2">
                           <div className="text-right sm:text-left">
                             <span className="font-['Inter',sans-serif] text-[13px] text-gray-500 mr-2">Total Pesanan:</span>
@@ -332,7 +396,7 @@ export default function Profile() {
         </div>
       </main>
 
-      {/* Modal Pop-up Detail */}
+      {/* Modal Detail */}
       {isModalOpen && selectedOrder && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all scale-100">
@@ -340,15 +404,11 @@ export default function Profile() {
               <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-[#171d19]">
                 Rincian Pesanan #{selectedOrder.va_number || selectedOrder.id}
               </h3>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-red-500 transition-colors p-1"
-              >
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors p-1">
                 <X size={22} strokeWidth={2.5} />
               </button>
             </div>
-            <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-              
+            <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
               <div>
                 <h4 className="font-['Inter',sans-serif] text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-3">Daftar Item</h4>
                 <div className="space-y-4">
@@ -363,7 +423,6 @@ export default function Profile() {
                   ))}
                 </div>
               </div>
-
               <div className="border-t border-gray-100 pt-5 space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">Metode Pembayaran</span>
@@ -378,27 +437,106 @@ export default function Profile() {
                   <span className="font-['Poppins',sans-serif] text-[18px] font-black text-[#006a3f]">Rp {Number(selectedOrder.total_amount || 0).toLocaleString('id-ID')}</span>
                 </div>
               </div>
-
-              <div className={`border rounded-xl p-5 ${selectedOrder.status === 'Pending' ? 'bg-amber-50 border-amber-100' : 'bg-emerald-50 border-emerald-100'}`}>
-                <h4 className={`font-['Inter',sans-serif] text-[12px] font-bold uppercase tracking-wider mb-1.5 ${selectedOrder.status === 'Pending' ? 'text-amber-700' : 'text-emerald-700'}`}>Status Pelacakan</h4>
-                <p className={`font-['Inter',sans-serif] text-[14px] font-medium leading-relaxed ${selectedOrder.status === 'Pending' ? 'text-amber-800' : 'text-emerald-800'}`}>
-                  {selectedOrder.status === 'Pending' ? 'Belum Bayar (Menunggu pembayaran Anda)' : 'Diproses (Apotek sedang menyiapkan obat Anda)'}
-                </p>
-              </div>
-
             </div>
             <div className="p-5 border-t border-gray-100 bg-white flex justify-end">
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="bg-white border-2 border-gray-200 text-gray-700 px-8 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
-              >
-                Tutup
-              </button>
+              <button onClick={() => setIsModalOpen(false)} className="bg-white border-2 border-gray-200 text-gray-700 px-8 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-gray-50 transition-all">Tutup</button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Modal Tambah Alamat */}
+      {isAddressModalOpen && (
+        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all scale-100">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-[#171d19]">
+                Tambah Alamat Baru
+              </h3>
+              <button 
+                onClick={() => { setIsAddressModalOpen(false); resetAddress(); }}
+                className="text-gray-400 hover:text-red-500 transition-colors p-1"
+              >
+                <X size={22} strokeWidth={2.5} />
+              </button>
+            </div>
+            <form onSubmit={submitAddress} className="p-6 space-y-4">
+              <div>
+                <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Label Alamat (Misal: Rumah, Kantor)</label>
+                <input 
+                  type="text" 
+                  value={formAddress.label}
+                  onChange={e => setFormAddress('label', e.target.value)}
+                  className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Alamat Lengkap</label>
+                <textarea 
+                  value={formAddress.alamat_lengkap}
+                  onChange={e => setFormAddress('alamat_lengkap', e.target.value)}
+                  className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                  rows={3}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Kota</label>
+                  <input 
+                    type="text" 
+                    value={formAddress.kota}
+                    onChange={e => setFormAddress('kota', e.target.value)}
+                    className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Provinsi</label>
+                  <input 
+                    type="text" 
+                    value={formAddress.provinsi}
+                    onChange={e => setFormAddress('provinsi', e.target.value)}
+                    className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Kode Pos</label>
+                <input 
+                  type="text" 
+                  value={formAddress.kode_pos}
+                  onChange={e => setFormAddress('kode_pos', e.target.value)}
+                  className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                  required
+                />
+              </div>
+              <div className="flex items-center gap-3 pt-2">
+                <input 
+                  type="checkbox" 
+                  id="is_default"
+                  checked={formAddress.is_default}
+                  onChange={e => setFormAddress('is_default', e.target.checked)}
+                  className="w-5 h-5 rounded border-gray-300 text-[#006a3f] focus:ring-[#006a3f]"
+                />
+                <label htmlFor="is_default" className="font-['Inter',sans-serif] text-[14px] text-gray-700">Jadikan alamat utama</label>
+              </div>
+              
+              <div className="pt-6">
+                <button 
+                  type="submit" 
+                  disabled={processingAddress}
+                  className="w-full py-4 bg-[#006a3f] hover:bg-[#005632] text-white rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium tracking-wide transition-colors"
+                >
+                  {processingAddress ? 'Menyimpan...' : 'Simpan Alamat'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { FilePlus, MapPin, X, Image as ImageIcon, ArrowLeft } from 'lucide-react
 import { useState, useRef } from 'react';
 import Header from '../../components/Header';
 
-export default function UploadStep2() {
+export default function UploadStep2({ defaultAddress }: any) {
     const [dragActive, setDragActive] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -167,25 +167,35 @@ export default function UploadStep2() {
                                 <h3 className="font-['Poppins',sans-serif] text-[16px] font-bold text-[#171d19]">
                                     Alamat Pengiriman
                                 </h3>
-                                <button className="font-['Poppins',sans-serif] text-[13px] font-semibold text-[#006a3f] hover:underline">
+                                <Link 
+                                    href={route('profile', { tab: 'address', redirect: '/prescriptions/upload/step-2' })}
+                                    className="font-['Poppins',sans-serif] text-[13px] font-semibold text-[#006a3f] hover:underline"
+                                >
                                     Ubah
-                                </button>
+                                </Link>
                             </div>
 
                             <div className="rounded-xl border-2 border-emerald-100 bg-emerald-50/30 p-4">
                                 <div className="mb-2 flex items-center gap-2">
                                     <MapPin size={16} className="text-[#006a3f]" />
-                                    <span className="font-['Poppins',sans-serif] text-[11px] font-bold uppercase tracking-wider text-[#006a3f]">Utama</span>
+                                    <span className="font-['Poppins',sans-serif] text-[11px] font-bold uppercase tracking-wider text-[#006a3f]">
+                                        {defaultAddress ? 'Utama' : 'Info'}
+                                    </span>
                                 </div>
-                                <p className="mb-1 font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">
-                                    Rumah (Bapak Ahmad)
-                                </p>
-                                <p className="mb-3 font-['Poppins',sans-serif] text-[13px] leading-relaxed text-gray-600">
-                                    Jl. Melati No. 45, Kompleks Griya Indah, Kel. Sukamaju, Kec. Serpong, Tangerang Selatan, Banten 15310
-                                </p>
-                                <p className="font-['Poppins',sans-serif] text-[12px] text-gray-400">
-                                    0812-3456-7890
-                                </p>
+                                {defaultAddress ? (
+                                    <>
+                                        <p className="mb-1 font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">
+                                            {defaultAddress.label}
+                                        </p>
+                                        <p className="mb-3 font-['Poppins',sans-serif] text-[13px] leading-relaxed text-gray-600">
+                                            {defaultAddress.alamat_lengkap}, {defaultAddress.kota}, {defaultAddress.provinsi} {defaultAddress.kode_pos}
+                                        </p>
+                                    </>
+                                ) : (
+                                    <p className="font-['Poppins',sans-serif] text-[13px] text-gray-600">
+                                        Belum ada alamat pengiriman. Silakan tambahkan alamat di menu Profil Anda.
+                                    </p>
+                                )}
                             </div>
                         </div>
 

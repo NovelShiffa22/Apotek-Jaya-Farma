@@ -38,7 +38,13 @@ Route::get('/notifications', function () {
 Route::prefix('prescriptions')->name('prescriptions.')->group(function () {
     Route::get('/', [\App\Http\Controllers\PrescriptionController::class, 'index'])->middleware('auth')->name('index');
     Route::get('/upload/step-1', function() { return Inertia::render('Prescriptions/UploadStep1'); })->name('upload.step1');
-    Route::get('/upload/step-2', function() { return Inertia::render('Prescriptions/UploadStep2'); })->name('upload.step2');
+    Route::get('/upload/step-2', function() { 
+        $defaultAddress = \App\Models\Address::where('user_id', auth()->id())->where('is_default', true)->first() 
+                       ?? \App\Models\Address::where('user_id', auth()->id())->first();
+        return Inertia::render('Prescriptions/UploadStep2', [
+            'defaultAddress' => $defaultAddress
+        ]); 
+    })->name('upload.step2');
     Route::get('/upload/step-3', function() { return Inertia::render('Prescriptions/UploadStep3'); })->name('upload.step3');
     Route::get('/{id}', [\App\Http\Controllers\PrescriptionController::class, 'show'])->name('detail');
     Route::post('/', [\App\Http\Controllers\PrescriptionController::class, 'store'])->middleware('auth')->name('store');
@@ -56,10 +62,17 @@ Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remov
 
 Route::get('/profile', function () {
     $orders = \App\Models\VirtualTransaction::where('user_id', auth()->id())->latest()->get();
+    $addresses = \App\Models\Address::where('user_id', auth()->id())->latest()->get();
     return Inertia::render('Profile', [
-        'orders' => $orders
+        'orders' => $orders,
+        'addresses' => $addresses
     ]);
-})->middleware(['auth', 'role:user']);
+})->middleware(['auth', 'role:user'])->name('profile');
+
+Route::middleware(['auth', 'role:user'])->group(function () {
+    Route::post('/profile/address', [\App\Http\Controllers\ProfileController::class, 'storeAlamat'])->name('address.store');
+    Route::patch('/profile/address/{id}/utama', [\App\Http\Controllers\ProfileController::class, 'setUtama'])->name('address.set_utama');
+});
 
 // Ruang Portal Kerja Manajemen (Dashboard)
 Route::middleware(['auth', 'role:pharmacist'])->group(function () {

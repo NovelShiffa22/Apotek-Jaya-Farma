@@ -60,4 +60,55 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+    /**
+     * Menyimpan alamat baru.
+     */
+    public function storeAlamat(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'label' => 'required|string|max:255',
+            'alamat_lengkap' => 'required|string',
+            'kota' => 'required|string',
+            'provinsi' => 'required|string',
+            'kode_pos' => 'required|string|max:10',
+        ]);
+
+        $is_default = $request->input('is_default', false);
+
+        // Jika ini alamat pertama atau user mencentang sebagai utama, jadikan utama
+        if ($is_default || \App\Models\Address::where('user_id', auth()->id())->count() === 0) {
+            \App\Models\Address::where('user_id', auth()->id())->update(['is_default' => false]);
+            $is_default = true;
+        }
+
+        \App\Models\Address::create([
+            'user_id' => auth()->id(),
+            'label' => $request->label,
+            'alamat_lengkap' => $request->alamat_lengkap,
+            'kota' => $request->kota,
+            'provinsi' => $request->provinsi,
+            'kode_pos' => $request->kode_pos,
+            'is_default' => $is_default,
+        ]);
+
+        return redirect()->back()->with('success', 'Alamat berhasil ditambahkan.');
+    }
+
+    /**
+     * Mengatur alamat sebagai utama.
+     */
+    public function setUtama($id): RedirectResponse
+    {
+        $address = \App\Models\Address::where('user_id', auth()->id())->findOrFail($id);
+        
+        // Matikan semua alamat utama user ini
+        \App\Models\Address::where('user_id', auth()->id())->update(['is_default' => false]);
+        
+        // Jadikan alamat yang dipilih sebagai utama
+        $address->update(['is_default' => true]);
+
+        return redirect()->back()->with('success', 'Alamat utama berhasil diperbarui.');
+    }
 }
+
