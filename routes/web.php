@@ -55,7 +55,7 @@ Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update')
 Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remove');
 
 Route::get('/profile', function () {
-    $orders = \App\Models\VirtualTransaction::where('user_id', auth()->id())->latest()->get();
+    $orders = \App\Models\Order::where('user_id', auth()->id())->with('products')->latest()->get();
     return Inertia::render('Profile', [
         'orders' => $orders
     ]);
