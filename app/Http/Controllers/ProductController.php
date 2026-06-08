@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
+use App\Models\Symptom;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -14,14 +16,48 @@ class ProductController extends Controller
     /**
      * Menampilkan daftar semua produk beserta kategorinya.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Mengambil data produk beserta relasi kategorinya
-        // Anda juga bisa menambahkan ->where('is_active', true) jika hanya ingin produk yang aktif
-        $products = Product::with('category')->get();
+        $categories = Category::all();
+        $symptoms = Symptom::all();
+
+        $catQuery = $request->input('category');
+        $symQuery = $request->input('symptoms');
+        $searchQuery = $request->input('search');
+
+        $products = Product::with(['category', 'symptoms'])
+            ->when($catQuery && $catQuery !== 'all', function ($q) use ($catQuery) {
+                $q->whereHas('category', function ($q) use ($catQuery) {
+                    $q->where('slug', $catQuery);
+                });
+            })
+            ->when($symQuery, function ($q) use ($symQuery) {
+                $symArray = is_array($symQuery) ? $symQuery : explode(',', $symQuery);
+                $q->whereHas('symptoms', function ($q) use ($symArray) {
+                    $q->whereIn('slug', $symArray);
+                });
+            })
+            ->when($searchQuery, function ($q) use ($searchQuery) {
+                $q->where('nama_obat', 'like', '%' . $searchQuery . '%');
+            })
+            ->get();
 
         return Inertia::render('Catalog', [
-            'products' => $products
+            'products' => $products,
+            'masterCategories' => $categories,
+            'masterSymptoms' => $symptoms,
+            'filters' => $request->all(),
+        ]);
+    }
+
+    /**
+     * Menampilkan detail spesifik dari sebuah produk.
+     */
+    public function show($id)
+    {
+        $product = Product::with('category')->findOrFail($id);
+        return Inertia::render('ProductDetail', [
+            'product' => $product
         ]);
     }
 

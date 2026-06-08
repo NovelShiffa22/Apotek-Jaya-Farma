@@ -37,6 +37,10 @@ class HandleInertiaRequests extends Middleware
             'cartCount' => function () {
                 return count(session()->get('cart', []));
             },
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+            ],
         ];
     }
 }

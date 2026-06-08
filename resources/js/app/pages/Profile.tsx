@@ -3,17 +3,13 @@ import Header from '../components/Header';
 import { User, MapPin, Package, LogOut } from 'lucide-react';
 import { usePage, Link } from '@inertiajs/react';
 
-const orderHistory = [
-  { id: 'ORD-001', date: '2026-04-25', total: 45000, status: 'selesai' },
-  { id: 'ORD-002', date: '2026-04-27', total: 125000, status: 'dikirim' },
-  { id: 'ORD-003', date: '2026-04-28', total: 30000, status: 'disiapkan' },
-  { id: 'ORD-004', date: '2026-04-29', total: 85000, status: 'diproses' },
-];
+
 
 export default function Profile() {
-  const { auth } = usePage().props as any;
+  const { auth, orders = [] } = usePage().props as any;
   const user = auth?.user;
   const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders'>('profile');
+  const [orderTab, setOrderTab] = useState<'Pending' | 'Lunas'>('Pending');
 
   const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
     diproses: { label: 'Diproses', bg: 'bg-amber-50', text: 'text-amber-700' },
@@ -144,43 +140,120 @@ export default function Profile() {
 
             {activeTab === 'orders' && (
               <div>
-                <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-8 font-semibold">
+                <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-6 font-semibold">
                   Riwayat Pesanan
                 </h2>
+                
+                {/* Sub-tabs */}
+                <div className="flex gap-4 mb-8 border-b border-[#f1f5f9]">
+                  <button
+                    onClick={() => setOrderTab('Pending')}
+                    className={`pb-3 px-2 font-['Inter',sans-serif] text-[15px] font-bold transition-all border-b-2 ${
+                      orderTab === 'Pending' ? 'border-[#006a3f] text-[#006a3f]' : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Belum Bayar
+                  </button>
+                  <button
+                    onClick={() => setOrderTab('Lunas')}
+                    className={`pb-3 px-2 font-['Inter',sans-serif] text-[15px] font-bold transition-all border-b-2 ${
+                      orderTab === 'Lunas' ? 'border-[#006a3f] text-[#006a3f]' : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Diproses
+                  </button>
+                </div>
+
                 <div className="space-y-4">
-                  {orderHistory.map(order => {
-                    const config = statusConfig[order.status];
+                  {orders.filter((o: any) => o.status === orderTab).length === 0 ? (
+                    <div className="bg-gray-50 p-8 rounded-2xl text-center text-gray-500 border border-gray-100 font-medium">
+                      Tidak ada pesanan di kategori ini.
+                    </div>
+                  ) : orders.filter((o: any) => o.status === orderTab).map((order: any) => {
+                    const isPending = order.status === 'Pending';
                     return (
                       <div
                         key={order.id}
                         className="bg-white rounded-2xl p-6 border border-[#f1f5f9] shadow-[0_4px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all"
                       >
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start justify-between mb-2">
                           <div>
-                            <p className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#171d19] mb-2 font-semibold">
-                              {order.id}
+                            <p className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#171d19] mb-1 font-semibold">
+                              VA: {order.va_number}
                             </p>
                             <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
-                              {new Date(order.date).toLocaleDateString('id-ID', {
+                              {new Date(order.created_at).toLocaleDateString('id-ID', {
                                 day: 'numeric',
                                 month: 'long',
                                 year: 'numeric'
-                              })}
+                              })} • {order.payment_method}
                             </p>
                           </div>
-                          <div className={`${config.bg} px-4 py-2 rounded-full`}>
-                            <p className={`font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase ${config.text}`}>
-                              {config.label}
+                          <div className={`${isPending ? 'bg-amber-50' : 'bg-emerald-50'} px-4 py-2 rounded-full`}>
+                            <p className={`font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase ${isPending ? 'text-amber-700' : 'text-emerald-700'}`}>
+                              {isPending ? 'Belum Bayar' : 'Lunas'}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between pt-4 border-t border-[#f1f5f9]">
-                          <p className="font-['Roboto_Condensed',sans-serif] text-[18px] text-[#171d19] font-semibold">
-                            Total: Rp {order.total.toLocaleString('id-ID')}
-                          </p>
-                          <button className="font-['Inter',sans-serif] text-[14px] font-bold text-[#006a3f] hover:text-[#005632] transition-colors">
-                            Lihat Detail →
-                          </button>
+
+                        {/* Product Snapshot (Shopee Style) */}
+                        {order.items && order.items.length > 0 && (
+                          <div className="py-4">
+                            <Link href={`/product/${order.items[0].id || order.items[0].product_id || 1}`} className="flex items-start gap-4 group">
+                              <div className="w-20 h-20 bg-gray-100 rounded-xl border border-gray-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                {order.items[0].foto || order.items[0].image ? (
+                                  <img 
+                                    src={order.items[0].foto || order.items[0].image} 
+                                    alt={order.items[0].nama || order.items[0].name} 
+                                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-1" 
+                                  />
+                                ) : (
+                                  <Package size={28} className="text-gray-400 group-hover:scale-105 transition-transform duration-300" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0 mt-1">
+                                <h3 className="font-['Poppins',sans-serif] text-[15px] font-bold text-[#171d19] group-hover:text-[#006a3f] transition-colors truncate">
+                                  {order.items[0].nama || order.items[0].name || 'Produk Farmasi'}
+                                </h3>
+                                <p className="font-['Inter',sans-serif] text-[13px] text-gray-500 mt-1">
+                                  x{order.items[0].quantity || 1}
+                                </p>
+                              </div>
+                              <div className="text-right mt-1">
+                                <p className="font-['Inter',sans-serif] text-[14px] text-[#171d19] font-medium">
+                                  Rp {Number(order.items[0].harga || order.items[0].price || 0).toLocaleString('id-ID')}
+                                </p>
+                              </div>
+                            </Link>
+                            
+                            {order.items.length > 1 && (
+                              <div className="mt-3 pl-[96px]">
+                                <p className="font-['Inter',sans-serif] text-[13px] text-gray-500">
+                                  Lihat +{order.items.length - 1} produk lainnya
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Footer Card */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-4 border-t border-[#f1f5f9] gap-4 mt-2">
+                          <div className="text-right sm:text-left">
+                            <span className="font-['Inter',sans-serif] text-[13px] text-gray-500 mr-2">Total Pesanan:</span>
+                            <span className="font-['Poppins',sans-serif] text-[18px] text-[#006a3f] font-bold">
+                              Rp {Number(order.total_amount).toLocaleString('id-ID')}
+                            </span>
+                          </div>
+                          <div className="flex gap-3 justify-end">
+                            <button className="font-['Inter',sans-serif] text-[14px] font-bold text-gray-600 hover:text-gray-900 border border-gray-200 px-5 py-2.5 rounded-xl transition-colors hover:bg-gray-50">
+                              Lihat Detail
+                            </button>
+                            {isPending && (
+                              <Link href={`/invoice/${order.id}`} className="bg-[#006a3f] text-white px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-[#005632] shadow-sm hover:shadow-md transition-all whitespace-nowrap">
+                                Bayar Sekarang
+                              </Link>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );

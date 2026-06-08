@@ -1,5 +1,5 @@
-import { Link, router } from '@inertiajs/react';
-import { FilePlus, MapPin, X, Image as ImageIcon } from 'lucide-react';
+import { Link, router, useForm } from '@inertiajs/react';
+import { FilePlus, MapPin, X, Image as ImageIcon, ArrowLeft } from 'lucide-react';
 import { useState, useRef } from 'react';
 import Header from '../../components/Header';
 
@@ -8,29 +8,26 @@ export default function UploadStep2() {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const { data, setData, post, processing, errors } = useForm<{ prescription_file: File | null }>({
+        prescription_file: null,
+    });
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setData('prescription_file', file);
+            
             const reader = new FileReader();
             reader.onload = (e) => {
                 setSelectedImage(e.target?.result as string);
             };
-            reader.readAsDataURL(e.target.files[0]);
+            reader.readAsDataURL(file);
         }
     };
 
-    const handleKirim = () => {
-        const newId = `#RX-${Math.floor(Math.random() * 900000) + 100000}`;
-        const newPrescription = {
-            id: newId,
-            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            fileName: 'resep_baru_upload.png',
-            status: 'Verifikasi'
-        };
-
-        const existing = JSON.parse(localStorage.getItem('mock_prescriptions') || '[]');
-        localStorage.setItem('mock_prescriptions', JSON.stringify([newPrescription, ...existing]));
-
-        router.visit(route('prescriptions.upload.step3', { id: newId.replace('#', '') }));
+    const handleKirim = (e: React.FormEvent) => {
+        e.preventDefault();
+        post(route('prescriptions.store'), { forceFormData: true });
     };
 
     return (
@@ -38,6 +35,17 @@ export default function UploadStep2() {
             <Header />
             <main className="mx-auto max-w-5xl px-8 py-10">
                 
+                {/* Back Button */}
+                <div className="mb-6">
+                    <Link 
+                        href={route('prescriptions.upload.step1')}
+                        className="inline-flex items-center gap-2 font-['Poppins',sans-serif] text-[14px] font-medium text-gray-500 transition-colors hover:text-[#006a3f]"
+                    >
+                        <ArrowLeft size={18} />
+                        Kembali
+                    </Link>
+                </div>
+
                 {/* Stepper */}
                 <div className="mb-12 flex items-center justify-center">
                     <div className="flex items-center gap-4">
@@ -67,7 +75,7 @@ export default function UploadStep2() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-8">
+                <form onSubmit={handleKirim} method="POST" encType="multipart/form-data" className="grid grid-cols-3 gap-8">
                     {/* Left Column - Upload Box */}
                     <div className="col-span-2 rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
                         <h2 className="mb-2 font-['Poppins',sans-serif] text-xl font-bold text-[#171d19]">
@@ -78,28 +86,31 @@ export default function UploadStep2() {
                         </p>
 
                         <div 
-                            className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-16 transition-colors overflow-hidden ${dragActive ? 'border-[#006a3f] bg-emerald-50' : 'border-gray-200 bg-gray-50/50'}`}
+                            className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-12 transition-colors ${dragActive ? 'border-[#006a3f] bg-emerald-50' : 'border-gray-200 bg-gray-50/50'}`}
                             onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                             onDragLeave={() => setDragActive(false)}
                             onDrop={(e) => {
                                 e.preventDefault();
                                 setDragActive(false);
                                 if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                    const file = e.dataTransfer.files[0];
+                                    setData('prescription_file', file);
                                     const reader = new FileReader();
                                     reader.onload = (ev) => setSelectedImage(ev.target?.result as string);
-                                    reader.readAsDataURL(e.dataTransfer.files[0]);
+                                    reader.readAsDataURL(file);
                                 }
                             }}
                         >
                             {selectedImage ? (
-                                <div className="absolute inset-0 w-full h-full p-4">
-                                    <div className="relative w-full h-full rounded-xl overflow-hidden border border-gray-200 shadow-sm">
-                                        <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" />
+                                <div className="relative flex w-full justify-center">
+                                    <div className="relative">
+                                        <img src={selectedImage} alt="Preview" className="w-full max-w-sm h-auto max-h-80 object-contain rounded-xl shadow-sm border border-gray-200 bg-white" />
                                         <button 
-                                            onClick={() => setSelectedImage(null)}
-                                            className="absolute top-4 right-4 bg-white/90 text-red-500 p-2 rounded-full shadow hover:bg-red-50 hover:text-red-600 transition-colors"
+                                            type="button"
+                                            onClick={(e) => { e.preventDefault(); setSelectedImage(null); setData('prescription_file', null); }}
+                                            className="absolute -top-3 -right-3 z-10 bg-red-50 text-red-600 p-1.5 rounded-full shadow-md border-2 border-white hover:bg-red-100 hover:text-red-700 transition-colors"
                                         >
-                                            <X size={20} />
+                                            <X size={18} />
                                         </button>
                                     </div>
                                 </div>
@@ -107,6 +118,7 @@ export default function UploadStep2() {
                                 <>
                                     <input 
                                         type="file" 
+                                        name="prescription_file"
                                         className="hidden" 
                                         ref={fileInputRef} 
                                         accept="image/*,.pdf"
@@ -131,6 +143,11 @@ export default function UploadStep2() {
                                     <p className="mt-6 font-['Poppins',sans-serif] text-[12px] font-medium text-gray-400">
                                         Format: JPG, PNG, PDF (Maks. 5MB)
                                     </p>
+                                    {errors.prescription_file && (
+                                        <p className="mt-2 font-['Poppins',sans-serif] text-[13px] font-bold text-red-500 bg-red-50 px-4 py-2 rounded-lg">
+                                            {errors.prescription_file}
+                                        </p>
+                                    )}
                                 </>
                             )}
                         </div>
@@ -186,16 +203,17 @@ export default function UploadStep2() {
 
                             <div className="mt-8">
                                 <button 
-                                    onClick={handleKirim}
-                                    className="block w-full rounded-xl bg-[#006a3f] py-3.5 text-center font-['Poppins',sans-serif] text-[14px] font-bold text-white transition-all hover:bg-[#005632] hover:shadow-lg"
+                                    type="submit"
+                                    disabled={processing || !data.prescription_file}
+                                    className="block w-full rounded-xl bg-[#006a3f] py-3.5 text-center font-['Poppins',sans-serif] text-[14px] font-bold text-white transition-all hover:bg-[#005632] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Kirim Resep
+                                    {processing ? 'Memproses...' : 'Kirim Resep'}
                                 </button>
                             </div>
                         </div>
 
                     </div>
-                </div>
+                </form>
 
             </main>
         </div>

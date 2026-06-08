@@ -34,9 +34,8 @@ export default function ProductCard(props: ProductCardProps) {
   const config = categoryConfig[productCategory];
 
   return (
-    <div className="group bg-white rounded-2xl border border-[#f1f5f9] overflow-hidden hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-1">
-      {/* Product Image */}
-      <Link href={`/product/${id}`} className="block relative aspect-square bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9] overflow-hidden">
+    <div className="group rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] transition-all duration-300 border border-[#f1f5f9] flex flex-col h-full">
+      <Link href={`/products/${id}`} className="block relative aspect-square bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9] overflow-hidden rounded-xl">
         {productImage ? (
           <img
             src={productImage}
@@ -61,7 +60,7 @@ export default function ProductCard(props: ProductCardProps) {
       </Link>
 
       {/* Product Info */}
-      <div className="p-5">
+      <div className="p-3 flex flex-col flex-1">
         {/* Kategori Label Text (Opsional) */}
         {kategoriNama && (
            <p className="font-['Inter',sans-serif] text-[11px] font-semibold text-[#006a3f] uppercase tracking-wider mb-1.5">
@@ -69,7 +68,7 @@ export default function ProductCard(props: ProductCardProps) {
            </p>
         )}
         
-        <Link href={`/product/${id}`}>
+        <Link href={`/products/${id}`}>
           <h3 className="font-['Roboto_Condensed',sans-serif] font-normal text-[18px] text-[#171d19] tracking-[-0.3px] mb-1 min-h-[50px] leading-tight hover:text-[#006a3f] transition-colors">
             {productName}
           </h3>
@@ -83,7 +82,7 @@ export default function ProductCard(props: ProductCardProps) {
         )}
 
         {/* Price & CTA */}
-        <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center justify-between mt-auto pt-4">
           <div>
             <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70] uppercase tracking-wider mb-1">
               Harga
@@ -93,11 +92,11 @@ export default function ProductCard(props: ProductCardProps) {
             </p>
           </div>
 
-          <Link
-            href={`/product/${id}`}
-            className="bg-[#006a3f] hover:bg-[#005632] p-3 rounded-xl transition-all duration-300 hover:shadow-lg group/btn"
+          <Link 
+            href={`/products/${id}`}
+            className="w-full max-w-[120px] bg-[#006a3f] text-white py-3 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 hover:bg-[#005632]"
           >
-            <ShoppingCart className="w-5 h-5 text-white group-hover/btn:scale-110 transition-transform" />
+            <ShoppingCart className="w-5 h-5 text-white" />
           </Link>
         </div>
       </div>

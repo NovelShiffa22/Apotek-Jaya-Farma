@@ -1,12 +1,22 @@
 import { router } from '@inertiajs/react';
 import { Upload, ShoppingCart, ArrowLeft, Shield, Clock, Heart } from 'lucide-react';
 import Header from '../components/Header';
-import { products } from '../data/products';
 
-export default function ProductDetail({ id }: { id: string }) {
+export default function ProductDetail({ product }: { product: any }) {
   const navigate = (path: any) => typeof path === 'number' ? window.history.back() : router.visit(path);
-  const product = products.find(p => p.id === id) || products[0];
-  const isRestricted = product.category === 'keras' || product.category === 'terbatas';
+  const isRestricted = product.is_prescription_required;
+
+  const handleAddToCart = () => {
+    router.post('/cart/add', {
+      product_id: product.id,
+      quantity: 1
+    }, {
+      preserveScroll: true,
+      onSuccess: () => {
+        // success is handled by flash messages in UI if implemented, or just refresh
+      }
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
@@ -25,11 +35,17 @@ export default function ProductDetail({ id }: { id: string }) {
           {/* Product Image */}
           <div className="sticky top-32 self-start">
             <div className="bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9] rounded-2xl aspect-square flex items-center justify-center border border-[#e8e8e6] p-12 shadow-[0_8px_24px_rgba(0,0,0,0.06)] overflow-hidden group">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-700"
-              />
+              {product.gambar ? (
+                <img
+                  src={product.gambar}
+                  alt={product.nama_obat}
+                  className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-700"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-48 h-48 bg-gradient-to-br from-[#6b8e6f] to-[#8ba68e] rounded-full opacity-20" />
+                </div>
+              )}
             </div>
 
             {/* Trust Badges */}
@@ -53,31 +69,31 @@ export default function ProductDetail({ id }: { id: string }) {
           <div>
             <div className="mb-10">
               <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 ${
-                product.category === 'bebas' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                product.category === 'keras' ? 'bg-red-50 text-red-700 border border-red-200' :
+                product.jenis_obat === 'bebas' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                product.jenis_obat === 'keras' ? 'bg-red-50 text-red-700 border border-red-200' :
                 'bg-amber-50 text-amber-700 border border-amber-200'
               }`}>
                 <div className={`w-2 h-2 rounded-full ${
-                  product.category === 'bebas' ? 'bg-emerald-500' :
-                  product.category === 'keras' ? 'bg-red-500' :
+                  product.jenis_obat === 'bebas' ? 'bg-emerald-500' :
+                  product.jenis_obat === 'keras' ? 'bg-red-500' :
                   'bg-amber-500'
                 }`} />
                 <p className="font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase">
-                  {product.category === 'bebas' ? 'Obat Bebas' : product.category === 'keras' ? 'Obat Keras' : 'Obat Terbatas'}
+                  {product.jenis_obat === 'bebas' ? 'Obat Bebas' : product.jenis_obat === 'keras' ? 'Obat Keras' : 'Obat Terbatas'}
                 </p>
               </div>
 
               <h1 className="font-['Roboto_Condensed',sans-serif] font-light text-[56px] tracking-[-1.4px] text-[#171d19] leading-[1.1] mb-6">
-                {product.name}
+                {product.nama_obat}
               </h1>
 
               <p className="font-['Inter',sans-serif] text-[16px] text-[#3e4a41] mb-8 leading-relaxed max-w-[540px]">
-                {product.description}
+                {product.deskripsi}
               </p>
 
               <div className="flex items-baseline gap-3 mb-2">
                 <p className="font-['Roboto_Condensed',sans-serif] text-[48px] text-[#006a3f] font-semibold tracking-[-1px]">
-                  Rp {product.price.toLocaleString('id-ID')}
+                  Rp {Number(product.harga).toLocaleString('id-ID')}
                 </p>
                 <p className="font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">per box</p>
               </div>
@@ -97,8 +113,8 @@ export default function ProductDetail({ id }: { id: string }) {
                   <p className="font-['Inter',sans-serif] text-[11px] font-bold text-[#6e7a70] tracking-wider uppercase mb-2">
                     INDIKASI
                   </p>
-                  <p className="font-['Inter',sans-serif] text-[15px] text-[#171d19] leading-relaxed">
-                    Mengatasi demam dan meredakan nyeri ringan hingga sedang seperti sakit kepala, sakit gigi, dan nyeri otot.
+                  <p className="font-['Inter',sans-serif] text-[15px] text-[#171d19] leading-relaxed whitespace-pre-line">
+                    {product.indikasi || 'Tidak ada informasi indikasi.'}
                   </p>
                 </div>
 
@@ -106,8 +122,8 @@ export default function ProductDetail({ id }: { id: string }) {
                   <p className="font-['Inter',sans-serif] text-[11px] font-bold text-[#6e7a70] tracking-wider uppercase mb-2">
                     ATURAN PAKAI
                   </p>
-                  <p className="font-['Inter',sans-serif] text-[15px] text-[#171d19] leading-relaxed">
-                    Dewasa: 1-2 tablet setiap 4-6 jam. Maksimal 8 tablet per hari. Diminum sesudah makan.
+                  <p className="font-['Inter',sans-serif] text-[15px] text-[#171d19] leading-relaxed whitespace-pre-line">
+                    {product.aturan_pakai || 'Tidak ada informasi aturan pakai.'}
                   </p>
                 </div>
 
@@ -115,8 +131,8 @@ export default function ProductDetail({ id }: { id: string }) {
                   <p className="font-['Inter',sans-serif] text-[11px] font-bold text-[#6e7a70] tracking-wider uppercase mb-2">
                     EFEK SAMPING
                   </p>
-                  <p className="font-['Inter',sans-serif] text-[15px] text-[#171d19] leading-relaxed">
-                    Jarang terjadi. Dapat menyebabkan mual, muntah, atau reaksi alergi pada beberapa orang.
+                  <p className="font-['Inter',sans-serif] text-[15px] text-[#171d19] leading-relaxed whitespace-pre-line">
+                    {product.efek_samping || 'Belum ada data efek samping.'}
                   </p>
                 </div>
               </div>
@@ -133,12 +149,12 @@ export default function ProductDetail({ id }: { id: string }) {
                     </span>
                   </button>
                   <button
-                    onClick={() => navigate('/checkout')}
-                    className="w-full bg-[#006a3f] hover:bg-[#005632] px-8 py-5 rounded-xl hover:shadow-[0_12px_32px_rgba(0,106,63,0.3)] transition-all duration-300 hover:-translate-y-0.5 group"
+                    onClick={() => router.visit(`/prescriptions/upload/step-1?product_id=${product.id}`)}
+                    className="w-full bg-[#8B5cf6] hover:bg-[#7c3aed] px-8 py-5 rounded-xl hover:shadow-[0_12px_32px_rgba(139,92,246,0.3)] transition-all duration-300 hover:-translate-y-0.5 group"
                   >
                     <span className="font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] text-white flex items-center justify-center gap-3 font-medium">
                       <Upload size={20} className="group-hover:scale-110 transition-transform" />
-                      Upload Resep & Beli
+                      Unggah Resep Dokter
                     </span>
                   </button>
                   <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 flex items-start gap-3">
@@ -151,7 +167,7 @@ export default function ProductDetail({ id }: { id: string }) {
                   </div>
                 </>
               ) : (
-                <button className="w-full bg-[#006a3f] hover:bg-[#005632] px-8 py-5 rounded-xl hover:shadow-[0_12px_32px_rgba(0,106,63,0.3)] transition-all duration-300 hover:-translate-y-0.5 group">
+                <button onClick={handleAddToCart} className="w-full bg-[#006a3f] hover:bg-[#005632] px-8 py-5 rounded-xl hover:shadow-[0_12px_32px_rgba(0,106,63,0.3)] transition-all duration-300 hover:-translate-y-0.5 group">
                   <span className="font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] text-white flex items-center justify-center gap-3 font-medium">
                     <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
                     Tambah ke Keranjang

@@ -5,6 +5,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -17,9 +18,7 @@ Route::get('/', function () {
 
 Route::get('/catalog', [ProductController::class, 'index'])->name('catalog.index');
 
-Route::get('/product/{id}', function ($id) {
-    return Inertia::render('ProductDetail', ['id' => $id]);
-});
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 
 // Menampilkan halaman form input gejala
 Route::get('/recommendation', [RecommendationController::class, 'index'])->name('rekomendasi.index');
@@ -30,29 +29,35 @@ Route::post('/rekomendasi/proses', [RecommendationController::class, 'process'])
 // Rute Transaksi & Keranjang
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 
-Route::get('/checkout', function () {
-    return Inertia::render('Checkout');
-})->name('checkout.index');
-
-Route::get('/cart', function () {
-    return Inertia::render('Cart');
-})->name('cart.index');
-
 Route::get('/notifications', function () {
     return Inertia::render('Notifications');
 })->name('notifications.index');
 
 // Rute Simulasi Resep (FE)
 Route::prefix('prescriptions')->name('prescriptions.')->group(function () {
-    Route::get('/', function() { return Inertia::render('Prescriptions/Index'); })->name('index');
+    Route::get('/', [\App\Http\Controllers\PrescriptionController::class, 'index'])->middleware('auth')->name('index');
     Route::get('/upload/step-1', function() { return Inertia::render('Prescriptions/UploadStep1'); })->name('upload.step1');
     Route::get('/upload/step-2', function() { return Inertia::render('Prescriptions/UploadStep2'); })->name('upload.step2');
     Route::get('/upload/step-3', function() { return Inertia::render('Prescriptions/UploadStep3'); })->name('upload.step3');
     Route::get('/{id}', function($id) { return Inertia::render('Prescriptions/Detail', ['id' => $id]); })->name('detail');
+    Route::post('/', [\App\Http\Controllers\PrescriptionController::class, 'store'])->middleware('auth')->name('store');
 });
 
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout/proses', [CheckoutController::class, 'process'])->name('checkout.proses');
+
+Route::get('/invoice/{id}', [CheckoutController::class, 'invoice'])->name('order.invoice');
+Route::post('/invoice/{id}/simulasi-bayar', [CheckoutController::class, 'simulatePayment'])->name('order.simulate_payment');
+
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
+Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remove');
+
 Route::get('/profile', function () {
-    return Inertia::render('Profile');
+    $orders = \App\Models\VirtualTransaction::where('user_id', auth()->id())->latest()->get();
+    return Inertia::render('Profile', [
+        'orders' => $orders
+    ]);
 })->middleware(['auth', 'role:user']);
 
 // Ruang Portal Kerja Manajemen (Dashboard)

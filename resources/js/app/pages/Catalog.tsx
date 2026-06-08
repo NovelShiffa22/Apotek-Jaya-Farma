@@ -1,57 +1,74 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { router } from '@inertiajs/react';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
-// import { products } from '../data/products'; // Di-comment agar tidak bentrok dengan data database
 import { SlidersHorizontal } from 'lucide-react';
 
-export default function Catalog({ products = [] }: { products?: any[] }) {
+export default function Catalog({ 
+  products = [], 
+  masterCategories = [], 
+  masterSymptoms = [], 
+  filters = {} 
+}: { 
+  products?: any[];
+  masterCategories?: any[];
+  masterSymptoms?: any[];
+  filters?: any;
+}) {
   const searchParams = new URLSearchParams(window.location.search);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(['all']);
-  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-
   const searchQuery = searchParams.get('search') || '';
 
+  const initialCat = filters.category || 'all';
+  const initialSym = filters.symptoms ? (Array.isArray(filters.symptoms) ? filters.symptoms : filters.symptoms.split(',')) : [];
+
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([initialCat]);
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(initialSym);
+
+  // Dynamic categories mapped from backend
   const categories = [
     { id: 'all', label: 'Semua Produk' },
-    { id: 'vitamin', label: 'Vitamin & Suplemen' },
-    { id: 'ibu-anak', label: 'Ibu & Anak' },
-    { id: 'alat-kesehatan', label: 'Alat Kesehatan' },
-    { id: 'perawatan', label: 'Perawatan Tubuh' }
+    ...masterCategories.map(c => ({ id: c.slug, label: c.nama_kategori }))
   ];
 
-  const symptoms = [
-    'Demam', 'Batuk', 'Pilek', 'Sakit Kepala',
-    'Flu', 'Alergi', 'Mual', 'Diare'
-  ];
+  // Dynamic symptoms mapped from backend
+  const symptoms = masterSymptoms.map(s => s.nama_gejala);
+
+  const updateFilters = (cat: string[], sym: string[]) => {
+    router.get('/catalog', {
+      category: cat.includes('all') ? 'all' : cat[0], // for now single category select
+      symptoms: sym.join(','),
+      search: searchQuery
+    }, { preserveState: true, replace: true });
+  };
 
   const toggleCategory = (categoryId: string) => {
+    let newCats = ['all'];
     if (categoryId === 'all') {
-      setSelectedCategories(['all']);
+      newCats = ['all'];
     } else {
-      setSelectedCategories(prev => {
-        const filtered = prev.filter(c => c !== 'all');
-        if (prev.includes(categoryId)) {
-          const newCats = filtered.filter(c => c !== categoryId);
-          return newCats.length === 0 ? ['all'] : newCats;
-        } else {
-          return [...filtered, categoryId];
-        }
-      });
+      newCats = [categoryId]; // simplify to single select for category
     }
+    setSelectedCategories(newCats);
+    updateFilters(newCats, selectedSymptoms);
   };
 
   const toggleSymptom = (symptom: string) => {
-    setSelectedSymptoms(prev =>
-      prev.includes(symptom)
-        ? prev.filter(s => s !== symptom)
-        : [...prev, symptom]
-    );
+    // Find symptom slug to send to backend instead of label
+    const symObj = masterSymptoms.find(s => s.nama_gejala === symptom);
+    const symSlug = symObj ? symObj.slug : symptom;
+
+    let newSyms;
+    if (selectedSymptoms.includes(symSlug)) {
+      newSyms = selectedSymptoms.filter(s => s !== symSlug);
+    } else {
+      newSyms = [...selectedSymptoms, symSlug];
+    }
+    setSelectedSymptoms(newSyms);
+    updateFilters(selectedCategories, newSyms);
   };
 
-  const filteredProducts = products.filter((product: any) => {
-    const matchesSearch = product.nama_obat?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
+  // We no longer filter manually here because backend already filtered
+  const filteredProducts = products;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
@@ -138,7 +155,7 @@ export default function Catalog({ products = [] }: { products?: any[] }) {
                       key={symptom}
                       onClick={() => toggleSymptom(symptom)}
                       className={`px-3 py-1.5 rounded-full font-['Inter',sans-serif] text-[14px] transition-all ${
-                        selectedSymptoms.includes(symptom)
+                        selectedSymptoms.includes(masterSymptoms.find(s => s.nama_gejala === symptom)?.slug || symptom)
                           ? 'bg-[rgba(0,106,63,0.1)] text-[#006a3f] border border-[#006a3f]'
                           : 'bg-[#f9fafb] text-[#171d19] border border-[#e5e7eb] hover:border-[#006a3f]'
                       }`}
