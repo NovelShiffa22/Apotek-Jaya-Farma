@@ -10,59 +10,63 @@ import {
 } from 'lucide-react';
 import { useRef, useState } from 'react';
 
+interface Category {
+    id: number;
+    nama_kategori: string;
+}
+
 interface ProductFormData {
-    name: string;
-    sku: string;
-    category: string;
-    manufacturer: string;
-    buyPrice: string;
-    sellPrice: string;
-    initialStock: string;
-    unit: string;
-    description: string;
-    sideEffects: string;
-    expiryDate: string;
-    photo: File | null;
+    nama_obat: string;
+    category_id: string;
+    deskripsi: string;
+    jenis_obat: string;
+    indikasi: string;
+    aturan_pakai: string;
+    efek_samping: string;
+    harga: string;
+    stok: string;
+    stok_minimum: string;
+    gambar: File | null;
+    is_active: boolean;
 }
 
 interface CreateProductProps {
+    isOpen: boolean;
+    onClose: () => void;
     isEdit?: boolean;
-    initialData?: ProductFormData;
+    initialData?: any;
+    categories?: Category[];
 }
 
-export default function CreateProduct({ isEdit = false, initialData }: CreateProductProps) {
+export default function CreateProduct({ isOpen, onClose, isEdit = false, initialData, categories = [] }: CreateProductProps) {
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [dragActive, setDragActive] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { data, setData, post, put, errors, processing } = useForm<ProductFormData>({
-        name: initialData?.name || '',
-        sku: initialData?.sku || '',
-        category: initialData?.category || '',
-        manufacturer: initialData?.manufacturer || '',
-        buyPrice: initialData?.buyPrice || '',
-        sellPrice: initialData?.sellPrice || '',
-        initialStock: initialData?.initialStock || '',
-        unit: initialData?.unit || 'tablet',
-        description: initialData?.description || '',
-        sideEffects: initialData?.sideEffects || '',
-        expiryDate: initialData?.expiryDate || '',
-        photo: null,
+        nama_obat: initialData?.nama_obat || '',
+        category_id: initialData?.category_id || '',
+        deskripsi: initialData?.deskripsi || '',
+        jenis_obat: initialData?.jenis_obat || '',
+        indikasi: initialData?.indikasi || '',
+        aturan_pakai: initialData?.aturan_pakai || '',
+        efek_samping: initialData?.efek_samping || '',
+        harga: initialData?.harga || '',
+        stok: initialData?.stok || '',
+        stok_minimum: initialData?.stok_minimum || '10',
+        gambar: null,
+        is_active: initialData?.is_active ?? true,
     });
 
     // Calculate completion percentage
     const calculateProgress = () => {
         const fields = [
-            data.name,
-            data.sku,
-            data.category,
-            data.manufacturer,
-            data.buyPrice,
-            data.sellPrice,
-            data.initialStock,
-            data.unit,
-            data.description,
-            data.expiryDate,
+            data.nama_obat,
+            data.jenis_obat,
+            data.harga,
+            data.stok,
+            data.indikasi,
+            data.aturan_pakai,
         ];
         const completedFields = fields.filter((field) => field !== '').length;
         return Math.round((completedFields / fields.length) * 100);
@@ -89,11 +93,11 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
     };
 
     const handleFileSelect = (file: File) => {
-        const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+        const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
         const maxSize = 2 * 1024 * 1024; // 2MB
 
         if (!validTypes.includes(file.type)) {
-            alert('Format file tidak didukung. Gunakan PNG, JPG, atau JPEG.');
+            alert('Format file tidak didukung. Gunakan PNG, JPG, JPEG, atau WEBP.');
             return;
         }
 
@@ -103,7 +107,7 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
         }
 
         setUploadedFile(file);
-        setData('photo', file);
+        setData('gambar', file);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,7 +119,7 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
 
     const removeFile = () => {
         setUploadedFile(null);
-        setData('photo', null);
+        setData('gambar', null);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -123,28 +127,40 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (isEdit) {
-            // For FE demo, we can just use put or pretend it saves
-            alert('Produk berhasil diperbarui (Simulasi FE)');
+        const options = {
+            onSuccess: () => {
+                handleReset();
+                onClose();
+            }
+        };
+
+        if (isEdit && initialData?.id) {
+            // Note: Inertia has issue with PUT + File Uploads, so we use _method=PUT via POST
+            if (data.gambar) {
+                // If there's an image, let's just use POST but tell Laravel it's a PUT
+                post(`/admin/products/${initialData.id}?_method=PUT`, options);
+            } else {
+                put(`/admin/products/${initialData.id}`, options);
+            }
         } else {
-            post(route('products.store'));
+            post('/admin/products', options);
         }
     };
 
     const handleReset = () => {
         setData({
-            name: '',
-            sku: '',
-            category: '',
-            manufacturer: '',
-            buyPrice: '',
-            sellPrice: '',
-            initialStock: '',
-            unit: 'tablet',
-            description: '',
-            sideEffects: '',
-            expiryDate: '',
-            photo: null,
+            nama_obat: '',
+            category_id: '',
+            deskripsi: '',
+            jenis_obat: '',
+            indikasi: '',
+            aturan_pakai: '',
+            efek_samping: '',
+            harga: '',
+            stok: '',
+            stok_minimum: '10',
+            gambar: null,
+            is_active: true,
         });
         setUploadedFile(null);
         if (fileInputRef.current) {
@@ -154,9 +170,19 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
 
     const progress = calculateProgress();
 
+    if (!isOpen) return null;
+
     return (
-        <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white px-8 py-8">
-            <div className="mx-auto max-w-7xl">
+        <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/60 p-6 overflow-y-auto">
+            <div className="relative w-full max-w-6xl rounded-3xl bg-white shadow-2xl p-8 my-8">
+                {/* Close Button */}
+                <button
+                    onClick={onClose}
+                    className="absolute right-6 top-6 rounded-full bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-900"
+                >
+                    <X size={20} />
+                </button>
+
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="font-['Poppins',sans-serif] text-3xl font-semibold text-[#171d19]">
@@ -192,55 +218,35 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
                                         </label>
                                         <input
                                             type="text"
-                                            value={data.name}
+                                            value={data.nama_obat}
                                             onChange={(e) =>
-                                                setData('name', e.target.value)
+                                                setData('nama_obat', e.target.value)
                                             }
                                             placeholder="Masukkan nama obat"
                                             className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
                                         />
-                                        {errors.name && (
+                                        {errors.nama_obat && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
-                                                {errors.name}
+                                                {errors.nama_obat}
                                             </p>
                                         )}
                                     </div>
 
-                                    {/* Kode SKU */}
-                                    <div>
-                                        <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Kode SKU
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={data.sku}
-                                            onChange={(e) =>
-                                                setData('sku', e.target.value)
-                                            }
-                                            placeholder="AP-XXXXX"
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
-                                        />
-                                        {errors.sku && (
-                                            <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
-                                                {errors.sku}
-                                            </p>
-                                        )}
-                                    </div>
 
-                                    {/* Kategori */}
+                                    {/* Jenis Obat */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Kategori
+                                            Jenis Obat
                                         </label>
                                         <select
-                                            value={data.category}
+                                            value={data.jenis_obat}
                                             onChange={(e) =>
-                                                setData('category', e.target.value)
+                                                setData('jenis_obat', e.target.value)
                                             }
                                             className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
                                         >
                                             <option value="">
-                                                Pilih kategori
+                                                Pilih jenis
                                             </option>
                                             <option value="bebas">
                                                 Obat Bebas
@@ -252,35 +258,25 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
                                                 Obat Terbatas
                                             </option>
                                         </select>
-                                        {errors.category && (
+                                        {errors.jenis_obat && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
-                                                {errors.category}
+                                                {errors.jenis_obat}
                                             </p>
                                         )}
                                     </div>
-
-                                    {/* Pabrikan/Produsen */}
-                                    <div>
-                                        <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Pabrikan/Produsen
-                                        </label>
+                                    
+                                    {/* Status Aktif */}
+                                    <div className="col-span-2 flex items-center">
                                         <input
-                                            type="text"
-                                            value={data.manufacturer}
-                                            onChange={(e) =>
-                                                setData(
-                                                    'manufacturer',
-                                                    e.target.value
-                                                )
-                                            }
-                                            placeholder="Nama pabrikan"
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                            id="is_active"
+                                            type="checkbox"
+                                            checked={data.is_active}
+                                            onChange={(e) => setData('is_active', e.target.checked)}
+                                            className="h-4 w-4 rounded border-gray-300 text-[#006a3f] focus:ring-[#006a3f]"
                                         />
-                                        {errors.manufacturer && (
-                                            <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
-                                                {errors.manufacturer}
-                                            </p>
-                                        )}
+                                        <label htmlFor="is_active" className="ml-2 block font-['Poppins',sans-serif] text-[14px] text-[#171d19]">
+                                            Aktif / Tersedia di Katalog
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -297,40 +293,11 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
                                     </h2>
                                 </div>
 
-                                <div className="grid grid-cols-4 gap-4">
-                                    {/* Harga Beli */}
-                                    <div>
-                                        <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Harga Beli
-                                        </label>
-                                        <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 font-['Poppins',sans-serif] text-[14px] font-medium text-[#6e7a70]">
-                                                Rp
-                                            </span>
-                                            <input
-                                                type="number"
-                                                value={data.buyPrice}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        'buyPrice',
-                                                        e.target.value
-                                                    )
-                                                }
-                                                placeholder="0"
-                                                className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
-                                            />
-                                        </div>
-                                        {errors.buyPrice && (
-                                            <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
-                                                {errors.buyPrice}
-                                            </p>
-                                        )}
-                                    </div>
-
+                                <div className="grid grid-cols-3 gap-4">
                                     {/* Harga Jual */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Harga Jual
+                                            Harga
                                         </label>
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 font-['Poppins',sans-serif] text-[14px] font-medium text-[#6e7a70]">
@@ -338,83 +305,66 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
                                             </span>
                                             <input
                                                 type="number"
-                                                value={data.sellPrice}
+                                                value={data.harga}
                                                 onChange={(e) =>
-                                                    setData(
-                                                        'sellPrice',
-                                                        e.target.value
-                                                    )
+                                                    setData('harga', e.target.value)
                                                 }
                                                 placeholder="0"
                                                 className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
                                             />
                                         </div>
-                                        {errors.sellPrice && (
+                                        {errors.harga && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
-                                                {errors.sellPrice}
+                                                {errors.harga}
                                             </p>
                                         )}
                                     </div>
 
-                                    {/* Stok Awal */}
+                                    {/* Stok Saat Ini */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Stok Awal
+                                            Stok
                                         </label>
                                         <input
                                             type="number"
-                                            value={data.initialStock}
+                                            value={data.stok}
                                             onChange={(e) =>
-                                                setData(
-                                                    'initialStock',
-                                                    e.target.value
-                                                )
+                                                setData('stok', e.target.value)
                                             }
                                             placeholder="0"
                                             className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
                                         />
-                                        {errors.initialStock && (
+                                        {errors.stok && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
-                                                {errors.initialStock}
+                                                {errors.stok}
                                             </p>
                                         )}
                                     </div>
 
-                                    {/* Satuan */}
+                                    {/* Stok Minimum */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Satuan
+                                            Stok Minimum
                                         </label>
-                                        <select
-                                            value={data.unit}
+                                        <input
+                                            type="number"
+                                            value={data.stok_minimum}
                                             onChange={(e) =>
-                                                setData('unit', e.target.value)
+                                                setData('stok_minimum', e.target.value)
                                             }
+                                            placeholder="10"
                                             className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
-                                        >
-                                            <option value="tablet">
-                                                Tablet
-                                            </option>
-                                            <option value="kapsul">
-                                                Kapsul
-                                            </option>
-                                            <option value="botol_sirup">
-                                                Botol Sirup
-                                            </option>
-                                            <option value="tube_salep">
-                                                Tube Salep
-                                            </option>
-                                        </select>
-                                        {errors.unit && (
+                                        />
+                                        {errors.stok_minimum && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
-                                                {errors.unit}
+                                                {errors.stok_minimum}
                                             </p>
                                         )}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Card 3: Informasi Tambahan */}
+                            {/* Card 3: Informasi Medis & Pemakaian */}
                             <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                                 <div className="mb-6 flex items-center gap-3">
                                     <Calendar
@@ -422,31 +372,49 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
                                         className="text-[#006a3f]"
                                     />
                                     <h2 className="font-['Poppins',sans-serif] text-lg font-semibold text-[#171d19]">
-                                        Informasi Tambahan
+                                        Informasi Medis & Pemakaian
                                     </h2>
                                 </div>
 
                                 <div className="space-y-5">
-                                    {/* Deskripsi Obat */}
+                                    {/* Indikasi */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Deskripsi Obat
+                                            Indikasi (Kegunaan)
                                         </label>
-                                        <textarea
-                                            value={data.description}
+                                        <input
+                                            type="text"
+                                            value={data.indikasi}
                                             onChange={(e) =>
-                                                setData(
-                                                    'description',
-                                                    e.target.value
-                                                )
+                                                setData('indikasi', e.target.value)
                                             }
-                                            placeholder="Deskripsi lengkap tentang obat..."
-                                            rows={3}
-                                            className="w-full resize-none rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                            placeholder="Contoh: Meredakan demam dan nyeri"
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
                                         />
-                                        {errors.description && (
+                                        {errors.indikasi && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
-                                                {errors.description}
+                                                {errors.indikasi}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Aturan Pakai */}
+                                    <div>
+                                        <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
+                                            Aturan Pakai
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.aturan_pakai}
+                                            onChange={(e) =>
+                                                setData('aturan_pakai', e.target.value)
+                                            }
+                                            placeholder="Contoh: 3 kali sehari 1 tablet sesudah makan"
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                        />
+                                        {errors.aturan_pakai && (
+                                            <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
+                                                {errors.aturan_pakai}
                                             </p>
                                         )}
                                     </div>
@@ -458,39 +426,37 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
                                         </label>
                                         <input
                                             type="text"
-                                            value={data.sideEffects}
+                                            value={data.efek_samping}
                                             onChange={(e) =>
-                                                setData(
-                                                    'sideEffects',
-                                                    e.target.value
-                                                )
+                                                setData('efek_samping', e.target.value)
                                             }
                                             placeholder="Efek samping yang mungkin terjadi"
                                             className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
                                         />
-                                        {errors.sideEffects && (
+                                        {errors.efek_samping && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
-                                                {errors.sideEffects}
+                                                {errors.efek_samping}
                                             </p>
                                         )}
                                     </div>
 
-                                    {/* Tanggal Kedaluwarsa */}
+                                    {/* Deskripsi Obat */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Tanggal Kedaluwarsa
+                                            Deskripsi Panjang
                                         </label>
-                                        <input
-                                            type="date"
-                                            value={data.expiryDate}
+                                        <textarea
+                                            value={data.deskripsi}
                                             onChange={(e) =>
-                                                setData('expiryDate', e.target.value)
+                                                setData('deskripsi', e.target.value)
                                             }
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                            placeholder="Deskripsi lengkap tentang obat..."
+                                            rows={3}
+                                            className="w-full resize-none rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
                                         />
-                                        {errors.expiryDate && (
+                                        {errors.deskripsi && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
-                                                {errors.expiryDate}
+                                                {errors.deskripsi}
                                             </p>
                                         )}
                                     </div>
@@ -512,7 +478,7 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
                                     </h2>
                                 </div>
 
-                                {!uploadedFile ? (
+                                {!uploadedFile && !(isEdit && initialData?.gambar) ? (
                                     <>
                                         {/* Dropzone */}
                                         <div
@@ -530,7 +496,7 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
                                                 ref={fileInputRef}
                                                 type="file"
                                                 onChange={handleInputChange}
-                                                accept=".png,.jpg,.jpeg"
+                                                accept=".png,.jpg,.jpeg,.webp"
                                                 className="hidden"
                                             />
                                             <button
@@ -550,34 +516,40 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
                                                     Klik atau seret file ke sini
                                                 </p>
                                                 <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-[#6e7a70]">
-                                                    PNG, JPG, JPEG - Maks 2MB
+                                                    PNG, JPG, WEBP - Maks 2MB
                                                 </p>
                                             </button>
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="mb-4 flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-4">
-                                        <div className="flex-1">
-                                            <p className="font-['Poppins',sans-serif] text-[13px] font-medium text-[#171d19]">
-                                                {uploadedFile.name}
-                                            </p>
-                                            <p className="font-['Poppins',sans-serif] text-[12px] text-[#6e7a70]">
-                                                {(
-                                                    uploadedFile.size / 1024
-                                                ).toFixed(2)}{' '}
-                                                KB
-                                            </p>
+                                    <div className="mb-4">
+                                        {/* Tampilkan preview gambar sebelumnya atau gambar yang baru diupload */}
+                                        {uploadedFile || initialData?.gambar ? (
+                                            <div className="relative mb-3 h-40 w-full overflow-hidden rounded-xl border border-gray-200">
+                                                <img 
+                                                    src={uploadedFile ? URL.createObjectURL(uploadedFile) : `/storage/${initialData.gambar}`} 
+                                                    alt="Preview" 
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            </div>
+                                        ) : null}
+                                        <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-4">
+                                            <div className="flex-1 overflow-hidden">
+                                                <p className="truncate font-['Poppins',sans-serif] text-[13px] font-medium text-[#171d19]">
+                                                    {uploadedFile ? uploadedFile.name : (initialData?.gambar || 'Gambar Saat Ini')}
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={removeFile}
+                                                className="ml-2 rounded-lg p-2 hover:bg-red-50 transition-colors"
+                                            >
+                                                <X
+                                                    size={18}
+                                                    className="text-red-600"
+                                                />
+                                            </button>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={removeFile}
-                                            className="rounded-lg p-2 hover:bg-red-50 transition-colors"
-                                        >
-                                            <X
-                                                size={18}
-                                                className="text-red-600"
-                                            />
-                                        </button>
                                     </div>
                                 )}
 
@@ -593,9 +565,9 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
                                     </p>
                                 </div>
 
-                                {errors.photo && (
+                                {errors.gambar && (
                                     <p className="mt-3 font-['Poppins',sans-serif] text-[12px] text-red-600">
-                                        {errors.photo}
+                                        {errors.gambar}
                                     </p>
                                 )}
                             </div>
@@ -603,20 +575,20 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
                             {/* Card 5: Status Penambahan & Progress */}
                             <div className="rounded-2xl border border-gray-200 bg-gradient-to-br from-blue-50/50 to-blue-50/20 p-6 shadow-sm">
                                 <h2 className="mb-4 font-['Poppins',sans-serif] text-lg font-semibold text-[#171d19]">
-                                    Status Penambahan
+                                    Status Pengisian
                                 </h2>
 
                                 {/* Status Badge */}
                                 <div className="mb-5 flex items-center gap-3 rounded-lg bg-white p-3">
-                                    <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
+                                    <div className={`h-3 w-3 rounded-full ${progress === 100 ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}`} />
                                     <span className="font-['Poppins',sans-serif] text-[13px] font-medium text-[#171d19]">
-                                        {isEdit ? 'Draft Perubahan Belum Disimpan' : 'Draft Belum Disimpan'}
+                                        {progress === 100 ? 'Data Lengkap' : 'Draft Belum Lengkap'}
                                     </span>
                                 </div>
 
                                 {/* Progress Bar Label */}
                                 <p className="mb-2 font-['Poppins',sans-serif] text-[12px] font-medium text-[#6e7a70]">
-                                    Kelengkapan Data
+                                    Kelengkapan Field Wajib
                                 </p>
 
                                 {/* Progress Bar */}
@@ -634,8 +606,7 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
                                 {/* Info Box */}
                                 <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50/50 p-3">
                                     <p className="font-['Poppins',sans-serif] text-[12px] text-blue-800">
-                                        Isi semua field untuk melanjutkan
-                                        penyimpanan data produk.
+                                        Pastikan mengisi kolom wajib yang ada di form dasar sebelum menyimpan.
                                     </p>
                                 </div>
                             </div>
@@ -656,7 +627,7 @@ export default function CreateProduct({ isEdit = false, initialData }: CreatePro
                         <div className="flex gap-3">
                             <button
                                 type="button"
-                                onClick={() => window.history.back()}
+                                onClick={onClose}
                                 className="rounded-xl border border-gray-300 bg-white px-6 py-2.5 font-['Poppins',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:bg-gray-50"
                             >
                                 Batal

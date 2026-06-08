@@ -18,165 +18,80 @@ import {
     UserCog,
     Users,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import CreateProduct from './CreateProduct';
+import CreateUser from './CreateUser';
+import { router } from '@inertiajs/react';
 
-const products = [
-    {
-        id: '1',
-        name: 'Paracetamol 500mg',
-        stock: 150,
-        price: 15000,
-        category: 'bebas',
-        symptoms: ['Demam', 'Sakit Kepala'],
-        sales: 245,
-    },
-    {
-        id: '2',
-        name: 'Amoxicillin 500mg',
-        stock: 5,
-        price: 45000,
-        category: 'keras',
-        symptoms: ['Batuk', 'Infeksi'],
-        sales: 87,
-    },
-    {
-        id: '3',
-        name: 'Vitamin C 1000mg',
-        stock: 200,
-        price: 85000,
-        category: 'bebas',
-        symptoms: [],
-        sales: 156,
-    },
-    {
-        id: '4',
-        name: 'Omeprazole 20mg',
-        stock: 12,
-        price: 125000,
-        category: 'terbatas',
-        symptoms: ['GERD'],
-        sales: 42,
-    },
-];
+interface AdminDashboardProps {
+    products?: any[];
+    categories?: any[];
+    users?: any[];
+    orders?: any[];
+}
 
-const orders = [
-    {
-        id: 'ORD-001',
-        customer: 'John Doe',
-        status: 'diproses',
-        total: 45000,
-        date: '2026-04-29 10:30',
-        items: 2,
-    },
-    {
-        id: 'ORD-002',
-        customer: 'Jane Smith',
-        status: 'disiapkan',
-        total: 125000,
-        date: '2026-04-29 11:15',
-        items: 1,
-    },
-    {
-        id: 'ORD-003',
-        customer: 'Bob Wilson',
-        status: 'dikirim',
-        total: 30000,
-        date: '2026-04-29 12:00',
-        items: 3,
-    },
-    {
-        id: 'ORD-004',
-        customer: 'Alice Chen',
-        status: 'selesai',
-        total: 85000,
-        date: '2026-04-28 15:20',
-        items: 1,
-    },
-];
+export default function AdminDashboard({ products = [], categories = [], users = [], orders = [] }: AdminDashboardProps) {
+    const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<any>(null);
+    const [productToDelete, setProductToDelete] = useState<any>(null);
 
-const users = [
-    {
-        id: '1',
-        name: 'Dr. Ahmad Wijaya',
-        email: 'ahmad.wijaya@apotek.com',
-        role: 'admin',
-        status: 'active',
-        joinDate: '2024-01-15',
-        lastActive: '2026-04-29 14:30',
-    },
-    {
-        id: '2',
-        name: 'Apt. Sarah Kusuma',
-        email: 'sarah.kusuma@apotek.com',
-        role: 'pharmacist',
-        status: 'active',
-        joinDate: '2024-03-20',
-        lastActive: '2026-04-29 15:20',
-    },
-    {
-        id: '3',
-        name: 'Apt. Budi Santoso',
-        email: 'budi.santoso@apotek.com',
-        role: 'pharmacist',
-        status: 'active',
-        joinDate: '2024-05-10',
-        lastActive: '2026-04-29 13:45',
-    },
-    {
-        id: '4',
-        name: 'John Doe',
-        email: 'john.doe@email.com',
-        role: 'customer',
-        status: 'active',
-        joinDate: '2025-08-12',
-        lastActive: '2026-04-28 10:15',
-    },
-    {
-        id: '5',
-        name: 'Jane Smith',
-        email: 'jane.smith@email.com',
-        role: 'customer',
-        status: 'active',
-        joinDate: '2025-09-05',
-        lastActive: '2026-04-29 11:30',
-    },
-    {
-        id: '6',
-        name: 'Apt. Linda Putri',
-        email: 'linda.putri@apotek.com',
-        role: 'pharmacist',
-        status: 'inactive',
-        joinDate: '2024-02-28',
-        lastActive: '2026-03-15 09:00',
-    },
-    {
-        id: '7',
-        name: 'Bob Wilson',
-        email: 'bob.wilson@email.com',
-        role: 'customer',
-        status: 'active',
-        joinDate: '2025-11-20',
-        lastActive: '2026-04-29 12:00',
-    },
-    {
-        id: '8',
-        name: 'Alice Chen',
-        email: 'alice.chen@email.com',
-        role: 'customer',
-        status: 'active',
-        joinDate: '2026-01-08',
-        lastActive: '2026-04-28 15:20',
-    },
-];
+    const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState<any>(null);
+    const [userToDelete, setUserToDelete] = useState<any>(null);
 
-export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState<
         'analytics' | 'products' | 'orders' | 'users'
-    >('analytics');
+    >(() => {
+        return (localStorage.getItem('adminDashboardTab') as any) || 'analytics';
+    });
+
+    useEffect(() => {
+        localStorage.setItem('adminDashboardTab', activeTab);
+    }, [activeTab]);
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState<
-        'all' | 'admin' | 'pharmacist' | 'customer'
+        'all' | 'admin' | 'pharmacist' | 'user'
     >('all');
+    const [productCategoryFilter, setProductCategoryFilter] = useState('all');
+    const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+    const [orderDateFilter, setOrderDateFilter] = useState('');
+    const [revenueFilterDays, setRevenueFilterDays] = useState(7);
+
+    // Compute chart data based on orders and filter
+    const revenueChartData = (() => {
+        const data = [];
+        const now = new Date();
+        for (let i = revenueFilterDays - 1; i >= 0; i--) {
+            const d = new Date(now);
+            d.setDate(now.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            
+            const dayTotal = orders
+                .filter((o) => o.status === 'selesai' && o.created_at?.startsWith(dateStr))
+                .reduce((sum, o) => sum + parseFloat(o.total_biaya || 0), 0);
+                
+            data.push({
+                date: d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }),
+                total: dayTotal
+            });
+        }
+        return data;
+    })();
+    const maxRevenue = Math.max(...revenueChartData.map(d => d.total), 1);
+
+    const productsWithSales = products.map(product => {
+        let sales = 0;
+        orders.forEach(order => {
+            if (order.status === 'selesai' && order.products) {
+                order.products.forEach((op: any) => {
+                    if (op.id === product.id) {
+                        sales += op.pivot?.kuantitas || 0;
+                    }
+                });
+            }
+        });
+        return { ...product, sales };
+    });
 
     const statusConfig: Record<
         string,
@@ -215,28 +130,18 @@ export default function AdminDashboard() {
                 <div className="mx-auto max-w-[1600px] px-8 py-5">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="font-['Roboto_Condensed',sans-serif] text-[32px] font-light tracking-[-0.8px] text-[#171d19]">
+                            <h1 className="font-['Roboto_Condensed',sans-serif] text-[32px] font-bold tracking-[-0.8px] text-[#171d19]">
                                 Dashboard Admin
                             </h1>
                             <p className="mt-1 font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">
-                                Kelola produk, pesanan, dan analytics
+                                Kelola produk, pesanan, dan analitik
                             </p>
                         </div>
 
                         {/* Quick Actions */}
                         <div className="flex gap-3">
                             <Link
-                                href="/admin/products/create"
-                                className="flex items-center gap-2 rounded-xl bg-[#006a3f] px-5 py-2.5 text-white transition-all hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]"
-                            >
-                                <Plus size={16} />
-                                <span className="font-['Inter',sans-serif] text-[13px] font-medium">
-                                    Tambah Produk
-                                </span>
-                            </Link>
-
-                            <Link
-                                href={route('logout')}
+                                href="/logout"
                                 method="post"
                                 as="button"
                                 className="flex cursor-pointer items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#ba1a1a] transition-all hover:bg-red-100"
@@ -255,28 +160,23 @@ export default function AdminDashboard() {
                     {[
                         {
                             id: 'analytics' as const,
-                            label: 'Analytics',
+                            label: 'Analitik',
                             icon: TrendingUp,
                         },
                         {
                             id: 'products' as const,
                             label: 'Produk & Stok',
                             icon: Package,
-                            badge: products.filter((p) => p.stock < 50).length,
                         },
                         {
                             id: 'orders' as const,
                             label: 'Manajemen Pesanan',
                             icon: ShoppingBag,
-                            badge: orders.filter((o) => o.status === 'diproses')
-                                .length,
                         },
                         {
                             id: 'users' as const,
                             label: 'Manajemen User',
                             icon: UserCog,
-                            badge: users.filter((u) => u.status === 'inactive')
-                                .length,
                         },
                     ].map((tab) => (
                         <button
@@ -290,17 +190,7 @@ export default function AdminDashboard() {
                         >
                             <tab.icon size={18} />
                             {tab.label}
-                            {tab.badge && tab.badge > 0 && (
-                                <span
-                                    className={`rounded-full px-2 py-0.5 text-xs ${
-                                        activeTab === tab.id
-                                            ? 'bg-white/20'
-                                            : 'bg-red-100 text-red-700'
-                                    }`}
-                                >
-                                    {tab.badge}
-                                </span>
-                            )}
+
                         </button>
                     ))}
                 </div>
@@ -309,40 +199,57 @@ export default function AdminDashboard() {
                     <div className="space-y-8">
                         {/* Enhanced Stats Cards */}
                         <div className="grid grid-cols-4 gap-6">
-                            {[
-                                {
-                                    label: 'Total Penjualan',
-                                    value: 'Rp 12.5M',
-                                    change: '+18.5%',
-                                    trend: 'up',
-                                    icon: DollarSign,
-                                    color: 'from-emerald-500 to-emerald-600',
-                                },
-                                {
-                                    label: 'Jumlah Transaksi',
-                                    value: '847',
-                                    change: '+12.3%',
-                                    trend: 'up',
-                                    icon: ShoppingBag,
-                                    color: 'from-blue-500 to-blue-600',
-                                },
-                                {
-                                    label: 'Pelanggan Aktif',
-                                    value: '1,248',
-                                    change: '+8.7%',
-                                    trend: 'up',
-                                    icon: Users,
-                                    color: 'from-purple-500 to-purple-600',
-                                },
-                                {
-                                    label: 'Avg Order Value',
-                                    value: 'Rp 147K',
-                                    change: '-2.4%',
-                                    trend: 'down',
-                                    icon: TrendingDown,
-                                    color: 'from-amber-500 to-amber-600',
-                                },
-                            ].map((stat, idx) => (
+                            {(() => {
+                                const completedOrders = orders.filter((o) => o.status === 'selesai');
+                                const totalPenjualan = completedOrders.reduce((sum, o) => sum + parseFloat(o.total_biaya || 0), 0);
+                                const jumlahTransaksi = completedOrders.length;
+                                const pelangganAktif = users.filter((u) => u.role === 'user').length;
+                                const avgOrderValue = jumlahTransaksi > 0 ? totalPenjualan / jumlahTransaksi : 0;
+
+                                const formatCurrency = (value: number) => {
+                                    if (value >= 1000000) {
+                                        return `Rp ${(value / 1000000).toFixed(1)}M`;
+                                    } else if (value >= 1000) {
+                                        return `Rp ${(value / 1000).toFixed(1)}K`;
+                                    }
+                                    return `Rp ${value}`;
+                                };
+
+                                return [
+                                    {
+                                        label: 'Total Penjualan',
+                                        value: formatCurrency(totalPenjualan),
+                                        change: '+18.5%', // Data historis bisa ditambahkan nanti
+                                        trend: 'up',
+                                        icon: DollarSign,
+                                        color: 'from-emerald-500 to-emerald-600',
+                                    },
+                                    {
+                                        label: 'Jumlah Transaksi',
+                                        value: jumlahTransaksi.toString(),
+                                        change: '+12.3%',
+                                        trend: 'up',
+                                        icon: ShoppingBag,
+                                        color: 'from-blue-500 to-blue-600',
+                                    },
+                                    {
+                                        label: 'Pelanggan Aktif',
+                                        value: pelangganAktif.toString(),
+                                        change: '+8.7%',
+                                        trend: 'up',
+                                        icon: Users,
+                                        color: 'from-purple-500 to-purple-600',
+                                    },
+                                    {
+                                        label: 'Avg Order Value',
+                                        value: formatCurrency(avgOrderValue),
+                                        change: '-2.4%',
+                                        trend: 'down',
+                                        icon: TrendingDown,
+                                        color: 'from-amber-500 to-amber-600',
+                                    },
+                                ];
+                            })().map((stat, idx) => (
                                 <div
                                     key={idx}
                                     className="rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
@@ -391,17 +298,32 @@ export default function AdminDashboard() {
                                     <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
                                         Revenue Trend
                                     </h3>
-                                    <select className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none">
-                                        <option>Last 7 days</option>
-                                        <option>Last 30 days</option>
-                                        <option>Last 90 days</option>
+                                    <select 
+                                        value={revenueFilterDays}
+                                        onChange={(e) => setRevenueFilterDays(Number(e.target.value))}
+                                        className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                    >
+                                        <option value={7}>Last 7 days</option>
+                                        <option value={30}>Last 30 days</option>
+                                        <option value={90}>Last 90 days</option>
                                     </select>
                                 </div>
-                                {/* Chart Placeholder */}
-                                <div className="flex h-64 items-center justify-center rounded-xl border border-[#f1f5f9] bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9]">
-                                    <p className="font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">
-                                        Chart visualization here
-                                    </p>
+                                {/* Bar Chart Implementation */}
+                                <div className={`flex h-64 items-end ${revenueFilterDays === 7 ? 'gap-4' : revenueFilterDays === 30 ? 'gap-1.5' : 'gap-[2px]'} rounded-xl border border-[#f1f5f9] bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9] p-4 relative`}>
+                                    {revenueChartData.map((item, idx) => (
+                                        <div key={idx} className="group relative flex flex-1 flex-col items-center justify-end h-full">
+                                            {/* Tooltip */}
+                                            <div className="absolute -top-10 hidden whitespace-nowrap rounded-md bg-[#171d19] px-2 py-1 text-xs text-white group-hover:block z-10">
+                                                {item.date}: Rp {item.total.toLocaleString('id-ID')}
+                                            </div>
+                                            {/* Bar */}
+                                            <div 
+                                                className="w-full rounded-t-sm bg-gradient-to-t from-[#006a3f] to-[#00a86b] transition-all duration-300 hover:opacity-80"
+                                                style={{ height: `${(item.total / maxRevenue) * 100}%`, minHeight: item.total > 0 ? '4px' : '0' }}
+                                            />
+
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
 
@@ -411,8 +333,8 @@ export default function AdminDashboard() {
                                     Top Selling Products
                                 </h3>
                                 <div className="space-y-4">
-                                    {products
-                                        .sort((a, b) => b.sales - a.sales)
+                                    {productsWithSales
+                                        .sort((a, b) => (b.sales || 0) - (a.sales || 0))
                                         .slice(0, 5)
                                         .map((product, idx) => (
                                             <div
@@ -424,18 +346,18 @@ export default function AdminDashboard() {
                                                 </div>
                                                 <div className="flex-1">
                                                     <p className="font-['Roboto_Condensed',sans-serif] text-[15px] font-medium text-[#171d19]">
-                                                        {product.name}
+                                                        {product.nama_obat}
                                                     </p>
                                                     <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">
-                                                        {product.sales}{' '}
+                                                        {product.sales || 0}{' '}
                                                         penjualan
                                                     </p>
                                                 </div>
                                                 <p className="font-['Roboto_Condensed',sans-serif] text-[14px] font-semibold text-[#006a3f]">
                                                     Rp{' '}
                                                     {(
-                                                        product.price *
-                                                        product.sales
+                                                        product.harga *
+                                                        (product.sales || 0)
                                                     ).toLocaleString('id-ID')}
                                                 </p>
                                             </div>
@@ -459,7 +381,7 @@ export default function AdminDashboard() {
                                     </h2>
                                     <p className="font-['Inter',sans-serif] text-[14px] text-[#3e4a41]">
                                         {
-                                            products.filter((p) => p.stock < 50)
+                                            productsWithSales.filter((p) => p.stok <= (p.stok_minimum || 10))
                                                 .length
                                         }{' '}
                                         produk memerlukan restock segera
@@ -468,8 +390,8 @@ export default function AdminDashboard() {
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                {products
-                                    .filter((p) => p.stock < 50)
+                                {productsWithSales
+                                    .filter((p) => p.stok <= (p.stok_minimum || 10))
                                     .map((product) => (
                                         <div
                                             key={product.id}
@@ -478,31 +400,37 @@ export default function AdminDashboard() {
                                             <div className="mb-3 flex items-start justify-between">
                                                 <div className="flex-1">
                                                     <p className="mb-1 font-['Roboto_Condensed',sans-serif] text-[18px] font-semibold text-[#171d19]">
-                                                        {product.name}
+                                                        {product.nama_obat}
                                                     </p>
                                                     <div className="flex items-center gap-2">
                                                         <div className="h-2 flex-1 overflow-hidden rounded-full bg-red-100">
                                                             <div
                                                                 className="h-full rounded-full bg-gradient-to-r from-red-500 to-red-600"
                                                                 style={{
-                                                                    width: `${(product.stock / 50) * 100}%`,
+                                                                    width: `${(product.stok / (product.stok_minimum || 10)) * 100}%`,
+                                                                    maxWidth: '100%'
                                                                 }}
                                                             />
                                                         </div>
                                                         <p
                                                             className={`font-['Inter',sans-serif] text-[13px] font-semibold ${
-                                                                product.stock <
-                                                                10
+                                                                product.stok < 10
                                                                     ? 'text-red-700'
                                                                     : 'text-amber-700'
                                                             }`}
                                                         >
-                                                            {product.stock} unit
+                                                            {product.stok} unit
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <button className="w-full rounded-lg bg-[#006a3f] px-4 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-white transition-all hover:bg-[#005632] hover:shadow-lg">
+                                            <button 
+                                                onClick={() => {
+                                                    setEditingProduct(product);
+                                                    setIsProductModalOpen(true);
+                                                }}
+                                                className="w-full rounded-lg bg-[#006a3f] px-4 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-white transition-all hover:bg-[#005632] hover:shadow-lg"
+                                            >
                                                 Restock Sekarang
                                             </button>
                                         </div>
@@ -514,6 +442,31 @@ export default function AdminDashboard() {
 
                 {activeTab === 'products' && (
                     <div>
+                        {/* Header Section */}
+                        <div className="mb-6 flex items-center justify-between">
+                            <div>
+                                <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] font-semibold tracking-[-0.7px] text-[#171d19]">
+                                    Produk & Stok
+                                </h2>
+                                <p className="mt-1 font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">
+                                    Kelola katalog obat dan pantau ketersediaan stok
+                                </p>
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    setEditingProduct(null);
+                                    setIsProductModalOpen(true);
+                                }}
+                                className="flex items-center gap-2 rounded-xl bg-[#006a3f] px-6 py-3 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]"
+                            >
+                                <Plus size={18} />
+                                <span className="font-['Roboto_Condensed',sans-serif] text-[14px] font-medium">
+                                    Tambah Produk
+                                </span>
+                            </button>
+                        </div>
+
+
                         {/* Search & Filter Bar */}
                         <div className="mb-6 rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
                             <div className="flex gap-4">
@@ -532,15 +485,16 @@ export default function AdminDashboard() {
                                         className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-3 pr-4 pl-12 font-['Inter',sans-serif] text-[14px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#006a3f] focus:bg-white focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
                                     />
                                 </div>
-                                <button className="flex items-center gap-2 rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-3 transition-all hover:border-[#006a3f] hover:bg-white">
-                                    <Filter
-                                        size={18}
-                                        className="text-[#171d19]"
-                                    />
-                                    <span className="font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19]">
-                                        Filter
-                                    </span>
-                                </button>
+                                <select 
+                                    value={productCategoryFilter}
+                                    onChange={(e) => setProductCategoryFilter(e.target.value)}
+                                    className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-3 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                >
+                                    <option value="all">Semua Jenis Obat</option>
+                                    <option value="bebas">Obat Bebas</option>
+                                    <option value="terbatas">Obat Terbatas</option>
+                                    <option value="keras">Obat Keras</option>
+                                </select>
                             </div>
                         </div>
 
@@ -573,35 +527,47 @@ export default function AdminDashboard() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {products.map((product) => (
+                                    {productsWithSales.filter(product => {
+                                        const matchesSearch = product.nama_obat.toLowerCase().includes(searchQuery.toLowerCase());
+                                        const matchesCategory = productCategoryFilter === 'all' || product.jenis_obat === productCategoryFilter;
+                                        return matchesSearch && matchesCategory;
+                                    }).map((product) => (
                                         <tr
                                             key={product.id}
                                             className="border-b border-[#f1f5f9] transition-colors last:border-0 hover:bg-[#fafaf8]"
                                         >
                                             <td className="px-6 py-5">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9]" />
+                                                    {product.gambar ? (
+                                                        <img 
+                                                            src={`/storage/${product.gambar}`} 
+                                                            alt={product.nama_obat} 
+                                                            className="h-12 w-12 shrink-0 rounded-lg object-cover" 
+                                                        />
+                                                    ) : (
+                                                        <div className="h-12 w-12 shrink-0 rounded-lg bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9]" />
+                                                    )}
                                                     <p className="font-['Roboto_Condensed',sans-serif] text-[16px] font-medium text-[#171d19]">
-                                                        {product.name}
+                                                        {product.nama_obat}
                                                     </p>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5">
                                                 <span
                                                     className={`inline-block rounded-full px-3 py-1 text-[11px] font-medium ${
-                                                        product.category ===
+                                                        product.jenis_obat ===
                                                         'bebas'
                                                             ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
-                                                            : product.category ===
+                                                            : product.jenis_obat ===
                                                                 'keras'
                                                               ? 'border border-red-200 bg-red-50 text-red-700'
                                                               : 'border border-amber-200 bg-amber-50 text-amber-700'
                                                     }`}
                                                 >
-                                                    {product.category ===
+                                                    {product.jenis_obat ===
                                                     'bebas'
                                                         ? 'Bebas'
-                                                        : product.category ===
+                                                        : product.jenis_obat ===
                                                             'keras'
                                                           ? 'Keras'
                                                           : 'Terbatas'}
@@ -643,16 +609,16 @@ export default function AdminDashboard() {
                                             </td>
                                             <td className="px-6 py-5 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19]">
                                                 Rp{' '}
-                                                {product.price.toLocaleString(
+                                                {parseFloat(product.harga).toLocaleString(
                                                     'id-ID',
                                                 )}
                                             </td>
                                             <td className="px-6 py-5 font-['Inter',sans-serif] text-[14px] text-[#3e4a41]">
-                                                {product.sales} unit
+                                                {product.sales || 0} unit
                                             </td>
                                             <td className="px-6 py-5">
                                                 <div className="flex flex-wrap gap-2">
-                                                    {product.symptoms.map(
+                                                    {(product.symptoms || []).map(
                                                         (symptom, idx) => (
                                                             <span
                                                                 key={idx}
@@ -666,9 +632,12 @@ export default function AdminDashboard() {
                                             </td>
                                             <td className="px-6 py-5">
                                                 <div className="flex justify-end gap-2">
-                                                    {/* REVISI: Tombol Edit Produk Diubah Menjadi Link Inertia */}
-                                                    <Link
-                                                        href={`/admin/products/${product.id}/edit`}
+                                                    {/* REVISI: Tombol Edit Produk Diubah Menjadi Modal Trigger */}
+                                                    <button
+                                                        onClick={() => {
+                                                            setEditingProduct(product);
+                                                            setIsProductModalOpen(true);
+                                                        }}
                                                         className="group inline-block rounded-lg p-2 transition-colors hover:bg-[#f9fafb]"
                                                         title="Edit Produk"
                                                     >
@@ -676,8 +645,11 @@ export default function AdminDashboard() {
                                                             size={16}
                                                             className="text-[#171d19] opacity-60 transition-colors group-hover:text-[#006a3f] group-hover:opacity-100"
                                                         />
-                                                    </Link>
-                                                    <button className="group rounded-lg p-2 transition-colors hover:bg-red-50">
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setProductToDelete(product)}
+                                                        className="group inline-block rounded-lg p-2 transition-colors hover:bg-red-50"
+                                                    >
                                                         <Trash2
                                                             size={16}
                                                             className="text-red-600 opacity-60 transition-opacity group-hover:opacity-100"
@@ -695,13 +667,69 @@ export default function AdminDashboard() {
 
                 {activeTab === 'orders' && (
                     <div>
-                        <h2 className="mb-6 font-['Roboto_Condensed',sans-serif] text-[28px] font-semibold tracking-[-0.7px] text-[#171d19]">
-                            Manajemen Pesanan
-                        </h2>
+                        <div className="mb-6">
+                            <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] font-semibold tracking-[-0.7px] text-[#171d19]">
+                                Manajemen Pesanan
+                            </h2>
+                            <p className="mt-1 font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">
+                                Pantau pesanan, ubah status pengiriman, dan kelola transaksi
+                            </p>
+                        </div>
+
+                        {/* Search & Filter Bar */}
+                        <div className="mb-6 rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+                            <div className="flex gap-4">
+                                <div className="relative flex-1">
+                                    <Search
+                                        className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6e7a70]"
+                                        size={20}
+                                    />
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Cari berdasarkan kode pesanan atau nama pelanggan..."
+                                        className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-3 pr-4 pl-12 font-['Inter',sans-serif] text-[14px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#006a3f] focus:bg-white focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                    />
+                                </div>
+                                <input
+                                    type="date"
+                                    value={orderDateFilter}
+                                    onChange={(e) => setOrderDateFilter(e.target.value)}
+                                    className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-3 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                />
+                                <select 
+                                    value={orderStatusFilter}
+                                    onChange={(e) => setOrderStatusFilter(e.target.value)}
+                                    className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-3 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                >
+                                    <option value="all">Semua Status</option>
+                                    <option value="diproses">Diproses</option>
+                                    <option value="disiapkan">Disiapkan</option>
+                                    <option value="dikirim">Dikirim</option>
+                                    <option value="selesai">Selesai</option>
+                                </select>
+                            </div>
+                        </div>
 
                         <div className="grid gap-4">
-                            {orders.map((order) => {
-                                const config = statusConfig[order.status];
+                            {orders.filter(order => {
+                                const customerName = order.user?.name || '';
+                                const orderCode = order.kode_pesanan || '';
+                                const matchesSearch = customerName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                                      orderCode.toLowerCase().includes(searchQuery.toLowerCase());
+                                const matchesStatus = orderStatusFilter === 'all' || order.status === orderStatusFilter;
+                                
+                                let matchesDate = true;
+                                if (orderDateFilter && order.created_at) {
+                                    const d = new Date(order.created_at);
+                                    const localDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                                    matchesDate = localDateStr === orderDateFilter;
+                                }
+                                
+                                return matchesSearch && matchesStatus && matchesDate;
+                            }).map((order) => {
+                                const config = statusConfig[order.status] || { bg: 'bg-gray-50', color: 'text-gray-700', border: 'border-gray-200' };
                                 return (
                                     <div
                                         key={order.id}
@@ -712,11 +740,11 @@ export default function AdminDashboard() {
                                                 {/* Order Info */}
                                                 <div>
                                                     <p className="mb-1 font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
-                                                        {order.id}
+                                                        {order.kode_pesanan}
                                                     </p>
                                                     <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
-                                                        {order.customer} •{' '}
-                                                        {order.date}
+                                                        {order.user?.name || 'Guest'} •{' '}
+                                                        {new Date(order.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}
                                                     </p>
                                                 </div>
 
@@ -726,7 +754,7 @@ export default function AdminDashboard() {
                                                         Items
                                                     </p>
                                                     <p className="font-['Roboto_Condensed',sans-serif] text-[18px] font-semibold text-[#171d19]">
-                                                        {order.items}
+                                                        {order.products ? order.products.length : 0}
                                                     </p>
                                                 </div>
 
@@ -737,7 +765,7 @@ export default function AdminDashboard() {
                                                     </p>
                                                     <p className="font-['Roboto_Condensed',sans-serif] text-[18px] font-semibold text-[#006a3f]">
                                                         Rp{' '}
-                                                        {order.total.toLocaleString(
+                                                        {parseFloat(order.total_biaya || 0).toLocaleString(
                                                             'id-ID',
                                                         )}
                                                     </p>
@@ -788,7 +816,13 @@ export default function AdminDashboard() {
                                     Kelola akses dan peran pengguna sistem
                                 </p>
                             </div>
-                            <button className="flex items-center gap-2 rounded-xl bg-[#006a3f] px-6 py-3 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]">
+                            <button 
+                                onClick={() => {
+                                    setEditingUser(null);
+                                    setIsUserModalOpen(true);
+                                }}
+                                className="flex items-center gap-2 rounded-xl bg-[#006a3f] px-6 py-3 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]"
+                            >
                                 <Plus size={18} />
                                 <span className="font-['Roboto_Condensed',sans-serif] text-[14px] font-medium">
                                     Tambah User Baru
@@ -830,7 +864,7 @@ export default function AdminDashboard() {
                                 {
                                     label: 'Pelanggan',
                                     value: users.filter(
-                                        (u) => u.role === 'customer',
+                                        (u) => u.role === 'user',
                                     ).length,
                                     icon: Users,
                                     color: 'from-amber-500 to-amber-600',
@@ -890,7 +924,7 @@ export default function AdminDashboard() {
                                     <option value="all">Semua Role</option>
                                     <option value="admin">Admin</option>
                                     <option value="pharmacist">Apoteker</option>
-                                    <option value="customer">Pelanggan</option>
+                                    <option value="user">Pelanggan</option>
                                 </select>
                             </div>
                         </div>
@@ -958,7 +992,7 @@ export default function AdminDashboard() {
                                                     border: 'border-emerald-200',
                                                     icon: UserCog,
                                                 },
-                                                customer: {
+                                                user: {
                                                     label: 'Pelanggan',
                                                     bg: 'bg-blue-50',
                                                     text: 'text-blue-700',
@@ -969,7 +1003,7 @@ export default function AdminDashboard() {
                                                 user.role as
                                                     | 'admin'
                                                     | 'pharmacist'
-                                                    | 'customer'
+                                                    | 'user'
                                             ] || {
                                                 label: 'Pelanggan',
                                                 bg: 'bg-blue-50',
@@ -1039,13 +1073,13 @@ export default function AdminDashboard() {
                                                     <td className="px-6 py-5">
                                                         <span
                                                             className={`inline-block rounded-full px-3 py-1.5 text-[12px] font-bold tracking-wider uppercase ${
-                                                                user.status ===
+                                                                (user.status || 'active') ===
                                                                 'active'
                                                                     ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
                                                                     : 'border border-red-200 bg-red-50 text-red-700'
                                                             }`}
                                                         >
-                                                            {user.status ===
+                                                            {(user.status || 'active') ===
                                                             'active'
                                                                 ? 'Aktif'
                                                                 : 'Nonaktif'}
@@ -1059,7 +1093,7 @@ export default function AdminDashboard() {
                                                             />
                                                             <span className="font-['Inter',sans-serif] text-[14px] text-[#3e4a41]">
                                                                 {new Date(
-                                                                    user.joinDate,
+                                                                    user.created_at || new Date(),
                                                                 ).toLocaleDateString(
                                                                     'id-ID',
                                                                     {
@@ -1072,13 +1106,15 @@ export default function AdminDashboard() {
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-5 font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
-                                                        {user.lastActive}
+                                                        {new Date(user.updated_at || new Date()).toLocaleString('id-ID', {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'})}
                                                     </td>
                                                     <td className="px-6 py-5">
                                                         <div className="flex justify-end gap-2">
-                                                            {/* REVISI: Tombol Edit User Diubah Menjadi Link Inertia */}
-                                                            <Link
-                                                                href={`/admin/users/${user.id}/edit`}
+                                                            <button
+                                                                onClick={() => {
+                                                                    setEditingUser(user);
+                                                                    setIsUserModalOpen(true);
+                                                                }}
                                                                 className="group inline-block rounded-lg p-2 transition-colors hover:bg-[#f9fafb]"
                                                                 title="Edit user"
                                                             >
@@ -1086,8 +1122,9 @@ export default function AdminDashboard() {
                                                                     size={16}
                                                                     className="text-[#171d19] opacity-60 transition-colors group-hover:text-[#006a3f] group-hover:opacity-100"
                                                                 />
-                                                            </Link>
+                                                            </button>
                                                             <button
+                                                                onClick={() => setUserToDelete(user)}
                                                                 className="group rounded-lg p-2 transition-colors hover:bg-red-50"
                                                                 title="Hapus user"
                                                             >
@@ -1137,6 +1174,93 @@ export default function AdminDashboard() {
                     </div>
                 )}
             </main>
+
+            {/* Modal Tambah/Edit Produk */}
+            <CreateProduct 
+                key={editingProduct ? editingProduct.id : 'create'}
+                isOpen={isProductModalOpen} 
+                onClose={() => {
+                    setIsProductModalOpen(false);
+                    setEditingProduct(null);
+                }} 
+                isEdit={!!editingProduct} 
+                initialData={editingProduct} 
+                categories={categories}
+            />
+
+            {/* Modal Konfirmasi Hapus Produk Minimalist */}
+            {productToDelete && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-6">
+                    <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg">
+                        <h3 className="mb-2 font-['Poppins',sans-serif] text-[15px] font-semibold text-[#171d19]">
+                            Konfirmasi Hapus
+                        </h3>
+                        <p className="mb-5 font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
+                            Apakah Anda yakin ingin menghapus produk?
+                        </p>
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setProductToDelete(null)}
+                                className="rounded-lg px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-[#6e7a70] transition-colors hover:bg-gray-100"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={() => {
+                                    router.delete(`/admin/products/${productToDelete.id}`);
+                                    setProductToDelete(null);
+                                }}
+                                className="rounded-lg bg-red-600 px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-white transition-colors hover:bg-red-700"
+                            >
+                                Hapus
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Tambah/Edit User */}
+            <CreateUser 
+                key={editingUser ? editingUser.id : 'create-user'}
+                isOpen={isUserModalOpen} 
+                onClose={() => {
+                    setIsUserModalOpen(false);
+                    setEditingUser(null);
+                }} 
+                isEdit={!!editingUser} 
+                initialData={editingUser} 
+            />
+
+            {/* Modal Konfirmasi Hapus User Minimalist */}
+            {userToDelete && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-6">
+                    <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg">
+                        <h3 className="mb-2 font-['Poppins',sans-serif] text-[15px] font-semibold text-[#171d19]">
+                            Konfirmasi Hapus
+                        </h3>
+                        <p className="mb-5 font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
+                            Apakah Anda yakin ingin menghapus akun user ini?
+                        </p>
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setUserToDelete(null)}
+                                className="rounded-lg px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-[#6e7a70] transition-colors hover:bg-gray-100"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={() => {
+                                    router.delete(`/admin/users/${userToDelete.id}`);
+                                    setUserToDelete(null);
+                                }}
+                                className="rounded-lg bg-red-600 px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-white transition-colors hover:bg-red-700"
+                            >
+                                Hapus
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\RecommendationController;
 use App\Http\Controllers\CartController;
 use Illuminate\Foundation\Application;
@@ -61,12 +62,29 @@ Route::get('/pharmacist', function () {
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin', function () {
-        return Inertia::render('AdminDashboard');
+        $products = \App\Models\Product::with('category')->latest()->get();
+        $categories = \App\Models\Category::all();
+        $users = \App\Models\User::all();
+        $orders = \App\Models\Order::with(['user', 'products'])->latest()->get();
+        
+        return Inertia::render('AdminDashboard', [
+            'products' => $products,
+            'categories' => $categories,
+            'users' => $users,
+            'orders' => $orders
+        ]);
     })->name('admin.dashboard');
 
     Route::get('/admin/products/create', [ProductController::class, 'create'])->name('admin.products.create');
     Route::post('/admin/products', [ProductController::class, 'store'])->name('products.store');
     Route::get('/admin/products/{id}/edit', [ProductController::class, 'edit'])->name('admin.products.edit');
+    Route::put('/admin/products/{id}', [ProductController::class, 'update'])->name('products.update');
+    Route::delete('/admin/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::post('/admin/products/{id}/image', [ProductController::class, 'updateImage'])->name('products.updateImage');
+
+    Route::post('/admin/users', [AdminUserController::class, 'store'])->name('admin.users.store');
+    Route::put('/admin/users/{id}', [AdminUserController::class, 'update'])->name('admin.users.update');
+    Route::delete('/admin/users/{id}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
 });
 
 Route::get('/dashboard', function () {

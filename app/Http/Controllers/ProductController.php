@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -27,7 +30,11 @@ class ProductController extends Controller
      */
     public function create()
     {
-        return Inertia::render('CreateProduct');
+        $categories = Category::all();
+        
+        return Inertia::render('CreateProduct', [
+            'categories' => $categories
+        ]);
     }
 
     /**
@@ -35,35 +42,142 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        // TODO: Validasi dan simpan data produk
-        // Untuk saat ini hanya melakukan redirect kembali dengan pesan sukses
+        $validated = $request->validate([
+            'nama_obat' => 'required|string|max:150',
+            'category_id' => 'nullable|exists:categories,id',
+            'deskripsi' => 'nullable|string',
+            'jenis_obat' => 'required|in:bebas,keras,terbatas',
+            'indikasi' => 'required|string',
+            'aturan_pakai' => 'required|string',
+            'efek_samping' => 'nullable|string',
+            'harga' => 'required|numeric|min:0',
+            'stok' => 'required|integer|min:0',
+            'stok_minimum' => 'required|integer|min:0',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'is_active' => 'boolean',
+        ]);
+
+        $validated['slug'] = Str::slug($request->nama_obat) . '-' . time();
+
+        if ($request->hasFile('gambar')) {
+            $path = $request->file('gambar')->store('products', 'public');
+            $validated['gambar'] = $path;
+        }
+
+        // is_active default to true if not provided or parsing boolean
+        $validated['is_active'] = $request->has('is_active') ? $request->boolean('is_active') : true;
+
+        Product::create($validated);
+
         return redirect()->route('admin.dashboard')->with('success', 'Produk berhasil ditambahkan');
     }
 
     /**
-     * Menampilkan form untuk mengedit produk (Dummy Data untuk FE).
+     * Menampilkan form untuk mengedit produk.
      */
     public function edit($id)
     {
-        // Dummy data untuk kebutuhan FE sementara
-        $dummyProduct = [
-            'id' => $id,
-            'name' => 'Paracetamol 500mg',
-            'sku' => 'AP-12345',
-            'category' => 'bebas',
-            'manufacturer' => 'PT. Kimia Farma',
-            'buyPrice' => '10000',
-            'sellPrice' => '15000',
-            'initialStock' => '150',
-            'unit' => 'tablet',
-            'description' => 'Obat pereda nyeri dan penurun demam.',
-            'sideEffects' => 'Jarang terjadi, mungkin ruam kulit ringan.',
-            'expiryDate' => '2027-12-31',
-        ];
+        $product = Product::findOrFail($id);
+        $categories = Category::all();
 
         return Inertia::render('CreateProduct', [
             'isEdit' => true,
-            'initialData' => $dummyProduct
+            'initialData' => $product,
+            'categories' => $categories
         ]);
+    }
+
+    /**
+     * Update data teks produk (tanpa gambar).
+     */
+    public function update(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+
+        $validated = $request->validate([
+            'nama_obat' => 'required|string|max:150',
+            'category_id' => 'nullable|exists:categories,id',
+            'deskripsi' => 'nullable|string',
+            'jenis_obat' => 'required|in:bebas,keras,terbatas',
+            'indikasi' => 'required|string',
+            'aturan_pakai' => 'required|string',
+            'efek_samping' => 'nullable|string',
+            'harga' => 'required|numeric|min:0',
+            'stok' => 'required|integer|min:0',
+            'stok_minimum' => 'required|integer|min:0',
+            'is_active' => 'boolean',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
+
+        // Cek jika nama berubah, update slug
+        if ($product->nama_obat !== $request->nama_obat) {
+            $validated['slug'] = Str::slug($request->nama_obat) . '-' . time();
+        }
+
+        // Proses unggahan gambar
+        if ($request->hasFile('gambar')) {
+            // Hapus gambar lama jika ada
+            if ($product->gambar && Storage::disk('public')->exists($product->gambar)) {
+                Storage::disk('public')->delete($product->gambar);
+            }
+
+            $path = $request->file('gambar')->store('products', 'public');
+            $validated['gambar'] = $path;
+        } else {
+            // Jangan timpa (overwrite) gambar dengan null jika tidak ada file baru yang diunggah
+            unset($validated['gambar']);
+        }
+
+        $validated['is_active'] = $request->has('is_active') ? $request->boolean('is_active') : $product->is_active;
+
+        $product->update($validated);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Data produk berhasil diperbarui');
+    }
+
+    /**
+     * Endpoint khusus untuk update gambar produk via modal.
+     */
+    public function updateImage(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+
+        $request->validate([
+            'gambar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
+
+        if ($request->hasFile('gambar')) {
+            // Hapus gambar lama jika ada
+            if ($product->gambar && Storage::disk('public')->exists($product->gambar)) {
+                Storage::disk('public')->delete($product->gambar);
+            }
+
+            // Simpan gambar baru
+            $path = $request->file('gambar')->store('products', 'public');
+            
+            $product->update(['gambar' => $path]);
+
+            // Jika Frontend butuh JSON response untuk modal AJAX
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Gambar berhasil diperbarui',
+                    'gambar_url' => asset('storage/' . $path)
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Gambar berhasil diperbarui');
+    }
+
+    /**
+     * Menghapus produk (Soft Delete).
+     */
+    public function destroy($id)
+    {
+        $product = Product::findOrFail($id);
+        
+        $product->delete();
+
+        return redirect()->back()->with('success', 'Produk berhasil dihapus');
     }
 }
