@@ -15,6 +15,11 @@ interface Category {
     nama_kategori: string;
 }
 
+interface Symptom {
+    id: number;
+    nama_gejala: string;
+}
+
 interface ProductFormData {
     nama_obat: string;
     category_id: string;
@@ -28,6 +33,7 @@ interface ProductFormData {
     stok_minimum: string;
     gambar: File | null;
     is_active: boolean;
+    symptom_ids: number[];
 }
 
 interface CreateProductProps {
@@ -36,9 +42,10 @@ interface CreateProductProps {
     isEdit?: boolean;
     initialData?: any;
     categories?: Category[];
+    symptoms?: Symptom[];
 }
 
-export default function CreateProduct({ isOpen, onClose, isEdit = false, initialData, categories = [] }: CreateProductProps) {
+export default function CreateProduct({ isOpen, onClose, isEdit = false, initialData, categories = [], symptoms = [] }: CreateProductProps) {
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [dragActive, setDragActive] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -56,6 +63,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
         stok_minimum: initialData?.stok_minimum || '10',
         gambar: null,
         is_active: initialData?.is_active ?? true,
+        symptom_ids: initialData?.symptom_ids || [],
     });
 
     // Calculate completion percentage
@@ -246,7 +254,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                             className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
                                         >
                                             <option value="">
-                                                Pilih jenis
+                                                Pilih golongan
                                             </option>
                                             <option value="bebas">
                                                 Obat Bebas
@@ -261,6 +269,34 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                         {errors.jenis_obat && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
                                                 {errors.jenis_obat}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Kategori Induk */}
+                                    <div>
+                                        <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
+                                            Kategori Induk
+                                        </label>
+                                        <select
+                                            value={data.category_id}
+                                            onChange={(e) =>
+                                                setData('category_id', e.target.value)
+                                            }
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                        >
+                                            <option value="">
+                                                Pilih Kategori Induk
+                                            </option>
+                                            {categories.map((cat) => (
+                                                <option key={cat.id} value={cat.id}>
+                                                    {cat.nama_kategori}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.category_id && (
+                                            <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
+                                                {errors.category_id}
                                             </p>
                                         )}
                                     </div>
@@ -436,6 +472,43 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                         {errors.efek_samping && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
                                                 {errors.efek_samping}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Kategori Gejala */}
+                                    <div>
+                                        <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
+                                            Kategori Gejala
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {symptoms.map((symptom) => {
+                                                const isSelected = data.symptom_ids.includes(symptom.id);
+                                                return (
+                                                    <button
+                                                        key={symptom.id}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (isSelected) {
+                                                                setData('symptom_ids', data.symptom_ids.filter(id => id !== symptom.id));
+                                                            } else {
+                                                                setData('symptom_ids', [...data.symptom_ids, symptom.id]);
+                                                            }
+                                                        }}
+                                                        className={`rounded-full px-4 py-1.5 text-[13px] font-medium transition-all ${
+                                                            isSelected
+                                                                ? 'bg-[#006a3f] text-white border border-[#006a3f]'
+                                                                : 'bg-white text-[#6e7a70] border border-gray-200 hover:border-[#006a3f] hover:text-[#006a3f]'
+                                                        }`}
+                                                    >
+                                                        {symptom.nama_gejala}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        {errors.symptom_ids && (
+                                            <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
+                                                {errors.symptom_ids}
                                             </p>
                                         )}
                                     </div>

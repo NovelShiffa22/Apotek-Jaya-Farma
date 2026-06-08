@@ -67,15 +67,17 @@ Route::get('/pharmacist', function () {
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin', function () {
-        $products = \App\Models\Product::with('category')->latest()->get();
+        $products = \App\Models\Product::with(['category', 'symptoms'])->latest()->get();
         $categories = \App\Models\Category::all();
         $users = \App\Models\User::all();
+        $symptoms = \App\Models\Symptom::all();
         $orders = \App\Models\Order::with(['user', 'products'])->latest()->get();
         
         return Inertia::render('AdminDashboard', [
             'products' => $products,
             'categories' => $categories,
             'users' => $users,
+            'symptoms' => $symptoms,
             'orders' => $orders
         ]);
     })->name('admin.dashboard');

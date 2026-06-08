@@ -66,9 +66,11 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::all();
+        $symptoms = Symptom::all();
         
         return Inertia::render('CreateProduct', [
-            'categories' => $categories
+            'categories' => $categories,
+            'symptoms' => $symptoms
         ]);
     }
 
@@ -90,6 +92,8 @@ class ProductController extends Controller
             'stok_minimum' => 'required|integer|min:0',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'is_active' => 'boolean',
+            'symptom_ids' => 'nullable|array',
+            'symptom_ids.*' => 'exists:symptoms,id',
         ]);
 
         $validated['slug'] = Str::slug($request->nama_obat) . '-' . time();
@@ -102,7 +106,11 @@ class ProductController extends Controller
         // is_active default to true if not provided or parsing boolean
         $validated['is_active'] = $request->has('is_active') ? $request->boolean('is_active') : true;
 
-        Product::create($validated);
+        $product = Product::create(collect($validated)->except('symptom_ids')->toArray());
+
+        if ($request->has('symptom_ids')) {
+            $product->symptoms()->sync($request->symptom_ids);
+        }
 
         return redirect()->route('admin.dashboard')->with('success', 'Produk berhasil ditambahkan');
     }
@@ -112,13 +120,18 @@ class ProductController extends Controller
      */
     public function edit($id)
     {
-        $product = Product::findOrFail($id);
+        $product = Product::with('symptoms')->findOrFail($id);
         $categories = Category::all();
+        $symptoms = Symptom::all();
+
+        // format symptom_ids
+        $product->symptom_ids = $product->symptoms->pluck('id')->toArray();
 
         return Inertia::render('CreateProduct', [
             'isEdit' => true,
             'initialData' => $product,
-            'categories' => $categories
+            'categories' => $categories,
+            'symptoms' => $symptoms
         ]);
     }
 
@@ -142,6 +155,8 @@ class ProductController extends Controller
             'stok_minimum' => 'required|integer|min:0',
             'is_active' => 'boolean',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'symptom_ids' => 'nullable|array',
+            'symptom_ids.*' => 'exists:symptoms,id',
         ]);
 
         // Cek jika nama berubah, update slug
@@ -165,7 +180,11 @@ class ProductController extends Controller
 
         $validated['is_active'] = $request->has('is_active') ? $request->boolean('is_active') : $product->is_active;
 
-        $product->update($validated);
+        $product->update(collect($validated)->except('symptom_ids')->toArray());
+
+        if ($request->has('symptom_ids')) {
+            $product->symptoms()->sync($request->symptom_ids);
+        }
 
         return redirect()->route('admin.dashboard')->with('success', 'Data produk berhasil diperbarui');
     }

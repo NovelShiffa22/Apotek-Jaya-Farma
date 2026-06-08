@@ -507,7 +507,10 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             Produk
                                         </th>
                                         <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
-                                            Kategori
+                                            Kategori Induk
+                                        </th>
+                                        <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                            Golongan Obat
                                         </th>
                                         <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
                                             Stok
@@ -551,6 +554,9 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                         {product.nama_obat}
                                                     </p>
                                                 </div>
+                                            </td>
+                                            <td className="px-6 py-5 font-['Inter',sans-serif] text-[14px] text-[#3e4a41]">
+                                                {product.category?.nama_kategori || '-'}
                                             </td>
                                             <td className="px-6 py-5">
                                                 <span
@@ -619,12 +625,12 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             <td className="px-6 py-5">
                                                 <div className="flex flex-wrap gap-2">
                                                     {(product.symptoms || []).map(
-                                                        (symptom, idx) => (
+                                                        (symptom: any, idx: number) => (
                                                             <span
                                                                 key={idx}
                                                                 className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 font-['Inter',sans-serif] text-[11px] font-medium text-blue-700"
                                                             >
-                                                                {symptom}
+                                                                {symptom.nama_gejala || symptom}
                                                             </span>
                                                         ),
                                                     )}
