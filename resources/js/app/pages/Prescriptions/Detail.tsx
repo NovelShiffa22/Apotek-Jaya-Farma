@@ -3,18 +3,12 @@ import { FileText, CheckCircle2, XCircle, Clock, ShoppingCart, Info, AlertTriang
 import { useState, useEffect } from 'react';
 import Header from '../../components/Header';
 
-export default function PrescriptionDetail({ id }: { id: string }) {
-    const [status, setStatus] = useState<'Verifikasi' | 'Disetujui' | 'Ditolak'>('Verifikasi');
-    const [date, setDate] = useState('Oct 24, 2024');
+export default function PrescriptionDetail({ prescription, user }: { prescription: any, user: any }) {
+    let status = 'Verifikasi';
+    if (prescription.status_validasi === 'disetujui') status = 'Disetujui';
+    else if (prescription.status_validasi === 'ditolak') status = 'Ditolak';
 
-    useEffect(() => {
-        const existing = JSON.parse(localStorage.getItem('mock_prescriptions') || '[]');
-        const found = existing.find((p: any) => p.id === `#${id}` || p.id === id);
-        if (found) {
-            setStatus(found.status === 'Pending' ? 'Verifikasi' : found.status);
-            setDate(found.date);
-        }
-    }, [id]);
+    const date = new Date(prescription.created_at).toLocaleDateString('id-ID', { month: 'short', day: 'numeric', year: 'numeric' });
 
     const MOCK_DRUGS = [
         { name: 'Paracetamol 500mg', qty: '10 tabs', icon: <Pill size={20} className="text-[#006a3f]" />, instruction: 'Diminum 3x sehari setelah makan', price: 15000 },
@@ -109,7 +103,10 @@ export default function PrescriptionDetail({ id }: { id: string }) {
                                 </div>
                                 
                                 <div className="bg-gray-100 rounded-xl h-[400px] relative overflow-hidden border border-gray-200">
-                                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1585435557343-3b092031a831?auto=format&fit=crop&q=80')] bg-cover bg-center blur-[2px] opacity-60"></div>
+                                    <div 
+                                        className="absolute inset-0 bg-cover bg-center blur-[2px] opacity-60"
+                                        style={{ backgroundImage: `url(/${prescription.file_foto})` }}
+                                    ></div>
                                     
                                     {(status === 'Ditolak' || status === 'Verifikasi') && (
                                         <div className="absolute inset-0 flex items-center justify-center">
@@ -139,15 +136,15 @@ export default function PrescriptionDetail({ id }: { id: string }) {
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
                                         <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Nama Lengkap</span>
-                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">Budi Santoso</span>
+                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{user.name || '-'}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Tanggal Lahir</span>
-                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">12 Mei 1985</span>
+                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{user.dob || '-'}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Nomor Telepon</span>
-                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">+62 812 3456 7890</span>
+                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{user.phone || '-'}</span>
                                     </div>
                                 </div>
                             </div>
@@ -164,18 +161,26 @@ export default function PrescriptionDetail({ id }: { id: string }) {
                                 </div>
                                 
                                 <div className="space-y-4">
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Nama Dokter</span>
-                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">dr. Aris Munandar, Sp.PD</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Instansi</span>
-                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">RS Umum Jaya Sehat</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">SIP</span>
-                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">21.04.1.2.000192</span>
-                                    </div>
+                                    {status === 'Verifikasi' ? (
+                                        <p className="font-['Poppins',sans-serif] text-[13px] text-gray-500 text-center py-4">
+                                            Informasi akan diperbarui setelah diverifikasi oleh apoteker.
+                                        </p>
+                                    ) : (
+                                        <>
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Nama Dokter</span>
+                                                <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">dr. Aris Munandar, Sp.PD</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Instansi</span>
+                                                <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">RS Umum Jaya Sehat</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">SIP</span>
+                                                <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">21.04.1.2.000192</span>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
@@ -204,7 +209,7 @@ export default function PrescriptionDetail({ id }: { id: string }) {
                                 <div className="w-16 h-16 bg-[#f0f9f4] rounded-xl flex items-center justify-center text-[#006a3f]">
                                     <FileText size={32} />
                                 </div>
-                                <span className="font-['Poppins',sans-serif] font-bold text-[16px] text-[#171d19]">resep_obat.png</span>
+                                <span className="font-['Poppins',sans-serif] font-bold text-[16px] text-[#171d19]">{prescription.file_foto?.split('/').pop()}</span>
                             </div>
                             
                             <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">

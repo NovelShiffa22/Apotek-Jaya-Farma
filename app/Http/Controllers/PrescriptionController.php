@@ -5,9 +5,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Prescription;
+use Illuminate\Support\Facades\Auth;
 
 class PrescriptionController extends Controller
 {
+    public function show($id)
+    {
+        $prescription = Prescription::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+
+        return Inertia::render('Prescriptions/Detail', [
+            'prescription' => $prescription,
+            'user' => Auth::user()
+        ]);
+    }
     public function index(Request $request)
     {
         $query = Prescription::where('user_id', auth()->id());
