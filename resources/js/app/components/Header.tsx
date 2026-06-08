@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { Search, MessageCircle, User, ShoppingCart, Bell } from 'lucide-react';
+import { Search, MessageCircle, User, ShoppingCart, Bell, FileText } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export default function Header() {
@@ -79,6 +79,16 @@ export default function Header() {
                   </span>
                 </a>
 
+                <Link 
+                  href={route('prescriptions.index')} 
+                  className="border border-[#006a3f] text-[#006a3f] hover:bg-emerald-50 px-6 py-3 rounded-xl flex items-center gap-2 hover:shadow-sm transition-all duration-300 hover:-translate-y-0.5 group bg-white"
+                >
+                  <FileText size={18} />
+                  <span className="font-['Roboto_Condensed',sans-serif] text-[15px] tracking-[0.3px] font-medium">
+                    Resep
+                  </span>
+                </Link>
+
                 <Link href="/cart" className="relative p-3 hover:bg-[#f9fafb] rounded-xl transition-colors group" title="Keranjang">
                   <ShoppingCart size={22} className="text-[#171d19] group-hover:text-[#006a3f] transition-colors" />
                   {cartCount > 0 && (
@@ -88,10 +98,10 @@ export default function Header() {
                   )}
                 </Link>
 
-                <button className="p-3 hover:bg-[#f9fafb] rounded-xl transition-colors group relative" title="Notifikasi">
+                <Link href={route('notifications.index')} className="p-3 hover:bg-[#f9fafb] rounded-xl transition-colors group relative" title="Notifikasi">
                   <Bell size={22} className="text-[#171d19] group-hover:text-[#006a3f] transition-colors" />
                   <span className="absolute top-3.5 right-3.5 bg-red-500 w-2 h-2 rounded-full" />
-                </button>
+                </Link>
 
                 <Link href="/profile" className="p-3 hover:bg-[#f9fafb] rounded-xl transition-colors group" title="Profil">
                   <User size={22} className="text-[#171d19] group-hover:text-[#006a3f] transition-colors" />

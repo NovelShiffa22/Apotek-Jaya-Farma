@@ -31,9 +31,24 @@ Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 
 Route::get('/checkout', function () {
     return Inertia::render('Checkout');
-});
+})->name('checkout.index');
 
-Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::get('/cart', function () {
+    return Inertia::render('Cart');
+})->name('cart.index');
+
+Route::get('/notifications', function () {
+    return Inertia::render('Notifications');
+})->name('notifications.index');
+
+// Rute Simulasi Resep (FE)
+Route::prefix('prescriptions')->name('prescriptions.')->group(function () {
+    Route::get('/', function() { return Inertia::render('Prescriptions/Index'); })->name('index');
+    Route::get('/upload/step-1', function() { return Inertia::render('Prescriptions/UploadStep1'); })->name('upload.step1');
+    Route::get('/upload/step-2', function() { return Inertia::render('Prescriptions/UploadStep2'); })->name('upload.step2');
+    Route::get('/upload/step-3', function() { return Inertia::render('Prescriptions/UploadStep3'); })->name('upload.step3');
+    Route::get('/{id}', function($id) { return Inertia::render('Prescriptions/Detail', ['id' => $id]); })->name('detail');
+});
 
 Route::get('/profile', function () {
     return Inertia::render('Profile');
@@ -44,9 +59,15 @@ Route::get('/pharmacist', function () {
     return Inertia::render('PharmacistDashboard');
 })->middleware(['auth', 'role:pharmacist']);
 
-Route::get('/admin', function () {
-    return Inertia::render('AdminDashboard');
-})->middleware(['auth', 'role:admin']);
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin', function () {
+        return Inertia::render('AdminDashboard');
+    })->name('admin.dashboard');
+
+    Route::get('/admin/products/create', [ProductController::class, 'create'])->name('admin.products.create');
+    Route::post('/admin/products', [ProductController::class, 'store'])->name('products.store');
+    Route::get('/admin/products/{id}/edit', [ProductController::class, 'edit'])->name('admin.products.edit');
+});
 
 Route::get('/dashboard', function () {
     $user = auth()->user();

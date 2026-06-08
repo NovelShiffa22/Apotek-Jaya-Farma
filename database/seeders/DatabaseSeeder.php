@@ -41,5 +41,9 @@ class DatabaseSeeder extends Seeder
             'role' => 'user',
             'password' => \Illuminate\Support\Facades\Hash::make('11223344'),
         ]);
+
+        $this->call([
+            MasterDataSeeder::class,
+        ]);
     }
 }

@@ -25,23 +25,28 @@ interface ProductFormData {
     photo: File | null;
 }
 
-export default function CreateProduct() {
+interface CreateProductProps {
+    isEdit?: boolean;
+    initialData?: ProductFormData;
+}
+
+export default function CreateProduct({ isEdit = false, initialData }: CreateProductProps) {
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [dragActive, setDragActive] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const { data, setData, post, errors, processing } = useForm<ProductFormData>({
-        name: '',
-        sku: '',
-        category: '',
-        manufacturer: '',
-        buyPrice: '',
-        sellPrice: '',
-        initialStock: '',
-        unit: 'tablet',
-        description: '',
-        sideEffects: '',
-        expiryDate: '',
+    const { data, setData, post, put, errors, processing } = useForm<ProductFormData>({
+        name: initialData?.name || '',
+        sku: initialData?.sku || '',
+        category: initialData?.category || '',
+        manufacturer: initialData?.manufacturer || '',
+        buyPrice: initialData?.buyPrice || '',
+        sellPrice: initialData?.sellPrice || '',
+        initialStock: initialData?.initialStock || '',
+        unit: initialData?.unit || 'tablet',
+        description: initialData?.description || '',
+        sideEffects: initialData?.sideEffects || '',
+        expiryDate: initialData?.expiryDate || '',
         photo: null,
     });
 
@@ -118,7 +123,12 @@ export default function CreateProduct() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(route('products.store'));
+        if (isEdit) {
+            // For FE demo, we can just use put or pretend it saves
+            alert('Produk berhasil diperbarui (Simulasi FE)');
+        } else {
+            post(route('products.store'));
+        }
     };
 
     const handleReset = () => {
@@ -150,10 +160,10 @@ export default function CreateProduct() {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="font-['Poppins',sans-serif] text-3xl font-semibold text-[#171d19]">
-                        Tambah Produk Baru
+                        {isEdit ? 'Edit Produk' : 'Tambah Produk Baru'}
                     </h1>
                     <p className="mt-2 font-['Poppins',sans-serif] text-[14px] text-[#6e7a70]">
-                        Isi formulir di bawah untuk menambahkan produk obat baru ke sistem apotek
+                        {isEdit ? 'Perbarui informasi produk obat yang sudah ada' : 'Isi formulir di bawah untuk menambahkan produk obat baru ke sistem apotek'}
                     </p>
                 </div>
 
@@ -600,7 +610,7 @@ export default function CreateProduct() {
                                 <div className="mb-5 flex items-center gap-3 rounded-lg bg-white p-3">
                                     <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
                                     <span className="font-['Poppins',sans-serif] text-[13px] font-medium text-[#171d19]">
-                                        Draft Belum Disimpan
+                                        {isEdit ? 'Draft Perubahan Belum Disimpan' : 'Draft Belum Disimpan'}
                                     </span>
                                 </div>
 
@@ -660,7 +670,7 @@ export default function CreateProduct() {
                                 <ShoppingBag size={16} />
                                 {processing
                                     ? 'Menyimpan...'
-                                    : 'Simpan Produk'}
+                                    : (isEdit ? 'Perbarui Produk' : 'Simpan Produk')}
                             </button>
                         </div>
                     </div>
