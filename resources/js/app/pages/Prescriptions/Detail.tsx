@@ -103,6 +103,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                 </div>
                                 
                                 <div className="bg-gray-100 rounded-xl h-[400px] relative overflow-hidden border border-gray-200">
+                                    {/* Using absolute path for public storage symlink */}
                                     <div 
                                         className="absolute inset-0 bg-cover bg-center blur-[2px] opacity-60"
                                         style={{ backgroundImage: `url(/${prescription.file_foto})` }}
