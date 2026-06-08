@@ -97,26 +97,19 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="font-['Poppins',sans-serif] font-bold text-[18px] text-[#171d19]">Pratinjau Resep</h3>
-                                    <button className="flex items-center gap-2 text-[#006a3f] font-['Poppins',sans-serif] font-semibold text-[14px] hover:underline">
+                                    <button 
+                                        onClick={() => window.open(`/${prescription.file_foto}`, '_blank')}
+                                        className="flex items-center gap-2 text-[#006a3f] font-['Poppins',sans-serif] font-semibold text-[14px] hover:underline"
+                                    >
                                         <ZoomIn size={16} /> Perbesar Foto
                                     </button>
                                 </div>
                                 
                                 <div className="bg-gray-100 rounded-xl h-[400px] relative overflow-hidden border border-gray-200">
-                                    {/* Using absolute path for public storage symlink */}
                                     <div 
-                                        className="absolute inset-0 bg-cover bg-center blur-[2px] opacity-60"
+                                        className="absolute inset-0 bg-contain bg-no-repeat bg-center"
                                         style={{ backgroundImage: `url(/${prescription.file_foto})` }}
                                     ></div>
-                                    
-                                    {(status === 'Ditolak' || status === 'Verifikasi') && (
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <div className="bg-white/90 backdrop-blur-sm px-6 py-4 rounded-xl flex items-center gap-3 shadow-lg border border-red-100 text-red-600 font-['Poppins',sans-serif] font-bold">
-                                                <XCircle size={24} />
-                                                Foto Kurang Jelas
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </div>
