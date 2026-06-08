@@ -260,9 +260,9 @@ export default function Profile() {
                             </span>
                           </div>
                           <div className="flex gap-3 justify-end">
-                            <button className="font-['Inter',sans-serif] text-[14px] font-bold text-gray-600 hover:text-gray-900 border border-gray-200 px-5 py-2.5 rounded-xl transition-colors hover:bg-gray-50">
+                            <Link href={`/invoice/${order.id}`} className="font-['Inter',sans-serif] text-[14px] font-bold text-gray-600 hover:text-gray-900 border border-gray-200 px-5 py-2.5 rounded-xl transition-colors hover:bg-gray-50">
                               Lihat Detail
-                            </button>
+                            </Link>
                             {isPending && (
                               <Link href={`/invoice/${order.id}`} className="bg-[#006a3f] text-white px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-[#005632] shadow-sm hover:shadow-md transition-all whitespace-nowrap">
                                 Bayar Sekarang
