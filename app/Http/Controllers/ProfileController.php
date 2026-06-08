@@ -62,6 +62,29 @@ class ProfileController extends Controller
     }
 
     /**
+     * Memperbarui informasi profil dari halaman Profile pelanggan.
+     */
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', \Illuminate\Validation\Rule::unique('users')->ignore(auth()->id())],
+            'phone' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        $user = $request->user();
+        $user->fill($request->only('name', 'email', 'phone'));
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
+
+        return redirect()->back()->with('success', 'Informasi profil berhasil diperbarui.');
+    }
+
+    /**
      * Menyimpan alamat baru.
      */
     public function storeAlamat(Request $request): RedirectResponse

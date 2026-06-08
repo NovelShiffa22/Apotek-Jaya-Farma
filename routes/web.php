@@ -64,12 +64,14 @@ Route::get('/profile', function () {
     $orders = \App\Models\VirtualTransaction::where('user_id', auth()->id())->latest()->get();
     $addresses = \App\Models\Address::where('user_id', auth()->id())->latest()->get();
     return Inertia::render('Profile', [
+        'user' => auth()->user(),
         'orders' => $orders,
         'addresses' => $addresses
     ]);
 })->middleware(['auth', 'role:user'])->name('profile');
 
 Route::middleware(['auth', 'role:user'])->group(function () {
+    Route::patch('/profile/update', [\App\Http\Controllers\ProfileController::class, 'updateProfile'])->name('profile.update_info');
     Route::post('/profile/address', [\App\Http\Controllers\ProfileController::class, 'storeAlamat'])->name('address.store');
     Route::patch('/profile/address/{id}/utama', [\App\Http\Controllers\ProfileController::class, 'setUtama'])->name('address.set_utama');
 });

@@ -20,6 +20,31 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
     is_default: false,
   });
 
+  const { data: formProfile, setData: setFormProfile, patch: patchProfile, processing: processingProfile } = useForm({
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+  });
+
+  const passwordForm = useForm({
+    current_password: '',
+    password: '',
+    password_confirmation: '',
+  });
+
+  const submitProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    patchProfile(route('profile.update_info'));
+  };
+
+  const submitPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    passwordForm.put(route('password.update'), {
+      preserveScroll: true,
+      onSuccess: () => passwordForm.reset(),
+    });
+  };
+
   const submitAddress = (e: React.FormEvent) => {
     e.preventDefault();
     postAddress(route('address.store'), {
@@ -123,19 +148,22 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
           {/* Content */}
           <div className="col-span-3">
             {activeTab === 'profile' && (
-              <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+              <>
+                <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
                 <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-8 font-semibold">
                   Informasi Profil
                 </h2>
-                <div className="space-y-6">
+                <form onSubmit={submitProfile} className="space-y-6">
                   <div>
                     <label className="font-['Inter',sans-serif] font-bold text-[12px] text-[#6e7a70] tracking-wider uppercase mb-3 block">
                       Nama Lengkap
                     </label>
                     <input
                       type="text"
-                      defaultValue={user?.name}
+                      value={formProfile.name}
+                      onChange={e => setFormProfile('name', e.target.value)}
                       className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      required
                     />
                   </div>
                   <div>
@@ -144,8 +172,10 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                     </label>
                     <input
                       type="email"
-                      defaultValue={user?.email}
+                      value={formProfile.email}
+                      onChange={e => setFormProfile('email', e.target.value)}
                       className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      required
                     />
                   </div>
                   <div>
@@ -154,15 +184,81 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                     </label>
                     <input
                       type="tel"
-                      defaultValue={user?.phone || ''}
+                      value={formProfile.phone}
+                      onChange={e => setFormProfile('phone', e.target.value)}
                       className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                     />
                   </div>
-                  <button className="bg-[#006a3f] hover:bg-[#005632] px-8 py-4 rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] text-white hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)] transition-all duration-300 hover:-translate-y-0.5 font-medium">
-                    Simpan Perubahan
+                  <button 
+                    type="submit" 
+                    disabled={processingProfile}
+                    className="bg-[#006a3f] hover:bg-[#005632] px-8 py-4 rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] text-white hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)] transition-all duration-300 hover:-translate-y-0.5 font-medium disabled:opacity-50"
+                  >
+                    {processingProfile ? 'Menyimpan...' : 'Simpan Perubahan'}
                   </button>
-                </div>
+                </form>
               </div>
+
+              <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)] mt-8">
+                <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-8 font-semibold">
+                  Ubah Password
+                </h2>
+                <form onSubmit={submitPassword} className="space-y-6">
+                  <div>
+                    <label className="font-['Inter',sans-serif] font-bold text-[12px] text-[#6e7a70] tracking-wider uppercase mb-3 block">
+                      Kata Sandi Saat Ini
+                    </label>
+                    <input
+                      type="password"
+                      value={passwordForm.data.current_password}
+                      onChange={e => passwordForm.setData('current_password', e.target.value)}
+                      className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      required
+                    />
+                    {passwordForm.errors.current_password && (
+                      <p className="mt-2 text-sm text-red-600 font-['Inter',sans-serif]">{passwordForm.errors.current_password}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="font-['Inter',sans-serif] font-bold text-[12px] text-[#6e7a70] tracking-wider uppercase mb-3 block">
+                      Kata Sandi Baru
+                    </label>
+                    <input
+                      type="password"
+                      value={passwordForm.data.password}
+                      onChange={e => passwordForm.setData('password', e.target.value)}
+                      className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      required
+                    />
+                    {passwordForm.errors.password && (
+                      <p className="mt-2 text-sm text-red-600 font-['Inter',sans-serif]">{passwordForm.errors.password}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="font-['Inter',sans-serif] font-bold text-[12px] text-[#6e7a70] tracking-wider uppercase mb-3 block">
+                      Konfirmasi Kata Sandi Baru
+                    </label>
+                    <input
+                      type="password"
+                      value={passwordForm.data.password_confirmation}
+                      onChange={e => passwordForm.setData('password_confirmation', e.target.value)}
+                      className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      required
+                    />
+                    {passwordForm.errors.password_confirmation && (
+                      <p className="mt-2 text-sm text-red-600 font-['Inter',sans-serif]">{passwordForm.errors.password_confirmation}</p>
+                    )}
+                  </div>
+                  <button 
+                    type="submit" 
+                    disabled={passwordForm.processing}
+                    className="bg-[#171d19] hover:bg-[#2c362f] px-8 py-4 rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] text-white hover:shadow-[0_8px_20px_rgba(23,29,25,0.3)] transition-all duration-300 hover:-translate-y-0.5 font-medium disabled:opacity-50"
+                  >
+                    {passwordForm.processing ? 'Menyimpan...' : 'Perbarui Password'}
+                  </button>
+                </form>
+              </div>
+              </>
             )}
 
             {activeTab === 'address' && (
