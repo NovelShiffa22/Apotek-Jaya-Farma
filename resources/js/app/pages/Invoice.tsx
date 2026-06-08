@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Head, router } from '@inertiajs/react';
-import { CheckCircle, Clock, Copy, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Head, router, Link } from '@inertiajs/react';
+import { CheckCircle, Clock, Copy, ArrowRight, ShieldCheck, ArrowLeft } from 'lucide-react';
 import Header from '../components/Header';
 
 interface Transaction {
@@ -66,6 +66,12 @@ export default function Invoice({ transaction }: Props) {
 
       <main className="max-w-[800px] mx-auto px-4 py-12">
         
+        <div className="mb-6">
+          <Link href="/profile" className="inline-flex items-center gap-1 font-['Inter',sans-serif] text-[14px] text-gray-500 hover:text-gray-700 transition-colors">
+            <ArrowLeft size={16} />
+            Kembali ke Riwayat Pesanan
+          </Link>
+        </div>
         {isLunas ? (
           // SUKSES UI
           <div className="bg-white rounded-3xl p-10 text-center shadow-lg border border-gray-100 max-w-lg mx-auto transform transition-all animate-fade-in-up">

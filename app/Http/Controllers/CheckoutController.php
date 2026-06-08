@@ -103,9 +103,12 @@ class CheckoutController extends Controller
         
         $subtotal = 0;
 
+        $purchasedItems = [];
+
         if (!empty($selectedIds)) {
             foreach ($selectedIds as $id) {
                 if(isset($cart[$id])) {
+                    $purchasedItems[] = $cart[$id];
                     $subtotal += $cart[$id]['price'] * $cart[$id]['quantity'];
                 }
                 unset($cart[$id]);
@@ -113,6 +116,7 @@ class CheckoutController extends Controller
             Session::put('cart', $cart);
         } else {
             foreach ($cart as $id => $item) {
+                $purchasedItems[] = $item;
                 $subtotal += $item['price'] * $item['quantity'];
             }
             Session::forget('cart');
@@ -130,6 +134,7 @@ class CheckoutController extends Controller
             'payment_method' => $paymentMethod,
             'total_amount' => $totalAmount,
             'status' => 'Pending',
+            'items' => $purchasedItems,
         ]);
 
         return redirect()->route('order.invoice', ['id' => $transaction->id]);

@@ -17,9 +17,7 @@ Route::get('/', function () {
 
 Route::get('/catalog', [ProductController::class, 'index'])->name('catalog.index');
 
-Route::get('/product/{id}', function ($id) {
-    return Inertia::render('ProductDetail', ['id' => $id]);
-});
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 
 // Menampilkan halaman form input gejala
 Route::get('/recommendation', [RecommendationController::class, 'index'])->name('rekomendasi.index');

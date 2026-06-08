@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Camera, FileText, CalendarCheck, ArrowRight } from 'lucide-react';
+import { Camera, FileText, CalendarCheck, ArrowRight, ArrowLeft } from 'lucide-react';
 import Header from '../../components/Header';
 
 export default function UploadStep1() {
@@ -8,6 +8,13 @@ export default function UploadStep1() {
             <Header />
             <main className="mx-auto max-w-4xl px-8 py-10">
                 
+                <div className="mb-6">
+                    <Link href="/catalog" className="inline-flex items-center gap-1 font-['Inter',sans-serif] text-[14px] text-gray-500 hover:text-gray-700 transition-colors">
+                        <ArrowLeft size={16} />
+                        Kembali
+                    </Link>
+                </div>
+
                 {/* Stepper */}
                 <div className="mb-12 flex items-center justify-center">
                     <div className="flex items-center gap-4">

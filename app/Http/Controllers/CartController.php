@@ -113,9 +113,7 @@ class CartController extends Controller
         Session::put('cart', $cart);
 
         $msg = "{$product->nama_obat} berhasil ditambahkan ke keranjang.";
-        if ($request->wantsJson() || $request->ajax()) {
-            return redirect()->back()->with('success', $msg);
-        }
+        return redirect()->back()->with('success', $msg);
     }
 
     /**
@@ -157,12 +155,9 @@ class CartController extends Controller
         if (isset($cart[$id])) {
             unset($cart[$id]);
             Session::put('cart', $cart);
-
-            if ($request->wantsJson() || $request->ajax()) return response()->json(['success' => true]);
             return redirect()->back()->with('success', 'Item dihapus dari keranjang.');
         }
 
-        if ($request->wantsJson() || $request->ajax()) return response()->json(['message' => 'Item tidak ditemukan.'], 404);
         return redirect()->back()->with('error', 'Item tidak ditemukan.');
     }
 }

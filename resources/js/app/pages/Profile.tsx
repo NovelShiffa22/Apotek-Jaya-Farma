@@ -176,7 +176,7 @@ export default function Profile() {
                         key={order.id}
                         className="bg-white rounded-2xl p-6 border border-[#f1f5f9] shadow-[0_4px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all"
                       >
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start justify-between mb-2">
                           <div>
                             <p className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#171d19] mb-1 font-semibold">
                               VA: {order.va_number}
@@ -195,19 +195,65 @@ export default function Profile() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center justify-between pt-4 border-t border-[#f1f5f9]">
-                          <p className="font-['Roboto_Condensed',sans-serif] text-[18px] text-[#171d19] font-semibold">
-                            Total: Rp {Number(order.total_amount).toLocaleString('id-ID')}
-                          </p>
-                          {isPending ? (
-                            <Link href={`/invoice/${order.id}`} className="bg-[#006a3f] text-white px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-[#005632] shadow-md hover:shadow-lg transition-all">
-                              Bayar Sekarang
+
+                        {/* Product Snapshot (Shopee Style) */}
+                        {order.items && order.items.length > 0 && (
+                          <div className="py-4">
+                            <Link href={`/product/${order.items[0].id || order.items[0].product_id || 1}`} className="flex items-start gap-4 group">
+                              <div className="w-20 h-20 bg-gray-100 rounded-xl border border-gray-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                {order.items[0].foto || order.items[0].image ? (
+                                  <img 
+                                    src={order.items[0].foto || order.items[0].image} 
+                                    alt={order.items[0].nama || order.items[0].name} 
+                                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-1" 
+                                  />
+                                ) : (
+                                  <Package size={28} className="text-gray-400 group-hover:scale-105 transition-transform duration-300" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0 mt-1">
+                                <h3 className="font-['Poppins',sans-serif] text-[15px] font-bold text-[#171d19] group-hover:text-[#006a3f] transition-colors truncate">
+                                  {order.items[0].nama || order.items[0].name || 'Produk Farmasi'}
+                                </h3>
+                                <p className="font-['Inter',sans-serif] text-[13px] text-gray-500 mt-1">
+                                  x{order.items[0].quantity || 1}
+                                </p>
+                              </div>
+                              <div className="text-right mt-1">
+                                <p className="font-['Inter',sans-serif] text-[14px] text-[#171d19] font-medium">
+                                  Rp {Number(order.items[0].harga || order.items[0].price || 0).toLocaleString('id-ID')}
+                                </p>
+                              </div>
                             </Link>
-                          ) : (
-                            <button className="font-['Inter',sans-serif] text-[14px] font-bold text-[#006a3f] hover:text-[#005632] transition-colors">
-                              Lihat Detail →
+                            
+                            {order.items.length > 1 && (
+                              <div className="mt-3 pl-[96px]">
+                                <p className="font-['Inter',sans-serif] text-[13px] text-gray-500">
+                                  Lihat +{order.items.length - 1} produk lainnya
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Footer Card */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-4 border-t border-[#f1f5f9] gap-4 mt-2">
+                          <div className="text-right sm:text-left">
+                            <span className="font-['Inter',sans-serif] text-[13px] text-gray-500 mr-2">Total Pesanan:</span>
+                            <span className="font-['Poppins',sans-serif] text-[18px] text-[#006a3f] font-bold">
+                              Rp {Number(order.total_amount).toLocaleString('id-ID')}
+                            </span>
+                          </div>
+                          <div className="flex gap-3 justify-end">
+                            <button className="font-['Inter',sans-serif] text-[14px] font-bold text-gray-600 hover:text-gray-900 border border-gray-200 px-5 py-2.5 rounded-xl transition-colors hover:bg-gray-50">
+                              Lihat Detail
                             </button>
-                          )}
+                            {isPending && (
+                              <Link href={`/invoice/${order.id}`} className="bg-[#006a3f] text-white px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-[#005632] shadow-sm hover:shadow-md transition-all whitespace-nowrap">
+                                Bayar Sekarang
+                              </Link>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );

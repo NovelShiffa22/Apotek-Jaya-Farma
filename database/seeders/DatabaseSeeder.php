@@ -42,12 +42,9 @@ class DatabaseSeeder extends Seeder
             'password' => \Illuminate\Support\Facades\Hash::make('11223344'),
         ]);
 
-<<<<<<< Updated upstream
         $this->call([
             MasterDataSeeder::class,
+            ProductSeeder::class,
         ]);
-=======
-        $this->call(MasterDataSeeder::class);
->>>>>>> Stashed changes
     }
 }

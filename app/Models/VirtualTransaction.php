@@ -15,5 +15,10 @@ class VirtualTransaction extends Model
         'payment_method',
         'total_amount',
         'status',
+        'items',
+    ];
+
+    protected $casts = [
+        'items' => 'array',
     ];
 }
