@@ -203,7 +203,7 @@ export default function Profile() {
                         <div className="flex items-start justify-between mb-2">
                           <div>
                             <p className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#171d19] mb-1 font-semibold">
-                              Pesanan: {order.kode_pesanan || order.va_number}
+                              VA: {order.va_number}
                             </p>
                             <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
                               {new Date(order.created_at).toLocaleDateString('id-ID', {
@@ -221,14 +221,14 @@ export default function Profile() {
                         </div>
 
                         {/* Product Snapshot (Shopee Style) */}
-                        {order.products && order.products.length > 0 && (
+                        {order.items && order.items.length > 0 && (
                           <div className="py-4">
-                            <Link href={`/product/${order.products[0].id || 1}`} className="flex items-start gap-4 group">
+                            <Link href={`/product/${order.items[0].id || order.items[0].product_id || 1}`} className="flex items-start gap-4 group">
                               <div className="w-20 h-20 bg-gray-100 rounded-xl border border-gray-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
-                                {order.products[0].image ? (
+                                {order.items[0].foto || order.items[0].image ? (
                                   <img 
-                                    src={order.products[0].image} 
-                                    alt={order.products[0].name} 
+                                    src={order.items[0].foto || order.items[0].image} 
+                                    alt={order.items[0].nama || order.items[0].name} 
                                     className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-1" 
                                   />
                                 ) : (
@@ -237,20 +237,20 @@ export default function Profile() {
                               </div>
                               <div className="flex-1 min-w-0 mt-1">
                                 <h3 className="font-['Poppins',sans-serif] text-[15px] font-bold text-[#171d19] group-hover:text-[#006a3f] transition-colors truncate">
-                                  {order.products[0].name || 'Produk Farmasi'}
+                                  {order.items[0].nama || order.items[0].name || 'Produk Farmasi'}
                                 </h3>
                                 <p className="font-['Inter',sans-serif] text-[13px] text-gray-500 mt-1">
-                                  x{order.products[0].pivot?.kuantitas || 1}
+                                  x{order.items[0].quantity || 1}
                                 </p>
                               </div>
                               <div className="text-right mt-1">
                                 <p className="font-['Inter',sans-serif] text-[14px] text-[#171d19] font-medium">
-                                  Rp {Number(order.products[0].pivot?.harga_satuan || 0).toLocaleString('id-ID')}
+                                  Rp {Number(order.items[0].harga || order.items[0].price || 0).toLocaleString('id-ID')}
                                 </p>
                               </div>
                             </Link>
                             
-                            {order.products.length > 1 && (
+                            {order.items.length > 1 && (
                               <div className="mt-3 pl-[96px]">
                                 <button 
                                   onClick={() => toggleExpandOrder(order.id)}
@@ -258,22 +258,22 @@ export default function Profile() {
                                 >
                                   {expandedOrders.includes(order.id) 
                                     ? 'Sembunyikan produk' 
-                                    : `Lihat +${order.products.length - 1} produk lainnya`
+                                    : `Lihat +${order.items.length - 1} produk lainnya`
                                   }
                                 </button>
                               </div>
                             )}
 
                             {/* Render sisa produk jika di-expand */}
-                            {expandedOrders.includes(order.id) && order.products.length > 1 && (
+                            {expandedOrders.includes(order.id) && order.items.length > 1 && (
                               <div className="mt-4 pt-4 border-t border-dashed border-gray-200 space-y-4 animate-fade-in">
-                                {order.products.slice(1).map((product: any, idx: number) => (
-                                  <Link key={idx} href={`/product/${product.id || 1}`} className="flex items-start gap-4 group">
+                                {order.items.slice(1).map((item: any, idx: number) => (
+                                  <Link key={idx} href={`/product/${item.id || item.product_id || 1}`} className="flex items-start gap-4 group">
                                     <div className="w-20 h-20 bg-gray-100 rounded-xl border border-gray-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
-                                      {product.image ? (
+                                      {item.foto || item.image ? (
                                         <img 
-                                          src={product.image} 
-                                          alt={product.name} 
+                                          src={item.foto || item.image} 
+                                          alt={item.nama || item.name} 
                                           className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-1" 
                                         />
                                       ) : (
@@ -282,15 +282,15 @@ export default function Profile() {
                                     </div>
                                     <div className="flex-1 min-w-0 mt-1">
                                       <h3 className="font-['Poppins',sans-serif] text-[15px] font-bold text-[#171d19] group-hover:text-[#006a3f] transition-colors truncate">
-                                        {product.name || 'Produk Farmasi'}
+                                        {item.nama || item.name || 'Produk Farmasi'}
                                       </h3>
                                       <p className="font-['Inter',sans-serif] text-[13px] text-gray-500 mt-1">
-                                        x{product.pivot?.kuantitas || 1}
+                                        x{item.quantity || 1}
                                       </p>
                                     </div>
                                     <div className="text-right mt-1">
                                       <p className="font-['Inter',sans-serif] text-[14px] text-[#171d19] font-medium">
-                                        Rp {Number(product.pivot?.harga_satuan || 0).toLocaleString('id-ID')}
+                                        Rp {Number(item.harga || item.price || 0).toLocaleString('id-ID')}
                                       </p>
                                     </div>
                                   </Link>
@@ -305,7 +305,7 @@ export default function Profile() {
                           <div className="text-right sm:text-left">
                             <span className="font-['Inter',sans-serif] text-[13px] text-gray-500 mr-2">Total Pesanan:</span>
                             <span className="font-['Poppins',sans-serif] text-[18px] text-[#006a3f] font-bold">
-                              Rp {Number(order.total_biaya || order.total_amount || 0).toLocaleString('id-ID')}
+                              Rp {Number(order.total_amount || 0).toLocaleString('id-ID')}
                             </span>
                           </div>
                           <div className="flex gap-3 justify-end">
@@ -338,7 +338,7 @@ export default function Profile() {
           <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all scale-100">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-[#171d19]">
-                Rincian Pesanan #{selectedOrder.kode_pesanan || selectedOrder.id}
+                Rincian Pesanan #{selectedOrder.va_number || selectedOrder.id}
               </h3>
               <button 
                 onClick={() => setIsModalOpen(false)}
@@ -352,13 +352,13 @@ export default function Profile() {
               <div>
                 <h4 className="font-['Inter',sans-serif] text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-3">Daftar Item</h4>
                 <div className="space-y-4">
-                  {selectedOrder.products?.map((product: any, idx: number) => (
+                  {selectedOrder.items?.map((item: any, idx: number) => (
                     <div key={idx} className="flex justify-between items-start text-[14px] font-['Inter',sans-serif]">
                       <div className="flex-1 pr-4">
-                        <span className="text-[#171d19] font-medium leading-snug block">{product.name}</span>
-                        <span className="text-gray-500 text-[13px]">x{product.pivot?.kuantitas || 1}</span>
+                        <span className="text-[#171d19] font-medium leading-snug block">{item.nama || item.name}</span>
+                        <span className="text-gray-500 text-[13px]">x{item.quantity || 1}</span>
                       </div>
-                      <span className="font-bold text-[#171d19] whitespace-nowrap">Rp {Number((product.pivot?.harga_satuan || 0) * (product.pivot?.kuantitas || 1)).toLocaleString('id-ID')}</span>
+                      <span className="font-bold text-[#171d19] whitespace-nowrap">Rp {Number((item.harga || item.price || 0) * (item.quantity || 1)).toLocaleString('id-ID')}</span>
                     </div>
                   ))}
                 </div>
@@ -370,12 +370,12 @@ export default function Profile() {
                   <span className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19]">{selectedOrder.payment_method || 'Virtual Account'}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">{selectedOrder.va_number ? 'Virtual Account' : 'Status'}</span>
+                  <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">Virtual Account</span>
                   <span className="font-['Inter',sans-serif] text-[14px] font-bold text-indigo-600 tracking-wider">{selectedOrder.va_number || selectedOrder.status}</span>
                 </div>
                 <div className="flex justify-between items-center pt-2">
                   <span className="font-['Inter',sans-serif] text-[14px] font-bold text-gray-900">Total Pembayaran</span>
-                  <span className="font-['Poppins',sans-serif] text-[18px] font-black text-[#006a3f]">Rp {Number(selectedOrder.total_biaya || selectedOrder.total_amount || 0).toLocaleString('id-ID')}</span>
+                  <span className="font-['Poppins',sans-serif] text-[18px] font-black text-[#006a3f]">Rp {Number(selectedOrder.total_amount || 0).toLocaleString('id-ID')}</span>
                 </div>
               </div>
 
