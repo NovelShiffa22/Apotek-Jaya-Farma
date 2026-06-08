@@ -7,7 +7,8 @@ export default function PrescriptionIndex({ prescriptions, filters }: { prescrip
     const { flash } = usePage().props as any;
     const [searchQuery, setSearchQuery] = useState(filters?.search || '');
 
-    const hasPrescriptions = prescriptions.data.length > 0 || searchQuery !== '';
+    const isSearching = filters?.search && filters.search.trim() !== '';
+    const showEmptyState = prescriptions.data.length === 0 && !isSearching;
 
     const handleSearch = (e: KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
@@ -50,7 +51,7 @@ export default function PrescriptionIndex({ prescriptions, filters }: { prescrip
                     </div>
                 )}
                 
-                {!hasPrescriptions ? (
+                {showEmptyState ? (
                     // Empty State
                     <div className="flex flex-col items-center justify-center rounded-2xl bg-white p-20 shadow-sm border border-gray-100">
                         <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#006a3f]/10">

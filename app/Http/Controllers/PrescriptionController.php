@@ -13,7 +13,11 @@ class PrescriptionController extends Controller
         $query = Prescription::where('user_id', auth()->id());
 
         if ($request->has('search') && !empty($request->search)) {
-            $query->where('id', 'LIKE', '%' . $request->search . '%');
+            $searchTerm = strtolower($request->search);
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(kode_resep) LIKE ?', ['%' . $searchTerm . '%'])
+                  ->orWhereRaw('LOWER(file_foto) LIKE ?', ['%' . $searchTerm . '%']);
+            });
         }
 
         $prescriptions = $query->latest()->paginate(5)->withQueryString();
