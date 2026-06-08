@@ -752,20 +752,20 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                         className="rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
                                     >
                                         <div className="flex items-center justify-between">
-                                            <div className="flex flex-1 items-center gap-6">
+                                            <div className="flex flex-1 items-center gap-4 md:gap-6">
                                                 {/* Order Info */}
-                                                <div>
+                                                <div className="w-[220px] md:w-[280px] shrink-0">
                                                     <p className="mb-1 font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
                                                         {order.kode_pesanan}
                                                     </p>
-                                                    <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
+                                                    <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70] truncate">
                                                         {order.user?.name || 'Guest'} •{' '}
                                                         {new Date(order.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}
                                                     </p>
                                                 </div>
 
                                                 {/* Items Count */}
-                                                <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2">
+                                                <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 w-[80px] shrink-0">
                                                     <p className="mb-0.5 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
                                                         Items
                                                     </p>
@@ -775,11 +775,11 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                 </div>
 
                                                 {/* Total */}
-                                                <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2">
+                                                <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 w-[140px] shrink-0">
                                                     <p className="mb-0.5 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
                                                         Total
                                                     </p>
-                                                    <p className="font-['Roboto_Condensed',sans-serif] text-[18px] font-semibold text-[#006a3f]">
+                                                    <p className="font-['Roboto_Condensed',sans-serif] text-[18px] font-semibold text-[#006a3f] truncate">
                                                         Rp{' '}
                                                         {parseFloat(order.total_biaya || 0).toLocaleString(
                                                             'id-ID',
@@ -789,24 +789,16 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             </div>
 
                                             {/* Status & Actions */}
-                                            <div className="flex items-center gap-4">
+                                            <div className="flex shrink-0 items-center gap-3">
                                                 <select
                                                     value={order.status}
                                                     onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                                                    className={`rounded-xl border-2 px-4 py-2.5 font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none ${config.bg} ${config.color} ${config.border}`}
+                                                    className={`w-[130px] rounded-xl border-2 px-3 py-2.5 font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none ${config.bg} ${config.color} ${config.border}`}
                                                 >
-                                                    <option value="diproses">
-                                                        Diproses
-                                                    </option>
-                                                    <option value="disiapkan">
-                                                        Disiapkan
-                                                    </option>
-                                                    <option value="dikirim">
-                                                        Dikirim
-                                                    </option>
-                                                    <option value="selesai">
-                                                        Selesai
-                                                    </option>
+                                                    <option value="diproses">Diproses</option>
+                                                    <option value="disiapkan">Disiapkan</option>
+                                                    <option value="dikirim">Dikirim</option>
+                                                    <option value="selesai">Selesai</option>
                                                 </select>
 
                                                 <button 
