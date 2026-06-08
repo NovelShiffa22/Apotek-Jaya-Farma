@@ -34,7 +34,7 @@ Route::get('/notifications', function () {
 
 // Rute Simulasi Resep (FE)
 Route::prefix('prescriptions')->name('prescriptions.')->group(function () {
-    Route::get('/', function() { return Inertia::render('Prescriptions/Index'); })->name('index');
+    Route::get('/', [\App\Http\Controllers\PrescriptionController::class, 'index'])->middleware('auth')->name('index');
     Route::get('/upload/step-1', function() { return Inertia::render('Prescriptions/UploadStep1'); })->name('upload.step1');
     Route::get('/upload/step-2', function() { return Inertia::render('Prescriptions/UploadStep2'); })->name('upload.step2');
     Route::get('/upload/step-3', function() { return Inertia::render('Prescriptions/UploadStep3'); })->name('upload.step3');
