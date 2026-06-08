@@ -9,23 +9,26 @@ export default function Profile() {
   const { auth, orders = [] } = usePage().props as any;
   const user = auth?.user;
   const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders'>('profile');
-  const [orderTab, setOrderTab] = useState<'Pending' | 'Lunas'>('Pending');
+  const [orderTab, setOrderTab] = useState<string>('Pending');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('tab') === 'orders') {
       setActiveTab('orders');
       if (params.get('status')) {
-        setOrderTab(params.get('status') as 'Pending' | 'Lunas');
+        setOrderTab(params.get('status') as string);
       }
     }
   }, []);
 
-  const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
-    diproses: { label: 'Diproses', bg: 'bg-amber-50', text: 'text-amber-700' },
-    disiapkan: { label: 'Disiapkan', bg: 'bg-blue-50', text: 'text-blue-700' },
-    dikirim: { label: 'Dikirim', bg: 'bg-purple-50', text: 'text-purple-700' },
-    selesai: { label: 'Selesai', bg: 'bg-emerald-50', text: 'text-emerald-700' }
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'Pending': return { label: 'Belum Bayar', bg: 'bg-amber-50', text: 'text-amber-700' };
+      case 'Lunas': return { label: 'Diproses', bg: 'bg-blue-50', text: 'text-blue-700' };
+      case 'Dikirim': return { label: 'Dikirim', bg: 'bg-purple-50', text: 'text-purple-700' };
+      case 'Selesai': return { label: 'Selesai', bg: 'bg-emerald-50', text: 'text-emerald-700' };
+      default: return { label: status, bg: 'bg-gray-50', text: 'text-gray-700' };
+    }
   };
 
   return (
@@ -155,23 +158,25 @@ export default function Profile() {
                 </h2>
                 
                 {/* Sub-tabs */}
-                <div className="flex gap-4 mb-8 border-b border-[#f1f5f9]">
-                  <button
-                    onClick={() => setOrderTab('Pending')}
-                    className={`pb-3 px-2 font-['Inter',sans-serif] text-[15px] font-bold transition-all border-b-2 ${
-                      orderTab === 'Pending' ? 'border-[#006a3f] text-[#006a3f]' : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    Belum Bayar
-                  </button>
-                  <button
-                    onClick={() => setOrderTab('Lunas')}
-                    className={`pb-3 px-2 font-['Inter',sans-serif] text-[15px] font-bold transition-all border-b-2 ${
-                      orderTab === 'Lunas' ? 'border-[#006a3f] text-[#006a3f]' : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    Diproses
-                  </button>
+                <div className="flex gap-6 mb-8 border-b border-[#f1f5f9]">
+                  {[
+                    { id: 'Pending', label: 'Belum Bayar' },
+                    { id: 'Lunas', label: 'Diproses' },
+                    { id: 'Dikirim', label: 'Dikirim' },
+                    { id: 'Selesai', label: 'Selesai' }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setOrderTab(tab.id)}
+                      className={`pb-3 px-2 font-['Inter',sans-serif] text-[15px] font-semibold transition-all border-b-2 ${
+                        orderTab === tab.id 
+                          ? 'border-emerald-600 text-emerald-700 font-bold' 
+                          : 'border-transparent text-gray-500 hover:text-gray-800'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
                 </div>
 
                 <div className="space-y-4">
@@ -199,9 +204,9 @@ export default function Profile() {
                               })} • {order.payment_method}
                             </p>
                           </div>
-                          <div className={`${isPending ? 'bg-amber-50' : 'bg-emerald-50'} px-4 py-2 rounded-full`}>
-                            <p className={`font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase ${isPending ? 'text-amber-700' : 'text-emerald-700'}`}>
-                              {isPending ? 'Belum Bayar' : 'Lunas'}
+                          <div className={`${getStatusBadge(order.status).bg} px-4 py-2 rounded-full`}>
+                            <p className={`font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase ${getStatusBadge(order.status).text}`}>
+                              {getStatusBadge(order.status).label}
                             </p>
                           </div>
                         </div>
