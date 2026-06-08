@@ -19,7 +19,9 @@ interface RecommendationResult {
 }
 
 interface Props {
-  results: RecommendationResult[];
+  direkomendasikan: RecommendationResult[];
+  dipertimbangkan: RecommendationResult[];
+  tidakDisarankan: RecommendationResult[];
   input_usia?: number;
   total_found?: number;
 }
@@ -30,10 +32,8 @@ const RecommendationCard = ({ product, isTopRecommendation }: { product: Recomme
 
   const isNotRecommended = product.kategori_rekomendasi === 'tidak disarankan' || product.status === 'tidak disarankan';
   
-  // Konversi skor ke format persentase
-  const percentageScore = product.skor_kecocokan > 0 
-      ? Math.min(Math.round(product.skor_kecocokan * 45 + 50), 99) 
-      : 0;
+  // Gunakan skor persentase langsung dari backend
+  const percentageScore = product.skor_kecocokan;
 
   // Handler integrasi Cart menggunakan Axios agar tidak memicu redirect halaman (mencegah 405 Not Found)
   const handleAddToCart = async () => {
@@ -135,12 +135,7 @@ const RecommendationCard = ({ product, isTopRecommendation }: { product: Recomme
   );
 };
 
-export default function Hasil({ results = [], input_usia }: Props) {
-  
-  // Logika filtering kategori yang sesuai dengan Controller
-  const recommended = results.filter(p => p.kategori_rekomendasi === 'direkomendasikan' || p.status === 'direkomendasikan');
-  const considered = results.filter(p => p.kategori_rekomendasi === 'dipertimbangkan' || p.status === 'dipertimbangkan');
-  const notRecommended = results.filter(p => p.kategori_rekomendasi === 'tidak disarankan' || p.status === 'tidak disarankan');
+export default function Hasil({ direkomendasikan = [], dipertimbangkan = [], tidakDisarankan = [], input_usia }: Props) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
@@ -167,9 +162,9 @@ export default function Hasil({ results = [], input_usia }: Props) {
                 Direkomendasikan
               </h3>
             </div>
-            {recommended.length > 0 && (
+            {direkomendasikan.length > 0 && (
               <div className="flex flex-col p-4 bg-gray-50/30">
-                {recommended.map((product, idx) => (
+                {direkomendasikan.map((product, idx) => (
                   <RecommendationCard key={product.id} product={product} isTopRecommendation={idx === 0} />
                 ))}
               </div>
@@ -184,9 +179,9 @@ export default function Hasil({ results = [], input_usia }: Props) {
                 Dipertimbangkan
               </h3>
             </div>
-            {considered.length > 0 && (
+            {dipertimbangkan.length > 0 && (
               <div className="flex flex-col p-4 bg-gray-50/30">
-                {considered.map((product, idx) => (
+                {dipertimbangkan.map((product, idx) => (
                   <RecommendationCard key={product.id} product={product} isTopRecommendation={false} />
                 ))}
               </div>
@@ -201,9 +196,9 @@ export default function Hasil({ results = [], input_usia }: Props) {
                 Tidak Disarankan
               </h3>
             </div>
-            {notRecommended.length > 0 && (
+            {tidakDisarankan.length > 0 && (
               <div className="flex flex-col p-4 bg-gray-50/30">
-                {notRecommended.map((product, idx) => (
+                {tidakDisarankan.map((product, idx) => (
                   <RecommendationCard key={product.id} product={product} isTopRecommendation={false} />
                 ))}
               </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useForm } from '@inertiajs/react';
+import { useForm, Link } from '@inertiajs/react';
 import Header from '../components/Header';
-import { CheckCircle2, AlertCircle, XCircle, Thermometer, Wind, Droplet, Brain, FileText, Baby, Frown, Activity } from 'lucide-react';
+import { CheckCircle2, AlertCircle, XCircle, Thermometer, Wind, Droplet, Brain, FileText, Baby, Frown, Activity, ArrowLeft } from 'lucide-react';
 
 const iconMap: Record<string, any> = {
   'demam': Thermometer,
@@ -58,8 +58,19 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
     <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
       <Header />
 
-      <main className="max-w-[1440px] mx-auto px-8 py-12">
-        <div className="max-w-[800px] mx-auto">
+      <main className="max-w-[1440px] mx-auto px-8 py-12 relative">
+        {/* Back Button */}
+        <div className="absolute top-12 left-8">
+          <Link 
+            href="/" 
+            className="inline-flex items-center gap-2 font-['Inter',sans-serif] text-[15px] font-medium text-gray-500 hover:text-[#006a3f] transition-colors"
+          >
+            <ArrowLeft size={18} />
+            Kembali
+          </Link>
+        </div>
+
+        <div className="max-w-[800px] mx-auto mt-8 md:mt-0">
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="font-['Roboto_Condensed',sans-serif] font-bold text-[48px] tracking-[-1.2px] text-[#171d19] mb-4">

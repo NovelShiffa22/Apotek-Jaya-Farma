@@ -47,32 +47,35 @@ class RecommendationController extends Controller
             }, 'category'])
             ->get();
 
-        // 3. Kalkulasi Skor dan Implementasi Logika Cerdas
+        // 3. Kalkulasi Skor dan Konversi ke Persentase
         $recommendations = $products->map(function ($product) use ($usia) {
-            
-            // Hitung akumulasi dari kolom pivot 'bobot_relevansi'
-            // Nilainya float/decimal, contoh: gejala A (0.8) + gejala B (0.5) = skor 1.3
             $totalScore = $product->symptoms->sum(function ($symptom) {
                 return (float) $symptom->pivot->bobot_relevansi;
             });
 
-            $statusRekomendasi = 'direkomendasikan';
-            $alasan = null;
+            // Konversi skor ke format persentase (mirip logika frontend)
+            $percentageScore = $totalScore > 0 ? min((int) round($totalScore * 45 + 50), 99) : 0;
 
-            // Logika "Cerdas" berdasarkan usia (Medical Rule Based Engine Sederhana)
-            // Jika usia di bawah 12 tahun, obat tipe "keras" tidak disarankan
+            $alasan = null;
+            $kategori_rekomendasi = '';
+
+            // Logika medis dasar: obat keras dilarang untuk anak < 12 tahun
             if ($usia < 12 && $product->jenis_obat === 'keras') {
-                $totalScore -= 2.0; // Pinalti skor yang sangat besar
-                $statusRekomendasi = 'tidak disarankan';
+                $percentageScore = 0;
+                $kategori_rekomendasi = 'tidak disarankan';
                 $alasan = 'Obat golongan keras berisiko untuk anak di bawah 12 tahun. Harap konsultasi dengan dokter.';
-            } 
-            // Jika obat tersebut bebas tapi skor kecocokan tergolong rendah/sedang, kita sebut "dipertimbangkan"
-            elseif ($totalScore < 1.0) {
-                $statusRekomendasi = 'dipertimbangkan';
-                $alasan = 'Obat ini hanya meringankan sebagian kecil keluhan Anda.';
+            } else {
+                if ($percentageScore >= 85) {
+                    $kategori_rekomendasi = 'direkomendasikan';
+                } elseif ($percentageScore >= 50) {
+                    $kategori_rekomendasi = 'dipertimbangkan';
+                    $alasan = 'Obat ini meringankan sebagian keluhan Anda.';
+                } else {
+                    $kategori_rekomendasi = 'tidak disarankan';
+                    $alasan = 'Tingkat kecocokan sangat rendah dengan keluhan Anda.';
+                }
             }
 
-            // Kembalikan struktur array yang siap dikonsumsi oleh React (tanpa mengekspos semua isi database)
             return [
                 'id' => $product->id,
                 'nama_obat' => $product->nama_obat,
@@ -81,21 +84,39 @@ class RecommendationController extends Controller
                 'harga' => $product->harga,
                 'gambar' => $product->gambar,
                 'aturan_pakai' => $product->aturan_pakai,
-                'skor_kecocokan' => round($totalScore, 2),
-                'kategori_rekomendasi' => $statusRekomendasi,
+                'skor_kecocokan' => $percentageScore,
+                'kategori_rekomendasi' => $kategori_rekomendasi,
                 'alasan' => $alasan
             ];
         });
 
-        // 4. Urutkan berdasarkan skor tertinggi (Descending) ke terendah
-        $sortedResults = $recommendations->sortByDesc('skor_kecocokan')->values()->all();
+        // 4. Kelompokkan ke Tiga Array Terpisah
+        $direkomendasikan = [];
+        $dipertimbangkan = [];
+        $tidakDisarankan = [];
+
+        foreach ($recommendations as $item) {
+            if ($item['kategori_rekomendasi'] === 'direkomendasikan') {
+                $direkomendasikan[] = $item;
+            } elseif ($item['kategori_rekomendasi'] === 'dipertimbangkan') {
+                $dipertimbangkan[] = $item;
+            } else {
+                $tidakDisarankan[] = $item;
+            }
+        }
+
+        // Urutkan tiap array dari skor terbesar ke terkecil
+        usort($direkomendasikan, fn($a, $b) => $b['skor_kecocokan'] <=> $a['skor_kecocokan']);
+        usort($dipertimbangkan, fn($a, $b) => $b['skor_kecocokan'] <=> $a['skor_kecocokan']);
+        usort($tidakDisarankan, fn($a, $b) => $b['skor_kecocokan'] <=> $a['skor_kecocokan']);
 
         // 5. Kirimkan Data ke View React Frontend (Inertia)
         return Inertia::render('Rekomendasi/Hasil', [
-            'results' => $sortedResults,
+            'direkomendasikan' => $direkomendasikan,
+            'dipertimbangkan' => $dipertimbangkan,
+            'tidakDisarankan' => $tidakDisarankan,
             'input_usia' => $usia,
-            // Opsional: mengirim total obat yang ditemukan
-            'total_found' => count($sortedResults) 
+            'total_found' => count($recommendations) 
         ]);
     }
 }
