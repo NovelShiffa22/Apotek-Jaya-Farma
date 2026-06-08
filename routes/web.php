@@ -62,9 +62,78 @@ Route::get('/profile', function () {
 })->middleware(['auth', 'role:user']);
 
 // Ruang Portal Kerja Manajemen (Dashboard)
-Route::get('/pharmacist', function () {
-    return Inertia::render('PharmacistDashboard');
-})->middleware(['auth', 'role:pharmacist']);
+Route::middleware(['auth', 'role:pharmacist'])->group(function () {
+    Route::get('/pharmacist', function () {
+        $prescriptions = \App\Models\Prescription::with(['user', 'items.product'])->latest()->get();
+        $products = \App\Models\Product::all();
+        $orders = \App\Models\Order::with(['user', 'products'])->latest()->get();
+
+        return Inertia::render('PharmacistDashboard', [
+            'prescriptions' => $prescriptions,
+            'products' => $products,
+            'orders' => $orders
+        ]);
+    })->name('pharmacist.dashboard');
+
+    Route::put('/pharmacist/prescriptions/{id}', function(\Illuminate\Http\Request $request, $id) {
+        $prescription = \App\Models\Prescription::findOrFail($id);
+        
+        $request->validate([
+            'status_validasi' => 'required|in:pending,disetujui,ditolak',
+        ]);
+
+        $prescription->update([
+            'status_validasi' => $request->status_validasi,
+            'doctor_name' => $request->doctor_name,
+            'doctor_poli' => $request->doctor_poli,
+            'doctor_ppk' => $request->doctor_ppk,
+            'doctor_alamat' => $request->doctor_alamat,
+            'total_biaya' => $request->total_biaya,
+            'catatan_apoteker' => $request->catatan_apoteker,
+            'validated_by' => auth()->id(),
+            'validated_at' => now(),
+        ]);
+
+        if ($request->has('items') && is_array($request->items)) {
+            $prescription->items()->delete();
+            foreach ($request->items as $item) {
+                $prescription->items()->create([
+                    'product_id' => $item['product_id'] ?? null,
+                    'product_name' => $item['product_name'] ?? null,
+                    'is_racikan' => $item['is_racikan'] ?? false,
+                    'kuantitas_resep' => $item['kuantitas_resep'] ?? 0,
+                    'kuantitas_ambil' => $item['kuantitas_ambil'] ?? 0,
+                    'satuan' => $item['satuan'] ?? null,
+                    'signa' => $item['signa'] ?? null,
+                    'harga_satuan' => $item['harga_satuan'] ?? 0,
+                    'subtotal' => $item['subtotal'] ?? 0,
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Validasi resep berhasil disimpan');
+    })->name('pharmacist.prescriptions.update');
+
+    Route::put('/pharmacist/products/{id}', function(\Illuminate\Http\Request $request, $id) {
+        $product = \App\Models\Product::findOrFail($id);
+        
+        $request->validate([
+            'indikasi' => 'nullable|string',
+            'aturan_pakai' => 'nullable|string',
+            'efek_samping' => 'nullable|string',
+            'deskripsi' => 'nullable|string',
+        ]);
+
+        $product->update([
+            'indikasi' => $request->indikasi ?? $product->indikasi,
+            'aturan_pakai' => $request->aturan_pakai ?? $product->aturan_pakai,
+            'efek_samping' => $request->efek_samping ?? $product->efek_samping,
+            'deskripsi' => $request->deskripsi ?? $product->deskripsi,
+        ]);
+
+        return back()->with('success', 'Informasi obat berhasil diperbarui');
+    })->name('pharmacist.products.update');
+});
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin', function () {

@@ -17,136 +17,75 @@ import {
   ZoomIn,
   SlidersHorizontal
 } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 
-// List of prescriptions in the queue (second mockup)
-const pendingPrescriptions = [
-  {
-    id: 'RX-20231102-01',
-    customer: 'Budi Santoso',
-    initials: 'BS',
-    date: '2026-06-08 16:58',
-    timeLabel: 'Baru saja',
-    drug: 'Amoxicillin 500mg',
-    priority: 'high',
-    age: 41, // 1985 born -> 41 in 2026
-    symptoms: 'Infeksi saluran pernapasan',
-    status: 'Menunggu',
-    nik: '3275084920000001',
-    dob: 'Jakarta, 12-05-1985',
-    email: 'budi.s@example.com',
-    alamat: 'Jl. Merdeka No. 45, Bekasi',
-    gender: 'Laki-laki',
-    marital: 'Menikah',
-    job: 'Karyawan Swasta',
-    phone: '+628123456789'
-  },
-  {
-    id: 'RX-20231102-05',
-    customer: 'Siti Aminah',
-    initials: 'SA',
-    date: '2026-06-08 16:48',
-    timeLabel: '10 menit lalu',
-    drug: 'Omeprazole 20mg',
-    priority: 'normal',
-    age: 42,
-    symptoms: 'GERD',
-    status: 'Menunggu',
-    nik: '3275084920000005',
-    dob: 'Bandung, 18-09-1983',
-    email: 'siti.a@example.com',
-    alamat: 'Jl. Dago No. 12, Bandung',
-    gender: 'Perempuan',
-    marital: 'Menikah',
-    job: 'Ibu Rumah Tangga',
-    phone: '+628129876543'
-  },
-  {
-    id: 'RX-20231102-12',
-    customer: 'Ahmad Fauzi',
-    initials: 'AF',
-    date: '2026-06-08 16:33',
-    timeLabel: '25 menit lalu',
-    drug: 'Metformin 500mg',
-    priority: 'low',
-    age: 58,
-    symptoms: 'Diabetes tipe 2',
-    status: 'Menunggu',
-    nik: '3275084920000012',
-    dob: 'Surabaya, 05-02-1968',
-    email: 'ahmad.f@example.com',
-    alamat: 'Jl. Pemuda No. 78, Surabaya',
-    gender: 'Laki-laki',
-    marital: 'Menikah',
-    job: 'Pensiunan',
-    phone: '+628134567890'
-  },
-  {
-    id: 'RX-20231102-15',
-    customer: 'Ratna Kartika',
-    initials: 'RK',
-    date: '2026-06-08 16:26',
-    timeLabel: '32 menit lalu',
-    drug: 'Paracetamol 500mg',
-    priority: 'normal',
-    age: 28,
-    symptoms: 'Demam dan pusing',
-    status: 'Menunggu',
-    nik: '3275084920000015',
-    dob: 'Medan, 22-11-1997',
-    email: 'ratna.k@example.com',
-    alamat: 'Jl. Sudirman No. 9, Medan',
-    gender: 'Perempuan',
-    marital: 'Belum Menikah',
-    job: 'Mahasiswi',
-    phone: '+628123459876'
-  },
-  {
-    id: 'RX-20231102-18',
-    customer: 'Dedi Prasetyo',
-    initials: 'DP',
-    date: '2026-06-08 16:13',
-    timeLabel: '45 menit lalu',
-    drug: 'Cataflam 50mg',
-    priority: 'high',
-    age: 31,
-    symptoms: 'Sakit gigi akut',
-    status: 'Menunggu',
-    nik: '3275084920000018',
-    dob: 'Yogyakarta, 30-07-1994',
-    email: 'dedi.p@example.com',
-    alamat: 'Jl. Malioboro No. 34, Yogyakarta',
-    gender: 'Laki-laki',
-    marital: 'Belum Menikah',
-    job: 'Wiraswasta',
-    phone: '+628112345678'
-  }
-];
+export default function PharmacistDashboard({ prescriptions = [], products = [], orders = [] }: any) {
+  const { auth } = usePage().props as any;
+  const user = auth?.user;
 
-// Approved list mock data
-const approvedPrescriptions = [
-  { id: 'RX-20231102-02', customer: 'Sarah Wulandari', initials: 'SW', date: '2026-06-08 15:30', timeLabel: '1 jam lalu', drug: 'Paracetamol 500mg', priority: 'normal', age: 24, symptoms: 'Pusing kepala', status: 'Disetujui' },
-  { id: 'RX-20231102-03', customer: 'Joko Widodo', initials: 'JW', date: '2026-06-08 14:15', timeLabel: '2 jam lalu', drug: 'Amlodipine 5mg', priority: 'low', age: 62, symptoms: 'Hipertensi', status: 'Disetujui' }
-];
+  const pendingPrescriptions = prescriptions.filter((p: any) => p.status_validasi === 'pending');
+  const approvedPrescriptions = prescriptions.filter((p: any) => p.status_validasi === 'disetujui');
+  const rejectedPrescriptions = prescriptions.filter((p: any) => p.status_validasi === 'ditolak');
+  const paymentQueue = orders;
 
-// Rejected list mock data
-const rejectedPrescriptions = [
-  { id: 'RX-20231102-04', customer: 'Luhut Pandjaitan', initials: 'LP', date: '2026-06-08 13:00', timeLabel: '3 jam lalu', drug: 'Ibuprofen 400mg', priority: 'high', age: 50, symptoms: 'Radang sendi', status: 'Ditolak', reason: 'Kontraindikasi dengan obat ginjal' }
-];
+  const toLocalDateString = (d: Date) => {
+    const pad = (n: number) => n < 10 ? '0' + n : n;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
 
-// Payment queue mock data
-const paymentQueue = [
-  { id: 'RX-20231102-06', customer: 'Megawati Soekarno', initials: 'MS', date: '2026-06-08 12:45', timeLabel: '4 jam lalu', drug: 'Insulin Glargine', priority: 'high', age: 72, symptoms: 'Diabetes Melitus', status: 'Menunggu Pembayaran' }
-];
+  const todayStr = toLocalDateString(new Date());
+  const totalResepHariIni = prescriptions.filter((p: any) => (p.created_at || '').startsWith(todayStr)).length;
 
-export default function PharmacistDashboard() {
+  const recentActivities = [...prescriptions]
+    .filter((p: any) => p.status_validasi === 'disetujui' || p.status_validasi === 'ditolak')
+    .sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+    .slice(0, 5)
+    .map((p: any) => ({
+      action: p.status_validasi === 'disetujui' ? 'Approved' : 'Rejected',
+      info: `Resep #${p.kode_resep || p.id} ${p.status_validasi === 'disetujui' ? 'telah diverifikasi' : 'ditolak'}`,
+      detail: `${new Date(p.updated_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} ${p.catatan_apoteker ? `· ${p.catatan_apoteker}` : ''}`,
+      isSuccess: p.status_validasi === 'disetujui',
+      isDanger: p.status_validasi === 'ditolak',
+      raw: p
+    }));
+
+  const chartData = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const dayName = d.toLocaleDateString('id-ID', { weekday: 'short' });
+    const count = prescriptions.filter((p: any) => {
+      if (p.status_validasi !== 'disetujui' && p.status_validasi !== 'ditolak') return false;
+      const targetDate = new Date(p.updated_at || p.created_at);
+      if (isNaN(targetDate.getTime())) return false;
+      return targetDate.getFullYear() === d.getFullYear() && 
+             targetDate.getMonth() === d.getMonth() && 
+             targetDate.getDate() === d.getDate();
+    }).length;
+    return { day: dayName, value: count, active: i === 6 };
+  });
+  
+  const maxChartValue = Math.max(...chartData.map(d => d.value), 10);
+
   const [activeTab, setActiveTab] = useState<'dashboard' | 'prescriptions' | 'settings'>('dashboard');
   const [activeSubTab, setActiveSubTab] = useState<'menunggu' | 'disetujui' | 'ditolak' | 'pembayaran' | 'editor'>('menunggu');
-  const [selectedPrescription, setSelectedPrescription] = useState(pendingPrescriptions[0]);
+  const [selectedPrescription, setSelectedPrescription] = useState<any>(null);
   const [prescriptionView, setPrescriptionView] = useState<'list' | 'detail'>('list');
   const [searchQuery, setSearchQuery] = useState('');
-  const [monthFilter, setMonthFilter] = useState('November');
+  const [monthFilter, setMonthFilter] = useState('');
   const [validationNotes, setValidationNotes] = useState('');
+
+  // Notification States
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, text: 'Pesanan baru masuk dari Budi Santoso', time: '5 menit lalu', isRead: false },
+    { id: 2, text: 'Resep RX-20231102-05 perlu diverifikasi segera', time: '15 menit lalu', isRead: false },
+    { id: 3, text: 'Pembayaran pesanan #12 berhasil', time: '1 jam lalu', isRead: true }
+  ]);
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  const markAllRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+  };
 
   // Doctor detail state (Mockup 3)
   const [doctorName, setDoctorName] = useState('Dr. Hermawan');
@@ -166,6 +105,14 @@ export default function PharmacistDashboard() {
   const [racikSatuan, setRacikSatuan] = useState('Puyer');
   const [racikDosis, setRacikDosis] = useState(250); // mg
 
+  // Product Editor State
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [productSearch, setProductSearch] = useState('');
+  const [productIndikasi, setProductIndikasi] = useState('');
+  const [productAturan, setProductAturan] = useState('');
+  const [productEfek, setProductEfek] = useState('');
+  const [productDeskripsi, setProductDeskripsi] = useState('');
+
   const priorityConfig = {
     high: { label: 'Urgent', color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' },
     normal: { label: 'Normal', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
@@ -179,11 +126,24 @@ export default function PharmacistDashboard() {
     else if (activeSubTab === 'ditolak') rawList = rejectedPrescriptions;
     else if (activeSubTab === 'pembayaran') rawList = paymentQueue;
     
-    return rawList.filter(rx => 
-      rx.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      rx.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      rx.drug.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return rawList.filter((rx: any) => {
+      const idStr = (rx.kode_resep || rx.id || '').toString().toLowerCase();
+      const nameStr = (rx.user?.name || rx.customer || '').toLowerCase();
+      const matchesSearch = idStr.includes(searchQuery.toLowerCase()) || nameStr.includes(searchQuery.toLowerCase());
+
+      let matchesMonth = true;
+      if (monthFilter) {
+        const dateStr = rx.created_at || rx.waktu_masuk || '';
+        if (dateStr.length >= 7) {
+          const rxMonth = dateStr.substring(5, 7);
+          matchesMonth = rxMonth === monthFilter;
+        } else {
+          matchesMonth = false;
+        }
+      }
+
+      return matchesSearch && matchesMonth;
+    });
   };
 
   const activeFilteredList = getFilteredList();
@@ -344,12 +304,53 @@ export default function PharmacistDashboard() {
 
           {/* Quick Info & Profile */}
           <div className="flex items-center gap-6">
-            <button className="relative p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors">
-              <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                className="relative p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors"
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
+                )}
+              </button>
+
+              {/* Notification Dropdown */}
+              {isNotifOpen && (
+                <div className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-xl border border-[#E2E8F0] z-50 overflow-hidden">
+                  <div className="p-4 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F8FAFC]">
+                    <h3 className="font-['Inter',sans-serif] font-bold text-sm text-slate-800">Notifikasi</h3>
+                    {unreadCount > 0 && (
+                      <button 
+                        onClick={markAllRead}
+                        className="text-xs text-[#0D6A36] font-bold hover:text-[#0a542b] transition-colors"
+                      >
+                        Tandai dibaca
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-80 overflow-y-auto divide-y divide-[#E2E8F0]">
+                    {notifications.length > 0 ? (
+                      notifications.map(notif => (
+                        <div key={notif.id} className={`p-4 transition-colors hover:bg-slate-50 cursor-pointer ${!notif.isRead ? 'bg-[#E7F5EC]/30' : ''}`}>
+                          <p className={`text-sm font-['Inter',sans-serif] ${!notif.isRead ? 'text-slate-800 font-semibold' : 'text-slate-600'}`}>
+                            {notif.text}
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1">{notif.time}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-6 text-center text-slate-400 text-sm">Belum ada notifikasi</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             
-            <button className="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors">
+            <button 
+              onClick={() => alert('Pusat Bantuan Apoteker sedang dalam pengembangan.')}
+              className="p-2 text-slate-500 hover:bg-slate-50 rounded-full transition-colors"
+            >
               <HelpCircle size={20} />
             </button>
 
@@ -358,17 +359,23 @@ export default function PharmacistDashboard() {
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <p className="font-['Inter',sans-serif] font-bold text-sm text-slate-800 leading-tight">
-                  Apt. Sarah Azizah
+                  {user?.name || 'Apoteker'}
                 </p>
                 <p className="font-['Inter',sans-serif] text-[9px] font-bold tracking-wider text-slate-400 uppercase mt-0.5">
-                  LEAD PHARMACIST
+                  PHARMACIST
                 </p>
               </div>
-              <img
-                src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=150"
-                alt="Apt. Sarah Azizah"
-                className="w-10 h-10 rounded-full object-cover border border-[#E2E8F0]"
-              />
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name || 'Apoteker'}
+                  className="w-10 h-10 rounded-full object-cover border border-[#E2E8F0]"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-slate-200 border border-[#E2E8F0] flex items-center justify-center text-slate-500">
+                  <User size={20} />
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -382,7 +389,7 @@ export default function PharmacistDashboard() {
               <div className="relative bg-gradient-to-r from-[#09522C] to-[#0D6A36] rounded-2xl p-8 text-white overflow-hidden shadow-sm">
                 <div className="relative z-10 max-w-2xl">
                   <h1 className="font-['Inter',sans-serif] font-bold text-2xl mb-2">
-                    Selamat Pagi, Apt. Sarah Azizah
+                    Selamat Pagi, {user?.name || 'Apoteker'}
                   </h1>
                   <p className="font-['Inter',sans-serif] text-sm text-white/80 leading-relaxed">
                     Berikut adalah ringkasan aktivitas apotek Anda hari ini. Semua sistem beroperasi dengan normal.
@@ -398,10 +405,10 @@ export default function PharmacistDashboard() {
               {/* Stats Panel */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[
-                  { label: 'Total Resep Hari Ini', value: '156', sub: 'vs. 139 kemarin', badge: '+12%', icon: FileText, iconBg: 'bg-[#e7f5ec] text-[#0D6A36]', hasBadge: true },
-                  { label: 'Menunggu Verifikasi', value: '8', sub: 'Segera periksa antrean', subColor: 'text-amber-600 font-semibold', icon: Clock, iconBg: 'bg-amber-50 text-amber-600' },
-                  { label: 'Resep Disetujui', value: '142', sub: '91% dari total masuk', icon: CheckCircle, iconBg: 'bg-[#e7f5ec] text-[#0D6A36]' },
-                  { label: 'Resep Ditolak', value: '6', sub: 'Memerlukan follow-up dokter', icon: XCircle, iconBg: 'bg-red-50 text-red-600' }
+                  { label: 'Total Resep Hari Ini', value: totalResepHariIni, sub: 'Semua resep masuk hari ini', badge: 'Hari ini', icon: FileText, iconBg: 'bg-[#e7f5ec] text-[#0D6A36]', hasBadge: true },
+                  { label: 'Menunggu Verifikasi', value: pendingPrescriptions.length, sub: 'Segera periksa antrean', subColor: 'text-amber-600 font-semibold', icon: Clock, iconBg: 'bg-amber-50 text-amber-600' },
+                  { label: 'Resep Disetujui', value: approvedPrescriptions.length, sub: 'Telah diproses', icon: CheckCircle, iconBg: 'bg-[#e7f5ec] text-[#0D6A36]' },
+                  { label: 'Resep Ditolak', value: rejectedPrescriptions.length, sub: 'Memerlukan follow-up', icon: XCircle, iconBg: 'bg-red-50 text-red-600' }
                 ].map((stat, idx) => (
                   <div key={idx} className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm flex flex-col justify-between h-44 hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between">
@@ -459,15 +466,7 @@ export default function PharmacistDashboard() {
                     </div>
 
                     {/* Bars */}
-                    {[
-                      { day: 'Sen', value: 70 },
-                      { day: 'Sel', value: 90 },
-                      { day: 'Rab', value: 55 },
-                      { day: 'Kam', value: 120 },
-                      { day: 'Jum', value: 105 },
-                      { day: 'Sab', value: 145, active: true },
-                      { day: 'Min', value: 40 },
-                    ].map((data, idx) => (
+                    {chartData.map((data, idx) => (
                       <div key={idx} className="flex flex-col items-center gap-3 z-10 w-12 group relative">
                         {/* Tooltip on hover */}
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] px-2 py-1 rounded absolute bottom-full mb-1 shadow-md whitespace-nowrap pointer-events-none">
@@ -479,7 +478,7 @@ export default function PharmacistDashboard() {
                               ? 'bg-[#0D6A36] shadow-[0_4px_12px_rgba(13,106,54,0.3)]' 
                               : 'bg-[#B6D0BD] group-hover:bg-[#97BA9F]'
                           }`}
-                          style={{ height: `${(data.value / 160) * 100}%`, minHeight: '8px' }}
+                          style={{ height: `${(data.value / maxChartValue) * 100}%`, minHeight: '8px' }}
                         />
                         <span 
                           className={`font-['Inter',sans-serif] text-xs transition-colors ${
@@ -503,11 +502,22 @@ export default function PharmacistDashboard() {
                   
                   {/* Activity List Container */}
                   <div className="flex-1 divide-y divide-[#E2E8F0] overflow-y-auto">
-                    {[
-                      { action: 'Approved', info: 'Resep #RX-882190 telah diverifikasi', detail: '2 menit yang lalu · Oleh Apt. Sarah', isSuccess: true },
-                      { action: 'Rejected', info: 'Resep #RX-882188 ditolak', detail: '45 menit yang lalu · Alasan: Kontraindikasi', isDanger: true }
-                    ].map((act, index) => (
-                      <div key={index} className="flex items-center justify-between p-6 hover:bg-[#F8FAFC] transition-colors cursor-pointer group">
+                    {recentActivities.length > 0 ? recentActivities.map((act, index) => (
+                      <div 
+                        key={index} 
+                        className="flex items-center justify-between p-6 hover:bg-[#F8FAFC] transition-colors cursor-pointer group"
+                        onClick={() => {
+                          setActiveTab('prescriptions');
+                          setActiveSubTab(act.raw.status_validasi);
+                          setSelectedPrescription(act.raw);
+                          setPrescriptionView('detail');
+                          setValidationNotes(act.raw.catatan_apoteker || '');
+                          if (act.raw.doctor_name) setDoctorName(act.raw.doctor_name);
+                          if (act.raw.doctor_poli) setDoctorPoli(act.raw.doctor_poli);
+                          if (act.raw.doctor_ppk) setDoctorPPK(act.raw.doctor_ppk);
+                          if (act.raw.doctor_alamat) setDoctorAlamat(act.raw.doctor_alamat);
+                        }}
+                      >
                         <div className="flex items-start gap-4">
                           <span className={`w-2.5 h-2.5 rounded-full mt-2.5 shrink-0 ${
                             act.isSuccess ? 'bg-[#0D6A36]' : act.isDanger ? 'bg-red-500' : 'bg-blue-500'
@@ -516,19 +526,24 @@ export default function PharmacistDashboard() {
                             <p className="font-['Inter',sans-serif] text-sm font-semibold text-slate-800">
                               {act.info}
                             </p>
-                            <p className="font-['Inter',sans-serif] text-xs text-slate-400 mt-1">
+                            <p className="font-['Inter',sans-serif] text-xs text-slate-400 mt-1 line-clamp-1">
                               {act.detail}
                             </p>
                           </div>
                         </div>
-                        <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                        <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
                       </div>
-                    ))}
+                    )) : (
+                      <div className="p-6 text-center text-slate-400 font-['Inter',sans-serif] text-sm">Belum ada aktivitas verifikasi resep.</div>
+                    )}
                   </div>
 
                   {/* See All Activities Button */}
                   <div className="p-4 border-t border-[#E2E8F0] bg-[#F8FAFC]/50 text-center">
-                    <button className="text-sm font-bold text-[#0D6A36] hover:text-[#0a542b] transition-colors">
+                    <button 
+                      onClick={() => setActiveTab('prescriptions')}
+                      className="text-sm font-bold text-[#0D6A36] hover:text-[#0a542b] transition-colors"
+                    >
                       Lihat Semua Aktivitas
                     </button>
                   </div>
@@ -545,7 +560,7 @@ export default function PharmacistDashboard() {
               {activeSubTab === 'editor' ? (
                 <div className="max-w-[1000px] mx-auto space-y-6">
                   {/* Search box for drug */}
-                  <div className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm">
+                  <div className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm relative">
                     <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-3 block">
                       Cari Obat untuk Diedit
                     </label>
@@ -553,9 +568,34 @@ export default function PharmacistDashboard() {
                       <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                       <input
                         type="text"
+                        value={productSearch}
+                        onChange={(e) => setProductSearch(e.target.value)}
                         placeholder="Ketik nama obat..."
                         className="w-full pl-12 pr-4 py-3.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] focus:bg-white transition-all"
                       />
+                      {productSearch && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#E2E8F0] rounded-xl shadow-lg max-h-60 overflow-y-auto z-50">
+                           {products.filter((p: any) => p.nama_obat.toLowerCase().includes(productSearch.toLowerCase())).map((p: any) => (
+                              <button
+                                key={p.id}
+                                className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-[#E2E8F0] last:border-0 font-['Inter',sans-serif] text-sm text-slate-800"
+                                onClick={() => {
+                                  setSelectedProduct(p);
+                                  setProductIndikasi(p.indikasi || '');
+                                  setProductAturan(p.aturan_pakai || '');
+                                  setProductEfek(p.efek_samping || '');
+                                  setProductDeskripsi(p.deskripsi || '');
+                                  setProductSearch('');
+                                }}
+                              >
+                                {p.nama_obat}
+                              </button>
+                           ))}
+                           {products.filter((p: any) => p.nama_obat.toLowerCase().includes(productSearch.toLowerCase())).length === 0 && (
+                             <div className="px-4 py-3 text-sm text-slate-500 font-['Inter',sans-serif]">Tidak ada obat ditemukan.</div>
+                           )}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -570,77 +610,105 @@ export default function PharmacistDashboard() {
                           Kelola data deskripsi obat, indikasi, dosis, dan kontraindikasi.
                         </p>
                       </div>
-                      <span className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-100 rounded-lg text-xs font-semibold">
-                        Terakhir diupdate: 2 hari lalu
-                      </span>
+                      {selectedProduct && (
+                        <span className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-100 rounded-lg text-xs font-semibold">
+                          Dipilih: {selectedProduct.nama_obat}
+                        </span>
+                      )}
                     </div>
 
-                    <div className="space-y-6">
-                      <div>
-                        <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-2 block">
-                          Nama Obat
-                        </label>
-                        <input
-                          type="text"
-                          defaultValue="Paracetamol 500mg"
-                          className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] focus:bg-white transition-all"
-                        />
-                      </div>
+                    {selectedProduct ? (
+                      <div className="space-y-6">
+                        <div>
+                          <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-2 block">
+                            Nama Obat
+                          </label>
+                          <input
+                            type="text"
+                            disabled
+                            value={selectedProduct.nama_obat}
+                            className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 focus:outline-none opacity-70 cursor-not-allowed"
+                          />
+                        </div>
 
-                      <div>
-                        <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-2 block">
-                          Indikasi
-                        </label>
-                        <textarea
-                          rows={3}
-                          defaultValue="Mengatasi demam dan meredakan nyeri ringan hingga sedang seperti sakit kepala, sakit gigi, dan nyeri otot."
-                          className="w-full p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] focus:bg-white resize-none transition-all"
-                        />
-                      </div>
+                        <div>
+                          <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-2 block">
+                            Indikasi
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={productIndikasi}
+                            onChange={(e) => setProductIndikasi(e.target.value)}
+                            className="w-full p-4 bg-white border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] resize-none transition-all"
+                          />
+                        </div>
 
-                      <div>
-                        <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-2 block">
-                          Aturan Pakai
-                        </label>
-                        <textarea
-                          rows={3}
-                          defaultValue="Dewasa: 1-2 tablet setiap 4-6 jam. Maksimal 8 tablet per hari. Diminum sesudah makan."
-                          className="w-full p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] focus:bg-white resize-none transition-all"
-                        />
-                      </div>
+                        <div>
+                          <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-2 block">
+                            Aturan Pakai
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={productAturan}
+                            onChange={(e) => setProductAturan(e.target.value)}
+                            className="w-full p-4 bg-white border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] resize-none transition-all"
+                          />
+                        </div>
 
-                      <div>
-                        <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-2 block">
-                          Efek Samping
-                        </label>
-                        <textarea
-                          rows={3}
-                          defaultValue="Jarang terjadi. Dapat menyebabkan mual, muntah, atau reaksi alergi pada beberapa orang."
-                          className="w-full p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] focus:bg-white resize-none transition-all"
-                        />
-                      </div>
+                        <div>
+                          <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-2 block">
+                            Efek Samping
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={productEfek}
+                            onChange={(e) => setProductEfek(e.target.value)}
+                            className="w-full p-4 bg-white border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] resize-none transition-all"
+                          />
+                        </div>
 
-                      <div>
-                        <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-2 block">
-                          Kontraindikasi
-                        </label>
-                        <textarea
-                          rows={3}
-                          placeholder="Tambahkan kontraindikasi..."
-                          className="w-full p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] focus:bg-white resize-none transition-all"
-                        />
-                      </div>
+                        <div>
+                          <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-2 block">
+                            Deskripsi (Kontraindikasi/Tambahan)
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={productDeskripsi}
+                            onChange={(e) => setProductDeskripsi(e.target.value)}
+                            placeholder="Tambahkan kontraindikasi..."
+                            className="w-full p-4 bg-white border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] resize-none transition-all"
+                          />
+                        </div>
 
-                      <div className="flex gap-4 pt-6 border-t border-[#E2E8F0]">
-                        <button className="flex-1 bg-[#0D6A36] hover:bg-[#0a542b] py-3.5 rounded-xl font-semibold font-['Inter',sans-serif] text-sm text-white hover:shadow-md transition-all flex items-center justify-center gap-2">
-                          <Edit2 size={16} />
-                          <span>Simpan Perubahan</span>
-                        </button>
-                        <button className="px-6 py-3.5 rounded-xl font-semibold font-['Inter',sans-serif] text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
-                          Batal
-                        </button>
+                        <div className="flex gap-4 pt-6 border-t border-[#E2E8F0]">
+                          <button 
+                            onClick={() => {
+                              router.put(`/pharmacist/products/${selectedProduct.id}`, {
+                                indikasi: productIndikasi,
+                                aturan_pakai: productAturan,
+                                efek_samping: productEfek,
+                                deskripsi: productDeskripsi
+                              });
+                            }}
+                            className="flex-1 bg-[#0D6A36] hover:bg-[#0a542b] py-3.5 rounded-xl font-semibold font-['Inter',sans-serif] text-sm text-white hover:shadow-md transition-all flex items-center justify-center gap-2"
+                          >
+                            <Edit2 size={16} />
+                            <span>Simpan Perubahan</span>
+                          </button>
+                          <button 
+                            onClick={() => setSelectedProduct(null)}
+                            className="px-6 py-3.5 rounded-xl font-semibold font-['Inter',sans-serif] text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
+                          >
+                            Batal
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <AlertCircle className="mx-auto text-slate-300 mb-2" size={36} />
+                        <p className="font-['Inter',sans-serif] text-sm text-slate-400">Silakan cari dan pilih obat untuk mengedit informasinya.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -680,15 +748,25 @@ export default function PharmacistDashboard() {
                             </div>
 
                             {/* Month Dropdown filter */}
-                            <div className="relative w-full sm:w-56">
+                            <div className="relative w-full sm:w-48">
                               <select
                                 value={monthFilter}
                                 onChange={(e) => setMonthFilter(e.target.value)}
                                 className="w-full pl-4 pr-10 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-xs font-semibold text-slate-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36]"
                               >
-                                <option value="November">Pilih Bulan (November)</option>
-                                <option value="Desember">Pilih Bulan (Desember)</option>
-                                <option value="Januari">Pilih Bulan (Januari)</option>
+                                <option value="">Semua Bulan</option>
+                                <option value="01">Januari</option>
+                                <option value="02">Februari</option>
+                                <option value="03">Maret</option>
+                                <option value="04">April</option>
+                                <option value="05">Mei</option>
+                                <option value="06">Juni</option>
+                                <option value="07">Juli</option>
+                                <option value="08">Agustus</option>
+                                <option value="09">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11">November</option>
+                                <option value="12">Desember</option>
                               </select>
                               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
                                 <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -719,7 +797,7 @@ export default function PharmacistDashboard() {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-[#E2E8F0]">
-                              {activeFilteredList.map((rx) => (
+                              {activeFilteredList.map((rx: any) => (
                                 <tr key={rx.id} className="hover:bg-[#F8FAFC]/50 transition-colors">
                                   {/* ID Resep Link */}
                                   <td className="p-4">
@@ -727,11 +805,15 @@ export default function PharmacistDashboard() {
                                       onClick={() => {
                                         setSelectedPrescription(rx);
                                         setPrescriptionView('detail');
-                                        setValidationNotes('');
+                                        setValidationNotes(rx.catatan_apoteker || '');
+                                        if (rx.doctor_name) setDoctorName(rx.doctor_name);
+                                        if (rx.doctor_poli) setDoctorPoli(rx.doctor_poli);
+                                        if (rx.doctor_ppk) setDoctorPPK(rx.doctor_ppk);
+                                        if (rx.doctor_alamat) setDoctorAlamat(rx.doctor_alamat);
                                       }}
                                       className="font-['Inter',sans-serif] text-sm font-bold text-[#0D6A36] hover:underline"
                                     >
-                                      #{rx.id}
+                                      #{rx.kode_resep || rx.id}
                                     </button>
                                   </td>
 
@@ -739,28 +821,28 @@ export default function PharmacistDashboard() {
                                   <td className="p-4">
                                     <div className="flex items-center gap-3">
                                       <div className="w-8 h-8 rounded-full bg-[#E7F5EC] text-[#0D6A36] flex items-center justify-center font-bold text-xs">
-                                        {rx.initials || rx.customer.split(' ').map(n => n[0]).join('')}
+                                        {(rx.user?.name || rx.customer || 'G').split(' ').map((n: string) => n[0]).join('')}
                                       </div>
-                                      <span className="font-['Inter',sans-serif] text-sm font-semibold text-slate-850">
-                                        {rx.customer}
+                                      <span className="font-['Inter',sans-serif] text-sm font-semibold text-slate-800">
+                                        {rx.user?.name || rx.customer}
                                       </span>
                                     </div>
                                   </td>
 
                                   {/* Entry Time */}
                                   <td className="p-4 font-['Inter',sans-serif] text-sm text-slate-500 font-medium">
-                                    {rx.timeLabel || rx.date.split(' ')[1]}
+                                    {rx.created_at ? new Date(rx.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : (rx.timeLabel || rx.date?.split(' ')[1])}
                                   </td>
 
                                   {/* Status Indicator Dot Badge */}
                                   <td className="p-4">
                                     <span className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-[#E2E8F0] rounded-full text-xs font-semibold text-slate-800">
                                       <span className={`w-2 h-2 rounded-full ${
-                                        rx.status === 'Menunggu' ? 'bg-slate-900' :
-                                        rx.status === 'Disetujui' ? 'bg-emerald-500' :
-                                        rx.status === 'Ditolak' ? 'bg-red-500' : 'bg-amber-500'
+                                        rx.status_validasi === 'pending' ? 'bg-slate-900' :
+                                        rx.status_validasi === 'disetujui' ? 'bg-emerald-500' :
+                                        rx.status_validasi === 'ditolak' ? 'bg-red-500' : 'bg-amber-500'
                                       }`} />
-                                      {rx.status}
+                                      {rx.status_validasi ? rx.status_validasi.charAt(0).toUpperCase() + rx.status_validasi.slice(1) : 'Menunggu'}
                                     </span>
                                   </td>
 
@@ -1202,6 +1284,8 @@ export default function PharmacistDashboard() {
                             <p className="font-['Inter',sans-serif] font-bold text-[10px] text-slate-400 tracking-wider uppercase mb-2">CATATAN FARMASI</p>
                             <textarea
                               rows={3}
+                              value={validationNotes}
+                              onChange={(e) => setValidationNotes(e.target.value)}
                               placeholder="Tambahkan instruksi khusus untuk pasien atau keterangan farmasi..."
                               className="w-full p-4 bg-white border border-slate-200 rounded-xl font-['Inter',sans-serif] text-xs text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] resize-none shadow-sm transition-all"
                             />
@@ -1221,7 +1305,7 @@ export default function PharmacistDashboard() {
                             <div className="bg-white p-4">
                               <div className="relative group overflow-hidden rounded-lg aspect-[3/4] border border-slate-100">
                                 <img
-                                  src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&q=80&w=400"
+                                  src={selectedPrescription.file_foto || "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&q=80&w=400"}
                                   alt="Surat Resep Asli"
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 cursor-zoom-in"
                                 />
@@ -1249,11 +1333,44 @@ export default function PharmacistDashboard() {
 
                           {/* Validation CTA Buttons */}
                           <div className="space-y-3 pt-2">
-                            <button className="w-full bg-[#0D6A36] hover:bg-[#0a542b] text-white py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(13,106,54,0.15)] hover:shadow-lg transition-all">
+                            <button 
+                              onClick={() => {
+                                router.put(`/pharmacist/prescriptions/${selectedPrescription.id}`, {
+                                  status_validasi: 'disetujui',
+                                  doctor_name: doctorName,
+                                  doctor_poli: doctorPoli,
+                                  doctor_ppk: doctorPPK,
+                                  doctor_alamat: doctorAlamat,
+                                  catatan_apoteker: validationNotes,
+                                  total_biaya: totalHargaVal,
+                                  items: [
+                                    {
+                                      product_name: selectedPrescription.drug || 'Obat Resep',
+                                      is_racikan: false,
+                                      kuantitas_resep: nonRacikQty,
+                                      kuantitas_ambil: nonRacikAmbil,
+                                      satuan: 'Tablet',
+                                      signa: `${nonRacikSigna1}x${nonRacikSigna2}`,
+                                      harga_satuan: priceNonRacik,
+                                      subtotal: subtotalNonRacik
+                                    }
+                                  ]
+                                }, { onSuccess: () => setPrescriptionView('list') });
+                              }}
+                              className="w-full bg-[#0D6A36] hover:bg-[#0a542b] text-white py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(13,106,54,0.15)] hover:shadow-lg transition-all"
+                            >
                               <CheckCircle size={15} />
                               <span>BUAT RESEP</span>
                             </button>
-                            <button className="w-full border border-red-500 text-red-500 hover:bg-red-50 py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all">
+                            <button 
+                              onClick={() => {
+                                router.put(`/pharmacist/prescriptions/${selectedPrescription.id}`, {
+                                  status_validasi: 'ditolak',
+                                  catatan_apoteker: validationNotes
+                                }, { onSuccess: () => setPrescriptionView('list') });
+                              }}
+                              className="w-full border border-red-500 text-red-500 hover:bg-red-50 py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all"
+                            >
                               <XCircle size={15} />
                               <span>TOLAK</span>
                             </button>
@@ -1282,17 +1399,23 @@ export default function PharmacistDashboard() {
               
               <div className="border-t border-[#E2E8F0] pt-6 space-y-6">
                 <div className="flex items-center gap-4">
-                  <img
-                    src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=150"
-                    alt="Apt. Sarah Azizah"
-                    className="w-20 h-20 rounded-full object-cover border border-[#E2E8F0]"
-                  />
+                  {user?.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name || 'Apoteker'}
+                      className="w-20 h-20 rounded-full object-cover border border-[#E2E8F0]"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-slate-200 border border-[#E2E8F0] flex items-center justify-center text-slate-500">
+                      <User size={40} />
+                    </div>
+                  )}
                   <div>
                     <h3 className="font-['Inter',sans-serif] font-bold text-lg text-slate-800">
-                      Apt. Sarah Azizah
+                      {user?.name || 'Apoteker'}
                     </h3>
                     <p className="font-['Inter',sans-serif] text-sm text-slate-400">
-                      Lead Pharmacist · ID Apoteker: AP-77192
+                      Pharmacist
                     </p>
                     <button className="text-xs text-[#0D6A36] font-bold mt-1 hover:underline">Ganti Foto Profil</button>
                   </div>
@@ -1305,7 +1428,7 @@ export default function PharmacistDashboard() {
                     </label>
                     <input
                       type="email"
-                      defaultValue="sarah.azizah@jayafarma.com"
+                      defaultValue={user?.email || ''}
                       className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] focus:bg-white"
                     />
                   </div>
