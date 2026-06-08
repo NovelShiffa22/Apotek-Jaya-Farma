@@ -1,5 +1,5 @@
 import { Link, router, useForm } from '@inertiajs/react';
-import { FilePlus, MapPin, X, Image as ImageIcon } from 'lucide-react';
+import { FilePlus, MapPin, X, Image as ImageIcon, ArrowLeft } from 'lucide-react';
 import { useState, useRef } from 'react';
 import Header from '../../components/Header';
 
@@ -35,6 +35,17 @@ export default function UploadStep2() {
             <Header />
             <main className="mx-auto max-w-5xl px-8 py-10">
                 
+                {/* Back Button */}
+                <div className="mb-6">
+                    <Link 
+                        href={route('prescriptions.upload.step1')}
+                        className="inline-flex items-center gap-2 font-['Poppins',sans-serif] text-[14px] font-medium text-gray-500 transition-colors hover:text-[#006a3f]"
+                    >
+                        <ArrowLeft size={18} />
+                        Kembali
+                    </Link>
+                </div>
+
                 {/* Stepper */}
                 <div className="mb-12 flex items-center justify-center">
                     <div className="flex items-center gap-4">

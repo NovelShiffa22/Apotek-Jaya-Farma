@@ -28,6 +28,10 @@ class PrescriptionController extends Controller
     {
         $request->validate([
             'prescription_file' => 'required|mimes:jpg,jpeg,png,pdf|max:5120'
+        ], [
+            'prescription_file.required' => 'Mohon unggah berkas resep dokter Anda terlebih dahulu.',
+            'prescription_file.mimes' => 'Format berkas tidak didukung. Sediakan file dalam format JPG, PNG, atau PDF.',
+            'prescription_file.max' => 'Ukuran berkas terlalu besar. Maksimal ukuran file yang diperbolehkan adalah 5MB.',
         ]);
 
         $file = $request->file('prescription_file');
