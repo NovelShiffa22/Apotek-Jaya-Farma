@@ -40,6 +40,8 @@ export default function AdminDashboard({ products = [], categories = [], users =
     const [editingUser, setEditingUser] = useState<any>(null);
     const [userToDelete, setUserToDelete] = useState<any>(null);
 
+    const [viewingOrder, setViewingOrder] = useState<any>(null);
+
     const [activeTab, setActiveTab] = useState<
         'analytics' | 'products' | 'orders' | 'users'
     >(() => {
@@ -57,6 +59,12 @@ export default function AdminDashboard({ products = [], categories = [], users =
     const [orderStatusFilter, setOrderStatusFilter] = useState('all');
     const [orderDateFilter, setOrderDateFilter] = useState('');
     const [revenueFilterDays, setRevenueFilterDays] = useState(7);
+
+    const updateOrderStatus = (orderId: number, status: string) => {
+        router.put(`/admin/orders/${orderId}/status`, { status }, {
+            preserveScroll: true
+        });
+    };
 
     // Compute chart data based on orders and filter
     const revenueChartData = (() => {
@@ -544,7 +552,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                 <div className="flex items-center gap-4">
                                                     {product.gambar ? (
                                                         <img 
-                                                            src={`/storage/${product.gambar}`} 
+                                                            src={product.gambar.startsWith('http') ? product.gambar : `/storage/${product.gambar}`} 
                                                             alt={product.nama_obat} 
                                                             className="h-12 w-12 shrink-0 rounded-lg object-cover" 
                                                         />
@@ -782,7 +790,8 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             {/* Status & Actions */}
                                             <div className="flex items-center gap-4">
                                                 <select
-                                                    defaultValue={order.status}
+                                                    value={order.status}
+                                                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
                                                     className={`rounded-xl border-2 px-4 py-2.5 font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none ${config.bg} ${config.color} ${config.border}`}
                                                 >
                                                     <option value="diproses">
@@ -799,7 +808,10 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                     </option>
                                                 </select>
 
-                                                <button className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:border-[#006a3f] hover:bg-white">
+                                                <button 
+                                                    onClick={() => setViewingOrder(order)}
+                                                    className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:border-[#006a3f] hover:bg-white"
+                                                >
                                                     Detail
                                                 </button>
                                             </div>
@@ -1265,6 +1277,91 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             >
                                 Hapus
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Detail Pesanan */}
+            {viewingOrder && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-6 overflow-y-auto">
+                    <div className="relative w-full max-w-2xl rounded-3xl bg-white shadow-2xl p-8 my-8">
+                        <button
+                            onClick={() => setViewingOrder(null)}
+                            className="absolute right-6 top-6 rounded-full bg-gray-100 p-2 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-900"
+                        >
+                            <X size={20} />
+                        </button>
+                        
+                        <div className="mb-6">
+                            <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-semibold text-[#171d19]">
+                                Detail Pesanan: {viewingOrder.kode_pesanan}
+                            </h2>
+                            <p className="font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">
+                                Dibuat pada {new Date(viewingOrder.created_at).toLocaleString('id-ID', {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'})}
+                            </p>
+                        </div>
+
+                        <div className="space-y-6">
+                            {/* User & Delivery Info */}
+                            <div className="rounded-2xl border border-[#f1f5f9] bg-[#f9fafb] p-5">
+                                <h3 className="mb-3 font-['Inter',sans-serif] text-[13px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                    Informasi Pelanggan
+                                </h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">Nama</p>
+                                        <p className="font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19]">{viewingOrder.user?.name || 'Guest'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">Metode Pembayaran</p>
+                                        <p className="font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19]">{viewingOrder.payment_method || '-'}</p>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">Alamat Pengiriman</p>
+                                        <p className="font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19]">{viewingOrder.address?.alamat_lengkap || 'Ambil di Apotek'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Order Items */}
+                            <div>
+                                <h3 className="mb-3 font-['Inter',sans-serif] text-[13px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                    Item Pesanan
+                                </h3>
+                                <div className="space-y-3">
+                                    {viewingOrder.products?.map((item: any, idx: number) => (
+                                        <div key={idx} className="flex items-center justify-between rounded-xl border border-gray-100 p-4">
+                                            <div className="flex items-center gap-4">
+                                                {item.gambar ? (
+                                                    <img src={item.gambar.startsWith('http') ? item.gambar : `/storage/${item.gambar}`} alt={item.nama_obat} className="h-12 w-12 rounded-lg object-cover" />
+                                                ) : (
+                                                    <div className="h-12 w-12 rounded-lg bg-gray-100" />
+                                                )}
+                                                <div>
+                                                    <p className="font-['Inter',sans-serif] text-[14px] font-semibold text-[#171d19]">{item.nama_obat}</p>
+                                                    <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
+                                                        {item.pivot.kuantitas} x Rp {parseFloat(item.pivot.harga_satuan).toLocaleString('id-ID')}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="font-['Inter',sans-serif] text-[14px] font-semibold text-[#006a3f]">
+                                                Rp {parseFloat(item.pivot.subtotal).toLocaleString('id-ID')}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Summary */}
+                            <div className="rounded-2xl bg-emerald-50 p-5">
+                                <div className="flex items-center justify-between">
+                                    <span className="font-['Inter',sans-serif] text-[15px] font-medium text-emerald-800">Total Biaya</span>
+                                    <span className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold text-emerald-700">
+                                        Rp {parseFloat(viewingOrder.total_biaya || 0).toLocaleString('id-ID')}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
