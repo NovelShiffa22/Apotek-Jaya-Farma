@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, Link } from '@inertiajs/react';
 import { MapPin, CheckCircle2, ChevronDown, Landmark, Wallet, CreditCard, Clock } from 'lucide-react';
 import Header from '../components/Header';
 
@@ -101,6 +101,9 @@ export default function Checkout({ cartItems = [], address, shippingMethods = []
       <Header />
 
       <main className="max-w-[1200px] mx-auto px-4 py-8 mt-4">
+        <Link href={route('cart.index')} className="text-[#006a3f] hover:text-[#005632] flex items-center gap-2 mb-6 text-[14px] font-medium transition-colors w-fit">
+            &larr; Kembali ke Keranjang
+        </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
