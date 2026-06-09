@@ -179,6 +179,11 @@ class ProductController extends Controller
 
             $path = $request->file('gambar')->store('products', 'public');
             $validated['gambar'] = $path;
+        } elseif ($request->boolean('delete_gambar')) {
+            if ($product->gambar && Storage::disk('public')->exists($product->gambar)) {
+                Storage::disk('public')->delete($product->gambar);
+            }
+            $validated['gambar'] = null;
         } else {
             // Jangan timpa (overwrite) gambar dengan null jika tidak ada file baru yang diunggah
             unset($validated['gambar']);
