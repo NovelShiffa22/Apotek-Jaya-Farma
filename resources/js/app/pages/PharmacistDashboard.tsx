@@ -926,192 +926,96 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                     /* Grid Layout containing the Main Table */
                     <div className="space-y-6">
                       
-                      {/* Main White Table Card Container */}
-                      <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
-                        
-                        {/* Table Controls (Search, Month select, Filter button) */}
-                        <div className="p-6 border-b border-[#E2E8F0] flex flex-col md:flex-row items-center justify-between gap-4">
-                          <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                            
-                            {/* Search bar inside container */}
-                            <div className="relative w-full sm:w-64">
-                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                              <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Cari ID Resep atau Pasien..."
-                                className="w-full pl-9 pr-4 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-xs focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36]"
-                              />
-                            </div>
-
-                            {/* Month Dropdown filter */}
-                            <div className="relative w-full sm:w-48">
-                              <select
-                                value={monthFilter}
-                                onChange={(e) => setMonthFilter(e.target.value)}
-                                className="w-full pl-4 pr-10 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-xs font-semibold text-slate-700 appearance-none focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36]"
-                              >
-                                <option value="">Semua Bulan</option>
-                                <option value="01">Januari</option>
-                                <option value="02">Februari</option>
-                                <option value="03">Maret</option>
-                                <option value="04">April</option>
-                                <option value="05">Mei</option>
-                                <option value="06">Juni</option>
-                                <option value="07">Juli</option>
-                                <option value="08">Agustus</option>
-                                <option value="09">September</option>
-                                <option value="10">Oktober</option>
-                                <option value="11">November</option>
-                                <option value="12">Desember</option>
-                              </select>
-                              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
-                                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                                </svg>
+                      {/* Search & Filter Bar */}
+                      <div className="mb-6 rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+                          <div className="flex gap-4">
+                              <div className="relative flex-1">
+                                  <Search className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6e7a70]" size={20} />
+                                  <input
+                                      type="text"
+                                      value={searchQuery}
+                                      onChange={(e) => setSearchQuery(e.target.value)}
+                                      placeholder="Cari ID Resep atau Nama Pasien..."
+                                      className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-3 pr-4 pl-12 font-['Inter',sans-serif] text-[14px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#006a3f] focus:bg-white focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                  />
                               </div>
-                            </div>
-
                           </div>
+                      </div>
 
-                          {/* Filter Button */}
-                          <button className="w-full sm:w-auto px-4 py-2 border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-xs font-semibold text-slate-600 flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors">
-                            <SlidersHorizontal size={14} />
-                            <span>Filter</span>
-                          </button>
-                        </div>
+                      <div className="grid gap-4">
+                          {activeFilteredList.map((rx: any) => {
+                              const config = rx.status_validasi === 'pending' ? { bg: 'bg-amber-50', color: 'text-amber-700', border: 'border-amber-200', text: 'Menunggu' } :
+                                           rx.status_validasi === 'disetujui' ? { bg: 'bg-emerald-50', color: 'text-emerald-700', border: 'border-emerald-200', text: 'Disetujui' } :
+                                           rx.status_validasi === 'ditolak' ? { bg: 'bg-red-50', color: 'text-red-700', border: 'border-red-200', text: 'Ditolak' } :
+                                           { bg: 'bg-gray-50', color: 'text-gray-700', border: 'border-gray-200', text: rx.status_validasi || 'Menunggu' };
+                                           
+                              return (
+                                  <div
+                                      key={rx.id}
+                                      className="rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
+                                  >
+                                      <div className="flex items-center justify-between">
+                                          <div className="flex flex-1 items-center gap-4 md:gap-6">
+                                              {/* ID Resep & Waktu Info */}
+                                              <div className="w-[220px] md:w-[280px] shrink-0">
+                                                  <div className="flex items-center gap-2 mb-1">
+                                                      <p className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
+                                                          #{rx.kode_resep || rx.id}
+                                                      </p>
+                                                      {rx.is_urgent && (
+                                                          <span className="rounded bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-red-700">
+                                                              Urgent
+                                                          </span>
+                                                      )}
+                                                  </div>
+                                                  <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70] truncate">
+                                                      {rx.created_at ? new Date(rx.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : (rx.timeLabel || rx.date?.split(' ')[1])} • {rx.created_at ? new Date(rx.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'}) : ''}
+                                                  </p>
+                                              </div>
 
-                        {/* Table Layout */}
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left border-collapse">
-                            <thead>
-                              <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
-                                <th className="p-4 font-['Inter',sans-serif] text-xs font-bold tracking-wider text-slate-400 uppercase">ID RESEP</th>
-                                <th className="p-4 font-['Inter',sans-serif] text-xs font-bold tracking-wider text-slate-400 uppercase">NAMA PASIEN</th>
-                                <th className="p-4 font-['Inter',sans-serif] text-xs font-bold tracking-wider text-slate-400 uppercase">WAKTU MASUK</th>
-                                <th className="p-4 font-['Inter',sans-serif] text-xs font-bold tracking-wider text-slate-400 uppercase">STATUS</th>
-                                <th className="p-4 font-['Inter',sans-serif] text-xs font-bold tracking-wider text-slate-400 uppercase text-center">AKSI</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[#E2E8F0]">
-                              {activeFilteredList.map((rx: any) => (
-                                <tr key={rx.id} className="hover:bg-[#F8FAFC]/50 transition-colors">
-                                  {/* ID Resep Link */}
-                                  <td className="p-4">
-                                    <button 
-                                      onClick={() => {
-                                        setSelectedPrescription(rx);
-                                        setPrescriptionView('detail');
-                                        setValidationNotes(rx.catatan_apoteker || '');
-                                        if (rx.doctor_name) setDoctorName(rx.doctor_name);
-                                        if (rx.doctor_poli) setDoctorPoli(rx.doctor_poli);
-                                        if (rx.doctor_ppk) setDoctorPPK(rx.doctor_ppk);
-                                        if (rx.doctor_alamat) setDoctorAlamat(rx.doctor_alamat);
-                                      }}
-                                      className="font-['Inter',sans-serif] text-sm font-bold text-[#0D6A36] hover:underline"
-                                    >
-                                      #{rx.kode_resep || rx.id}
-                                    </button>
-                                  </td>
+                                              {/* NAMA PASIEN */}
+                                              <div className="flex items-center gap-3 shrink-0">
+                                                  <div className="w-10 h-10 rounded-full bg-[#E7F5EC] text-[#0D6A36] flex items-center justify-center font-bold text-sm">
+                                                      {(rx.user?.name || rx.customer || 'G').split(' ').map((n: string) => n[0]).join('')}
+                                                  </div>
+                                                  <span className="font-['Inter',sans-serif] text-[15px] font-semibold text-[#171d19]">
+                                                      {rx.user?.name || rx.customer}
+                                                  </span>
+                                              </div>
+                                          </div>
 
-                                  {/* Patient Initials Circle + Name */}
-                                  <td className="p-4">
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-8 h-8 rounded-full bg-[#E7F5EC] text-[#0D6A36] flex items-center justify-center font-bold text-xs">
-                                        {(rx.user?.name || rx.customer || 'G').split(' ').map((n: string) => n[0]).join('')}
+                                          {/* Status & Actions */}
+                                          <div className="flex shrink-0 items-center gap-3">
+                                              <div className={`px-4 py-2.5 rounded-xl border font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase ${config.bg} ${config.color} ${config.border}`}>
+                                                  {config.text}
+                                              </div>
+
+                                              <button 
+                                                  onClick={() => {
+                                                      setSelectedPrescription(rx);
+                                                      setPrescriptionView('detail');
+                                                      setValidationNotes(rx.catatan_apoteker || '');
+                                                      if (rx.doctor_name) setDoctorName(rx.doctor_name);
+                                                      if (rx.doctor_poli) setDoctorPoli(rx.doctor_poli);
+                                                      if (rx.doctor_ppk) setDoctorPPK(rx.doctor_ppk);
+                                                      if (rx.doctor_alamat) setDoctorAlamat(rx.doctor_alamat);
+                                                  }}
+                                                  className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:border-[#006a3f] hover:bg-white"
+                                              >
+                                                  {activeSubTab === 'menunggu' ? 'Verifikasi' : 'Detail'}
+                                              </button>
+                                          </div>
                                       </div>
-                                      <span className="font-['Inter',sans-serif] text-sm font-semibold text-slate-800">
-                                        {rx.user?.name || rx.customer}
-                                      </span>
-                                    </div>
-                                  </td>
-
-                                  {/* Entry Time */}
-                                  <td className="p-4 font-['Inter',sans-serif] text-sm text-slate-500 font-medium">
-                                    {rx.created_at ? new Date(rx.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : (rx.timeLabel || rx.date?.split(' ')[1])}
-                                  </td>
-
-                                  {/* Status Indicator Dot Badge */}
-                                  <td className="p-4">
-                                    <span className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-[#E2E8F0] rounded-full text-xs font-semibold text-slate-800">
-                                      <span className={`w-2 h-2 rounded-full ${
-                                        rx.status_validasi === 'pending' ? 'bg-slate-900' :
-                                        rx.status_validasi === 'disetujui' ? 'bg-emerald-500' :
-                                        rx.status_validasi === 'ditolak' ? 'bg-red-500' : 'bg-amber-500'
-                                      }`} />
-                                      {rx.status_validasi ? rx.status_validasi.charAt(0).toUpperCase() + rx.status_validasi.slice(1) : 'Menunggu'}
-                                    </span>
-                                  </td>
-
-                                  {/* Verifikasi Action Button */}
-                                  <td className="p-4 text-center">
-                                    <button
-                                      onClick={() => {
-                                        setSelectedPrescription(rx);
-                                        setPrescriptionView('detail');
-                                        setValidationNotes('');
-                                      }}
-                                      className="bg-[#0D6A36] hover:bg-[#0a542b] text-white px-4 py-2 rounded-lg text-xs font-bold transition-all"
-                                    >
-                                      {activeSubTab === 'menunggu' ? 'Verifikasi' : 'Detail'}
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-
-                              {activeFilteredList.length === 0 && (
-                                <tr>
-                                  <td colSpan={5} className="text-center py-12">
-                                    <AlertCircle className="mx-auto text-slate-350 mb-2" size={36} />
-                                    <p className="font-['Inter',sans-serif] text-sm text-slate-400">Tidak ada resep dalam kategori ini</p>
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-
-                        {/* Table Footer with Pagination */}
-                        <div className="p-6 border-t border-[#E2E8F0] bg-[#F8FAFC]/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-                          <span className="font-['Inter',sans-serif] text-xs text-slate-400 font-semibold">
-                            Menampilkan 1 - {activeFilteredList.length} dari 128 data
-                          </span>
-
-                          <div className="flex items-center gap-2">
-                            {/* Prev page button */}
-                            <button className="w-8 h-8 rounded-lg border border-[#E2E8F0] flex items-center justify-center hover:bg-slate-50 transition-colors text-slate-500">
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                              </svg>
-                            </button>
-
-                            {/* Page 1 (Active) */}
-                            <button className="w-8 h-8 rounded-lg bg-[#0D6A36] text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                              1
-                            </button>
-
-                            {/* Other pages */}
-                            <button className="w-8 h-8 rounded-lg border border-[#E2E8F0] hover:bg-slate-50 transition-colors flex items-center justify-center font-semibold text-xs text-slate-500">
-                              2
-                            </button>
-                            <button className="w-8 h-8 rounded-lg border border-[#E2E8F0] hover:bg-slate-50 transition-colors flex items-center justify-center font-semibold text-xs text-slate-500">
-                              3
-                            </button>
-                            <span className="text-slate-400 text-xs font-semibold px-1">...</span>
-                            <button className="w-8 h-8 rounded-lg border border-[#E2E8F0] hover:bg-slate-50 transition-colors flex items-center justify-center font-semibold text-xs text-slate-500">
-                              26
-                            </button>
-
-                            {/* Next page button */}
-                            <button className="w-8 h-8 rounded-lg border border-[#E2E8F0] flex items-center justify-center hover:bg-slate-50 transition-colors text-slate-500">
-                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-
+                                  </div>
+                              );
+                          })}
+                          
+                          {activeFilteredList.length === 0 && (
+                              <div className="rounded-2xl border border-[#f1f5f9] bg-white p-12 text-center shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+                                  <AlertCircle className="mx-auto text-slate-300 mb-3" size={48} />
+                                  <p className="font-['Inter',sans-serif] text-base text-slate-500 font-medium">Tidak ada resep dalam kategori ini</p>
+                              </div>
+                          )}
                       </div>
                     </div>
                   ) : (
