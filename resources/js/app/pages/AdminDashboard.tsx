@@ -286,7 +286,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                         color: 'from-purple-500 to-purple-600',
                                     },
                                     {
-                                        label: 'Avg Order Value',
+                                        label: 'Rata-rata Pesanan',
                                         value: formatCurrency(avgOrderValue),
                                         change: '-2.4%',
                                         trend: 'down',
@@ -341,16 +341,16 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             <div className="rounded-2xl border border-[#f1f5f9] bg-white p-8 shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
                                 <div className="mb-6 flex items-center justify-between">
                                     <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
-                                        Revenue Trend
+                                        Tren Pendapatan
                                     </h3>
                                     <select 
                                         value={revenueFilterDays}
                                         onChange={(e) => setRevenueFilterDays(Number(e.target.value))}
                                         className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
                                     >
-                                        <option value={7}>Last 7 days</option>
-                                        <option value={30}>Last 30 days</option>
-                                        <option value={90}>Last 90 days</option>
+                                        <option value={7}>7 Hari Terakhir</option>
+                                        <option value={30}>30 Hari Terakhir</option>
+                                        <option value={90}>90 Hari Terakhir</option>
                                     </select>
                                 </div>
                                 {/* Bar Chart Implementation */}
@@ -375,7 +375,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             {/* Top Products */}
                             <div className="rounded-2xl border border-[#f1f5f9] bg-white p-8 shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
                                 <h3 className="mb-6 font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
-                                    Top Selling Products
+                                    Produk Terlaris
                                 </h3>
                                 <div className="space-y-4">
                                     {productsWithSales
