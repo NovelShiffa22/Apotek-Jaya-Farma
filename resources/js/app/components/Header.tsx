@@ -24,46 +24,44 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white/90 backdrop-blur-md border-b border-[#f1f5f9] sticky top-0 z-50 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-      <div className="max-w-[1440px] mx-auto px-8 py-5">
-        <div className="flex items-center justify-between gap-8">
-          {/* Logo */}
-          <Link href="/" className="shrink-0 group">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)]">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
-                  <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h1 className="font-['Roboto_Condensed',sans-serif] font-normal text-[24px] tracking-[-0.6px] text-[#171d19] group-hover:text-[#006a3f] transition-colors">
-                Apotek Jaya Farma
-              </h1>
-            </div>
-          </Link>
+    <header className="w-full flex items-center justify-between px-4 py-3 bg-white shadow-sm sticky top-0 z-50">
+      {/* Logo */}
+      <Link href="/" className="shrink-0 group">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <h1 className="text-base sm:text-lg md:text-xl font-bold text-emerald-600 font-sans ml-2 truncate max-w-[150px] sm:max-w-none group-hover:text-emerald-700 transition-colors">
+            Apotek Jaya Farma
+          </h1>
+        </div>
+      </Link>
 
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="flex-1 max-w-[600px]">
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari obat, vitamin, atau produk kesehatan..."
-                className="w-full px-5 py-3 pr-12 bg-[#f9fafb] rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] border border-[#f1f5f9] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:bg-white focus:border-[#006a3f] transition-all placeholder:text-[#6e7a70]"
-              />
-              <button
-                type="submit"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6e7a70] hover:text-[#006a3f] transition-colors"
-              >
-                <Search size={20} />
-              </button>
-            </div>
-          </form>
+      {/* Search Bar */}
+      <form onSubmit={handleSearch} className="hidden sm:block flex-1 max-w-md mx-4">
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Cari obat, vitamin, atau produk kesehatan..."
+            className="w-full px-5 py-3 pr-12 bg-[#f9fafb] rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] border border-[#f1f5f9] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:bg-white focus:border-[#006a3f] transition-all placeholder:text-[#6e7a70]"
+          />
+          <button
+            type="submit"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6e7a70] hover:text-[#006a3f] transition-colors"
+          >
+            <Search size={20} />
+          </button>
+        </div>
+      </form>
 
-          {/* Actions */}
-          <div className="flex items-center gap-3">
+      {/* Actions */}
+      <div className="flex items-center gap-2 md:gap-4">
             {user ? (
               // Authenticated State (Landing Page 2)
               <>
@@ -71,7 +69,7 @@ export default function Header() {
                   href="https://wa.me/6281234567890"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-[#006a3f] hover:bg-[#005632] px-6 py-3 rounded-xl flex items-center gap-2 hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)] transition-all duration-300 hover:-translate-y-0.5 group"
+                  className="bg-[#006a3f] hover:bg-[#005632] px-6 py-3 rounded-xl hidden lg:flex items-center gap-2 hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)] transition-all duration-300 hover:-translate-y-0.5 group"
                 >
                   <MessageCircle size={18} className="text-white" />
                   <span className="font-['Roboto_Condensed',sans-serif] text-[15px] tracking-[0.3px] text-white font-medium">
@@ -81,7 +79,7 @@ export default function Header() {
 
                 <Link 
                   href={route('prescriptions.index')} 
-                  className="border border-[#006a3f] text-[#006a3f] hover:bg-emerald-50 px-6 py-3 rounded-xl flex items-center gap-2 hover:shadow-sm transition-all duration-300 hover:-translate-y-0.5 group bg-white"
+                  className="border border-[#006a3f] text-[#006a3f] hover:bg-emerald-50 px-6 py-3 rounded-xl hidden lg:flex items-center gap-2 hover:shadow-sm transition-all duration-300 hover:-translate-y-0.5 group bg-white"
                 >
                   <FileText size={18} />
                   <span className="font-['Roboto_Condensed',sans-serif] text-[15px] tracking-[0.3px] font-medium">
@@ -124,9 +122,7 @@ export default function Header() {
                   Sign Up
                 </Link>
               </>
-            )}
-          </div>
-        </div>
+        )}
       </div>
     </header>
   );

@@ -13,7 +13,10 @@ use App\Models\Symptom;
 
 // Halaman Utama / Landing Page
 Route::get('/', function () {
-    return Inertia::render('Home');
+    $featuredProducts = \App\Models\Product::with(['category', 'symptoms'])->inRandomOrder()->take(6)->get();
+    return Inertia::render('Home', [
+        'featuredProducts' => $featuredProducts
+    ]);
 });
 
 Route::get('/catalog', [ProductController::class, 'index'])->name('catalog.index');

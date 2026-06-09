@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, UploadCloud } from 'lucide-react';
 
 interface ProductCardProps {
   id: string | number;
@@ -14,6 +14,8 @@ interface ProductCardProps {
   deskripsi?: string;
   kategori_nama?: string;
   stok?: number;
+  unit?: string;
+  is_prescription_required?: boolean;
 }
 
 export default function ProductCard(props: ProductCardProps) {
@@ -24,6 +26,8 @@ export default function ProductCard(props: ProductCardProps) {
   const productImage = props.gambar || props.image;
   const stok = props.stok;
   const kategoriNama = props.kategori_nama;
+  const unit = props.unit;
+  const isPrescriptionRequired = props.is_prescription_required || false;
 
   const categoryConfig = {
     bebas: { label: 'Obat Bebas', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', dot: 'bg-emerald-500' },
@@ -31,16 +35,16 @@ export default function ProductCard(props: ProductCardProps) {
     terbatas: { label: 'Obat Terbatas', bgColor: 'bg-amber-50', textColor: 'text-amber-700', dot: 'bg-amber-500' }
   };
 
-  const config = categoryConfig[productCategory];
+  const config = categoryConfig[productCategory] || categoryConfig['bebas'];
 
   return (
-    <div className="group rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] transition-all duration-300 border border-[#f1f5f9] flex flex-col h-full">
+    <div className="group rounded-2xl bg-white p-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] transition-all duration-300 border border-[#f1f5f9] flex flex-col h-full w-full">
       <Link href={`/products/${id}`} className="block relative aspect-square bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9] overflow-hidden rounded-xl">
         {productImage ? (
           <img
             src={productImage}
             alt={productName}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -89,14 +93,16 @@ export default function ProductCard(props: ProductCardProps) {
             </p>
             <p className="font-['Roboto_Condensed',sans-serif] font-semibold text-[20px] text-[#006a3f]">
               Rp {productPrice.toLocaleString('id-ID')}
+              {unit && <span className="text-[14px] font-normal text-[#6e7a70]"> / {unit}</span>}
             </p>
           </div>
 
           <Link 
-            href={`/products/${id}`}
-            className="w-full max-w-[120px] bg-[#006a3f] text-white py-3 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 hover:bg-[#005632]"
+            href={isPrescriptionRequired ? '/prescriptions/upload/step-1' : `/products/${id}`}
+            className={`w-full max-w-[120px] ${isPrescriptionRequired ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#006a3f] hover:bg-[#005632]'} text-white py-3 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2`}
+            title={isPrescriptionRequired ? 'Upload Resep' : 'Tambah ke Keranjang'}
           >
-            <ShoppingCart className="w-5 h-5 text-white" />
+            {isPrescriptionRequired ? <UploadCloud className="w-5 h-5 text-white" /> : <ShoppingCart className="w-5 h-5 text-white" />}
           </Link>
         </div>
       </div>

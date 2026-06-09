@@ -1,10 +1,7 @@
 import { Link } from '@inertiajs/react';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
-import { products } from '../data/products';
-import { Pill, Thermometer, Heart, Stethoscope, Baby, Activity, ShieldCheck, Clock, HeartHandshake } from 'lucide-react';
-
-const featuredProducts = products.slice(0, 6);
+import { Pill, Thermometer, Heart, Stethoscope, Baby, Activity, ShieldCheck, Clock, HeartHandshake, ShoppingCart, Lightbulb } from 'lucide-react';
 
 const categories = [
   {
@@ -51,7 +48,7 @@ const categories = [
   },
 ];
 
-export default function Home() {
+export default function Home({ featuredProducts = [] }: { featuredProducts?: any[] }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
       <Header cartCount={0} />
@@ -59,7 +56,7 @@ export default function Home() {
       <main className="max-w-[1440px] mx-auto px-8 py-12">
         {/* Hero Section - Enhanced */}
         <section className="mb-20">
-          <div className="bg-gradient-to-r from-[#006a3f] to-[#005632] rounded-2xl overflow-hidden shadow-[0_8px_24px_rgba(0,106,63,0.2)] relative">
+          <div className="bg-gradient-to-r from-emerald-700 to-teal-600 rounded-2xl overflow-hidden shadow-[0_8px_24px_rgba(0,106,63,0.2)] relative">
             <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-10">
               <img
                 src="https://images.unsplash.com/photo-1580281657529-557a6abb6387?w=800&q=80"
@@ -83,17 +80,19 @@ export default function Home() {
                 Konsultasi gratis dengan apoteker berpengalaman. Pengiriman cepat ke seluruh Indonesia.
               </p>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 mt-6 w-full sm:w-auto">
                 <Link
                   href="/catalog"
-                  className="bg-white px-8 py-4 rounded-lg font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] text-[#006a3f] hover:shadow-[0_12px_32px_rgba(0,0,0,0.15)] transition-all duration-300 hover:-translate-y-0.5 font-medium"
+                  className="bg-white text-emerald-800 font-semibold px-5 py-2.5 rounded-xl shadow-md hover:bg-gray-100 transition flex items-center w-full sm:w-auto justify-center"
                 >
+                  <ShoppingCart className="w-5 h-5 mr-2 inline-block" />
                   Belanja Sekarang
                 </Link>
                 <Link
                   href="/recommendation"
-                  className="bg-white/10 backdrop-blur-sm border-2 border-white/30 px-8 py-4 rounded-lg font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] text-white hover:bg-white/20 transition-all duration-300 font-medium"
+                  className="bg-transparent border-2 border-white text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-white/10 transition flex items-center w-full sm:w-auto justify-center"
                 >
+                  <Lightbulb className="w-5 h-5 mr-2 inline-block text-yellow-300" />
                   Butuh Rekomendasi?
                 </Link>
               </div>
@@ -120,7 +119,7 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
             {categories.map(category => (
               <Link
                 key={category.id}
@@ -135,54 +134,6 @@ export default function Home() {
                 </p>
               </Link>
             ))}
-          </div>
-        </section>
-
-        {/* Promo Banner - New from Figma */}
-        <section className="mb-20">
-          <h2 className="font-['Roboto_Condensed',sans-serif] font-light text-[40px] tracking-[-1px] text-[#171d19] mb-8">
-            Promo Spesial Untuk Anda
-          </h2>
-
-          <div className="grid grid-cols-3 gap-6">
-            <div className="bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-2xl p-8 text-white relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
-              <h3 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-semibold mb-2 relative z-10">
-                Gratis Ongkir
-              </h3>
-              <p className="font-['Inter',sans-serif] text-[14px] text-white/90 mb-4 relative z-10">
-                Min. pembelian Rp 100.000
-              </p>
-              <button className="bg-white text-[#006a3f] px-6 py-2 rounded-lg font-['Inter',sans-serif] text-[14px] font-bold hover:shadow-lg transition-all relative z-10">
-                Belanja Sekarang
-              </button>
-            </div>
-
-            <div className="bg-gradient-to-br from-[#2d5f9f] to-[#1e40af] rounded-2xl p-8 text-white relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
-              <h3 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-semibold mb-2 relative z-10">
-                Diskon 10%
-              </h3>
-              <p className="font-['Inter',sans-serif] text-[14px] text-white/90 mb-4 relative z-10">
-                Untuk member baru
-              </p>
-              <button className="bg-white text-[#2d5f9f] px-6 py-2 rounded-lg font-['Inter',sans-serif] text-[14px] font-bold hover:shadow-lg transition-all relative z-10">
-                Daftar Sekarang
-              </button>
-            </div>
-
-            <div className="bg-gradient-to-br from-[#ba1a1a] to-[#991b1b] rounded-2xl p-8 text-white relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
-              <h3 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-semibold mb-2 relative z-10">
-                Vitamin Sale
-              </h3>
-              <p className="font-['Inter',sans-serif] text-[14px] text-white/90 mb-4 relative z-10">
-                Diskon hingga 25%
-              </p>
-              <button className="bg-white text-[#ba1a1a] px-6 py-2 rounded-lg font-['Inter',sans-serif] text-[14px] font-bold hover:shadow-lg transition-all relative z-10">
-                Lihat Promo
-              </button>
-            </div>
           </div>
         </section>
 
@@ -205,10 +156,22 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 gap-6">
-            {featuredProducts.map(product => (
-              <ProductCard key={product.id} {...product} />
+          <div className="w-full max-w-full overflow-hidden px-4 md:px-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 w-full">
+            {featuredProducts.map((product: any) => (
+              <ProductCard 
+                key={product.id} 
+                {...product}
+                nama_obat={product.nama_obat}
+                harga={product.harga}
+                jenis_obat={product.is_prescription_required ? 'keras' : product.jenis_obat}
+                gambar={product.gambar || 'https://images.unsplash.com/photo-1584308666744-24d5e47144e5?auto=format&fit=crop&q=80&w=400'}
+                kategori_nama={product.category?.name}
+                unit={product.unit}
+                is_prescription_required={product.is_prescription_required}
+              />
             ))}
+            </div>
           </div>
         </section>
 
@@ -242,7 +205,7 @@ export default function Home() {
                 <div className={`w-16 h-16 ${item.color} rounded-xl flex items-center justify-center mb-6`}>
                   <item.icon className={`${item.iconColor} w-8 h-8`} />
                 </div>
-                <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#171d19] mb-2 font-semibold">
+                <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 leading-snug break-words tracking-tight mb-2">
                   {item.title}
                 </h3>
                 <p className="font-['Inter',sans-serif] text-[14px] text-[#3e4a41] leading-relaxed">

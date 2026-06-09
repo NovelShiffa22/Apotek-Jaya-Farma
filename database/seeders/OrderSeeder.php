@@ -16,7 +16,7 @@ class OrderSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::statement('PRAGMA foreign_keys = OFF;');
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
         $users = User::pluck('id');
         if($users->isEmpty()){ 
@@ -96,6 +96,6 @@ class OrderSeeder extends Seeder
             }
         }
 
-        DB::statement('PRAGMA foreign_keys = ON;');
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 }

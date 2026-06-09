@@ -100,14 +100,14 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
     <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
       <Header />
 
-      <main className="max-w-[1440px] mx-auto px-8 py-12">
-        <h1 className="font-['Roboto_Condensed',sans-serif] font-light text-[48px] tracking-[-1.2px] text-[#171d19] mb-10">
+      <main className="w-full max-w-4xl mx-auto px-4 py-8 sm:py-12">
+        <h1 className="font-['Roboto_Condensed',sans-serif] font-light text-[36px] sm:text-[48px] tracking-[-1.2px] text-[#171d19] mb-6 sm:mb-10">
           Profil Saya
         </h1>
 
-        <div className="grid grid-cols-4 gap-8">
+        <div className="flex flex-col md:flex-row gap-8 w-full">
           {/* Sidebar */}
-          <div className="col-span-1">
+          <div className="w-full md:w-1/4 shrink-0">
             <div className="bg-white rounded-2xl p-4 border border-[#f1f5f9] shadow-[0_4px_12px_rgba(0,0,0,0.04)] sticky top-32">
               <nav className="space-y-2">
                 {[
@@ -146,7 +146,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
           </div>
 
           {/* Content */}
-          <div className="col-span-3">
+          <div className="w-full md:w-3/4 flex-1">
             {activeTab === 'profile' && (
               <>
                 <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
@@ -385,7 +385,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
 
                         {order.items && order.items.length > 0 && (
                           <div className="py-4">
-                            <Link href={`/product/${order.items[0].id || order.items[0].product_id || 1}`} className="flex items-start gap-4 group">
+                            <Link href={`/product/${order.items[0].id || order.items[0].product_id || 1}`} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 group">
                               <div className="w-20 h-20 bg-gray-100 rounded-xl border border-gray-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
                                 {order.items[0].foto || order.items[0].image ? (
                                   <img 
@@ -429,7 +429,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                             {expandedOrders.includes(order.id) && order.items.length > 1 && (
                               <div className="mt-4 pt-4 border-t border-dashed border-gray-200 space-y-4 animate-fade-in">
                                 {order.items.slice(1).map((item: any, idx: number) => (
-                                  <Link key={idx} href={`/product/${item.id || item.product_id || 1}`} className="flex items-start gap-4 group">
+                                  <Link key={idx} href={`/product/${item.id || item.product_id || 1}`} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 group">
                                     <div className="w-20 h-20 bg-gray-100 rounded-xl border border-gray-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
                                       {item.foto || item.image ? (
                                         <img 
@@ -468,15 +468,15 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                               Rp {Number(order.total_amount || 0).toLocaleString('id-ID')}
                             </span>
                           </div>
-                          <div className="flex gap-3 justify-end">
+                          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-4 sm:mt-0 sm:justify-end">
                             <button 
                               onClick={() => { setSelectedOrder(order); setIsModalOpen(true); }}
-                              className="font-['Inter',sans-serif] text-[14px] font-bold text-gray-600 hover:text-gray-900 border border-gray-200 px-5 py-2.5 rounded-xl transition-colors hover:bg-gray-50"
+                              className="w-full sm:w-auto text-center font-['Inter',sans-serif] text-[14px] font-bold text-gray-600 hover:text-gray-900 border border-gray-200 px-5 py-2.5 rounded-xl transition-colors hover:bg-gray-50"
                             >
                               Lihat Detail
                             </button>
                             {isPending && (
-                              <Link href={`/invoice/${order.id}`} className="bg-[#006a3f] text-white px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-[#005632] shadow-sm hover:shadow-md transition-all whitespace-nowrap">
+                              <Link href={`/invoice/${order.id}`} className="w-full sm:w-auto text-center bg-[#006a3f] text-white px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-[#005632] shadow-sm hover:shadow-md transition-all whitespace-nowrap">
                                 Bayar Sekarang
                               </Link>
                             )}

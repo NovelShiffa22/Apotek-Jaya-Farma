@@ -95,10 +95,10 @@ export default function Catalog({
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-8">
+        <div className="flex flex-col lg:flex-row gap-6 w-full">
           {/* Sidebar Filter - From Figma */}
-          <div className="col-span-3">
-            <div className="bg-white rounded-2xl p-6 border border-[#f1f5f9] sticky top-8">
+          <div className="w-full lg:w-1/4">
+            <div className="bg-white rounded-2xl p-6 border border-[#f1f5f9] lg:sticky lg:top-8">
               {/* Filter Header */}
               <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19] mb-6">
                 Filter
@@ -169,9 +169,9 @@ export default function Catalog({
           </div>
 
           {/* Product Grid */}
-          <div className="col-span-9">
+          <div className="flex-1 w-full">
             {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full">
                 {filteredProducts.map((product: any) => (
                   <ProductCard 
                     key={product.id} 
