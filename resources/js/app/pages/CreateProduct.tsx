@@ -7,6 +7,9 @@ import {
     ShoppingBag,
     UploadCloud,
     X,
+    Edit2,
+    Trash2,
+    AlertTriangle,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
 
@@ -34,6 +37,7 @@ interface ProductFormData {
     gambar: File | null;
     is_active: boolean;
     symptom_ids: number[];
+    delete_gambar?: boolean;
 }
 
 interface CreateProductProps {
@@ -48,9 +52,10 @@ interface CreateProductProps {
 export default function CreateProduct({ isOpen, onClose, isEdit = false, initialData, categories = [], symptoms = [] }: CreateProductProps) {
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [dragActive, setDragActive] = useState(false);
+    const [showDeletePhotoAlert, setShowDeletePhotoAlert] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const { data, setData, post, put, errors, processing } = useForm<ProductFormData>({
+    const { data, setData, post, errors, processing } = useForm<ProductFormData>({
         nama_obat: initialData?.nama_obat || '',
         category_id: initialData?.category_id || '',
         deskripsi: initialData?.deskripsi || '',
@@ -64,6 +69,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
         gambar: null,
         is_active: initialData?.is_active ?? true,
         symptom_ids: initialData?.symptoms ? initialData.symptoms.map((s: any) => s.id) : (initialData?.symptom_ids || []),
+        delete_gambar: false,
     });
 
     // Calculate completion percentage
@@ -127,7 +133,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
 
     const removeFile = () => {
         setUploadedFile(null);
-        setData('gambar', null);
+        setData(prev => ({ ...prev, gambar: null, delete_gambar: true }));
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -143,13 +149,11 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
         };
 
         if (isEdit && initialData?.id) {
-            // Note: Inertia has issue with PUT + File Uploads, so we use _method=PUT via POST
-            if (data.gambar) {
-                // If there's an image, let's just use POST but tell Laravel it's a PUT
-                post(`/admin/products/${initialData.id}?_method=PUT`, options);
-            } else {
-                put(`/admin/products/${initialData.id}`, options);
-            }
+            // Workaround for file upload in Inertia when updating
+            post(`/admin/products/${initialData.id}?_method=PUT`, {
+                ...options,
+                forceFormData: true,
+            });
         } else {
             post('/admin/products', options);
         }
@@ -169,6 +173,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
             stok_minimum: '10',
             gambar: null,
             is_active: true,
+            delete_gambar: false,
         });
         setUploadedFile(null);
         if (fileInputRef.current) {
@@ -551,7 +556,16 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                     </h2>
                                 </div>
 
-                                {!uploadedFile && !(isEdit && initialData?.gambar) ? (
+                                {/* Hidden File Input */}
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    onChange={handleInputChange}
+                                    accept=".png,.jpg,.jpeg,.webp"
+                                    className="hidden"
+                                />
+
+                                {!(uploadedFile || (initialData?.gambar && !data.delete_gambar)) ? (
                                     <>
                                         {/* Dropzone */}
                                         <div
@@ -565,13 +579,6 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                                     : 'border-gray-300 bg-gray-50'
                                             }`}
                                         >
-                                            <input
-                                                ref={fileInputRef}
-                                                type="file"
-                                                onChange={handleInputChange}
-                                                accept=".png,.jpg,.jpeg,.webp"
-                                                className="hidden"
-                                            />
                                             <button
                                                 type="button"
                                                 onClick={() =>
@@ -597,30 +604,30 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                 ) : (
                                     <div className="mb-4">
                                         {/* Tampilkan preview gambar sebelumnya atau gambar yang baru diupload */}
-                                        {uploadedFile || initialData?.gambar ? (
-                                            <div className="relative mb-3 h-40 w-full overflow-hidden rounded-xl border border-gray-200">
-                                                <img 
-                                                    src={uploadedFile ? URL.createObjectURL(uploadedFile) : `/storage/${initialData.gambar}`} 
-                                                    alt="Preview" 
-                                                    className="h-full w-full object-cover"
-                                                />
-                                            </div>
-                                        ) : null}
-                                        <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-4">
-                                            <div className="flex-1 overflow-hidden">
-                                                <p className="truncate font-['Poppins',sans-serif] text-[13px] font-medium text-[#171d19]">
-                                                    {uploadedFile ? uploadedFile.name : (initialData?.gambar || 'Gambar Saat Ini')}
-                                                </p>
-                                            </div>
+                                        <div className="relative mb-3 h-40 w-full overflow-hidden rounded-xl border border-gray-200">
+                                            <img 
+                                                src={uploadedFile ? URL.createObjectURL(uploadedFile) : `/storage/${initialData.gambar}`} 
+                                                alt="Preview" 
+                                                className="h-full w-full object-cover"
+                                            />
+                                        </div>
+                                        <div className="mt-3 flex items-center justify-center gap-4">
                                             <button
                                                 type="button"
-                                                onClick={removeFile}
-                                                className="ml-2 rounded-lg p-2 hover:bg-red-50 transition-colors"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="flex items-center gap-2 rounded-lg px-3 py-1.5 font-['Poppins',sans-serif] text-[13px] font-medium text-[#006a3f] transition-colors hover:bg-[#006a3f]/10"
                                             >
-                                                <X
-                                                    size={18}
-                                                    className="text-red-600"
-                                                />
+                                                <Edit2 size={14} />
+                                                Ganti Foto
+                                            </button>
+                                            <div className="h-4 w-[1px] bg-gray-300"></div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowDeletePhotoAlert(true)}
+                                                className="flex items-center gap-2 rounded-lg px-3 py-1.5 font-['Poppins',sans-serif] text-[13px] font-medium text-red-600 transition-colors hover:bg-red-50"
+                                            >
+                                                <Trash2 size={14} />
+                                                Hapus Foto
                                             </button>
                                         </div>
                                     </div>
@@ -720,6 +727,38 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                     </div>
                 </form>
             </div>
+            {/* Delete Photo Confirmation Alert */}
+            {showDeletePhotoAlert && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/20 p-4 transition-all">
+                    <div className="w-full max-w-xs rounded-2xl border border-gray-100 bg-white p-5 shadow-lg">
+                        <h3 className="mb-1 font-['Poppins',sans-serif] text-[15px] font-semibold text-[#171d19]">
+                            Hapus Foto Produk?
+                        </h3>
+                        <p className="mb-5 font-['Poppins',sans-serif] text-[12px] leading-relaxed text-[#6e7a70]">
+                            Tindakan ini akan menghapus foto secara permanen.
+                        </p>
+                        <div className="flex justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setShowDeletePhotoAlert(false)}
+                                className="rounded-lg px-4 py-2 font-['Poppins',sans-serif] text-[12px] font-medium text-[#6e7a70] transition-colors hover:bg-gray-100"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowDeletePhotoAlert(false);
+                                    removeFile();
+                                }}
+                                className="rounded-lg bg-red-50 px-4 py-2 font-['Poppins',sans-serif] text-[12px] font-medium text-red-600 transition-colors hover:bg-red-100"
+                            >
+                                Hapus
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -18,11 +18,12 @@ import {
     UserCog,
     Users,
     X,
+    Settings,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import CreateProduct from './CreateProduct';
 import CreateUser from './CreateUser';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 
 interface AdminDashboardProps {
     products?: any[];
@@ -33,6 +34,9 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ products = [], categories = [], users = [], symptoms = [], orders = [] }: AdminDashboardProps) {
+    const { auth } = usePage<any>().props;
+    const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>(null);
     const [productToDelete, setProductToDelete] = useState<any>(null);
@@ -148,17 +152,48 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             </p>
                         </div>
 
-                        {/* Quick Actions */}
-                        <div className="flex gap-3">
-                            <Link
-                                href="/logout"
-                                method="post"
-                                as="button"
-                                className="flex cursor-pointer items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#ba1a1a] transition-all hover:bg-red-100"
+                        {/* Profile Dropdown */}
+                        <div className="relative">
+                            <button 
+                                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                                className="flex items-center gap-3 rounded-xl border border-[#f1f5f9] bg-white p-2 pr-4 transition-all hover:border-[#006a3f] hover:shadow-sm"
                             >
-                                <LogOut size={16} />
-                                <span>Keluar</span>
-                            </Link>
+                                <div className="text-right hidden md:block">
+                                    <p className="font-['Roboto_Condensed',sans-serif] text-[15px] font-semibold text-[#171d19]">
+                                        {auth?.user?.name || 'Admin'}
+                                    </p>
+                                    <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">
+                                        Administrator
+                                    </p>
+                                </div>
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200">
+                                    <span className="font-['Roboto_Condensed',sans-serif] text-[15px] font-semibold text-gray-700">
+                                        {auth?.user?.name?.split(' ').map((n: string) => n[0]).join('').substring(0, 2) || 'AD'}
+                                    </span>
+                                </div>
+                            </button>
+
+                            {isProfileDropdownOpen && (
+                                <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-[#f1f5f9] bg-white p-2 shadow-[0_8px_24px_rgba(0,0,0,0.12)] z-50">
+                                    <Link
+                                        href="/admin/settings"
+                                        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:bg-[#f9fafb] hover:text-[#006a3f]"
+                                    >
+                                        <UserCog size={16} />
+                                        <span>Setting Profile</span>
+                                    </Link>
+                                    <div className="my-1 h-[1px] w-full bg-[#f1f5f9]"></div>
+                                    <Link
+                                        href="/logout"
+                                        method="post"
+                                        as="button"
+                                        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-['Inter',sans-serif] text-[13px] font-medium text-[#ba1a1a] transition-all hover:bg-red-50"
+                                    >
+                                        <LogOut size={16} />
+                                        <span>Keluar</span>
+                                    </Link>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -590,38 +625,18 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                 </span>
                                             </td>
                                             <td className="px-6 py-5">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="max-w-[100px] flex-1">
-                                                        <div className="h-2 overflow-hidden rounded-full bg-[#e8e8e6]">
-                                                            <div
-                                                                className={`h-full rounded-full ${
-                                                                    product.stock <
-                                                                    10
-                                                                        ? 'bg-gradient-to-r from-red-500 to-red-600'
-                                                                        : product.stock <
-                                                                            50
-                                                                          ? 'bg-gradient-to-r from-amber-500 to-amber-600'
-                                                                          : 'bg-gradient-to-r from-emerald-500 to-emerald-600'
-                                                                }`}
-                                                                style={{
-                                                                    width: `${Math.min((product.stock / 200) * 100, 100)}%`,
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <span
-                                                        className={`font-['Inter',sans-serif] text-[14px] font-semibold ${
-                                                            product.stock < 10
-                                                                ? 'text-red-700'
-                                                                : product.stock <
-                                                                    50
-                                                                  ? 'text-amber-700'
-                                                                  : 'text-emerald-700'
-                                                        }`}
-                                                    >
-                                                        {product.stock}
-                                                    </span>
-                                                </div>
+                                                <span
+                                                    className={`font-['Inter',sans-serif] text-[14px] font-semibold ${
+                                                        product.stok < 10
+                                                            ? 'text-red-700'
+                                                            : product.stok <
+                                                                50
+                                                                ? 'text-amber-700'
+                                                                : 'text-emerald-700'
+                                                    }`}
+                                                >
+                                                    {product.stok}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-5 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19]">
                                                 Rp{' '}
@@ -755,9 +770,16 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             <div className="flex flex-1 items-center gap-4 md:gap-6">
                                                 {/* Order Info */}
                                                 <div className="w-[220px] md:w-[280px] shrink-0">
-                                                    <p className="mb-1 font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
-                                                        {order.kode_pesanan}
-                                                    </p>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <p className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
+                                                            {order.kode_pesanan}
+                                                        </p>
+                                                        {order.prescription && (
+                                                            <span className="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700">
+                                                                Resep Terlampir
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70] truncate">
                                                         {order.user?.name || 'Guest'} •{' '}
                                                         {new Date(order.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}
@@ -1311,6 +1333,22 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                         <span className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70] shrink-0">Alamat</span>
                                         <span className="font-['Inter',sans-serif] text-[12px] font-medium text-[#171d19] text-right line-clamp-2" title={viewingOrder.address?.alamat_lengkap || 'Ambil di Apotek'}>{viewingOrder.address?.alamat_lengkap || 'Ambil di Apotek'}</span>
                                     </div>
+                                    {viewingOrder.prescription && (
+                                        <div className="flex justify-between items-start gap-4 pt-2 mt-2 border-t border-[#f1f5f9]">
+                                            <span className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70] shrink-0">Resep Dokter</span>
+                                            <div className="text-right">
+                                                <span className="font-['Inter',sans-serif] text-[12px] font-medium text-[#171d19] block">{viewingOrder.prescription.kode_resep}</span>
+                                                <a 
+                                                    href={viewingOrder.prescription.file_foto?.startsWith('http') ? viewingOrder.prescription.file_foto : `/storage/${viewingOrder.prescription.file_foto}`} 
+                                                    target="_blank" 
+                                                    rel="noreferrer" 
+                                                    className="inline-block mt-1 text-[11px] font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                                                >
+                                                    Lihat Foto Resep
+                                                </a>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

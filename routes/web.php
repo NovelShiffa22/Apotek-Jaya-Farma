@@ -156,7 +156,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         $categories = \App\Models\Category::all();
         $users = \App\Models\User::all();
         $symptoms = \App\Models\Symptom::all();
-        $orders = \App\Models\Order::with(['user', 'products'])->latest()->get();
+        $orders = \App\Models\Order::with(['user', 'products', 'prescription'])->latest()->get();
         
         return Inertia::render('AdminDashboard', [
             'products' => $products,
@@ -167,10 +167,47 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         ]);
     })->name('admin.dashboard');
 
+    Route::get('/admin/settings', function () {
+        return Inertia::render('AdminSettings');
+    })->name('admin.settings');
+
+    Route::post('/admin/settings/profile', function(\Illuminate\Http\Request $request) {
+        $user = auth()->user();
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
+            'phone' => 'nullable|string|max:20',
+            'password' => 'nullable|string|min:8|confirmed',
+            'avatar' => 'nullable|image|max:2048'
+        ]);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->phone = $request->phone;
+        
+        if ($request->filled('password')) {
+            $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
+        }
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+            }
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar = $path;
+        }
+
+        $user->save();
+
+        return back()->with('success', 'Profil berhasil diperbarui');
+    })->name('admin.settings.update');
+
     Route::get('/admin/products/create', [ProductController::class, 'create'])->name('admin.products.create');
     Route::post('/admin/products', [ProductController::class, 'store'])->name('products.store');
     Route::get('/admin/products/{id}/edit', [ProductController::class, 'edit'])->name('admin.products.edit');
     Route::put('/admin/products/{id}', [ProductController::class, 'update'])->name('products.update');
+    Route::post('/admin/products/{id}', [ProductController::class, 'update'])->name('products.update_post');
     Route::delete('/admin/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
     Route::post('/admin/products/{id}/image', [ProductController::class, 'updateImage'])->name('products.updateImage');
 
