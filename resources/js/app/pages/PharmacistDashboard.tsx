@@ -203,17 +203,43 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
   const [doctorPPK, setDoctorPPK] = useState('Puskesmas Tebet');
   const [doctorAlamat, setDoctorAlamat] = useState('Jl. Raya Kemerdekaan No. 10, Jakarta Selatan');
 
-  // Drugs validation state (Mockup 3)
-  const [nonRacikQty, setNonRacikQty] = useState(10);
-  const [nonRacikAmbil, setNonRacikAmbil] = useState(10);
-  const [nonRacikSigna1, setNonRacikSigna1] = useState(3);
-  const [nonRacikSigna2, setNonRacikSigna2] = useState(1);
+  // Dynamic Prescription Items State
+  const [prescriptionItems, setPrescriptionItems] = useState<any[]>([]);
 
-  const [racikQty, setRacikQty] = useState(10);
-  const [racikSigna1, setRacikSigna1] = useState(3);
-  const [racikSigna2, setRacikSigna2] = useState(1);
-  const [racikSatuan, setRacikSatuan] = useState('Puyer');
-  const [racikDosis, setRacikDosis] = useState(250); // mg
+  // Function to calculate subtotal for an item
+  const calculateSubtotal = (item: any) => {
+    return (item.harga_satuan || 0) * (item.kuantitas_ambil || 0);
+  };
+
+  // Helper to add a new non-racikan item
+  const addNonRacikanItem = () => {
+    setPrescriptionItems([...prescriptionItems, {
+      product_id: null,
+      product_name: '',
+      is_racikan: false,
+      kuantitas_resep: 1,
+      kuantitas_ambil: 1,
+      satuan: 'Tablet',
+      signa: '3x1',
+      harga_satuan: 0,
+      subtotal: 0
+    }]);
+  };
+
+  // Helper to add a new racikan item
+  const addRacikanItem = () => {
+    setPrescriptionItems([...prescriptionItems, {
+      product_id: null,
+      product_name: 'Racikan Baru',
+      is_racikan: true,
+      kuantitas_resep: 10,
+      kuantitas_ambil: 10,
+      satuan: 'Puyer',
+      signa: '3x1',
+      harga_satuan: 0,
+      subtotal: 0
+    }]);
+  };
 
   // Product Editor State
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -227,6 +253,22 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
     high: { label: 'Urgent', color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' },
     normal: { label: 'Normal', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
     low: { label: 'Low', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' }
+  };
+
+  const handleSelectPrescription = (rx: any) => {
+    setSelectedPrescription(rx);
+    setPrescriptionView('detail');
+    setValidationNotes(rx.catatan_apoteker || '');
+    if (rx.doctor_name) setDoctorName(rx.doctor_name);
+    if (rx.doctor_poli) setDoctorPoli(rx.doctor_poli);
+    if (rx.doctor_ppk) setDoctorPPK(rx.doctor_ppk);
+    if (rx.doctor_alamat) setDoctorAlamat(rx.doctor_alamat);
+    
+    if (rx.items && rx.items.length > 0) {
+      setPrescriptionItems(rx.items);
+    } else {
+      setPrescriptionItems([]);
+    }
   };
 
   const getFilteredList = () => {
@@ -258,14 +300,8 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
   const activeFilteredList = getFilteredList();
 
-  // Price calculations
-  const priceNonRacik = 2500; // per tablet
-  const priceCompo = 3500; // per tablet
-  
-  const subtotalNonRacik = nonRacikQty * priceNonRacik;
-  const numPillsNeeded = Math.ceil(racikQty * (racikDosis / 500));
-  const subtotalRacik = numPillsNeeded * priceCompo;
-  const totalHargaVal = subtotalNonRacik + subtotalRacik;
+  // Calculate Grand Total from dynamic items
+  const totalHargaVal = prescriptionItems.reduce((acc, item) => acc + (item.subtotal || 0), 0);
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
@@ -531,13 +567,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                         onClick={() => {
                           setActiveTab('prescriptions');
                           setActiveSubTab(act.raw.status_validasi);
-                          setSelectedPrescription(act.raw);
-                          setPrescriptionView('detail');
-                          setValidationNotes(act.raw.catatan_apoteker || '');
-                          if (act.raw.doctor_name) setDoctorName(act.raw.doctor_name);
-                          if (act.raw.doctor_poli) setDoctorPoli(act.raw.doctor_poli);
-                          if (act.raw.doctor_ppk) setDoctorPPK(act.raw.doctor_ppk);
-                          if (act.raw.doctor_alamat) setDoctorAlamat(act.raw.doctor_alamat);
+                          handleSelectPrescription(act.raw);
                         }}
                       >
                         <div className="flex items-start gap-4">
@@ -991,15 +1021,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                               </div>
 
                                               <button 
-                                                  onClick={() => {
-                                                      setSelectedPrescription(rx);
-                                                      setPrescriptionView('detail');
-                                                      setValidationNotes(rx.catatan_apoteker || '');
-                                                      if (rx.doctor_name) setDoctorName(rx.doctor_name);
-                                                      if (rx.doctor_poli) setDoctorPoli(rx.doctor_poli);
-                                                      if (rx.doctor_ppk) setDoctorPPK(rx.doctor_ppk);
-                                                      if (rx.doctor_alamat) setDoctorAlamat(rx.doctor_alamat);
-                                                  }}
+                                                  onClick={() => handleSelectPrescription(rx)}
                                                   className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:border-[#006a3f] hover:bg-white"
                                               >
                                                   {activeSubTab === 'menunggu' ? 'Verifikasi' : 'Detail'}
@@ -1160,83 +1182,114 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                     </svg>
                                     <span>Obat Non-Racik</span>
                                   </h4>
-                                  <button className="bg-[#0D6A36] hover:bg-[#0a542b] text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
-                                    <span>+ Tambah Obat</span>
-                                  </button>
+                                  {activeSubTab === 'menunggu' && (
+                                    <button onClick={addNonRacikanItem} className="bg-[#0D6A36] hover:bg-[#0a542b] text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
+                                      <span>+ Tambah Obat</span>
+                                    </button>
+                                  )}
                                 </div>
 
                                 <div className="overflow-x-auto border border-slate-100 rounded-xl">
                                   <table className="w-full text-left text-xs border-collapse">
                                     <thead>
                                       <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold">
-                                        <th className="p-3">NAMA OBAT</th>
-                                        <th className="p-3 text-center">STOK</th>
+                                        <th className="p-3 w-64">NAMA OBAT</th>
                                         <th className="p-3 text-center">SATUAN</th>
-                                        <th className="p-3 text-right">HARGA</th>
-                                        <th className="p-3 text-center w-16">JML RESEP</th>
-                                        <th className="p-3 text-center w-16">JML AMBIL</th>
+                                        <th className="p-3 text-right">HARGA SATUAN</th>
+                                        <th className="p-3 text-center w-20">JML RESEP</th>
+                                        <th className="p-3 text-center w-20">JML AMBIL</th>
                                         <th className="p-3 text-center w-24">SIGNA</th>
-                                        <th className="p-3 text-center">TGL KADALUARSA</th>
                                         <th className="p-3 text-right">SUBTOTAL</th>
-                                        <th className="p-3 text-center w-10"></th>
+                                        {activeSubTab === 'menunggu' && <th className="p-3 text-center w-10"></th>}
                                       </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50">
-                                      <tr>
-                                        <td className="p-3 font-bold text-slate-800">
-                                          <div>{selectedPrescription.drug}</div>
-                                          <div className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Kapsul</div>
-                                        </td>
-                                        <td className="p-3 text-center text-slate-500 font-semibold">150</td>
-                                        <td className="p-3 text-center text-slate-500 font-semibold">Tablet</td>
-                                        <td className="p-3 text-right text-slate-500 font-semibold">Rp {priceNonRacik.toLocaleString('id-ID')}</td>
-                                        <td className="p-3 text-center">
-                                          <input
-                                            type="number"
-                                            value={nonRacikQty}
-                                            onChange={(e) => {
-                                              const v = Math.max(0, parseInt(e.target.value) || 0);
-                                              setNonRacikQty(v);
-                                              setNonRacikAmbil(v);
-                                            }}
-                                            className="w-12 text-center py-1 border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none"
-                                          />
-                                        </td>
-                                        <td className="p-3 text-center">
-                                          <input
-                                            type="number"
-                                            value={nonRacikAmbil}
-                                            onChange={(e) => setNonRacikAmbil(Math.max(0, parseInt(e.target.value) || 0))}
-                                            className="w-12 text-center py-1 border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none"
-                                          />
-                                        </td>
-                                        <td className="p-3 text-center">
-                                          <div className="flex items-center justify-center gap-1">
-                                            <input
-                                              type="number"
-                                              value={nonRacikSigna1}
-                                              onChange={(e) => setNonRacikSigna1(Math.max(0, parseInt(e.target.value) || 0))}
-                                              className="w-8 text-center py-1 border border-slate-200 rounded-lg text-slate-700 font-semibold focus:outline-none"
-                                            />
-                                            <span className="text-slate-400">x</span>
-                                            <input
-                                              type="number"
-                                              value={nonRacikSigna2}
-                                              onChange={(e) => setNonRacikSigna2(Math.max(0, parseInt(e.target.value) || 0))}
-                                              className="w-8 text-center py-1 border border-slate-200 rounded-lg text-slate-700 font-semibold focus:outline-none"
-                                            />
-                                          </div>
-                                        </td>
-                                        <td className="p-3 text-center text-slate-500 font-semibold">12/2025</td>
-                                        <td className="p-3 text-right font-bold text-slate-800">
-                                          Rp {subtotalNonRacik.toLocaleString('id-ID')}
-                                        </td>
-                                        <td className="p-3 text-center text-red-500 hover:text-red-750 cursor-pointer">
-                                          <svg className="w-4 h-4 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                          </svg>
-                                        </td>
-                                      </tr>
+                                      {prescriptionItems.filter(item => !item.is_racikan).map((item, idx) => {
+                                        const globalIndex = prescriptionItems.indexOf(item);
+                                        return (
+                                        <tr key={globalIndex}>
+                                          <td className="p-3">
+                                            {activeSubTab === 'menunggu' ? (
+                                              <select 
+                                                value={item.product_id || ''} 
+                                                onChange={(e) => {
+                                                  const pId = e.target.value;
+                                                  const prod = products.find((p: any) => p.id.toString() === pId);
+                                                  const newItems = [...prescriptionItems];
+                                                  newItems[globalIndex].product_id = pId;
+                                                  if (prod) {
+                                                    newItems[globalIndex].product_name = prod.name;
+                                                    newItems[globalIndex].harga_satuan = prod.price || 0;
+                                                    newItems[globalIndex].satuan = prod.unit || 'Tablet';
+                                                    newItems[globalIndex].subtotal = calculateSubtotal(newItems[globalIndex]);
+                                                  }
+                                                  setPrescriptionItems(newItems);
+                                                }}
+                                                className="w-full py-1.5 px-2 border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none"
+                                              >
+                                                <option value="" disabled>Pilih Obat...</option>
+                                                {products.filter((p: any) => !p.is_racikan_only).map((p: any) => (
+                                                  <option key={p.id} value={p.id}>{p.name}</option>
+                                                ))}
+                                              </select>
+                                            ) : (
+                                              <span className="font-bold text-slate-800">{item.product_name || item.product?.name}</span>
+                                            )}
+                                          </td>
+                                          <td className="p-3 text-center text-slate-500 font-semibold">{item.satuan}</td>
+                                          <td className="p-3 text-right text-slate-500 font-semibold">Rp {(item.harga_satuan || 0).toLocaleString('id-ID')}</td>
+                                          <td className="p-3 text-center">
+                                            {activeSubTab === 'menunggu' ? (
+                                              <input
+                                                type="number"
+                                                value={item.kuantitas_resep}
+                                                onChange={(e) => updateItem(globalIndex, 'kuantitas_resep', Math.max(0, parseInt(e.target.value) || 0))}
+                                                className="w-14 text-center py-1 border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none"
+                                              />
+                                            ) : (
+                                              <span className="font-bold">{item.kuantitas_resep}</span>
+                                            )}
+                                          </td>
+                                          <td className="p-3 text-center">
+                                            {activeSubTab === 'menunggu' ? (
+                                              <input
+                                                type="number"
+                                                value={item.kuantitas_ambil}
+                                                onChange={(e) => updateItem(globalIndex, 'kuantitas_ambil', Math.max(0, parseInt(e.target.value) || 0))}
+                                                className="w-14 text-center py-1 border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none"
+                                              />
+                                            ) : (
+                                              <span className="font-bold text-[#0D6A36]">{item.kuantitas_ambil}</span>
+                                            )}
+                                          </td>
+                                          <td className="p-3 text-center">
+                                            {activeSubTab === 'menunggu' ? (
+                                              <input
+                                                type="text"
+                                                value={item.signa}
+                                                onChange={(e) => updateItem(globalIndex, 'signa', e.target.value)}
+                                                className="w-full text-center py-1 px-2 border border-slate-200 rounded-lg text-slate-700 font-semibold focus:outline-none"
+                                                placeholder="3x1"
+                                              />
+                                            ) : (
+                                              <span className="font-bold">{item.signa}</span>
+                                            )}
+                                          </td>
+                                          <td className="p-3 text-right font-bold text-slate-800">
+                                            Rp {(item.subtotal || 0).toLocaleString('id-ID')}
+                                          </td>
+                                          {activeSubTab === 'menunggu' && (
+                                            <td className="p-3 text-center text-red-500 hover:text-red-750 cursor-pointer" onClick={() => removeItem(globalIndex)}>
+                                              <X size={16} className="mx-auto" strokeWidth={2.5} />
+                                            </td>
+                                          )}
+                                        </tr>
+                                      )})}
+                                      {prescriptionItems.filter(item => !item.is_racikan).length === 0 && (
+                                        <tr>
+                                          <td colSpan={activeSubTab === 'menunggu' ? 8 : 7} className="p-4 text-center text-slate-400 font-medium italic">Belum ada obat non-racik.</td>
+                                        </tr>
+                                      )}
                                     </tbody>
                                   </table>
                                 </div>
@@ -1251,131 +1304,128 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                     </svg>
                                     <span>Obat Racik</span>
                                   </h4>
-                                  <button className="border border-[#0D6A36] text-[#0D6A36] hover:bg-emerald-50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
-                                    <span>+ Tambah Racikan Baru</span>
-                                  </button>
+                                  {activeSubTab === 'menunggu' && (
+                                    <button onClick={addRacikanItem} className="border border-[#0D6A36] text-[#0D6A36] hover:bg-emerald-50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
+                                      <span>+ Tambah Racikan Baru</span>
+                                    </button>
+                                  )}
                                 </div>
 
-                                {/* Compounded Box Card */}
-                                <div className="border border-slate-200 border-dashed rounded-xl p-5 space-y-4">
-                                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
-                                    <div className="sm:col-span-4">
-                                      <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5">Nama Racikan</label>
-                                      <input
-                                        type="text"
-                                        defaultValue="Racikan Batuk Dewasa"
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 font-bold focus:outline-none"
-                                      />
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                      <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5 text-center">Jml Racikan</label>
-                                      <input
-                                        type="number"
-                                        value={racikQty}
-                                        onChange={(e) => setRacikQty(Math.max(0, parseInt(e.target.value) || 0))}
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-750 font-bold text-center focus:outline-none"
-                                      />
-                                    </div>
-                                    <div className="sm:col-span-3 text-center">
-                                      <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5">Signa</label>
-                                      <div className="flex items-center justify-center gap-1.5">
-                                        <input
-                                          type="number"
-                                          value={racikSigna1}
-                                          onChange={(e) => setRacikSigna1(Math.max(0, parseInt(e.target.value) || 0))}
-                                          className="w-10 px-1 py-2 border border-slate-200 rounded-lg text-xs text-center font-semibold focus:outline-none"
-                                        />
-                                        <span className="text-slate-400">x</span>
-                                        <input
-                                          type="number"
-                                          value={racikSigna2}
-                                          onChange={(e) => setRacikSigna2(Math.max(0, parseInt(e.target.value) || 0))}
-                                          className="w-10 px-1 py-2 border border-slate-200 rounded-lg text-xs text-center font-semibold focus:outline-none"
-                                        />
+                                {prescriptionItems.filter(item => item.is_racikan).map((item, idx) => {
+                                  const globalIndex = prescriptionItems.indexOf(item);
+                                  return (
+                                  <div key={globalIndex} className="border border-slate-200 border-dashed rounded-xl p-5 mb-4 space-y-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
+                                      <div className="sm:col-span-4">
+                                        <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5">Nama Racikan</label>
+                                        {activeSubTab === 'menunggu' ? (
+                                          <input
+                                            type="text"
+                                            value={item.product_name}
+                                            onChange={(e) => updateItem(globalIndex, 'product_name', e.target.value)}
+                                            placeholder="Contoh: Racikan Batuk Dewasa"
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 font-bold focus:outline-none"
+                                          />
+                                        ) : (
+                                          <div className="font-bold text-slate-800 text-sm mt-2">{item.product_name || item.product?.name}</div>
+                                        )}
                                       </div>
-                                    </div>
-                                    <div className="sm:col-span-2">
-                                      <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5">Satuan</label>
-                                      <select
-                                        value={racikSatuan}
-                                        onChange={(e) => setRacikSatuan(e.target.value)}
-                                        className="w-full px-2 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 font-bold bg-white focus:outline-none"
-                                      >
-                                        <option value="Puyer">Puyer</option>
-                                        <option value="Kapsul">Kapsul</option>
-                                        <option value="Tablet">Tablet</option>
-                                      </select>
-                                    </div>
-                                    <div className="sm:col-span-1 text-right">
-                                      <button className="text-red-500 hover:text-red-750 text-[10px] font-bold pb-2.5">
-                                        HAPUS
-                                      </button>
-                                    </div>
-                                  </div>
-
-                                  {/* Composition Ingredients Sub-Table */}
-                                  <div className="overflow-x-auto border border-slate-100 rounded-lg">
-                                    <table className="w-full text-left text-xs border-collapse">
-                                      <thead>
-                                        <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold">
-                                          <th className="p-2.5">KOMPOSISI OBAT</th>
-                                          <th className="p-2.5 text-center">STOK</th>
-                                          <th className="p-2.5 text-center w-24">DOSIS (MG)</th>
-                                          <th className="p-2.5 text-center">JML DIBUTUHKAN</th>
-                                          <th className="p-2.5 text-right">HARGA</th>
-                                          <th className="p-2.5 text-center w-10"></th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        <tr>
-                                          <td className="p-2.5 font-bold text-slate-800">Paracetamol 500mg</td>
-                                          <td className="p-2.5 text-center text-slate-500 font-semibold">1000</td>
-                                          <td className="p-2.5 text-center">
+                                      <div className="sm:col-span-2">
+                                        <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5 text-center">Jml Diresepkan</label>
+                                        {activeSubTab === 'menunggu' ? (
+                                          <input
+                                            type="number"
+                                            value={item.kuantitas_resep}
+                                            onChange={(e) => updateItem(globalIndex, 'kuantitas_resep', Math.max(0, parseInt(e.target.value) || 0))}
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-750 font-bold text-center focus:outline-none"
+                                          />
+                                        ) : (
+                                          <div className="font-bold text-slate-700 text-center mt-2">{item.kuantitas_resep}</div>
+                                        )}
+                                      </div>
+                                      <div className="sm:col-span-2">
+                                        <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5 text-center">Jml Diambil</label>
+                                        {activeSubTab === 'menunggu' ? (
+                                          <input
+                                            type="number"
+                                            value={item.kuantitas_ambil}
+                                            onChange={(e) => updateItem(globalIndex, 'kuantitas_ambil', Math.max(0, parseInt(e.target.value) || 0))}
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs text-[#0D6A36] font-bold text-center focus:outline-none"
+                                          />
+                                        ) : (
+                                          <div className="font-bold text-[#0D6A36] text-center mt-2">{item.kuantitas_ambil}</div>
+                                        )}
+                                      </div>
+                                      <div className="sm:col-span-2 text-center">
+                                        <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5">Signa & Satuan</label>
+                                        {activeSubTab === 'menunggu' ? (
+                                          <div className="flex gap-1">
                                             <input
-                                              type="number"
-                                              value={racikDosis}
-                                              onChange={(e) => setRacikDosis(Math.max(0, parseInt(e.target.value) || 0))}
-                                              className="w-16 text-center py-1 border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none"
+                                              type="text"
+                                              value={item.signa}
+                                              onChange={(e) => updateItem(globalIndex, 'signa', e.target.value)}
+                                              placeholder="3x1"
+                                              className="w-full px-2 py-2 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none"
                                             />
-                                          </td>
-                                          <td className="p-2.5 text-center font-bold text-slate-700">
-                                            {numPillsNeeded} Tab
-                                          </td>
-                                          <td className="p-2.5 text-right text-slate-500 font-semibold">Rp 5.000</td>
-                                          <td className="p-2.5 text-center text-slate-400 hover:text-red-500 cursor-pointer">
-                                            <svg className="w-4 h-4 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                          </td>
-                                        </tr>
-                                      </tbody>
-                                    </table>
-                                  </div>
-
-                                  {/* Add composition link */}
-                                  <button className="text-[#0D6A36] hover:text-[#0a542b] font-bold text-xs flex items-center gap-1 transition-colors">
-                                    <span>+ Tambah Komposisi</span>
-                                  </button>
-
-                                  {/* Subtotal calculation box */}
-                                  <div className="flex justify-end pt-2">
-                                    <div className="w-64 space-y-1 text-xs">
-                                      <div className="flex justify-between text-slate-400 font-semibold">
-                                        <span>Embalase:</span>
-                                        <span className="text-slate-700 font-bold">Rp 0</span>
+                                            <select
+                                              value={item.satuan}
+                                              onChange={(e) => updateItem(globalIndex, 'satuan', e.target.value)}
+                                              className="w-full px-1 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 font-bold bg-white focus:outline-none"
+                                            >
+                                              <option value="Puyer">Puyer</option>
+                                              <option value="Kapsul">Kapsul</option>
+                                              <option value="Bungkus">Bungkus</option>
+                                            </select>
+                                          </div>
+                                        ) : (
+                                          <div className="font-bold text-slate-700 text-center mt-2">{item.signa} {item.satuan}</div>
+                                        )}
                                       </div>
-                                      <div className="flex justify-between text-slate-400 font-semibold">
-                                        <span>Harga Racikan:</span>
-                                        <span className="text-slate-700 font-bold">Rp 0</span>
+                                      
+                                      {activeSubTab === 'menunggu' && (
+                                        <div className="sm:col-span-2 text-right">
+                                          <button onClick={() => removeItem(globalIndex)} className="text-red-500 hover:text-red-750 text-[10px] font-bold pb-2.5 uppercase">
+                                            Hapus
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Racikan Subtotal and Price Override */}
+                                    <div className="flex justify-between items-center pt-2 mt-4 border-t border-slate-100">
+                                      <div className="text-xs text-slate-500 italic">
+                                        *Harga dan komponen racikan dapat disesuaikan pada sistem kasir atau input manual.
                                       </div>
-                                      <div className="flex justify-between text-[#0D6A36] font-bold pt-1.5 border-t border-slate-100 text-sm">
-                                        <span>Subtotal Racikan:</span>
-                                        <span>Rp {subtotalRacik.toLocaleString('id-ID')}</span>
+                                      <div className="flex items-center gap-4 text-xs">
+                                        <div className="flex items-center gap-2 text-slate-700 font-bold">
+                                          <span>Harga Satuan:</span>
+                                          {activeSubTab === 'menunggu' ? (
+                                            <div className="flex items-center">
+                                              <span className="mr-1">Rp</span>
+                                              <input 
+                                                type="number"
+                                                value={item.harga_satuan}
+                                                onChange={(e) => updateItem(globalIndex, 'harga_satuan', Math.max(0, parseInt(e.target.value) || 0))}
+                                                className="w-24 text-right py-1 px-2 border border-slate-200 rounded text-slate-700 focus:outline-none"
+                                              />
+                                            </div>
+                                          ) : (
+                                            <span>Rp {(item.harga_satuan || 0).toLocaleString('id-ID')}</span>
+                                          )}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[#0D6A36] font-bold text-sm">
+                                          <span>Subtotal Racikan:</span>
+                                          <span>Rp {(item.subtotal || 0).toLocaleString('id-ID')}</span>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
-
-                                </div>
+                                )})}
+                                {prescriptionItems.filter(item => item.is_racikan).length === 0 && (
+                                  <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl">
+                                    <p className="text-slate-400 font-medium italic text-sm">Belum ada obat racikan.</p>
+                                  </div>
+                                )}
                               </div>
 
                             </div>
@@ -1445,18 +1495,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                   doctor_alamat: doctorAlamat,
                                   catatan_apoteker: validationNotes,
                                   total_biaya: totalHargaVal,
-                                  items: [
-                                    {
-                                      product_name: selectedPrescription.drug || 'Obat Resep',
-                                      is_racikan: false,
-                                      kuantitas_resep: nonRacikQty,
-                                      kuantitas_ambil: nonRacikAmbil,
-                                      satuan: 'Tablet',
-                                      signa: `${nonRacikSigna1}x${nonRacikSigna2}`,
-                                      harga_satuan: priceNonRacik,
-                                      subtotal: subtotalNonRacik
-                                    }
-                                  ]
+                                  items: prescriptionItems
                                 }, { onSuccess: () => setPrescriptionView('list') });
                               }}
                               className="w-full bg-[#0D6A36] hover:bg-[#0a542b] text-white py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(13,106,54,0.15)] hover:shadow-lg transition-all"
