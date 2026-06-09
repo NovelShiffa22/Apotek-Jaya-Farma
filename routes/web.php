@@ -84,7 +84,7 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
     Route::get('/pharmacist', function () {
         $prescriptions = \App\Models\Prescription::with(['user', 'items.product'])->latest()->get();
         $products = \App\Models\Product::all();
-        $orders = \App\Models\Order::with(['user', 'products'])->latest()->get();
+        $orders = \App\Models\Order::with(['user', 'products', 'prescription'])->latest()->get();
 
         return Inertia::render('PharmacistDashboard', [
             'prescriptions' => $prescriptions,
@@ -151,6 +151,45 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
 
         return back()->with('success', 'Informasi obat berhasil diperbarui');
     })->name('pharmacist.products.update');
+
+    Route::put('/pharmacist/orders/{id}/status', function(\Illuminate\Http\Request $request, $id) {
+        $request->validate(['status' => 'required|string|in:pending,diproses,disiapkan,dikirim,selesai,dibatalkan']);
+        $order = \App\Models\Order::findOrFail($id);
+        $order->update(['status' => $request->status]);
+        return back()->with('success', 'Status pesanan berhasil diperbarui');
+    })->name('pharmacist.orders.status');
+
+    Route::post('/pharmacist/settings/profile', function(\Illuminate\Http\Request $request) {
+        $user = auth()->user();
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
+            'phone' => 'nullable|string|max:20',
+            'password' => 'nullable|string|min:8|confirmed',
+            'avatar' => 'nullable|image|max:2048'
+        ]);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->phone = $request->phone;
+        
+        if ($request->filled('password')) {
+            $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
+        }
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+            }
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar = $path;
+        }
+
+        $user->save();
+
+        return back()->with('success', 'Profil berhasil diperbarui');
+    })->name('pharmacist.settings.update');
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
