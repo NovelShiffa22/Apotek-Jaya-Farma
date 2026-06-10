@@ -249,12 +249,8 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                 {subtotal > 0 && (
                   <>
                     <div className="flex justify-between items-center text-[15px]">
-                      <span className="text-gray-600">Biaya Pengiriman</span>
-                      <span className="font-medium text-gray-900">Rp {shippingCost.toLocaleString('id-ID')}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-[15px]">
                       <span className="text-[#006a3f]">Potongan Harga</span>
-                      <span className="font-medium text-[#006a3f]">-Rp {discount.toLocaleString('id-ID')}</span>
+                      <span className="font-medium text-[#006a3f]">-Rp {Number(discount).toLocaleString('id-ID')}</span>
                     </div>
                   </>
                 )}

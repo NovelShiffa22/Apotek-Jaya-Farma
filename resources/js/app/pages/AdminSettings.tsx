@@ -1,11 +1,44 @@
-import { Link, usePage, useForm } from '@inertiajs/react';
+import { Link, usePage, useForm, router } from '@inertiajs/react';
+import ConfirmModal from '../components/ConfirmModal';
 import { LogOut, UserCog, ChevronLeft, Camera } from 'lucide-react';
 import { useState, useRef } from 'react';
 
 export default function AdminSettings() {
-    const { auth } = usePage<any>().props;
+    const { auth, globalDiscount = 0 } = usePage<any>().props;
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const [modalConfig, setModalConfig] = useState<{
+        isOpen: boolean;
+        type: 'logout' | 'delete' | 'timeout' | 'warning';
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        confirmText?: string;
+    }>({
+        isOpen: false,
+        type: 'warning',
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
+
+    const closeConfirmModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
+
+    const handleAdminLogout = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setModalConfig({
+            isOpen: true,
+            type: 'logout',
+            title: 'Keluar dari Sistem',
+            message: 'Apakah Anda yakin ingin keluar dari sistem Apotek Jaya Farma?',
+            confirmText: 'Ya, Keluar',
+            onConfirm: () => {
+                closeConfirmModal();
+                router.post(route('logout'));
+            }
+        });
+    };
 
     const { data, setData, post, processing, errors, recentlySuccessful } = useForm({
         name: auth?.user?.name || '',
@@ -38,6 +71,15 @@ export default function AdminSettings() {
                 setData('password_confirmation', '');
             }
         });
+    };
+
+    const { data: discountData, setData: setDiscountData, post: postDiscount, processing: processingDiscount } = useForm({
+        discount: globalDiscount
+    });
+
+    const submitDiscount = (e: React.FormEvent) => {
+        e.preventDefault();
+        postDiscount('/admin/settings/discount', { preserveScroll: true });
     };
 
     return (
@@ -83,15 +125,13 @@ export default function AdminSettings() {
                             {isProfileDropdownOpen && (
                                 <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-[#f1f5f9] bg-white p-2 shadow-[0_8px_24px_rgba(0,0,0,0.12)] z-50">
                                     <div className="my-1 h-[1px] w-full bg-[#f1f5f9]"></div>
-                                    <Link
-                                        href="/logout"
-                                        method="post"
-                                        as="button"
+                                    <button
+                                        onClick={handleAdminLogout}
                                         className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-['Inter',sans-serif] text-[13px] font-medium text-[#ba1a1a] transition-all hover:bg-red-50"
                                     >
                                         <LogOut size={16} />
                                         <span>Keluar</span>
-                                    </Link>
+                                    </button>
                                 </div>
                             )}
                         </div>
@@ -239,7 +279,41 @@ export default function AdminSettings() {
                         </div>
                     </div>
                 </form>
+
+                <form onSubmit={submitDiscount} className="mx-auto max-w-[1000px] mt-8 rounded-2xl border border-[#f1f5f9] bg-white p-8 shadow-sm">
+                    <h2 className="mb-2 font-['Inter',sans-serif] text-[24px] font-bold text-[#171d19]">
+                        Pengaturan Global Aplikasi
+                    </h2>
+                    <p className="mb-6 font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">
+                        Kelola pengaturan yang berdampak pada pengalaman seluruh pengguna Apotek Jaya Farma.
+                    </p>
+                    
+                    <div className="space-y-6 border-t border-[#f1f5f9] pt-6">
+                        <div>
+                            <label className="mb-2 block font-['Inter',sans-serif] text-[12px] font-bold uppercase tracking-wider text-[#6e7a70]">
+                                Potongan Harga (Diskon) Default Checkout & Keranjang
+                            </label>
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-500">Rp</span>
+                                <input
+                                    type="number"
+                                    value={discountData.discount}
+                                    onChange={e => setDiscountData('discount', Number(e.target.value))}
+                                    className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] pl-12 pr-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#006a3f] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20"
+                                    min="0"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 border-t border-[#f1f5f9] pt-6">
+                            <button type="submit" disabled={processingDiscount} className="rounded-xl bg-[#006a3f] px-6 py-3 font-['Inter',sans-serif] text-[14px] font-semibold text-white transition-colors hover:bg-[#005632] disabled:opacity-70">
+                                {processingDiscount ? 'Menyimpan...' : 'Simpan Pengaturan'}
+                            </button>
+                        </div>
+                    </div>
+                </form>
             </main>
+            <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
         </div>
     );
 }

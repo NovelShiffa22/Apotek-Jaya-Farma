@@ -20,9 +20,13 @@ export default function Catalog({
 
   const initialCat = filters.category || 'all';
   const initialSym = filters.symptoms ? (Array.isArray(filters.symptoms) ? filters.symptoms : filters.symptoms.split(',')) : [];
+  const initialPriceMin = filters.price_min || '';
+  const initialPriceMax = filters.price_max || '';
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([initialCat]);
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(initialSym);
+  const [priceMin, setPriceMin] = useState<string>(initialPriceMin);
+  const [priceMax, setPriceMax] = useState<string>(initialPriceMax);
 
   // Dynamic categories mapped from backend
   const categories = [
@@ -33,24 +37,34 @@ export default function Catalog({
   // Dynamic symptoms mapped from backend
   const symptoms = masterSymptoms.map(s => s.nama_gejala);
 
-  const updateFilters = (cat: string[], sym: string[]) => {
-    router.get('/catalog', {
-      category: cat.includes('all') ? 'all' : cat[0], // for now single category select
-      symptoms: sym.join(','),
-      search: searchQuery
-    }, { preserveState: true, replace: true });
+  const updateFilters = (cat: string[], sym: string[], resetSearch: boolean = false, minP: string = priceMin, maxP: string = priceMax) => {
+    const params: any = {
+      category: cat.includes('all') ? 'all' : cat[0],
+      symptoms: sym.join(',')
+    };
+    if (!resetSearch && searchQuery) params.search = searchQuery;
+    if (minP) params.price_min = minP;
+    if (maxP) params.price_max = maxP;
+
+    router.get('/catalog', params, { preserveState: true, replace: true });
   };
 
-  const toggleCategory = (categoryId: string) => {
-    let newCats = ['all'];
-    if (categoryId === 'all') {
-      newCats = ['all'];
-    } else {
-      newCats = [categoryId]; // simplify to single select for category
-    }
-    setSelectedCategories(newCats);
-    updateFilters(newCats, selectedSymptoms);
-  };
+    const toggleCategory = (categoryId: string) => {
+      let newCats = ['all'];
+      if (categoryId !== 'all') {
+        newCats = [categoryId]; // simplify to single select for category
+      }
+      setSelectedCategories(newCats);
+      updateFilters(newCats, selectedSymptoms, true); // True to reset search
+    };
+
+    const resetAllFilters = () => {
+      setSelectedCategories(['all']);
+      setSelectedSymptoms([]);
+      setPriceMin('');
+      setPriceMax('');
+      router.get('/catalog', {}, { preserveState: true, replace: true });
+    };
 
   const toggleSymptom = (symptom: string) => {
     // Find symptom slug to send to backend instead of label
@@ -64,7 +78,7 @@ export default function Catalog({
       newSyms = [...selectedSymptoms, symSlug];
     }
     setSelectedSymptoms(newSyms);
-    updateFilters(selectedCategories, newSyms);
+    updateFilters(selectedCategories, newSyms, false);
   };
 
   // We no longer filter manually here because backend already filtered
@@ -81,9 +95,17 @@ export default function Catalog({
               Katalog Obat
             </h1>
             {searchQuery && (
-              <p className="font-['Inter',sans-serif] text-[16px] text-[#3e4a41]">
-                Hasil pencarian untuk "<span className="text-[#006a3f] font-bold">{searchQuery}</span>"
-              </p>
+              <div className="mt-2">
+                <p className="font-['Inter',sans-serif] text-[16px] text-[#3e4a41] inline-block mr-3">
+                  Hasil pencarian untuk "<span className="text-[#006a3f] font-bold">{searchQuery}</span>"
+                </p>
+                <button
+                  onClick={() => updateFilters(selectedCategories, selectedSymptoms, true)}
+                  className="text-red-500 text-[13px] font-bold hover:underline inline-block transition-all"
+                >
+                  [ Hapus Pencarian ]
+                </button>
+              </div>
             )}
           </div>
 
@@ -98,11 +120,21 @@ export default function Catalog({
         <div className="flex flex-col lg:flex-row gap-6 w-full">
           {/* Sidebar Filter - From Figma */}
           <div className="w-full lg:w-1/4">
-            <div className="bg-white rounded-2xl p-6 border border-[#f1f5f9] lg:sticky lg:top-8">
+            <div className="bg-white rounded-2xl p-6 border border-[#f1f5f9] lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
               {/* Filter Header */}
-              <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19] mb-6">
-                Filter
-              </h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
+                  Filter
+                </h3>
+                {(selectedCategories[0] !== 'all' || selectedSymptoms.length > 0 || priceMin || priceMax) && (
+                  <button 
+                    onClick={resetAllFilters}
+                    className="text-red-500 text-[13px] font-bold hover:underline transition-all"
+                  >
+                    Reset Filter
+                  </button>
+                )}
+              </div>
 
               {/* Category Filter */}
               <div className="mb-8">
@@ -142,10 +174,12 @@ export default function Catalog({
                 </div>
               </div>
 
+
+
               <div className="h-px bg-[#e5e7eb] mb-8" />
 
               {/* Symptom Filter */}
-              <div>
+              <div className="mb-8">
                 <p className="font-['Inter',sans-serif] text-[12px] font-bold text-[#6e7a70] tracking-wider uppercase mb-4">
                   GEJALA
                 </p>
@@ -164,6 +198,37 @@ export default function Catalog({
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="h-px bg-[#e5e7eb] mb-8" />
+
+              {/* Price Filter */}
+              <div>
+                <p className="font-['Inter',sans-serif] text-[12px] font-bold text-[#6e7a70] tracking-wider uppercase mb-4">
+                  RENTANG HARGA
+                </p>
+                <div className="flex items-center gap-2 mb-2">
+                  <input
+                    type="number"
+                    placeholder="Harga Min"
+                    value={priceMin}
+                    onChange={(e) => setPriceMin(e.target.value)}
+                    className="w-1/2 px-3 py-2 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[13px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Harga Max"
+                    value={priceMax}
+                    onChange={(e) => setPriceMax(e.target.value)}
+                    className="w-1/2 px-3 py-2 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[13px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                  />
+                </div>
+                <button
+                  onClick={() => updateFilters(selectedCategories, selectedSymptoms, false, priceMin, priceMax)}
+                  className="bg-[#006a3f] hover:bg-[#005632] text-white rounded-lg py-1.5 px-3 w-full text-xs font-bold mt-2 transition-colors"
+                >
+                  Terapkan
+                </button>
               </div>
             </div>
           </div>

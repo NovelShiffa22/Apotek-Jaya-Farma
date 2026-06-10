@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
-import { User, MapPin, Package, LogOut, X, CheckCircle2 } from 'lucide-react';
+import { User, MapPin, Package, LogOut, X, CheckCircle2, Pencil, Trash2 } from 'lucide-react';
 import { usePage, Link, useForm, router } from '@inertiajs/react';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function Profile({ user, orders = [], addresses = [] }: any) {
   const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders'>('profile');
@@ -9,7 +10,25 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
+  const [addressToDelete, setAddressToDelete] = useState<number | null>(null);
   const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
+  const [modalConfig, setModalConfig] = useState<{
+      isOpen: boolean;
+      type: 'logout' | 'delete' | 'timeout' | 'warning';
+      title: string;
+      message: string;
+      onConfirm: () => void;
+      confirmText?: string;
+  }>({
+      isOpen: false,
+      type: 'warning',
+      title: '',
+      message: '',
+      onConfirm: () => {}
+  });
+
+  const closeConfirmModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
 
   const { data: formAddress, setData: setFormAddress, post: postAddress, processing: processingAddress, reset: resetAddress } = useForm({
     label: '',
@@ -45,14 +64,53 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
     });
   };
 
+  const openEditModal = (address: any) => {
+    setEditingAddressId(address.id);
+    setFormAddress({
+      label: address.label,
+      alamat_lengkap: address.alamat_lengkap,
+      kota: address.kota,
+      provinsi: address.provinsi,
+      kode_pos: address.kode_pos,
+      is_default: address.is_default
+    });
+    setIsAddressModalOpen(true);
+  };
+
+  const confirmDelete = (id: number) => {
+    setModalConfig({
+        isOpen: true,
+        type: 'delete',
+        title: 'Hapus Alamat',
+        message: 'Apakah Anda yakin ingin menghapus alamat ini? Data yang dihapus tidak dapat dikembalikan.',
+        confirmText: 'Ya, Hapus',
+        onConfirm: () => {
+            closeConfirmModal();
+            router.delete(route('addresses.destroy', id), {
+              preserveScroll: true
+            });
+        }
+    });
+  };
+
   const submitAddress = (e: React.FormEvent) => {
     e.preventDefault();
-    postAddress(route('address.store'), {
-      onSuccess: () => {
-        setIsAddressModalOpen(false);
-        resetAddress();
-      }
-    });
+    if (editingAddressId) {
+      router.patch(`/profile/address/${editingAddressId}`, formAddress as any, {
+        onSuccess: () => {
+          setIsAddressModalOpen(false);
+          setEditingAddressId(null);
+          resetAddress();
+        }
+      });
+    } else {
+      postAddress(route('address.store'), {
+        onSuccess: () => {
+          setIsAddressModalOpen(false);
+          resetAddress();
+        }
+      });
+    }
   };
 
   const setUtama = (id: number) => {
@@ -73,6 +131,21 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
     );
   };
 
+  const handleProfileLogout = (e: React.MouseEvent) => {
+      e.preventDefault();
+      setModalConfig({
+          isOpen: true,
+          type: 'logout',
+          title: 'Keluar Akun',
+          message: 'Apakah Anda yakin ingin keluar dari akun Anda?',
+          confirmText: 'Ya, Keluar',
+          onConfirm: () => {
+              closeConfirmModal();
+              router.post(route('logout'));
+          }
+      });
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('tab')) {
@@ -88,7 +161,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Pending': return { label: 'Belum Bayar', bg: 'bg-amber-50', text: 'text-amber-700' };
+      case 'Pending': return { label: 'Belum Bayar', bg: 'bg-red-50 border border-red-600', text: 'text-red-600' };
       case 'Lunas': return { label: 'Diproses', bg: 'bg-blue-50', text: 'text-blue-700' };
       case 'Dikirim': return { label: 'Dikirim', bg: 'bg-purple-50', text: 'text-purple-700' };
       case 'Selesai': return { label: 'Selesai', bg: 'bg-emerald-50', text: 'text-emerald-700' };
@@ -100,15 +173,15 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
     <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
       <Header />
 
-      <main className="w-full max-w-4xl mx-auto px-4 py-8 sm:py-12">
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <h1 className="font-['Roboto_Condensed',sans-serif] font-light text-[36px] sm:text-[48px] tracking-[-1.2px] text-[#171d19] mb-6 sm:mb-10">
           Profil Saya
         </h1>
 
         <div className="flex flex-col md:flex-row gap-8 w-full">
           {/* Sidebar */}
-          <div className="w-full md:w-1/4 shrink-0">
-            <div className="bg-white rounded-2xl p-4 border border-[#f1f5f9] shadow-[0_4px_12px_rgba(0,0,0,0.04)] sticky top-32">
+          <div className="w-full md:w-64 shrink-0">
+            <div className="bg-white rounded-2xl p-4 border border-[#f1f5f9] shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
               <nav className="space-y-2">
                 {[
                   { id: 'profile' as const, label: 'Profil', icon: User },
@@ -125,28 +198,26 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                     }`}
                   >
                     <item.icon size={18} />
-                    <span className="font-['Inter',sans-serif] text-[14px] font-medium">
+                    <span className="font-['Inter',sans-serif] text-[14px] font-medium whitespace-nowrap">
                       {item.label}
                     </span>
                   </button>
                 ))}
-                <Link
-                  href={route('logout')}
-                  method="post"
-                  as="button"
+                <button
+                  onClick={handleProfileLogout}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all bg-transparent hover:bg-red-50 text-[#ba1a1a] hover:border-red-200 mt-4 text-left"
                 >
                   <LogOut size={18} />
-                  <span className="font-['Inter',sans-serif] text-[14px] font-medium">
+                  <span className="font-['Inter',sans-serif] text-[14px] font-medium whitespace-nowrap">
                     Keluar
                   </span>
-                </Link>
+                </button>
               </nav>
             </div>
           </div>
 
           {/* Content */}
-          <div className="w-full md:w-3/4 flex-1">
+          <div className="flex-1 w-full min-w-0">
             {activeTab === 'profile' && (
               <>
                 <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
@@ -162,7 +233,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                       type="text"
                       value={formProfile.name}
                       onChange={e => setFormProfile('name', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                       required
                     />
                   </div>
@@ -174,7 +245,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                       type="email"
                       value={formProfile.email}
                       onChange={e => setFormProfile('email', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                       required
                     />
                   </div>
@@ -186,7 +257,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                       type="tel"
                       value={formProfile.phone}
                       onChange={e => setFormProfile('phone', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                     />
                   </div>
                   <button 
@@ -212,7 +283,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                       type="password"
                       value={passwordForm.data.current_password}
                       onChange={e => passwordForm.setData('current_password', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                       required
                     />
                     {passwordForm.errors.current_password && (
@@ -227,7 +298,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                       type="password"
                       value={passwordForm.data.password}
                       onChange={e => passwordForm.setData('password', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                       required
                     />
                     {passwordForm.errors.password && (
@@ -242,7 +313,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                       type="password"
                       value={passwordForm.data.password_confirmation}
                       onChange={e => passwordForm.setData('password_confirmation', e.target.value)}
-                      className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                       required
                     />
                     {passwordForm.errors.password_confirmation && (
@@ -279,37 +350,56 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                 </div>
                 
                 {addresses.length === 0 ? (
-                  <div className="bg-[#f9fafb] rounded-xl p-8 border border-[#f1f5f9] mb-6 text-center">
+                  <div className="bg-gray-50 rounded-xl p-8 border border-gray-300 mb-6 text-center">
                     <MapPin className="mx-auto h-12 w-12 text-gray-400 mb-3" />
                     <p className="font-['Inter',sans-serif] text-[15px] text-gray-500">Anda belum menambahkan alamat pengiriman.</p>
                   </div>
                 ) : (
                   <div className="space-y-4 mb-6">
                     {addresses.map((address: any) => (
-                      <div key={address.id} className={`bg-[#f9fafb] rounded-xl p-6 border ${address.is_default ? 'border-[#006a3f]' : 'border-[#f1f5f9]'}`}>
-                        <div className="flex items-start justify-between mb-3">
-                          <p className="font-['Roboto_Condensed',sans-serif] text-[18px] text-[#171d19] font-semibold flex items-center gap-2">
-                            {address.label}
-                            {address.is_default && (
-                              <span className="px-3 py-1 bg-[#006a3f] text-white rounded-full font-['Inter',sans-serif] text-[11px] font-bold tracking-wider uppercase">
-                                Utama
-                              </span>
-                            )}
-                          </p>
+                      <div key={address.id} className={`relative bg-gray-50 rounded-xl p-6 border flex flex-col justify-between ${address.is_default ? 'border-[#006a3f]' : 'border-gray-300'}`}>
+                        <div className="absolute top-4 right-4 flex items-center">
                           {!address.is_default && (
                             <button 
                               onClick={() => setUtama(address.id)}
-                              className="font-['Inter',sans-serif] text-[12px] font-medium px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+                              className="border border-emerald-500 text-emerald-600 bg-white text-[11px] sm:text-xs px-3 py-1.5 rounded-lg font-medium transition hover:bg-emerald-50 mr-2 inline-block"
                             >
                               Jadikan Utama
                             </button>
                           )}
+                          <button 
+                            onClick={() => openEditModal(address)}
+                            className="text-gray-500 hover:text-emerald-600 transition-colors p-1 mr-1" 
+                            title="Ubah Alamat"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                          <button 
+                            onClick={() => confirmDelete(address.id)}
+                            className="text-gray-500 hover:text-red-600 transition-colors p-1" 
+                            title="Hapus Alamat"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
-                        <p className="font-['Inter',sans-serif] text-[14px] text-[#3e4a41] leading-relaxed">
-                          {address.alamat_lengkap}<br />
-                          {address.kota}, {address.provinsi}<br />
-                          Kode Pos: {address.kode_pos}
-                        </p>
+                        
+                        <div className="flex flex-col flex-1">
+                          <div className="flex items-start justify-between mb-3 pr-48">
+                            <p className="font-['Roboto_Condensed',sans-serif] text-[18px] text-[#171d19] font-semibold flex items-center flex-wrap gap-2">
+                              {address.label}
+                              {address.is_default && (
+                                <span className="bg-[#006a3f] text-white text-[11px] sm:text-xs px-3 py-1.5 rounded-lg font-bold ml-2 inline-flex items-center justify-center leading-none shadow-sm">
+                                  Alamat Utama
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                          <p className="font-['Inter',sans-serif] text-[14px] text-[#3e4a41] leading-relaxed mb-1">
+                            {address.alamat_lengkap}<br />
+                            {address.kota}, {address.provinsi}<br />
+                            Kode Pos: {address.kode_pos}
+                          </p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -325,7 +415,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
             )}
 
             {activeTab === 'orders' && (
-              <div>
+              <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)] w-full text-left">
                 <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-6 font-semibold">
                   Riwayat Pesanan
                 </h2>
@@ -353,7 +443,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
 
                 <div className="space-y-4">
                   {orders.filter((o: any) => o.status === orderTab).length === 0 ? (
-                    <div className="bg-gray-50 p-8 rounded-2xl text-center text-gray-500 border border-gray-100 font-medium">
+                    <div className="text-center text-gray-500 py-8 font-medium">
                       Tidak ada pesanan di kategori ini.
                     </div>
                   ) : orders.filter((o: any) => o.status === orderTab).map((order: any) => {
@@ -361,9 +451,9 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                     return (
                       <div
                         key={order.id}
-                        className="bg-white rounded-2xl p-6 border border-[#f1f5f9] shadow-[0_4px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all"
+                        className="border-b border-gray-300 pb-6 mb-6 last:border-0 last:pb-0 last:mb-0 w-full text-left"
                       >
-                        <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-start justify-between mb-4">
                           <div>
                             <p className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#171d19] mb-1 font-semibold">
                               VA: {order.va_number}
@@ -384,30 +474,32 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                         </div>
 
                         {order.items && order.items.length > 0 && (
-                          <div className="py-4">
-                            <Link href={`/product/${order.items[0].id || order.items[0].product_id || 1}`} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 group">
-                              <div className="w-20 h-20 bg-gray-100 rounded-xl border border-gray-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
-                                {order.items[0].foto || order.items[0].image ? (
-                                  <img 
-                                    src={order.items[0].foto || order.items[0].image} 
-                                    alt={order.items[0].nama || order.items[0].name} 
-                                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-1" 
-                                  />
-                                ) : (
-                                  <Package size={28} className="text-gray-400 group-hover:scale-105 transition-transform duration-300" />
-                                )}
+                          <div className="py-2 space-y-4">
+                            <Link href={`/product/${order.items[0].id || order.items[0].product_id || 1}`} className="flex flex-col md:flex-row items-center justify-between w-full gap-4 p-4 bg-white border border-gray-300 rounded-xl group hover:shadow-md transition-all">
+                              <div className="flex items-center gap-4 flex-1">
+                                <div className="w-16 h-16 bg-gray-50 rounded-xl border border-gray-300 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                  {order.items[0].foto || order.items[0].image ? (
+                                    <img 
+                                      src={order.items[0].foto || order.items[0].image} 
+                                      alt={order.items[0].nama || order.items[0].name} 
+                                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-1" 
+                                    />
+                                  ) : (
+                                    <Package size={28} className="text-gray-400 group-hover:scale-105 transition-transform duration-300" />
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <h3 className="font-['Poppins',sans-serif] text-[15px] font-bold text-[#171d19] group-hover:text-[#006a3f] transition-colors line-clamp-2">
+                                    {order.items[0].nama || order.items[0].name || 'Produk Farmasi'}
+                                  </h3>
+                                  <span className="font-['Inter',sans-serif] text-[13px] text-gray-500 block mt-1">
+                                    {order.items[0].quantity || 1} x Rp {Number(order.items[0].harga || order.items[0].price || 0).toLocaleString('id-ID')}
+                                  </span>
+                                </div>
                               </div>
-                              <div className="flex-1 min-w-0 mt-1">
-                                <h3 className="font-['Poppins',sans-serif] text-[15px] font-bold text-[#171d19] group-hover:text-[#006a3f] transition-colors truncate">
-                                  {order.items[0].nama || order.items[0].name || 'Produk Farmasi'}
-                                </h3>
-                                <p className="font-['Inter',sans-serif] text-[13px] text-gray-500 mt-1">
-                                  x{order.items[0].quantity || 1}
-                                </p>
-                              </div>
-                              <div className="text-right mt-1">
-                                <p className="font-['Inter',sans-serif] text-[14px] text-[#171d19] font-medium">
-                                  Rp {Number(order.items[0].harga || order.items[0].price || 0).toLocaleString('id-ID')}
+                              <div className="w-full md:w-auto md:ml-auto md:text-right mt-2 md:mt-0 text-left">
+                                <p className="font-['Inter',sans-serif] text-[16px] text-[#171d19] font-bold">
+                                  Rp {Number((order.items[0].harga || order.items[0].price || 0) * (order.items[0].quantity || 1)).toLocaleString('id-ID')}
                                 </p>
                               </div>
                             </Link>
@@ -429,29 +521,31 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                             {expandedOrders.includes(order.id) && order.items.length > 1 && (
                               <div className="mt-4 pt-4 border-t border-dashed border-gray-200 space-y-4 animate-fade-in">
                                 {order.items.slice(1).map((item: any, idx: number) => (
-                                  <Link key={idx} href={`/product/${item.id || item.product_id || 1}`} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 group">
-                                    <div className="w-20 h-20 bg-gray-100 rounded-xl border border-gray-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
-                                      {item.foto || item.image ? (
-                                        <img 
-                                          src={item.foto || item.image} 
-                                          alt={item.nama || item.name} 
-                                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-1" 
-                                        />
-                                      ) : (
-                                        <Package size={28} className="text-gray-400 group-hover:scale-105 transition-transform duration-300" />
-                                      )}
+                                  <Link key={idx} href={`/product/${item.id || item.product_id || 1}`} className="flex flex-col md:flex-row items-center justify-between w-full gap-4 p-4 bg-white border border-gray-300 rounded-xl group hover:shadow-md transition-all">
+                                    <div className="flex items-center gap-4 flex-1">
+                                      <div className="w-16 h-16 bg-gray-50 rounded-xl border border-gray-300 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                        {item.foto || item.image ? (
+                                          <img 
+                                            src={item.foto || item.image} 
+                                            alt={item.nama || item.name} 
+                                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-1" 
+                                          />
+                                        ) : (
+                                          <Package size={28} className="text-gray-400 group-hover:scale-105 transition-transform duration-300" />
+                                        )}
+                                      </div>
+                                      <div className="flex-1">
+                                        <h3 className="font-['Poppins',sans-serif] text-[15px] font-bold text-[#171d19] group-hover:text-[#006a3f] transition-colors line-clamp-2">
+                                          {item.nama || item.name || 'Produk Farmasi'}
+                                        </h3>
+                                        <span className="font-['Inter',sans-serif] text-[13px] text-gray-500 block mt-1">
+                                          {item.quantity || 1} x Rp {Number(item.harga || item.price || 0).toLocaleString('id-ID')}
+                                        </span>
+                                      </div>
                                     </div>
-                                    <div className="flex-1 min-w-0 mt-1">
-                                      <h3 className="font-['Poppins',sans-serif] text-[15px] font-bold text-[#171d19] group-hover:text-[#006a3f] transition-colors truncate">
-                                        {item.nama || item.name || 'Produk Farmasi'}
-                                      </h3>
-                                      <p className="font-['Inter',sans-serif] text-[13px] text-gray-500 mt-1">
-                                        x{item.quantity || 1}
-                                      </p>
-                                    </div>
-                                    <div className="text-right mt-1">
-                                      <p className="font-['Inter',sans-serif] text-[14px] text-[#171d19] font-medium">
-                                        Rp {Number(item.harga || item.price || 0).toLocaleString('id-ID')}
+                                    <div className="w-full md:w-auto md:ml-auto md:text-right mt-2 md:mt-0 text-left">
+                                      <p className="font-['Inter',sans-serif] text-[16px] text-[#171d19] font-bold">
+                                        Rp {Number((item.harga || item.price || 0) * (item.quantity || 1)).toLocaleString('id-ID')}
                                       </p>
                                     </div>
                                   </Link>
@@ -471,7 +565,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-4 sm:mt-0 sm:justify-end">
                             <button 
                               onClick={() => { setSelectedOrder(order); setIsModalOpen(true); }}
-                              className="w-full sm:w-auto text-center font-['Inter',sans-serif] text-[14px] font-bold text-gray-600 hover:text-gray-900 border border-gray-200 px-5 py-2.5 rounded-xl transition-colors hover:bg-gray-50"
+                              className="w-full sm:w-auto text-center font-['Inter',sans-serif] text-[14px] font-bold text-gray-600 hover:text-gray-900 border border-gray-400 px-5 py-2.5 rounded-xl transition-colors hover:bg-gray-50"
                             >
                               Lihat Detail
                             </button>
@@ -547,10 +641,10 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
           <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all scale-100">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-[#171d19]">
-                Tambah Alamat Baru
+                {editingAddressId ? 'Ubah Alamat' : 'Tambah Alamat Baru'}
               </h3>
               <button 
-                onClick={() => { setIsAddressModalOpen(false); resetAddress(); }}
+                onClick={() => { setIsAddressModalOpen(false); setEditingAddressId(null); resetAddress(); }}
                 className="text-gray-400 hover:text-red-500 transition-colors p-1"
               >
                 <X size={22} strokeWidth={2.5} />
@@ -563,7 +657,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                   type="text" 
                   value={formAddress.label}
                   onChange={e => setFormAddress('label', e.target.value)}
-                  className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                   required
                 />
               </div>
@@ -572,7 +666,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                 <textarea 
                   value={formAddress.alamat_lengkap}
                   onChange={e => setFormAddress('alamat_lengkap', e.target.value)}
-                  className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                   rows={3}
                   required
                 />
@@ -584,7 +678,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                     type="text" 
                     value={formAddress.kota}
                     onChange={e => setFormAddress('kota', e.target.value)}
-                    className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                     required
                   />
                 </div>
@@ -594,7 +688,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                     type="text" 
                     value={formAddress.provinsi}
                     onChange={e => setFormAddress('provinsi', e.target.value)}
-                    className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                     required
                   />
                 </div>
@@ -605,7 +699,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                   type="text" 
                   value={formAddress.kode_pos}
                   onChange={e => setFormAddress('kode_pos', e.target.value)}
-                  className="w-full px-4 py-3 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                   required
                 />
               </div>
@@ -633,6 +727,9 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
           </div>
         </div>
       )}
+
+      <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
     </div>
   );
 }
+

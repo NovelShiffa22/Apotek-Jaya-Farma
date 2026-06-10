@@ -30,25 +30,13 @@ interface Props {
   address: Address;
   shippingMethods: ShippingMethod[];
   discount?: number;
+  isBuyNow?: boolean;
 }
 
-export default function Checkout({ cartItems = [], address, shippingMethods = [], discount = 0 }: Props) {
+export default function Checkout({ cartItems = [], address, shippingMethods = [], discount = 0, isBuyNow = false }: Props) {
   const [shippingMethod, setShippingMethod] = useState<string>(shippingMethods[0]?.id || '');
   const [selectedPaymentGroup, setSelectedPaymentGroup] = useState<string>('transfer');
   const [selectedPayment, setSelectedPayment] = useState<string>('');
-
-  // Hitung Mundur Waktu Aktif (20 Menit)
-  const [timeLeft, setTimeLeft] = useState(20 * 60);
-
-  useEffect(() => {
-    if (timeLeft <= 0) return;
-    const interval = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [timeLeft]);
-
-  const formattedTime = `${Math.floor(timeLeft / 60).toString().padStart(2, '0')}:${(timeLeft % 60).toString().padStart(2, '0')}`;
 
   // Calculations
   const subtotal = useMemo(() => cartItems.reduce((sum, item) => sum + (item.harga * item.quantity), 0), [cartItems]);
@@ -70,7 +58,8 @@ export default function Checkout({ cartItems = [], address, shippingMethods = []
     router.post('/checkout/proses', {
       item_ids: cartItems.map(item => item.id),
       shipping_method: shippingMethod,
-      payment_method: selectedPayment
+      payment_method: selectedPayment,
+      is_buy_now: isBuyNow
     });
   };
 
@@ -101,9 +90,9 @@ export default function Checkout({ cartItems = [], address, shippingMethods = []
       <Header />
 
       <main className="max-w-[1200px] mx-auto px-4 py-8 mt-4">
-        <Link href={route('cart.index')} className="text-[#006a3f] hover:text-[#005632] flex items-center gap-2 mb-6 text-[14px] font-medium transition-colors w-fit">
-            &larr; Kembali ke Keranjang
-        </Link>
+        <button onClick={() => window.history.back()} className="text-[#006a3f] hover:text-[#005632] flex items-center gap-2 mb-6 text-[14px] font-medium transition-colors w-fit">
+            &larr; Kembali
+        </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
@@ -114,9 +103,9 @@ export default function Checkout({ cartItems = [], address, shippingMethods = []
             <div className="bg-white rounded-2xl p-7 shadow-sm border border-gray-100">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-[22px] font-bold text-gray-900">Alamat Pengiriman</h2>
-                <button className="text-[14px] font-bold text-[#006a3f] hover:text-[#005632] transition-colors">
+                <Link href="/profile?tab=address&redirect=/checkout" className="text-[14px] font-bold text-[#006a3f] hover:text-[#005632] transition-colors">
                   Ubah
-                </button>
+                </Link>
               </div>
 
               <div className="flex items-start gap-4 p-5 rounded-xl border border-gray-200 bg-[#fafaf8]">
@@ -293,12 +282,10 @@ export default function Checkout({ cartItems = [], address, shippingMethods = []
                     <span className="font-medium text-gray-800">Rp {currentShippingCost.toLocaleString('id-ID')}</span>
                   </div>
 
-                  {discount > 0 && subtotal > 0 && (
-                    <div className="flex justify-between items-center text-[14px]">
-                      <span className="text-[#006a3f] font-medium">Potongan Harga</span>
-                      <span className="font-medium text-[#006a3f]">-Rp {discount.toLocaleString('id-ID')}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between items-center text-[14px]">
+                    <span className="text-[#006a3f] font-medium">Potongan Harga</span>
+                    <span className="font-medium text-[#006a3f]">-Rp {Number(discount).toLocaleString('id-ID')}</span>
+                  </div>
                 </div>
 
                 <div className="border-t border-dashed border-gray-300 pt-5 mb-8 flex justify-between items-center">
@@ -315,14 +302,6 @@ export default function Checkout({ cartItems = [], address, shippingMethods = []
                 >
                   Bayar Sekarang
                 </button>
-              </div>
-
-              {/* Alert Countdown */}
-              <div className="bg-[#fee2e2] border border-[#fecaca] rounded-xl p-4 flex gap-3 items-center">
-                <Clock className="text-[#ef4444] flex-shrink-0" size={18} strokeWidth={2.5}/>
-                <p className="text-[#b91c1c] font-bold text-[13px] leading-tight pt-0.5">
-                  Selesaikan pembayaran dalam {formattedTime}
-                </p>
               </div>
 
             </div>

@@ -24,6 +24,7 @@ import { useState, useEffect } from 'react';
 import CreateProduct from './CreateProduct';
 import CreateUser from './CreateUser';
 import { router, usePage } from '@inertiajs/react';
+import ConfirmModal from '../components/ConfirmModal';
 
 interface AdminDashboardProps {
     products?: any[];
@@ -46,6 +47,38 @@ export default function AdminDashboard({ products = [], categories = [], users =
     const [userToDelete, setUserToDelete] = useState<any>(null);
 
     const [viewingOrder, setViewingOrder] = useState<any>(null);
+
+    const [modalConfig, setModalConfig] = useState<{
+        isOpen: boolean;
+        type: 'logout' | 'delete' | 'timeout' | 'warning';
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        confirmText?: string;
+    }>({
+        isOpen: false,
+        type: 'warning',
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
+
+    const closeConfirmModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
+
+    const handleAdminLogout = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setModalConfig({
+            isOpen: true,
+            type: 'logout',
+            title: 'Keluar dari Sistem',
+            message: 'Apakah Anda yakin ingin keluar dari sistem Apotek Jaya Farma?',
+            confirmText: 'Ya, Keluar',
+            onConfirm: () => {
+                closeConfirmModal();
+                router.post(route('logout'));
+            }
+        });
+    };
 
     const [activeTab, setActiveTab] = useState<
         'analytics' | 'products' | 'orders' | 'users'
@@ -183,15 +216,13 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                         <span>Setting Profile</span>
                                     </Link>
                                     <div className="my-1 h-[1px] w-full bg-[#f1f5f9]"></div>
-                                    <Link
-                                        href="/logout"
-                                        method="post"
-                                        as="button"
+                                    <button
+                                        onClick={handleAdminLogout}
                                         className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-['Inter',sans-serif] text-[13px] font-medium text-[#ba1a1a] transition-all hover:bg-red-50"
                                     >
                                         <LogOut size={16} />
                                         <span>Keluar</span>
-                                    </Link>
+                                    </button>
                                 </div>
                             )}
                         </div>
@@ -1389,6 +1420,8 @@ export default function AdminDashboard({ products = [], categories = [], users =
                     </div>
                 </div>
             )}
+            
+            <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
         </div>
     );
 }

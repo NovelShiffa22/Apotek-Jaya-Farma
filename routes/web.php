@@ -58,6 +58,7 @@ Route::post('/checkout/proses', [CheckoutController::class, 'process'])->name('c
 
 Route::get('/invoice/{id}', [CheckoutController::class, 'invoice'])->name('order.invoice');
 Route::post('/invoice/{id}/simulasi-bayar', [CheckoutController::class, 'simulatePayment'])->name('order.simulate_payment');
+Route::post('/invoice/{id}/cancel', [CheckoutController::class, 'cancelTransaction'])->name('order.cancel');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
@@ -76,7 +77,9 @@ Route::get('/profile', function () {
 Route::middleware(['auth', 'role:user'])->group(function () {
     Route::patch('/profile/update', [\App\Http\Controllers\ProfileController::class, 'updateProfile'])->name('profile.update_info');
     Route::post('/profile/address', [\App\Http\Controllers\ProfileController::class, 'storeAlamat'])->name('address.store');
+    Route::patch('/profile/address/{id}', [\App\Http\Controllers\ProfileController::class, 'updateAlamat'])->name('address.update');
     Route::patch('/profile/address/{id}/utama', [\App\Http\Controllers\ProfileController::class, 'setUtama'])->name('address.set_utama');
+    Route::delete('/profile/address/{id}', [\App\Http\Controllers\ProfileController::class, 'destroyAlamat'])->name('addresses.destroy');
 });
 
 // Ruang Portal Kerja Manajemen (Dashboard)
@@ -210,8 +213,17 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     })->name('admin.dashboard');
 
     Route::get('/admin/settings', function () {
-        return Inertia::render('AdminSettings');
+        $globalDiscount = \Illuminate\Support\Facades\Cache::get('global_discount', 0);
+        return Inertia::render('AdminSettings', [
+            'globalDiscount' => $globalDiscount
+        ]);
     })->name('admin.settings');
+
+    Route::post('/admin/settings/discount', function(\Illuminate\Http\Request $request) {
+        $request->validate(['discount' => 'required|numeric|min:0']);
+        \Illuminate\Support\Facades\Cache::forever('global_discount', $request->discount);
+        return back()->with('success', 'Potongan harga global berhasil diperbarui');
+    })->name('admin.settings.discount');
 
     Route::post('/admin/settings/profile', function(\Illuminate\Http\Request $request) {
         $user = auth()->user();

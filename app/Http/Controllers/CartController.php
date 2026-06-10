@@ -46,8 +46,8 @@ class CartController extends Controller
 
         return \Inertia\Inertia::render('Cart', [
             'cartItems' => $formattedItems,
-            'shippingCost' => 15000,
-            'discount' => 5000,
+            'shippingCost' => 0,
+            'discount' => \Illuminate\Support\Facades\Cache::get('global_discount', 0),
             'frequentlyBought' => $frequentlyBought
         ]);
     }

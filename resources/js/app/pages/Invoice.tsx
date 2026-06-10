@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Head, router, Link } from '@inertiajs/react';
 import { CheckCircle, Clock, Copy, ArrowRight, ShieldCheck, ArrowLeft } from 'lucide-react';
 import Header from '../components/Header';
+import ConfirmModal from '../components/ConfirmModal';
 
 interface Transaction {
   id: number;
@@ -22,6 +23,17 @@ export default function Invoice({ transaction }: Props) {
   // Timer: 20 minutes from created_at
   const [timeLeft, setTimeLeft] = useState(20 * 60);
   const [copied, setCopied] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: '',
+    cancelText: 'Batal',
+    type: 'warning' as 'warning' | 'delete' | 'logout',
+    onConfirm: () => {}
+  });
+
+  const closeModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
 
   useEffect(() => {
     if (isLunas) return;
@@ -55,6 +67,41 @@ export default function Invoice({ transaction }: Props) {
     });
   };
 
+  const handleSudahBayarClick = () => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Konfirmasi Pembayaran',
+      message: 'Pastikan Anda telah mentransfer nominal yang sesuai. Apoteker kami akan segera memverifikasi transaksi Anda.',
+      confirmText: 'Ya, Sudah Transfer',
+      cancelText: 'Batal',
+      type: 'warning',
+      onConfirm: () => {
+        closeModal();
+        handleSimulatePayment(); // Still uses the same backend logic to verify
+      }
+    });
+  };
+
+  const handleCancelClick = () => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Batalkan Pesanan',
+      message: 'Apakah Anda yakin ingin membatalkan pesanan ini? Aksi ini tidak dapat dikembalikan.',
+      confirmText: 'Ya, Batalkan',
+      cancelText: 'Kembali',
+      type: 'delete',
+      onConfirm: () => {
+        closeModal();
+        router.post(`/invoice/${transaction.id}/cancel`, {}, {
+          preserveScroll: true,
+          onSuccess: () => {
+            // Success handled by controller redirect
+          }
+        });
+      }
+    });
+  };
+
   const goToHome = () => {
     router.get('/');
   };
@@ -67,7 +114,7 @@ export default function Invoice({ transaction }: Props) {
       <main className="max-w-[800px] mx-auto px-4 py-12">
         
         <div className="mb-6">
-          <Link href="/profile" className="inline-flex items-center gap-1 font-['Inter',sans-serif] text-[14px] text-gray-500 hover:text-gray-700 transition-colors">
+          <Link href="/profile?tab=orders" className="inline-flex items-center gap-1 font-['Inter',sans-serif] text-[14px] text-gray-500 hover:text-gray-700 transition-colors">
             <ArrowLeft size={16} />
             Kembali ke Riwayat Pesanan
           </Link>
@@ -148,20 +195,21 @@ export default function Invoice({ transaction }: Props) {
                 </div>
               </div>
 
-              {/* SIMULASI BUTTON */}
-              <div className="mt-12 border-t border-dashed border-gray-200 pt-8">
-                <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 text-center">
-                  <p className="text-indigo-800 font-bold mb-2">Area Developer (Simulasi)</p>
-                  <p className="text-sm text-indigo-600 mb-6">Klik tombol di bawah untuk menyimulasikan sistem API bank memverifikasi pembayaran Anda.</p>
-                  
-                  <button 
-                    onClick={handleSimulatePayment}
-                    className="bg-indigo-600 text-white rounded-xl py-4 px-8 font-bold flex items-center justify-center gap-2 mx-auto hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200 hover:shadow-lg"
-                  >
-                    Klik di Sini untuk Simulasi Bayar Lunas
-                    <ArrowRight size={20} />
-                  </button>
-                </div>
+              {/* ACTION BUTTONS */}
+              <div className="mt-8 space-y-4">
+                <button 
+                  onClick={handleSudahBayarClick}
+                  className="w-full bg-[#006a3f] text-white rounded-xl py-4 font-bold flex items-center justify-center gap-2 hover:bg-[#005632] transition-colors shadow-md shadow-emerald-200 hover:shadow-lg"
+                >
+                  Sudah Bayar
+                  <ArrowRight size={20} />
+                </button>
+                <button 
+                  onClick={handleCancelClick}
+                  className="w-full bg-white border-2 border-red-500 text-red-500 rounded-xl py-3.5 font-bold flex items-center justify-center hover:bg-red-50 transition-colors"
+                >
+                  Batalkan Pesanan
+                </button>
               </div>
 
             </div>
@@ -169,6 +217,16 @@ export default function Invoice({ transaction }: Props) {
         )}
 
       </main>
+      <ConfirmModal 
+        isOpen={modalConfig.isOpen}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        confirmText={modalConfig.confirmText}
+        cancelText={modalConfig.cancelText}
+        type={modalConfig.type}
+        onClose={closeModal}
+        onConfirm={modalConfig.onConfirm}
+      />
     </div>
   );
 }

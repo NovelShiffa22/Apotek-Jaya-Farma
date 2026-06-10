@@ -119,6 +119,39 @@ class ProfileController extends Controller
     }
 
     /**
+     * Memperbarui alamat yang sudah ada.
+     */
+    public function updateAlamat(Request $request, $id): RedirectResponse
+    {
+        $request->validate([
+            'label' => 'required|string|max:255',
+            'alamat_lengkap' => 'required|string',
+            'kota' => 'required|string',
+            'provinsi' => 'required|string',
+            'kode_pos' => 'required|string|max:10',
+        ]);
+
+        $address = \App\Models\Address::where('user_id', auth()->id())->findOrFail($id);
+        
+        $is_default = $request->input('is_default', false);
+
+        if ($is_default && !$address->is_default) {
+            \App\Models\Address::where('user_id', auth()->id())->update(['is_default' => false]);
+        }
+
+        $address->update([
+            'label' => $request->label,
+            'alamat_lengkap' => $request->alamat_lengkap,
+            'kota' => $request->kota,
+            'provinsi' => $request->provinsi,
+            'kode_pos' => $request->kode_pos,
+            'is_default' => $is_default,
+        ]);
+
+        return redirect()->back()->with('success', 'Alamat berhasil diperbarui.');
+    }
+
+    /**
      * Mengatur alamat sebagai utama.
      */
     public function setUtama($id): RedirectResponse
@@ -133,5 +166,26 @@ class ProfileController extends Controller
 
         return redirect()->back()->with('success', 'Alamat utama berhasil diperbarui.');
     }
-}
 
+    /**
+     * Menghapus alamat pengiriman.
+     */
+    public function destroyAlamat($id): RedirectResponse
+    {
+        $address = \App\Models\Address::where('user_id', auth()->id())->findOrFail($id);
+        
+        // Jika alamat yang dihapus adalah utama, jadikan alamat pertama lain sebagai utama
+        if ($address->is_default) {
+            $otherAddress = \App\Models\Address::where('user_id', auth()->id())
+                ->where('id', '!=', $id)
+                ->first();
+            if ($otherAddress) {
+                $otherAddress->update(['is_default' => true]);
+            }
+        }
+
+        $address->delete();
+
+        return redirect()->back()->with('success', 'Alamat berhasil dihapus.');
+    }
+}

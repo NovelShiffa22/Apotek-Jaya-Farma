@@ -1,21 +1,33 @@
+import { useState } from 'react';
 import { router } from '@inertiajs/react';
-import { Upload, ShoppingCart, ArrowLeft, Shield, Clock, Heart } from 'lucide-react';
+import { Upload, ShoppingCart, ArrowLeft, Shield, Clock, Heart, ShoppingBag, Plus, Minus } from 'lucide-react';
 import Header from '../components/Header';
 
 export default function ProductDetail({ product }: { product: any }) {
   const navigate = (path: any) => typeof path === 'number' ? window.history.back() : router.visit(path);
   const isRestricted = product.is_prescription_required;
+  const [qty, setQty] = useState(1);
+
+  const handleQtyChange = (newQty: number) => {
+    if (newQty >= 1 && newQty <= product.stok) {
+      setQty(newQty);
+    }
+  };
 
   const handleAddToCart = () => {
     router.post('/cart/add', {
       product_id: product.id,
-      quantity: 1
+      quantity: qty
     }, {
       preserveScroll: true,
       onSuccess: () => {
-        // success is handled by flash messages in UI if implemented, or just refresh
+        alert("Obat berhasil dimasukkan ke keranjang!");
       }
     });
+  };
+
+  const handleBuyNow = () => {
+    router.visit(`/checkout?buy_now_product_id=${product.id}&buy_now_quantity=${qty}`);
   };
 
   return (
@@ -167,12 +179,47 @@ export default function ProductDetail({ product }: { product: any }) {
                   </div>
                 </>
               ) : (
-                <button onClick={handleAddToCart} className="w-full bg-[#006a3f] hover:bg-[#005632] px-8 py-5 rounded-xl hover:shadow-[0_12px_32px_rgba(0,106,63,0.3)] transition-all duration-300 hover:-translate-y-0.5 group">
-                  <span className="font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] text-white flex items-center justify-center gap-3 font-medium">
-                    <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
-                    Tambah ke Keranjang
-                  </span>
-                </button>
+                <>
+                  <div className="flex items-center justify-between gap-4 mb-8">
+                    <div className="flex items-center border border-gray-400 rounded-2xl bg-white h-14 w-[160px]">
+                      <button 
+                        onClick={() => handleQtyChange(qty - 1)}
+                        disabled={qty <= 1}
+                        className="w-14 h-full flex items-center justify-center hover:bg-red-50 rounded-xl text-red-500 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                      >
+                        <Minus size={20} strokeWidth={2.5} />
+                      </button>
+                      <div className="flex-1 h-full flex items-center justify-center font-bold text-[#171d19] text-[18px]">
+                        {qty}
+                      </div>
+                      <button 
+                        onClick={() => handleQtyChange(qty + 1)}
+                        disabled={qty >= product.stok}
+                        className="w-14 h-full flex items-center justify-center hover:bg-emerald-50 rounded-xl text-emerald-600 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                      >
+                        <Plus size={20} strokeWidth={2.5} />
+                      </button>
+                    </div>
+                    <span className="font-['Inter',sans-serif] text-[15px] text-[#6e7a70]">
+                      Tersedia: <strong className="text-[#171d19]">{product.stok} {product.jenis_kemasan || 'box'}</strong>
+                    </span>
+                  </div>
+
+                  <div className="flex gap-4">
+                  <button onClick={handleAddToCart} className="flex-1 bg-white border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-6 py-4 rounded-xl transition-all duration-300 group">
+                    <span className="font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] flex items-center justify-center gap-2 font-bold">
+                      <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
+                      Tambah Keranjang
+                    </span>
+                  </button>
+                  <button onClick={handleBuyNow} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl py-3 px-6 transition duration-200 group">
+                    <span className="font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] flex items-center justify-center gap-2 font-bold">
+                      <ShoppingBag size={20} className="group-hover:scale-110 transition-transform" />
+                      Beli Sekarang
+                    </span>
+                  </button>
+                </div>
+                </>
               )}
             </div>
           </div>

@@ -23,6 +23,8 @@ class ProductController extends Controller
         $catQuery = $request->input('category');
         $symQuery = $request->input('symptoms');
         $searchQuery = $request->input('search');
+        $priceMin = $request->input('price_min');
+        $priceMax = $request->input('price_max');
 
         $products = Product::with(['category', 'symptoms'])
             ->when($catQuery && $catQuery !== 'all', function ($q) use ($catQuery) {
@@ -38,6 +40,12 @@ class ProductController extends Controller
             })
             ->when($searchQuery, function ($q) use ($searchQuery) {
                 $q->where('nama_obat', 'like', '%' . $searchQuery . '%');
+            })
+            ->when(!is_null($priceMin), function ($q) use ($priceMin) {
+                $q->where('harga', '>=', $priceMin);
+            })
+            ->when(!is_null($priceMax), function ($q) use ($priceMax) {
+                $q->where('harga', '<=', $priceMax);
             })
             ->get();
 

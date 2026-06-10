@@ -21,6 +21,7 @@ import {
   Camera
 } from 'lucide-react';
 import { Link, router, usePage, useForm } from '@inertiajs/react';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function PharmacistDashboard({ prescriptions = [], products = [], orders = [] }: any) {
   const { auth } = usePage().props as any;
@@ -142,6 +143,38 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [orderDateFilter, setOrderDateFilter] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+
+  const [modalConfig, setModalConfig] = useState<{
+      isOpen: boolean;
+      type: 'logout' | 'delete' | 'timeout' | 'warning';
+      title: string;
+      message: string;
+      onConfirm: () => void;
+      confirmText?: string;
+  }>({
+      isOpen: false,
+      type: 'warning',
+      title: '',
+      message: '',
+      onConfirm: () => {}
+  });
+
+  const closeConfirmModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
+
+  const handlePharmacistLogout = (e: React.MouseEvent) => {
+      e.preventDefault();
+      setModalConfig({
+          isOpen: true,
+          type: 'logout',
+          title: 'Keluar dari Sistem',
+          message: 'Apakah Anda yakin ingin keluar dari sistem Apotek Jaya Farma?',
+          confirmText: 'Ya, Keluar',
+          onConfirm: () => {
+              closeConfirmModal();
+              router.post(route('logout'));
+          }
+      });
+  };
 
   const statusConfig: any = {
       menunggu_pembayaran: {
@@ -393,15 +426,13 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
             <Settings size={18} className={activeTab === 'settings' ? 'text-[#0D6A36]' : 'text-slate-400'} />
             <span>Pengaturan</span>
           </button>
-          <Link
-            href={typeof route !== 'undefined' ? route('logout') : '#'}
-            method="post"
-            as="button"
+          <button
+            onClick={handlePharmacistLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold text-red-600 hover:bg-red-50 transition-all duration-200 text-left"
           >
             <LogOut size={18} className="text-red-500" />
             <span>Keluar</span>
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -1758,6 +1789,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
         )}
         </main>
       </div>
+      <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
     </div>
   );
 }
