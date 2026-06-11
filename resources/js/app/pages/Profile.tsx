@@ -7,6 +7,14 @@ import ConfirmModal from '../components/ConfirmModal';
 export default function Profile({ user, orders = [], addresses = [] }: any) {
   const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders'>('profile');
   const [orderTab, setOrderTab] = useState<string>('Pending');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam === 'orders' || tabParam === 'address' || tabParam === 'profile') {
+      setActiveTab(tabParam);
+    }
+  }, []);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -425,7 +433,8 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                     { id: 'Pending', label: 'Belum Bayar' },
                     { id: 'Lunas', label: 'Diproses' },
                     { id: 'Dikirim', label: 'Dikirim' },
-                    { id: 'Selesai', label: 'Selesai' }
+                    { id: 'Selesai', label: 'Selesai' },
+                    { id: 'Dibatalkan', label: 'Dibatalkan' }
                   ].map(tab => (
                     <button
                       key={tab.id}
@@ -442,12 +451,27 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                 </div>
 
                 <div className="space-y-4">
-                  {orders.filter((o: any) => o.status === orderTab).length === 0 ? (
-                    <div className="text-center text-gray-500 py-8 font-medium">
-                      Tidak ada pesanan di kategori ini.
-                    </div>
-                  ) : orders.filter((o: any) => o.status === orderTab).map((order: any) => {
-                    const isPending = order.status === 'Pending';
+                  {(() => {
+                    const filteredOrders = orders.filter((order: any) => {
+                      if (orderTab === 'Pending') {
+                        return order.status === 'Pending' || order.status === 'Belum Bayar';
+                      }
+                      if (orderTab === 'Dibatalkan') {
+                        return order.status === 'Dibatalkan';
+                      }
+                      return order.status === orderTab;
+                    });
+
+                    if (filteredOrders.length === 0) {
+                      return (
+                        <div className="text-center text-gray-500 py-8 font-medium">
+                          Tidak ada pesanan di kategori ini.
+                        </div>
+                      );
+                    }
+
+                    return filteredOrders.map((order: any) => {
+                      const isPending = order.status === 'Pending' || order.status === 'Belum Bayar';
                     return (
                       <div
                         key={order.id}
@@ -461,16 +485,24 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                             <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
                               {new Date(order.created_at).toLocaleDateString('id-ID', {
                                 day: 'numeric',
-                                month: 'long',
+                                month: 'long', 
                                 year: 'numeric'
                               })} • {order.payment_method || 'Virtual Account'}
                             </p>
                           </div>
-                          <div className={`${getStatusBadge(order.status).bg} px-4 py-2 rounded-full`}>
-                            <p className={`font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase ${getStatusBadge(order.status).text}`}>
-                              {getStatusBadge(order.status).label}
-                            </p>
-                          </div>
+                          {order.status === 'Dibatalkan' ? (
+                            <div className="bg-red-50 border border-red-200 px-4 py-2 rounded-full">
+                              <p className="font-['Inter',sans-serif] text-[12px] font-bold tracking-wider text-red-600">
+                                TRANSAKSI KEDALUWARSA (<span className="italic font-medium">Expired</span>)
+                              </p>
+                            </div>
+                          ) : (
+                            <div className={`${getStatusBadge(order.status).bg} px-4 py-2 rounded-full`}>
+                              <p className={`font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase ${getStatusBadge(order.status).text}`}>
+                                {getStatusBadge(order.status).label}
+                              </p>
+                            </div>
+                          )}
                         </div>
 
                         {order.items && order.items.length > 0 && (
@@ -574,11 +606,23 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                                 Bayar Sekarang
                               </Link>
                             )}
+                            {order.status === 'Dibatalkan' && (
+                              <button
+                                onClick={() => {
+                                  if(confirm('Apakah Anda yakin ingin menghapus riwayat pesanan ini?')) {
+                                    router.delete(`/profile/orders/${order.id}`, { preserveScroll: true });
+                                  }
+                                }}
+                                className="w-full sm:w-auto text-center bg-white border border-gray-300 text-gray-500 px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-gray-50 shadow-sm transition-all whitespace-nowrap"
+                              >
+                                Hapus Riwayat
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
                     );
-                  })}
+                  })})()}
                 </div>
               </div>
             )}

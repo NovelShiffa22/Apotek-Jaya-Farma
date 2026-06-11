@@ -51,7 +51,7 @@ class CheckoutController extends Controller
         }
 
         // 3. Format Data Produk untuk UI
-        $formattedItems = array_map(function($item) {
+        $checkoutItems = array_map(function($item) {
             return [
                 'id' => $item['id'],
                 'nama' => $item['name'],
@@ -115,7 +115,7 @@ class CheckoutController extends Controller
 
         // 6. Return Payload ke Frontend (Inertia)
         return Inertia::render('Checkout', [
-            'cartItems' => $formattedItems,
+            'cartItems' => $checkoutItems,
             'address' => $deliveryAddress,
             'shippingMethods' => $shippingMethods,
             'discount' => \Illuminate\Support\Facades\Cache::get('global_discount', 0),
@@ -197,6 +197,47 @@ class CheckoutController extends Controller
             'items' => $purchasedItems,
         ]);
 
+        // Konfigurasi Midtrans
+        \Midtrans\Config::$serverKey = config('midtrans.server_key');
+        \Midtrans\Config::$isProduction = config('midtrans.is_production');
+        \Midtrans\Config::$isSanitized = config('midtrans.is_sanitized');
+        \Midtrans\Config::$is3ds = config('midtrans.is_3ds');
+        // Bypass SSL untuk localhost Windows (mengatasi CURL Error cacert.pem)
+        \Midtrans\Config::$curlOptions = [
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLOPT_HTTPHEADER => []
+        ];
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => $transaction->id,
+                'gross_amount' => $totalAmount,
+            ],
+            'customer_details' => [
+                'first_name' => auth()->check() ? auth()->user()->name : 'Guest',
+                'email' => auth()->check() ? auth()->user()->email : 'guest@example.com',
+                'phone' => auth()->check() ? auth()->user()->phone : '08123456789',
+            ],
+            'callbacks' => [
+                'finish' => url('/invoice/' . $transaction->id),
+                'unfinish' => url('/invoice/' . $transaction->id),
+                'error' => url('/invoice/' . $transaction->id)
+            ],
+            'expiry' => [
+                'start_time' => date('Y-m-d H:i:s O'),
+                'duration' => 20,
+                'unit' => 'minutes'
+            ]
+        ];
+
+        try {
+            $snapToken = \Midtrans\Snap::getSnapToken($params);
+            $transaction->update(['snap_token' => $snapToken]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal mendapatkan token Midtrans: ' . $e->getMessage());
+        }
+
         return redirect()->route('order.invoice', ['id' => $transaction->id]);
     }
 
@@ -204,9 +245,80 @@ class CheckoutController extends Controller
     {
         $transaction = \App\Models\VirtualTransaction::findOrFail($id);
         
+        // DIRECT SINKRONISASI MIDTRANS
+        if ($transaction->status === 'Pending' || $transaction->status === 'Belum Bayar') {
+            \Midtrans\Config::$serverKey = config('midtrans.server_key');
+            \Midtrans\Config::$isProduction = config('midtrans.is_production');
+            \Midtrans\Config::$curlOptions = [
+                CURLOPT_SSL_VERIFYHOST => 0,
+                CURLOPT_SSL_VERIFYPEER => 0,
+                CURLOPT_HTTPHEADER => []
+            ];
+
+            try {
+                $status = \Midtrans\Transaction::status($transaction->id);
+                if ($status->transaction_status == 'settlement' || $status->transaction_status == 'capture') {
+                    $transaction->update(['status' => 'Lunas']);
+                } else if ($status->transaction_status == 'cancel' || $status->transaction_status == 'deny' || $status->transaction_status == 'expire') {
+                    $transaction->update(['status' => 'Dibatalkan']);
+                }
+            } catch (\Exception $e) {
+                // Abaikan jika order belum ada di Midtrans atau eror jaringan
+            }
+        }
+
+        // REDIRECT JIKA LUNAS
+        if ($transaction->status === 'Lunas' || $transaction->status === 'Diproses') {
+            return redirect('/profile?tab=orders')->with('success', 'Pembayaran Berhasil! Pesanan Anda sedang diproses.');
+        }
+        
         return Inertia::render('Invoice', [
             'transaction' => $transaction
         ]);
+    }
+
+    public function generateToken($id)
+    {
+        $transaction = \App\Models\VirtualTransaction::findOrFail($id);
+        
+        if (!$transaction->snap_token) {
+            \Midtrans\Config::$serverKey = config('midtrans.server_key');
+            \Midtrans\Config::$isProduction = config('midtrans.is_production');
+            \Midtrans\Config::$isSanitized = config('midtrans.is_sanitized');
+            \Midtrans\Config::$is3ds = config('midtrans.is_3ds');
+            \Midtrans\Config::$curlOptions = [
+                CURLOPT_SSL_VERIFYHOST => 0,
+                CURLOPT_SSL_VERIFYPEER => 0,
+                CURLOPT_HTTPHEADER => []
+            ];
+
+            $params = [
+                'transaction_details' => [
+                    'order_id' => $transaction->id,
+                    'gross_amount' => $transaction->total_amount,
+                ],
+                'customer_details' => [
+                    'first_name' => auth()->check() ? auth()->user()->name : 'Guest',
+                    'email' => auth()->check() ? auth()->user()->email : 'guest@example.com',
+                    'phone' => auth()->check() ? auth()->user()->phone : '08123456789',
+                ],
+                'callbacks' => [
+                    'finish' => url('/invoice/' . $transaction->id),
+                    'unfinish' => url('/invoice/' . $transaction->id),
+                    'error' => url('/invoice/' . $transaction->id)
+                ]
+            ];
+
+            try {
+                $snapToken = \Midtrans\Snap::getSnapToken($params);
+                $transaction->update(['snap_token' => $snapToken]);
+                return redirect()->back()->with('success', 'Token pembayaran berhasil dibuat.');
+            } catch (\Exception $e) {
+                return redirect()->back()->with('error', 'Gagal memproses pembayaran: ' . $e->getMessage());
+            }
+        }
+        
+        return redirect()->back();
     }
 
     public function simulatePayment($id)

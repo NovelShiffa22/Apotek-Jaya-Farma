@@ -15,6 +15,7 @@ class VirtualTransaction extends Model
         'payment_method',
         'total_amount',
         'status',
+        'snap_token',
         'items',
     ];
 

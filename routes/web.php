@@ -57,7 +57,8 @@ Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.in
 Route::post('/checkout/proses', [CheckoutController::class, 'process'])->name('checkout.proses');
 
 Route::get('/invoice/{id}', [CheckoutController::class, 'invoice'])->name('order.invoice');
-Route::post('/invoice/{id}/simulasi-bayar', [CheckoutController::class, 'simulatePayment'])->name('order.simulate_payment');
+Route::post('/invoice/{id}/generate-token', [CheckoutController::class, 'generateToken'])->name('order.generate_token');
+Route::post('/api/midtrans-callback', [\App\Http\Controllers\MidtransController::class, 'callback']);
 Route::post('/invoice/{id}/cancel', [CheckoutController::class, 'cancelTransaction'])->name('order.cancel');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -65,10 +66,77 @@ Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update')
 Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remove');
 
 Route::get('/profile', function () {
-    $orders = \App\Models\VirtualTransaction::where('user_id', auth()->id())->latest()->get();
-    $addresses = \App\Models\Address::where('user_id', auth()->id())->latest()->get();
+    $user = auth()->user();
+    $orders = \App\Models\VirtualTransaction::where('user_id', $user->id)->latest()->get();
+
+    // SINKRONISASI MIDTRANS LOKAL (DIRECT STATUS CHECK)
+    \Midtrans\Config::$serverKey = config('midtrans.server_key');
+    \Midtrans\Config::$isProduction = config('midtrans.is_production');
+    \Midtrans\Config::$curlOptions = [
+        CURLOPT_SSL_VERIFYHOST => 0,
+        CURLOPT_SSL_VERIFYPEER => 0,
+        CURLOPT_HTTPHEADER => []
+    ];
+
+    $needsRefresh = false;
+    foreach ($orders as $order) {
+        if ($order->status === 'Pending') {
+            try {
+                $status = \Midtrans\Transaction::status($order->id);
+                if ($status->transaction_status === 'expire' || $status->transaction_status === 'cancel') {
+                    $order->update(['status' => 'Dibatalkan']);
+                    
+                    // Kembalikan stok obat
+                    if (is_array($order->items)) {
+                        foreach ($order->items as $item) {
+                            $productId = $item['id'] ?? $item['product_id'] ?? null;
+                            if ($productId) {
+                                $product = \App\Models\Product::find($productId);
+                                if ($product) {
+                                    $product->increment('stok', $item['quantity'] ?? 1);
+                                }
+                            }
+                        }
+                    }
+                    $needsRefresh = true;
+                } elseif ($status->transaction_status === 'settlement' || $status->transaction_status === 'capture') {
+                    $order->update(['status' => 'Lunas']);
+                    $needsRefresh = true;
+                }
+            } catch (\Exception $e) {
+                // Abaikan jika belum ada di Midtrans
+            }
+
+            // Fallback cek waktu lokal (20 menit kedaluwarsa)
+            if ($order->status === 'Pending') {
+                $createdAt = \Carbon\Carbon::parse($order->created_at);
+                if (now()->diffInMinutes($createdAt, true) >= 20 && $createdAt->isPast()) {
+                    $order->update(['status' => 'Dibatalkan']);
+                    
+                    if (is_array($order->items)) {
+                        foreach ($order->items as $item) {
+                            $productId = $item['id'] ?? $item['product_id'] ?? null;
+                            if ($productId) {
+                                $product = \App\Models\Product::find($productId);
+                                if ($product) {
+                                    $product->increment('stok', $item['quantity'] ?? 1);
+                                }
+                            }
+                        }
+                    }
+                    $needsRefresh = true;
+                }
+            }
+        }
+    }
+
+    if ($needsRefresh) {
+        $orders = \App\Models\VirtualTransaction::where('user_id', $user->id)->latest()->get();
+    }
+
+    $addresses = \App\Models\Address::where('user_id', $user->id)->latest()->get();
     return Inertia::render('Profile', [
-        'user' => auth()->user(),
+        'user' => $user,
         'orders' => $orders,
         'addresses' => $addresses
     ]);
@@ -80,6 +148,14 @@ Route::middleware(['auth', 'role:user'])->group(function () {
     Route::patch('/profile/address/{id}', [\App\Http\Controllers\ProfileController::class, 'updateAlamat'])->name('address.update');
     Route::patch('/profile/address/{id}/utama', [\App\Http\Controllers\ProfileController::class, 'setUtama'])->name('address.set_utama');
     Route::delete('/profile/address/{id}', [\App\Http\Controllers\ProfileController::class, 'destroyAlamat'])->name('addresses.destroy');
+    Route::delete('/profile/orders/{id}', function ($id) {
+        $order = \App\Models\VirtualTransaction::where('user_id', auth()->id())->findOrFail($id);
+        if ($order->status === 'Dibatalkan') {
+            $order->delete();
+            return redirect()->back()->with('success', 'Riwayat pesanan berhasil dihapus.');
+        }
+        return redirect()->back()->with('error', 'Hanya pesanan yang dibatalkan yang dapat dihapus.');
+    })->name('orders.destroy');
 });
 
 // Ruang Portal Kerja Manajemen (Dashboard)

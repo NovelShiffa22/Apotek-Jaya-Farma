@@ -81,7 +81,7 @@ export default function ConfirmModal({
                 </div>
 
                 <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-center">
-                    {type !== 'timeout' && (
+                    {type !== 'timeout' && cancelText && (
                         <button
                             type="button"
                             className="inline-flex w-full justify-center rounded-xl bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-200 sm:w-auto font-['Inter',sans-serif] transition-colors"
