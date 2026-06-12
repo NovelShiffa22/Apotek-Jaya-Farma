@@ -81,10 +81,10 @@ class ProductSeeder extends Seeder
         $dbSymptoms = DB::table('symptoms')->get()->keyBy('nama_gejala')->toArray();
 
         // Tahan Foreign Key check untuk Truncate
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
         DB::table('product_symptoms')->truncate();
         DB::table('products')->truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
 
         $productData = [];
         $pivotData = [];

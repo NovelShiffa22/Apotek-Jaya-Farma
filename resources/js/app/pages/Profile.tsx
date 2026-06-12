@@ -3,6 +3,7 @@ import Header from '../components/Header';
 import { User, MapPin, Package, LogOut, X, CheckCircle2, Pencil, Trash2 } from 'lucide-react';
 import { usePage, Link, useForm, router } from '@inertiajs/react';
 import ConfirmModal from '../components/ConfirmModal';
+import { regions } from '../data/regions';
 
 export default function Profile({ user, orders = [], addresses = [] }: any) {
   const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders'>('profile');
@@ -47,6 +48,10 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
     is_default: false,
   });
 
+  const availableCities = formAddress.provinsi
+    ? regions.find(r => r.name.toLowerCase() === formAddress.provinsi.toLowerCase())?.cities || []
+    : [];
+
   const { data: formProfile, setData: setFormProfile, patch: patchProfile, processing: processingProfile } = useForm({
     name: user?.name || '',
     email: user?.email || '',
@@ -74,15 +79,36 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
 
   const openEditModal = (address: any) => {
     setEditingAddressId(address.id);
+
+    const foundProv = regions.find(r => r.name.toLowerCase() === (address.provinsi || '').toLowerCase());
+    const normalizedProv = foundProv ? foundProv.name : address.provinsi;
+
+    let normalizedKota = address.kota;
+    if (foundProv) {
+      const foundCity = foundProv.cities.find(c => c.toLowerCase() === (address.kota || '').toLowerCase());
+      if (foundCity) {
+        normalizedKota = foundCity;
+      }
+    }
+
     setFormAddress({
       label: address.label,
       alamat_lengkap: address.alamat_lengkap,
-      kota: address.kota,
-      provinsi: address.provinsi,
+      kota: normalizedKota,
+      provinsi: normalizedProv,
       kode_pos: address.kode_pos,
       is_default: address.is_default
     });
     setIsAddressModalOpen(true);
+  };
+
+  const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setFormAddress({
+      ...formAddress,
+      provinsi: value,
+      kota: ''
+    });
   };
 
   const confirmDelete = (id: number) => {
@@ -717,24 +743,33 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Kota</label>
-                  <input 
-                    type="text" 
-                    value={formAddress.kota}
-                    onChange={e => setFormAddress('kota', e.target.value)}
+                  <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Provinsi</label>
+                  <select 
+                    value={formAddress.provinsi}
+                    onChange={handleProvinceChange}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                     required
-                  />
+                  >
+                    <option value="">Pilih Provinsi</option>
+                    {regions.map(r => (
+                      <option key={r.name} value={r.name}>{r.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
-                  <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Provinsi</label>
-                  <input 
-                    type="text" 
-                    value={formAddress.provinsi}
-                    onChange={e => setFormAddress('provinsi', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                  <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Kota</label>
+                  <select 
+                    value={formAddress.kota}
+                    onChange={e => setFormAddress('kota', e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     required
-                  />
+                    disabled={!formAddress.provinsi}
+                  >
+                    <option value="">Pilih Kota/Kabupaten</option>
+                    {availableCities.map(city => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div>

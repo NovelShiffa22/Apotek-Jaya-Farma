@@ -17,7 +17,7 @@ class MasterDataSeeder extends Seeder
         $now = now();
 
         // 1. Seeding Data Categories
-        DB::table('categories')->insert([
+        DB::table('categories')->insertOrIgnore([
             [
                 'nama_kategori' => 'Obat Batuk & Pilek',
                 'slug' => Str::slug('Obat Batuk & Pilek'),
@@ -55,7 +55,7 @@ class MasterDataSeeder extends Seeder
                 'updated_at' => $now,
             ];
         }
-        DB::table('symptoms')->insert($symptomData);
+        DB::table('symptoms')->insertOrIgnore($symptomData);
 
         // 3. Seeding Data Products
         // (Produk dummy lama telah dihapus, beralih ke ProductSeeder)
