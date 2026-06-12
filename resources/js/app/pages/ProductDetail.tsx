@@ -43,9 +43,9 @@ export default function ProductDetail({ product }: { product: any }) {
           Kembali
         </button>
 
-        <div className="grid grid-cols-2 gap-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
           {/* Product Image */}
-          <div className="sticky top-32 self-start">
+          <div className="md:sticky md:top-32 self-start">
             <div className="bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9] rounded-2xl aspect-square flex items-center justify-center border border-[#e8e8e6] p-12 shadow-[0_8px_24px_rgba(0,0,0,0.06)] overflow-hidden group">
               {product.gambar ? (
                 <img
@@ -61,7 +61,7 @@ export default function ProductDetail({ product }: { product: any }) {
             </div>
 
             {/* Trust Badges */}
-            <div className="grid grid-cols-3 gap-3 mt-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
               {[
                 { icon: Shield, text: '100% Original', color: 'bg-[#ecfdf5]', iconColor: 'text-[#006a3f]' },
                 { icon: Clock, text: 'Pengiriman Cepat', color: 'bg-[#eff6ff]', iconColor: 'text-[#2d5f9f]' },
@@ -95,7 +95,7 @@ export default function ProductDetail({ product }: { product: any }) {
                 </p>
               </div>
 
-              <h1 className="font-['Roboto_Condensed',sans-serif] font-light text-[56px] tracking-[-1.4px] text-[#171d19] leading-[1.1] mb-6">
+              <h1 className="font-['Roboto_Condensed',sans-serif] font-light text-[32px] md:text-[56px] tracking-[-1.4px] text-[#171d19] leading-[1.1] mb-6">
                 {product.nama_obat}
               </h1>
 

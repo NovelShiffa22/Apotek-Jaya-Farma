@@ -18,12 +18,13 @@ import {
   ZoomIn,
   SlidersHorizontal,
   ShoppingBag,
-  Camera
+  Camera,
+  Menu
 } from 'lucide-react';
 import { Link, router, usePage, useForm } from '@inertiajs/react';
 import ConfirmModal from '../components/ConfirmModal';
 
-export default function PharmacistDashboard({ prescriptions = [], products = [], orders = [] }: any) {
+export default function PharmacistDashboard({ prescriptions = [], products = [], orders = [], statusChanges = [] }: any) {
   const { auth } = usePage().props as any;
   const user = auth?.user;
 
@@ -41,6 +42,20 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
       user?.avatar ? `/storage/${user.avatar}` : null
   );
+
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setData(prev => ({
+        ...prev,
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+      }));
+      setAvatarPreview(user.avatar ? `/storage/${user.avatar}` : null);
+    }
+  }, [user]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -131,7 +146,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
     }
   }, [activeTab]);
 
-  const [activeSubTab, setActiveSubTab] = useState<'menunggu' | 'disetujui' | 'ditolak' | 'pembayaran' | 'editor'>('menunggu');
+  const [activeSubTab, setActiveSubTab] = useState<'menunggu' | 'disetujui' | 'ditolak' | 'pembayaran'>('menunggu');
   const [selectedPrescription, setSelectedPrescription] = useState<any>(null);
   const [prescriptionView, setPrescriptionView] = useState<'list' | 'detail'>('list');
   const [searchQuery, setSearchQuery] = useState('');
@@ -219,14 +234,63 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
   // Notification States
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: 'Pesanan baru masuk dari Budi Santoso', time: '5 menit lalu', isRead: false },
-    { id: 2, text: 'Resep RX-20231102-05 perlu diverifikasi segera', time: '15 menit lalu', isRead: false },
-    { id: 3, text: 'Pembayaran pesanan #12 berhasil', time: '1 jam lalu', isRead: true }
-  ]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (statusChanges && statusChanges.length > 0) {
+      const lastReadTime = localStorage.getItem('pharmacist_notif_last_read') || '0';
+      const readTimeMs = parseInt(lastReadTime, 10);
+
+      const mapped = statusChanges.map((sc: any) => {
+        const timeMs = new Date(sc.created_at).getTime();
+        const pharmacistName = sc.changed_by_user?.name || 'Apoteker';
+        const isSelf = sc.changed_by === user?.id;
+        
+        let text = '';
+        const statusLabels: Record<string, string> = {
+          menunggu_pembayaran: 'Menunggu Pembayaran',
+          diproses: 'Diproses',
+          disiapkan: 'Disiapkan',
+          dikirim: 'Dikirim',
+          selesai: 'Selesai',
+          dibatalkan: 'Dibatalkan',
+        };
+
+        const displayStatus = statusLabels[sc.status_sesudah] || sc.status_sesudah;
+
+        if (isSelf) {
+          text = `Anda mengubah status Pesanan #${sc.order?.kode_pesanan || sc.order_id} menjadi "${displayStatus}"`;
+        } else {
+          text = `${pharmacistName} mengubah status Pesanan #${sc.order?.kode_pesanan || sc.order_id} menjadi "${displayStatus}"`;
+        }
+
+        const dateObj = new Date(sc.created_at);
+        const timeFormatted = dateObj.toLocaleDateString('id-ID', {
+          day: 'numeric',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        return {
+          id: sc.id,
+          text,
+          time: timeFormatted,
+          isRead: timeMs <= readTimeMs,
+          orderId: sc.order_id,
+          timeMs
+        };
+      });
+
+      setNotifications(mapped);
+    }
+  }, [statusChanges, user?.id]);
+
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const markAllRead = () => {
+    const maxTimeMs = Math.max(...notifications.map(n => n.timeMs), 0);
+    localStorage.setItem('pharmacist_notif_last_read', maxTimeMs.toString());
     setNotifications(notifications.map(n => ({ ...n, isRead: true })));
   };
 
@@ -339,7 +403,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
   return (
     <div className="flex min-h-screen bg-[#F8FAFC]">
       {/* Sidebar Navigation */}
-      <aside className="w-64 bg-white border-r border-[#E2E8F0] flex flex-col justify-between sticky top-0 h-screen z-30">
+      <aside className="hidden md:flex w-64 bg-white border-r border-[#E2E8F0] flex-col justify-between sticky top-0 h-screen z-30">
         <div>
           {/* Logo Brand */}
           <div className="flex items-center gap-3 px-6 h-20 border-b border-[#E2E8F0]">
@@ -440,7 +504,14 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
       <div className="flex-1 flex flex-col min-w-0">
         
         {/* Dynamic Header */}
-        <header className="h-20 bg-white border-b border-[#E2E8F0] flex items-center justify-between px-8 sticky top-0 z-20 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+        <header className="h-20 bg-white border-b border-[#E2E8F0] flex items-center justify-between px-4 sm:px-8 sticky top-0 z-20 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+          <button 
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="flex md:hidden p-2.5 text-slate-500 hover:bg-slate-100 rounded-xl mr-2 transition-all shrink-0"
+          >
+            <Menu size={22} />
+          </button>
+          
           {activeTab === 'dashboard' ? (
             /* Empty Header for Dashboard */
             <div></div>
@@ -457,6 +528,72 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
           {/* Quick Info & Profile */}
           <div className="flex items-center gap-6">
+            {/* Bell Notification Icon */}
+            <div className="relative">
+              <button
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                className="p-2.5 text-slate-400 hover:text-[#0D6A36] hover:bg-[#E7F5EC] rounded-xl transition-all relative"
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {isNotifOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white border border-[#E2E8F0] rounded-2xl shadow-xl z-50 overflow-hidden py-1">
+                  <div className="px-4 py-3 border-b border-[#E2E8F0] flex justify-between items-center">
+                    <span className="font-['Inter',sans-serif] font-bold text-sm text-slate-800">Notifikasi</span>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={markAllRead}
+                        className="text-xs font-semibold text-[#0D6A36] hover:underline"
+                      >
+                        Tandai dibaca
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-72 overflow-y-auto">
+                    {notifications.length > 0 ? (
+                      notifications.map((notif: any) => (
+                        <div
+                          key={notif.id}
+                          className={`px-4 py-3 border-b border-[#F1F5F9] last:border-0 hover:bg-[#F8FAFC] transition-colors text-left cursor-pointer ${
+                            !notif.isRead ? 'bg-[#E7F5EC]/30' : ''
+                          }`}
+                          onClick={() => {
+                            if (notif.orderId) {
+                              const ord = orders.find((o: any) => o.id === notif.orderId);
+                              if (ord) {
+                                setActiveTab('orders');
+                                setViewingOrder(ord);
+                              }
+                            }
+                            // Mark this one as read in local state
+                            setNotifications(notifications.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
+                            setIsNotifOpen(false);
+                          }}
+                        >
+                          <p className="font-['Inter',sans-serif] text-xs text-slate-800 font-medium leading-relaxed">
+                            {notif.text}
+                          </p>
+                          <span className="text-[10px] text-slate-400 mt-1 block">
+                            {notif.time}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-6 text-center text-slate-400 font-['Inter',sans-serif] text-xs">
+                        Tidak ada notifikasi baru
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <p className="font-['Inter',sans-serif] font-bold text-sm text-slate-800 leading-tight">
@@ -649,7 +786,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
                   {/* Search & Filter Bar */}
                   <div className="mb-6 rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
-                      <div className="flex gap-4">
+                      <div className="flex flex-col sm:flex-row gap-4">
                           <div className="relative flex-1">
                               <Search
                                   className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6e7a70]"
@@ -708,11 +845,11 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                   key={order.id}
                                   className="rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
                               >
-                                  <div className="flex items-center justify-between">
-                                      <div className="flex flex-1 items-center gap-4 md:gap-6">
+                                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                      <div className="flex flex-col sm:flex-row sm:items-center flex-1 gap-4 md:gap-6">
                                           {/* Order Info */}
-                                          <div className="w-[220px] md:w-[280px] shrink-0">
-                                              <div className="flex items-center gap-2 mb-1">
+                                          <div className="flex-1 min-w-[200px]">
+                                              <div className="flex items-center flex-wrap gap-2 mb-1">
                                                   <p className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
                                                       {order.kode_pesanan}
                                                   </p>
@@ -729,7 +866,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                           </div>
 
                                           {/* Items Count */}
-                                          <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 w-[80px] shrink-0">
+                                          <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 w-full sm:w-20 shrink-0">
                                               <p className="mb-0.5 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
                                                   Items
                                               </p>
@@ -739,25 +876,23 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                           </div>
 
                                           {/* Total */}
-                                          <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 w-[140px] shrink-0">
+                                          <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 w-full sm:w-36 shrink-0">
                                               <p className="mb-0.5 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
                                                   Total
                                               </p>
                                               <p className="font-['Roboto_Condensed',sans-serif] text-[18px] font-semibold text-[#006a3f] truncate">
                                                   Rp{' '}
-                                                  {parseFloat(order.total_biaya || 0).toLocaleString(
-                                                      'id-ID',
-                                                  )}
+                                                  {parseFloat(order.total_biaya || 0).toLocaleString('id-ID')}
                                               </p>
                                           </div>
                                       </div>
-
+                                      
                                       {/* Status & Actions */}
-                                      <div className="flex shrink-0 items-center gap-3">
+                                      <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full lg:w-auto justify-between sm:justify-end pt-4 lg:pt-0 border-t lg:border-t-0 border-[#f1f5f9]">
                                           <select
                                               value={order.status}
                                               onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                                              className={`w-[190px] rounded-xl border-2 px-3 py-2.5 font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none ${config.bg} ${config.color} ${config.border}`}
+                                              className={`w-full sm:w-[190px] rounded-xl border-2 px-3 py-2.5 font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none ${config.bg} ${config.color} ${config.border}`}
                                           >
                                               <option value="menunggu_pembayaran">Menunggu Pembayaran</option>
                                               <option value="diproses">Diproses</option>
@@ -766,15 +901,44 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                               <option value="selesai">Selesai</option>
                                               <option value="dibatalkan">Dibatalkan</option>
                                           </select>
-
+ 
                                           <button 
                                               onClick={() => setViewingOrder(order)}
-                                              className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:border-[#006a3f] hover:bg-white"
+                                              className="w-full sm:w-auto justify-center rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:border-[#006a3f] hover:bg-white flex items-center"
                                           >
                                               Detail
                                           </button>
                                       </div>
                                   </div>
+
+                                  {/* Status Change History Timeline */}
+                                  {order.status_histories && order.status_histories.length > 0 && (
+                                      <div className="mt-4 pt-4 border-t border-dashed border-[#e2e8f0]">
+                                          <p className="font-['Inter',sans-serif] text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                              Riwayat Status ({order.status_histories.length})
+                                          </p>
+                                          <div className="flex flex-wrap gap-2">
+                                              {order.status_histories.map((hist: any, hIdx: number) => {
+                                                  const statusLabels: Record<string, string> = {
+                                                      menunggu_pembayaran: 'Menunggu Pembayaran',
+                                                      diproses: 'Diproses',
+                                                      disiapkan: 'Disiapkan',
+                                                      dikirim: 'Dikirim',
+                                                      selesai: 'Selesai',
+                                                      dibatalkan: 'Dibatalkan',
+                                                  };
+                                                  return (
+                                                      <span key={hIdx} className="inline-flex items-center gap-1 rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-1 text-[11px] font-['Inter',sans-serif] text-slate-600">
+                                                          <span className="font-semibold text-slate-800">{statusLabels[hist.status_sesudah] || hist.status_sesudah}</span>
+                                                          <span className="text-slate-400">oleh</span>
+                                                          <span className="font-bold text-[#0D6A36]">{hist.changed_by_user?.name || 'Sistem'}</span>
+                                                          <span className="text-[10px] text-slate-400">({new Date(hist.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})})</span>
+                                                      </span>
+                                                  );
+                                              })}
+                                          </div>
+                                      </div>
+                                  )}
                               </div>
                           );
                       })}
@@ -786,7 +950,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
             <div className="max-w-[1600px] mx-auto">
               <div className="mb-6">
                   <h2 className="font-['Inter',sans-serif] text-2xl font-bold text-[#0D6A36] capitalize">
-                      Resep Menunggu Verifikasi
+                      Verifikasi Resep
                   </h2>
                   <p className="font-['Inter',sans-serif] text-sm text-slate-400 mt-1">
                       Daftar resep yang baru masuk dan memerlukan verifikasi apoteker.
@@ -800,8 +964,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                         { id: 'menunggu' as const, label: 'Menunggu' },
                         { id: 'disetujui' as const, label: 'Disetujui' },
                         { id: 'ditolak' as const, label: 'Ditolak' },
-                        { id: 'pembayaran' as const, label: 'Pembayaran' },
-                        { id: 'editor' as const, label: 'Informasi Obat' }
+                        { id: 'pembayaran' as const, label: 'Pembayaran' }
                       ].map((tab) => {
                         const isActive = activeSubTab === tab.id;
                         return (
@@ -825,164 +988,8 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                   </div>
               </div>
               
-              {/* editor tab content (drug editor) */}
-              {activeSubTab === 'editor' ? (
-                <div className="max-w-[1000px] mx-auto space-y-6">
-                  {/* Search box for drug */}
-                  <div className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm relative">
-                    <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-3 block">
-                      Cari Obat untuk Diedit
-                    </label>
-                    <div className="relative">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                      <input
-                        type="text"
-                        value={productSearch}
-                        onChange={(e) => setProductSearch(e.target.value)}
-                        placeholder="Ketik nama obat..."
-                        className="w-full pl-12 pr-4 py-3.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] focus:bg-white transition-all"
-                      />
-                      {productSearch && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#E2E8F0] rounded-xl shadow-lg max-h-60 overflow-y-auto z-50">
-                           {products.filter((p: any) => p.nama_obat.toLowerCase().includes(productSearch.toLowerCase())).map((p: any) => (
-                              <button
-                                key={p.id}
-                                className="w-full text-left px-4 py-3 hover:bg-slate-50 border-b border-[#E2E8F0] last:border-0 font-['Inter',sans-serif] text-sm text-slate-800"
-                                onClick={() => {
-                                  setSelectedProduct(p);
-                                  setProductIndikasi(p.indikasi || '');
-                                  setProductAturan(p.aturan_pakai || '');
-                                  setProductEfek(p.efek_samping || '');
-                                  setProductDeskripsi(p.deskripsi || '');
-                                  setProductSearch('');
-                                }}
-                              >
-                                {p.nama_obat}
-                              </button>
-                           ))}
-                           {products.filter((p: any) => p.nama_obat.toLowerCase().includes(productSearch.toLowerCase())).length === 0 && (
-                             <div className="px-4 py-3 text-sm text-slate-500 font-['Inter',sans-serif]">Tidak ada obat ditemukan.</div>
-                           )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Form Container */}
-                  <div className="bg-white rounded-2xl p-8 border border-[#E2E8F0] shadow-sm">
-                    <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#E2E8F0]">
-                      <div>
-                        <h2 className="font-['Inter',sans-serif] font-bold text-xl text-slate-800">
-                          Edit Informasi Obat
-                        </h2>
-                        <p className="font-['Inter',sans-serif] text-xs text-slate-400 mt-1">
-                          Kelola data deskripsi obat, indikasi, dosis, dan kontraindikasi.
-                        </p>
-                      </div>
-                      {selectedProduct && (
-                        <span className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-100 rounded-lg text-xs font-semibold">
-                          Dipilih: {selectedProduct.nama_obat}
-                        </span>
-                      )}
-                    </div>
-
-                    {selectedProduct ? (
-                      <div className="space-y-6">
-                        <div>
-                          <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-2 block">
-                            Nama Obat
-                          </label>
-                          <input
-                            type="text"
-                            disabled
-                            value={selectedProduct.nama_obat}
-                            className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 focus:outline-none opacity-70 cursor-not-allowed"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-2 block">
-                            Indikasi
-                          </label>
-                          <textarea
-                            rows={3}
-                            value={productIndikasi}
-                            onChange={(e) => setProductIndikasi(e.target.value)}
-                            className="w-full p-4 bg-white border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] resize-none transition-all"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-2 block">
-                            Aturan Pakai
-                          </label>
-                          <textarea
-                            rows={3}
-                            value={productAturan}
-                            onChange={(e) => setProductAturan(e.target.value)}
-                            className="w-full p-4 bg-white border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] resize-none transition-all"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-2 block">
-                            Efek Samping
-                          </label>
-                          <textarea
-                            rows={3}
-                            value={productEfek}
-                            onChange={(e) => setProductEfek(e.target.value)}
-                            className="w-full p-4 bg-white border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] resize-none transition-all"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="font-['Inter',sans-serif] font-bold text-xs text-slate-400 tracking-wider uppercase mb-2 block">
-                            Deskripsi (Kontraindikasi/Tambahan)
-                          </label>
-                          <textarea
-                            rows={3}
-                            value={productDeskripsi}
-                            onChange={(e) => setProductDeskripsi(e.target.value)}
-                            placeholder="Tambahkan kontraindikasi..."
-                            className="w-full p-4 bg-white border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] resize-none transition-all"
-                          />
-                        </div>
-
-                        <div className="flex gap-4 pt-6 border-t border-[#E2E8F0]">
-                          <button 
-                            onClick={() => {
-                              router.put(`/pharmacist/products/${selectedProduct.id}`, {
-                                indikasi: productIndikasi,
-                                aturan_pakai: productAturan,
-                                efek_samping: productEfek,
-                                deskripsi: productDeskripsi
-                              });
-                            }}
-                            className="flex-1 bg-[#0D6A36] hover:bg-[#0a542b] py-3.5 rounded-xl font-semibold font-['Inter',sans-serif] text-sm text-white hover:shadow-md transition-all flex items-center justify-center gap-2"
-                          >
-                            <Edit2 size={16} />
-                            <span>Simpan Perubahan</span>
-                          </button>
-                          <button 
-                            onClick={() => setSelectedProduct(null)}
-                            className="px-6 py-3.5 rounded-xl font-semibold font-['Inter',sans-serif] text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
-                          >
-                            Batal
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-12">
-                        <AlertCircle className="mx-auto text-slate-300 mb-2" size={36} />
-                        <p className="font-['Inter',sans-serif] text-sm text-slate-400">Silakan cari dan pilih obat untuk mengedit informasinya.</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                /* Main Table Queues (Menunggu, Disetujui, Ditolak, Pembayaran) */
-                <div>
+              
+              <div>
                   {prescriptionView === 'list' ? (
                     /* Grid Layout containing the Main Table */
                     <div className="space-y-6">
@@ -1015,11 +1022,11 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                       key={rx.id}
                                       className="rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
                                   >
-                                      <div className="flex items-center justify-between">
-                                          <div className="flex flex-1 items-center gap-4 md:gap-6">
+                                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                          <div className="flex flex-col sm:flex-row sm:items-center flex-1 gap-4 md:gap-6">
                                               {/* ID Resep & Waktu Info */}
-                                              <div className="w-[220px] md:w-[280px] shrink-0">
-                                                  <div className="flex items-center gap-2 mb-1">
+                                              <div className="flex-1 min-w-[150px]">
+                                                  <div className="flex items-center flex-wrap gap-2 mb-1">
                                                       <p className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
                                                           #{rx.kode_resep || rx.id}
                                                       </p>
@@ -1035,25 +1042,25 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                               </div>
 
                                               {/* NAMA PASIEN */}
-                                              <div className="flex items-center gap-3 shrink-0">
-                                                  <div className="w-10 h-10 rounded-full bg-[#E7F5EC] text-[#0D6A36] flex items-center justify-center font-bold text-sm">
+                                              <div className="flex items-center gap-3 w-full sm:w-auto">
+                                                  <div className="w-10 h-10 rounded-full bg-[#E7F5EC] text-[#0D6A36] flex items-center justify-center font-bold text-sm shrink-0">
                                                       {(rx.user?.name || rx.customer || 'G').split(' ').map((n: string) => n[0]).join('')}
                                                   </div>
-                                                  <span className="font-['Inter',sans-serif] text-[15px] font-semibold text-[#171d19]">
+                                                  <span className="font-['Inter',sans-serif] text-[15px] font-semibold text-[#171d19] truncate">
                                                       {rx.user?.name || rx.customer}
                                                   </span>
                                               </div>
                                           </div>
 
                                           {/* Status & Actions */}
-                                          <div className="flex shrink-0 items-center gap-3">
-                                              <div className={`px-4 py-2.5 rounded-xl border font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase ${config.bg} ${config.color} ${config.border}`}>
+                                          <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-4 sm:pt-0 border-t border-slate-100 sm:border-t-0">
+                                              <div className={`px-4 py-2.5 rounded-xl border font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase text-center w-full sm:w-auto ${config.bg} ${config.color} ${config.border}`}>
                                                   {config.text}
                                               </div>
 
                                               <button 
                                                   onClick={() => handleSelectPrescription(rx)}
-                                                  className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:border-[#006a3f] hover:bg-white"
+                                                  className="w-full sm:w-auto justify-center rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:border-[#006a3f] hover:bg-white flex items-center"
                                               >
                                                   {activeSubTab === 'menunggu' ? 'Verifikasi' : 'Detail'}
                                               </button>
@@ -1105,7 +1112,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                 </div>
                                 <div>
                                   <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Nama Lengkap</p>
-                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.customer}</p>
+                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.user?.name || selectedPrescription.customer}</p>
                                 </div>
                                 <div>
                                   <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Tempat Tanggal Lahir</p>
@@ -1113,11 +1120,18 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                 </div>
                                 <div>
                                   <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Email</p>
-                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.email || 'budi.s@example.com'}</p>
+                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.user?.email || selectedPrescription.email || 'budi.s@example.com'}</p>
                                 </div>
                                 <div className="md:col-span-2">
                                   <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Alamat</p>
-                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.alamat || 'Jl. Merdeka No. 45, Bekasi'}</p>
+                                  <p className="font-bold text-slate-800 text-xs">
+                                    {(() => {
+                                      const userAddress = selectedPrescription.user?.addresses?.find((addr: any) => addr.is_default) || selectedPrescription.user?.addresses?.[0];
+                                      return userAddress 
+                                        ? `${userAddress.alamat_lengkap}, ${userAddress.kota}, ${userAddress.provinsi} ${userAddress.kode_pos}`
+                                        : (selectedPrescription.alamat || 'Jl. Merdeka No. 45, Bekasi');
+                                    })()}
+                                  </p>
                                 </div>
                                 <div>
                                   <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Jenis Kelamin</p>
@@ -1133,7 +1147,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                 </div>
                                 <div>
                                   <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">No. Telp</p>
-                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.phone || '+628123456789'}</p>
+                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.user?.phone || selectedPrescription.phone || '+628123456789'}</p>
                                 </div>
                               </div>
                             </div>
@@ -1555,7 +1569,6 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                     </div>
                   )}
                 </div>
-              )}
 
             </div>
           )}
@@ -1838,6 +1851,133 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                     </div>
                 </div>
             </div>
+        )}
+        {/* Mobile Sidebar Navigation Drawer */}
+        {isMobileSidebarOpen && (
+          <div className="fixed inset-0 z-50 flex md:hidden">
+            {/* Backdrop */}
+            <div 
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className="fixed inset-0 bg-black/55 backdrop-blur-sm"
+            />
+            
+            {/* Drawer Content */}
+            <aside className="relative w-64 bg-white flex flex-col justify-between h-full shadow-2xl z-50">
+              <div>
+                {/* Logo Brand */}
+                <div className="flex items-center justify-between px-6 h-20 border-b border-[#E2E8F0]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                    <h2 className="font-['Inter',sans-serif] font-bold text-sm text-[#1A1A1A] leading-tight">
+                      Apotek Jaya Farma
+                    </h2>
+                  </div>
+                  <button 
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                    className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {/* Navigation Links */}
+                <nav className="px-4 py-6 space-y-1.5">
+                  <button
+                    onClick={() => {
+                      setActiveTab('dashboard');
+                      setIsMobileSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold transition-all duration-200 ${
+                      activeTab === 'dashboard'
+                        ? 'bg-[#E7F5EC] text-[#0D6A36]'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className={`w-5 h-5 ${activeTab === 'dashboard' ? 'text-[#0D6A36]' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
+                      </svg>
+                      <span>Dashboard</span>
+                    </div>
+                    {activeTab === 'dashboard' && <div className="w-1.5 h-5 bg-[#0D6A36] rounded-full" />}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setActiveTab('prescriptions');
+                      setPrescriptionView('list');
+                      setIsMobileSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold transition-all duration-200 ${
+                      activeTab === 'prescriptions'
+                        ? 'bg-[#E7F5EC] text-[#0D6A36]'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <svg className={`w-5 h-5 ${activeTab === 'prescriptions' ? 'text-[#0D6A36]' : 'text-slate-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span>Resep</span>
+                    </div>
+                    {activeTab === 'prescriptions' && <div className="w-1.5 h-5 bg-[#0D6A36] rounded-full" />}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setActiveTab('orders');
+                      setIsMobileSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold transition-all duration-200 ${
+                      activeTab === 'orders'
+                        ? 'bg-[#E7F5EC] text-[#0D6A36]'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <ShoppingBag className={`w-5 h-5 ${activeTab === 'orders' ? 'text-[#0D6A36]' : 'text-slate-400'}`} />
+                      <span>Pesanan</span>
+                    </div>
+                    {activeTab === 'orders' && <div className="w-1.5 h-5 bg-[#0D6A36] rounded-full" />}
+                  </button>
+                </nav>
+              </div>
+
+              {/* Sidebar Footer */}
+              <div className="p-4 border-t border-[#E2E8F0] space-y-1">
+                <button
+                  onClick={() => {
+                    setActiveTab('settings');
+                    setIsMobileSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold transition-all duration-200 ${
+                    activeTab === 'settings'
+                      ? 'bg-[#E7F5EC] text-[#0D6A36]'
+                      : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <Settings size={18} className={activeTab === 'settings' ? 'text-[#0D6A36]' : 'text-slate-400'} />
+                  <span>Pengaturan</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    setIsMobileSidebarOpen(false);
+                    handlePharmacistLogout(e);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold text-red-600 hover:bg-red-50 transition-all duration-200 text-left"
+                >
+                  <LogOut size={18} className="text-red-500" />
+                  <span>Keluar</span>
+                </button>
+              </div>
+            </aside>
+          </div>
         )}
         </main>
       </div>
