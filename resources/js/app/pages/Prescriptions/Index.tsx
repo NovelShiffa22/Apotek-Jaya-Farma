@@ -95,7 +95,7 @@ export default function PrescriptionIndex({ prescriptions, filters }: { prescrip
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyDown={handleSearch}
-                                    placeholder="Search by Pharmacy or Prescription ID..." 
+                                    placeholder="Cari berdasarkan ID Resep..." 
                                     className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-12 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10"
                                 />
                             </div>
@@ -151,7 +151,7 @@ export default function PrescriptionIndex({ prescriptions, filters }: { prescrip
                                                         href={route('prescriptions.detail', { id: prescription.id })}
                                                         className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-2 font-['Poppins',sans-serif] text-[13px] font-semibold text-[#006a3f] transition-colors hover:bg-emerald-100"
                                                     >
-                                                        Details
+                                                        Detail
                                                     </Link>
                                                 </td>
                                             </tr>

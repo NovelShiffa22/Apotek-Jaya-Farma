@@ -14,6 +14,7 @@ interface ProductCardProps {
   deskripsi?: string;
   kategori_nama?: string;
   stok?: number;
+  terjual?: number;
   unit?: string;
   is_prescription_required?: boolean;
 }
@@ -25,6 +26,7 @@ export default function ProductCard(props: ProductCardProps) {
   const productCategory = props.jenis_obat || props.category || 'bebas';
   const productImage = props.gambar || props.image;
   const stok = props.stok;
+  const terjual = props.terjual;
   const kategoriNama = props.kategori_nama;
   const unit = props.unit;
   const isPrescriptionRequired = props.is_prescription_required || false;
@@ -78,11 +80,21 @@ export default function ProductCard(props: ProductCardProps) {
           </h3>
         </Link>
 
-        {/* Info Stok */}
-        {stok !== undefined && (
-          <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70] mb-2">
-            Stok: <span className="font-semibold text-[#171d19]">{stok}</span>
-          </p>
+        {/* Info Stok & Terjual */}
+        {(stok !== undefined || terjual !== undefined) && (
+          <div className="flex items-center gap-2 mb-2 font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">
+            {stok !== undefined && (
+              <span>
+                Stok: <span className="font-semibold text-[#171d19]">{stok}</span>
+              </span>
+            )}
+            {stok !== undefined && terjual !== undefined && <span>•</span>}
+            {terjual !== undefined && (
+              <span>
+                Terjual: <span className="font-semibold text-[#171d19]">{terjual}</span>
+              </span>
+            )}
+          </div>
         )}
 
         {/* Price & CTA */}

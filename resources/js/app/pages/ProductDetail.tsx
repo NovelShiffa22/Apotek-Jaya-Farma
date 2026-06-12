@@ -65,7 +65,7 @@ export default function ProductDetail({ product }: { product: any }) {
               {[
                 { icon: Shield, text: '100% Original', color: 'bg-[#ecfdf5]', iconColor: 'text-[#006a3f]' },
                 { icon: Clock, text: 'Pengiriman Cepat', color: 'bg-[#eff6ff]', iconColor: 'text-[#2d5f9f]' },
-                { icon: Heart, text: 'Quality Check', color: 'bg-[#fef2f2]', iconColor: 'text-[#ba1a1a]' }
+                { icon: Heart, text: 'Kualitas Terjamin', color: 'bg-[#fef2f2]', iconColor: 'text-[#ba1a1a]' }
               ].map((badge, idx) => (
                 <div key={idx} className={`${badge.color} rounded-xl p-4 text-center border border-[#f1f5f9]`}>
                   <badge.icon className={`w-6 h-6 mx-auto mb-2 ${badge.iconColor}`} />
@@ -107,7 +107,7 @@ export default function ProductDetail({ product }: { product: any }) {
                 <p className="font-['Roboto_Condensed',sans-serif] text-[48px] text-[#006a3f] font-semibold tracking-[-1px]">
                   Rp {Number(product.harga).toLocaleString('id-ID')}
                 </p>
-                <p className="font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">per box</p>
+                <p className="font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">per boks</p>
               </div>
               <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70] mb-8">
                 Sudah termasuk pajak

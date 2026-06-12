@@ -28,21 +28,45 @@ class CartController extends Controller
             ];
         }, $cartItems);
 
-        // Get 2 frequently bought items (random active products with stock)
-        $frequentlyBought = Product::where('is_active', true)
-            ->where('stok', '>', 0)
-            ->inRandomOrder()
-            ->limit(2)
-            ->get()
-            ->map(function($product) {
-                return [
-                    'id' => $product->id,
-                    'nama' => $product->nama_obat,
-                    'kategori' => $product->category ? $product->category->nama_kategori : 'Umum',
-                    'harga' => $product->harga,
-                    'foto' => $product->gambar,
-                ];
-            });
+        $isEmpty = empty($cartItems);
+
+        if ($isEmpty) {
+            // Ambil barang terlaris (diurutkan berdasarkan total penjualan)
+            $activeProducts = Product::where('is_active', true)
+                ->where('stok', '>', 0)
+                ->get();
+            
+            $activeProducts = Product::attachSoldCounts($activeProducts);
+
+            $frequentlyBought = $activeProducts->sortByDesc('terjual')
+                ->take(2)
+                ->map(function($product) {
+                    return [
+                        'id' => $product->id,
+                        'nama' => $product->nama_obat,
+                        'kategori' => $product->category ? $product->category->nama_kategori : 'Umum',
+                        'harga' => $product->harga,
+                        'foto' => $product->gambar,
+                    ];
+                })
+                ->values();
+        } else {
+            // Get 2 frequently bought items (random active products with stock)
+            $frequentlyBought = Product::where('is_active', true)
+                ->where('stok', '>', 0)
+                ->inRandomOrder()
+                ->limit(2)
+                ->get()
+                ->map(function($product) {
+                    return [
+                        'id' => $product->id,
+                        'nama' => $product->nama_obat,
+                        'kategori' => $product->category ? $product->category->nama_kategori : 'Umum',
+                        'harga' => $product->harga,
+                        'foto' => $product->gambar,
+                    ];
+                });
+        }
 
         return \Inertia\Inertia::render('Cart', [
             'cartItems' => $formattedItems,

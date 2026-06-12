@@ -169,6 +169,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
                 kategori_nama={product.category?.name}
                 unit={product.unit}
                 is_prescription_required={product.is_prescription_required}
+                terjual={product.terjual}
               />
             ))}
             </div>

@@ -248,6 +248,7 @@ export default function Catalog({
                     deskripsi={product.deskripsi || product.indikasi}
                     kategori_nama={product.category?.nama_kategori}
                     stok={product.stok}
+                    terjual={product.terjual}
                   />
                 ))}
               </div>

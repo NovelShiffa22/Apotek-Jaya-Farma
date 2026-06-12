@@ -154,7 +154,7 @@ export default function Register() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label htmlFor="password" className="block text-[11px] font-bold tracking-wider text-[#171d19] uppercase mb-1.5 font-['Inter',sans-serif]">
-                                    Password
+                                    Kata Sandi
                                 </label>
                                 <div className="relative">
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9ca3af]">
@@ -180,7 +180,7 @@ export default function Register() {
 
                             <div>
                                 <label htmlFor="password_confirmation" className="block text-[11px] font-bold tracking-wider text-[#171d19] uppercase mb-1.5 font-['Inter',sans-serif]">
-                                    Konfirmasi Password
+                                    Konfirmasi Kata Sandi
                                 </label>
                                 <div className="relative">
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9ca3af]">

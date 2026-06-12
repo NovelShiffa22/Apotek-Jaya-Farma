@@ -14,6 +14,7 @@ use App\Models\Symptom;
 // Halaman Utama / Landing Page
 Route::get('/', function () {
     $featuredProducts = \App\Models\Product::with(['category', 'symptoms'])->inRandomOrder()->take(6)->get();
+    $featuredProducts = \App\Models\Product::attachSoldCounts($featuredProducts);
     return Inertia::render('Home', [
         'featuredProducts' => $featuredProducts
     ]);
@@ -135,10 +136,12 @@ Route::get('/profile', function () {
     }
 
     $addresses = \App\Models\Address::where('user_id', $user->id)->latest()->get();
+    $prescriptions = \App\Models\Prescription::withCount('orders')->where('user_id', $user->id)->latest()->get();
     return Inertia::render('Profile', [
         'user' => $user,
         'orders' => $orders,
-        'addresses' => $addresses
+        'addresses' => $addresses,
+        'prescriptions' => $prescriptions
     ]);
 })->middleware(['auth', 'role:user'])->name('profile');
 
@@ -156,6 +159,18 @@ Route::middleware(['auth', 'role:user'])->group(function () {
         }
         return redirect()->back()->with('error', 'Hanya pesanan yang dibatalkan yang dapat dihapus.');
     })->name('orders.destroy');
+    Route::delete('/profile/prescriptions/{id}', function ($id) {
+        $prescription = \App\Models\Prescription::where('user_id', auth()->id())->findOrFail($id);
+        if ($prescription->status_validasi === 'pending') {
+            $filePath = str_replace('storage/', '', $prescription->file_foto);
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($filePath)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($filePath);
+            }
+            $prescription->delete();
+            return redirect()->back()->with('success', 'Resep berhasil dibatalkan.');
+        }
+        return redirect()->back()->with('error', 'Hanya resep dengan status pending yang dapat dibatalkan.');
+    })->name('prescriptions.destroy');
 });
 
 // Ruang Portal Kerja Manajemen (Dashboard)

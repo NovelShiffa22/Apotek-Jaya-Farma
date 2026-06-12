@@ -31,6 +31,7 @@ export default function Header() {
   ];
 
   return (
+    <>
     <header className="w-full bg-white shadow-sm sticky top-0 z-50">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Logo */}
@@ -115,7 +116,7 @@ export default function Header() {
                 href={route('login')}
                 className="bg-[#006a3f] hover:bg-[#005632] px-5 py-2 rounded-lg font-['Inter',sans-serif] font-bold text-[14px] text-white transition-colors"
               >
-                Login
+                Masuk
               </Link>
             </div>
           )}
@@ -177,13 +178,13 @@ export default function Header() {
                   href={route('login')}
                   className="w-full text-center bg-[#006a3f] py-3 rounded-xl font-['Inter',sans-serif] font-bold text-[14px] text-white"
                 >
-                  Login
+                  Masuk
                 </Link>
                 <Link
                   href={route('register')}
                   className="w-full text-center border border-[#171d19] py-3 rounded-xl font-['Inter',sans-serif] font-bold text-[14px] text-[#171d19]"
                 >
-                  Sign Up
+                  Daftar
                 </Link>
               </div>
             )}
@@ -204,5 +205,19 @@ export default function Header() {
         </div>
       )}
     </header>
+    
+    {/* Floating WhatsApp Contact Button */}
+    <a
+      href="https://wa.me/628111230705"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="fixed bottom-6 right-6 z-[9999] bg-[#25D366] hover:bg-[#20ba5a] text-white p-4 rounded-full shadow-[0_4px_16px_rgba(37,211,102,0.3)] hover:shadow-[0_8px_24px_rgba(37,211,102,0.4)] transition-all duration-300 hover:-translate-y-1 flex items-center justify-center cursor-pointer"
+      title="Hubungi kami via WhatsApp"
+    >
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.747 1.451 5.436 0 9.86-4.413 9.863-9.847.001-2.63-1.019-5.101-2.871-6.958C16.472 1.983 14.007 1.96 12.01 1.96c-5.437 0-9.861 4.414-9.865 9.847-.001 1.677.452 3.3 1.313 4.7l-.364 1.33 1.385-.363-.432-.693zm11.233-7.558c-.31-.155-1.837-.907-2.122-1.01-.285-.104-.493-.155-.701.156-.207.31-.803.155-1.01.155-.207 0-.414-.103-.724-.258-1.309-.646-2.339-1.127-3.14-2.51-.156-.268-.017-.414.118-.548.12-.12.268-.31.403-.465.135-.155.18-.258.27-.432.09-.175.045-.33-.023-.485-.068-.155-.583-1.408-.801-1.927-.212-.51-.446-.44-.616-.449-.16-.008-.344-.01-.527-.01-.183 0-.482.069-.733.344-.252.274-.962.94-1.962.94-.999 0-1.961-.94-2.169-1.21-.207-.274-.41-.53-.41-.803s.069-.517.15-.705c.08-.188.468-.865.597-1.144.13-.279.18-.465.18-.65 0-.186-.046-.35-.13-.53-.08-.18-.597-1.504-.818-2.04-.216-.525-.427-.453-.597-.453h-.493c-.156 0-.414.052-.63.29-.216.236-.828.809-.828 1.977s.854 2.296.974 2.457c.12.162 1.68 2.56 4.07 3.593.568.246 1.01.393 1.356.502.572.181 1.092.155 1.503.094.458-.068 1.503-.615 1.716-1.21.213-.595.213-1.104.15-1.21-.063-.105-.231-.156-.541-.311z"/>
+      </svg>
+    </a>
+    </>
   );
 }

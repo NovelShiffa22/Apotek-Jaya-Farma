@@ -125,7 +125,7 @@ export default function Login({
                         {/* Password Input */}
                         <div>
                             <label htmlFor="password" className="block text-[13px] font-semibold text-[#171d19] mb-2 font-['Inter',sans-serif]">
-                                Password
+                                Kata Sandi
                             </label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9ca3af]">
@@ -136,7 +136,7 @@ export default function Login({
                                     type={showPassword ? 'text' : 'password'}
                                     name="password"
                                     value={data.password}
-                                    placeholder="Password"
+                                    placeholder="Kata Sandi"
                                     className={`w-full pl-12 pr-12 py-3 bg-[#f3f4f6]/50 border ${
                                         errors.password 
                                             ? 'border-[#ef4444] focus:ring-[#ef4444]/20 focus:border-[#ef4444]' 
@@ -166,7 +166,7 @@ export default function Login({
                                     onChange={(e) => setData('remember', e.target.checked)}
                                 />
                                 <span className="ms-2 text-[13px] text-[#6e7a70] select-none">
-                                    Remember Me
+                                    Ingat Saya
                                 </span>
                             </label>
                             {canResetPassword && (
@@ -174,7 +174,7 @@ export default function Login({
                                     href={route('password.request')}
                                     className="text-[13px] font-medium text-[#ba1a1a] hover:text-[#991b1b]"
                                 >
-                                    Lupa Password?
+                                    Lupa Kata Sandi?
                                 </Link>
                             )}
                         </div>
