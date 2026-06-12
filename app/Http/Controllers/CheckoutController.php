@@ -12,11 +12,33 @@ class CheckoutController extends Controller
     {
         $buyNowProductId = $request->query('buy_now_product_id');
         $buyNowQuantity = $request->query('buy_now_quantity', 1);
+        $prescriptionId = $request->query('prescription_id');
         $isBuyNow = false;
+        $isPrescription = false;
         
         $checkoutItems = [];
 
-        if ($buyNowProductId) {
+        if ($prescriptionId) {
+            $prescription = \App\Models\Prescription::with('items.product.category')->find($prescriptionId);
+            if ($prescription) {
+                $isPrescription = true;
+                foreach ($prescription->items as $pItem) {
+                    $prod = $pItem->product;
+                    if ($prod) {
+                        $checkoutItems[] = [
+                            'id' => $prod->id,
+                            'name' => $prod->nama_obat,
+                            'category' => $prod->category ? $prod->category->nama_kategori : 'Satuan',
+                            'price' => $prod->harga,
+                            'quantity' => $pItem->kuantitas_ambil ?? $pItem->kuantitas_resep ?? 1,
+                            'image' => $prod->gambar,
+                        ];
+                    }
+                }
+            }
+        }
+
+        if (!$isPrescription && $buyNowProductId) {
             $product = \App\Models\Product::with('category')->find($buyNowProductId);
             if ($product) {
                 $isBuyNow = true;
@@ -31,7 +53,7 @@ class CheckoutController extends Controller
             }
         }
 
-        if (!$isBuyNow) {
+        if (!$isPrescription && !$isBuyNow) {
             // 1. Dapatkan data keranjang (seluruhnya) dari session
             $cart = Session::get('cart', []);
             
@@ -120,6 +142,7 @@ class CheckoutController extends Controller
             'shippingMethods' => $shippingMethods,
             'discount' => \Illuminate\Support\Facades\Cache::get('global_discount', 0),
             'isBuyNow' => $isBuyNow,
+            'prescriptionId' => $prescriptionId ? (int)$prescriptionId : null,
         ]);
     }
 
@@ -141,7 +164,28 @@ class CheckoutController extends Controller
         $subtotal = 0;
         $purchasedItems = [];
 
-        if ($isBuyNow) {
+        $prescriptionId = $request->input('prescription_id');
+
+        if ($prescriptionId) {
+            $prescription = \App\Models\Prescription::with('items.product.category')->find($prescriptionId);
+            if ($prescription) {
+                foreach ($prescription->items as $pItem) {
+                    $prod = $pItem->product;
+                    if ($prod) {
+                        $qty = $pItem->kuantitas_ambil ?? $pItem->kuantitas_resep ?? 1;
+                        $purchasedItems[] = [
+                            'id' => $prod->id,
+                            'name' => $prod->nama_obat,
+                            'category' => $prod->category ? $prod->category->nama_kategori : 'Satuan',
+                            'price' => $prod->harga,
+                            'quantity' => $qty,
+                            'image' => $prod->gambar,
+                        ];
+                        $subtotal += $prod->harga * $qty;
+                    }
+                }
+            }
+        } elseif ($isBuyNow) {
             $buyNowProductIds = $request->input('item_ids', []);
             if (!empty($buyNowProductIds)) {
                 $product = \App\Models\Product::with('category')->find($buyNowProductIds[0]);

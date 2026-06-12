@@ -16,7 +16,17 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
         { name: 'Cetirizine 10mg', qty: '10 tabs', icon: <Syringe size={20} className="text-[#006a3f]" />, instruction: 'Diminum 1x sehari sebelum tidur', price: 25000 },
     ];
 
-    const totalHarga = MOCK_DRUGS.reduce((acc, curr) => acc + curr.price, 0);
+    const drugs = (prescription.items && prescription.items.length > 0)
+        ? prescription.items.map((item: any) => ({
+            name: item.product_name || (item.product ? item.product.nama_obat : 'Obat'),
+            qty: `${item.kuantitas_ambil ?? item.kuantitas_resep ?? 1} ${item.satuan || 'Pcs'}`,
+            icon: <Pill size={20} className="text-[#006a3f]" />,
+            instruction: item.signa || 'Diminum sesuai petunjuk dokter',
+            price: Number(item.harga_satuan ?? (item.product ? item.product.harga : 0)) * (item.kuantitas_ambil ?? item.kuantitas_resep ?? 1)
+        }))
+        : MOCK_DRUGS;
+
+    const totalHarga = drugs.reduce((acc: number, curr: any) => acc + curr.price, 0);
     const biayaPengiriman = 15000;
     const biayaLayanan = 2000;
     const totalPembayaran = totalHarga + biayaPengiriman + biayaLayanan;
@@ -209,7 +219,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                             <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
                                 <h3 className="font-['Poppins',sans-serif] font-bold text-[18px] text-[#171d19] mb-6">Daftar Obat</h3>
                                 <div className="space-y-6 divide-y divide-gray-100">
-                                    {MOCK_DRUGS.map((drug, idx) => (
+                                    {drugs.map((drug, idx) => (
                                         <div key={idx} className={`${idx !== 0 ? 'pt-6' : ''} flex flex-col sm:flex-row sm:items-start justify-between gap-4`}>
                                             <div className="flex items-start gap-4">
                                                 <div className="mt-1 w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
@@ -260,10 +270,10 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                 </div>
 
                                 <Link 
-                                    href={route('cart.index')}
+                                    href={route('checkout.index', { prescription_id: prescription.id })}
                                     className="w-full flex items-center justify-center rounded-xl bg-[#006a3f] py-4 font-['Poppins',sans-serif] text-[15px] font-bold text-white transition-all hover:bg-[#005632] shadow-lg"
                                 >
-                                    Tambahkan ke Keranjang
+                                    Lanjutkan ke Pembayaran
                                 </Link>
                             </div>
                         </div>

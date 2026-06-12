@@ -32,9 +32,10 @@ interface Props {
   shippingMethods: ShippingMethod[];
   discount?: number;
   isBuyNow?: boolean;
+  prescriptionId?: number | null;
 }
 
-export default function Checkout({ cartItems = [], address, shippingMethods = [], discount = 0, isBuyNow = false }: Props) {
+export default function Checkout({ cartItems = [], address, shippingMethods = [], discount = 0, isBuyNow = false, prescriptionId = null }: Props) {
   const [shippingMethod, setShippingMethod] = useState<string>(shippingMethods[0]?.id || '');
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
@@ -63,7 +64,8 @@ export default function Checkout({ cartItems = [], address, shippingMethods = []
       item_ids: cartItems.map(item => item.id),
       shipping_method: shippingMethod,
       payment_method: 'Midtrans Payment Gateway',
-      is_buy_now: isBuyNow
+      is_buy_now: isBuyNow,
+      prescription_id: prescriptionId
     });
   };
 

@@ -18,12 +18,12 @@ export default function Catalog({
   const searchParams = new URLSearchParams(window.location.search);
   const searchQuery = searchParams.get('search') || '';
 
-  const initialCat = filters.category || 'all';
+  const initialCat = filters.category ? (Array.isArray(filters.category) ? filters.category : filters.category.split(',')) : ['all'];
   const initialSym = filters.symptoms ? (Array.isArray(filters.symptoms) ? filters.symptoms : filters.symptoms.split(',')) : [];
   const initialPriceMin = filters.price_min || '';
   const initialPriceMax = filters.price_max || '';
 
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([initialCat]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCat);
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(initialSym);
   const [priceMin, setPriceMin] = useState<string>(initialPriceMin);
   const [priceMax, setPriceMax] = useState<string>(initialPriceMax);
@@ -39,7 +39,7 @@ export default function Catalog({
 
   const updateFilters = (cat: string[], sym: string[], resetSearch: boolean = false, minP: string = priceMin, maxP: string = priceMax) => {
     const params: any = {
-      category: cat.includes('all') ? 'all' : cat[0],
+      category: cat.includes('all') ? 'all' : cat.join(','),
       symptoms: sym.join(',')
     };
     if (!resetSearch && searchQuery) params.search = searchQuery;
@@ -49,22 +49,31 @@ export default function Catalog({
     router.get('/catalog', params, { preserveState: true, replace: true });
   };
 
-    const toggleCategory = (categoryId: string) => {
-      let newCats = ['all'];
-      if (categoryId !== 'all') {
-        newCats = [categoryId]; // simplify to single select for category
+  const toggleCategory = (categoryId: string) => {
+    let newCats: string[];
+    if (categoryId === 'all') {
+      newCats = ['all'];
+    } else {
+      if (selectedCategories.includes(categoryId)) {
+        newCats = selectedCategories.filter(c => c !== categoryId && c !== 'all');
+        if (newCats.length === 0) {
+          newCats = ['all'];
+        }
+      } else {
+        newCats = [...selectedCategories.filter(c => c !== 'all'), categoryId];
       }
-      setSelectedCategories(newCats);
-      updateFilters(newCats, selectedSymptoms, true); // True to reset search
-    };
+    }
+    setSelectedCategories(newCats);
+    updateFilters(newCats, selectedSymptoms, true); // True to reset search
+  };
 
-    const resetAllFilters = () => {
-      setSelectedCategories(['all']);
-      setSelectedSymptoms([]);
-      setPriceMin('');
-      setPriceMax('');
-      router.get('/catalog', {}, { preserveState: true, replace: true });
-    };
+  const resetAllFilters = () => {
+    setSelectedCategories(['all']);
+    setSelectedSymptoms([]);
+    setPriceMin('');
+    setPriceMax('');
+    router.get('/catalog', {}, { preserveState: true, replace: true });
+  };
 
   const toggleSymptom = (symptom: string) => {
     // Find symptom slug to send to backend instead of label
@@ -126,7 +135,7 @@ export default function Catalog({
                 <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
                   Filter
                 </h3>
-                {(selectedCategories[0] !== 'all' || selectedSymptoms.length > 0 || priceMin || priceMax) && (
+                {(!selectedCategories.includes('all') || selectedSymptoms.length > 0 || priceMin || priceMax) && (
                   <button 
                     onClick={resetAllFilters}
                     className="text-red-500 text-[13px] font-bold hover:underline transition-all"
