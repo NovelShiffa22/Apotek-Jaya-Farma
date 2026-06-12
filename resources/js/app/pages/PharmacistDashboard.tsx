@@ -19,7 +19,9 @@ import {
   SlidersHorizontal,
   ShoppingBag,
   Camera,
-  Menu
+  Menu,
+  Package,
+  Eye
 } from 'lucide-react';
 import { Link, router, usePage, useForm } from '@inertiajs/react';
 import ConfirmModal from '../components/ConfirmModal';
@@ -133,7 +135,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
   
   const maxChartValue = Math.max(...chartData.map(d => d.value), 10);
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'prescriptions' | 'settings'>(() => {
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'prescriptions' | 'settings' | 'products'>(() => {
     if (typeof window !== 'undefined') {
       return (localStorage.getItem('pharmacistActiveTab') as any) || 'dashboard';
     }
@@ -148,6 +150,30 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
   const [activeSubTab, setActiveSubTab] = useState<'menunggu' | 'disetujui' | 'ditolak' | 'pembayaran'>('menunggu');
   const [selectedPrescription, setSelectedPrescription] = useState<any>(null);
+
+  // States for 'products' tab
+  const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [productCategoryFilter, setProductCategoryFilter] = useState('all');
+  const [viewingProductDetail, setViewingProductDetail] = useState<any>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  // Compute completed orders sales count for each product
+  const productsWithSales = products.map((product: any) => {
+    let sales = 0;
+    orders.forEach((order: any) => {
+      if (order.status === 'selesai' && order.products) {
+        order.products.forEach((op: any) => {
+          if (op.id === product.id) {
+            sales += op.pivot?.kuantitas || 0;
+          }
+        });
+      }
+    });
+    return {
+      ...product,
+      sales
+    };
+  });
   const [prescriptionView, setPrescriptionView] = useState<'list' | 'detail'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [monthFilter, setMonthFilter] = useState('');
@@ -473,6 +499,21 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                 <span>Pesanan</span>
               </div>
               {activeTab === 'orders' && <div className="w-1.5 h-5 bg-[#0D6A36] rounded-full" />}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('products')}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold transition-all duration-200 ${
+                activeTab === 'products'
+                  ? 'bg-[#E7F5EC] text-[#0D6A36]'
+                  : 'text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Package className={`w-5 h-5 ${activeTab === 'products' ? 'text-[#0D6A36]' : 'text-slate-400'}`} />
+                <span>Produk dan Stok</span>
+              </div>
+              {activeTab === 'products' && <div className="w-1.5 h-5 bg-[#0D6A36] rounded-full" />}
             </button>
           </nav>
         </div>
@@ -1573,6 +1614,192 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
             </div>
           )}
 
+          {activeTab === 'products' && (
+            <div className="max-w-[1600px] mx-auto">
+              {/* Header Section */}
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] font-semibold tracking-[-0.7px] text-[#171d19]">
+                    Produk & Stok
+                  </h2>
+                  <p className="mt-1 font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">
+                    Pantau katalog obat dan ketersediaan stok
+                  </p>
+                </div>
+              </div>
+
+              {/* Search & Filter Bar */}
+              <div className="mb-6 rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search
+                      className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6e7a70]"
+                      size={20}
+                    />
+                    <input
+                      type="text"
+                      value={productSearchQuery}
+                      onChange={(e) => setProductSearchQuery(e.target.value)}
+                      placeholder="Cari produk..."
+                      className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-3 pr-4 pl-12 font-['Inter',sans-serif] text-[14px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#0D6A36] focus:bg-white focus:ring-2 focus:ring-[#0D6A36]/20 focus:outline-none"
+                    />
+                  </div>
+                  <select
+                    value={productCategoryFilter}
+                    onChange={(e) => setProductCategoryFilter(e.target.value)}
+                    className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-3 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#0D6A36] focus:ring-2 focus:ring-[#0D6A36]/20 focus:outline-none"
+                  >
+                    <option value="all">Semua Jenis Obat</option>
+                    <option value="bebas">Obat Bebas</option>
+                    <option value="terbatas">Obat Terbatas</option>
+                    <option value="keras">Obat Keras</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Enhanced Product Table */}
+              <div className="overflow-hidden rounded-2xl border border-[#f1f5f9] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-[#f1f5f9] bg-gradient-to-r from-[#f9fafb] to-[#f5f7f6]">
+                      <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                        Produk
+                      </th>
+                      <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                        Kategori Induk
+                      </th>
+                      <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                        Golongan Obat
+                      </th>
+                      <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                        Stok
+                      </th>
+                      <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                        Harga
+                      </th>
+                      <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                        Penjualan
+                      </th>
+                      <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                        Label Gejala
+                      </th>
+                      <th className="px-6 py-4 text-right font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                        Aksi
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {productsWithSales
+                      .filter((product: any) => {
+                        const matchesSearch = product.nama_obat
+                          .toLowerCase()
+                          .includes(productSearchQuery.toLowerCase());
+                        const matchesCategory =
+                          productCategoryFilter === 'all' ||
+                          product.jenis_obat === productCategoryFilter;
+                        return matchesSearch && matchesCategory;
+                      })
+                      .map((product: any) => (
+                        <tr
+                          key={product.id}
+                          className="border-b border-[#f1f5f9] transition-colors last:border-0 hover:bg-[#fafaf8]"
+                        >
+                          <td className="px-6 py-5">
+                            <div className="flex items-center gap-4">
+                              {product.gambar ? (
+                                <img
+                                  src={
+                                    product.gambar.startsWith('http')
+                                      ? product.gambar
+                                      : `/storage/${product.gambar}`
+                                  }
+                                  alt={product.nama_obat}
+                                  className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                                />
+                              ) : (
+                                <div className="h-12 w-12 shrink-0 rounded-lg bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9]" />
+                              )}
+                              <p className="font-['Roboto_Condensed',sans-serif] text-[16px] font-medium text-[#171d19]">
+                                {product.nama_obat}
+                              </p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-5 font-['Inter',sans-serif] text-[14px] text-[#3e4a41]">
+                            {product.category?.nama_kategori || '-'}
+                          </td>
+                          <td className="px-6 py-5">
+                            <span
+                              className={`inline-block rounded-full px-3 py-1 text-[11px] font-medium ${
+                                product.jenis_obat === 'bebas'
+                                  ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+                                  : product.jenis_obat === 'keras'
+                                  ? 'border border-red-200 bg-red-50 text-red-700'
+                                  : 'border border-amber-200 bg-amber-50 text-amber-700'
+                              }`}
+                            >
+                              {product.jenis_obat === 'bebas'
+                                ? 'Bebas'
+                                : product.jenis_obat === 'keras'
+                                ? 'Keras'
+                                : 'Terbatas'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5">
+                            <span
+                              className={`font-['Inter',sans-serif] text-[14px] font-semibold ${
+                                product.stok < 10
+                                  ? 'text-red-700'
+                                  : product.stok < 50
+                                  ? 'text-amber-700'
+                                  : 'text-emerald-700'
+                              }`}
+                            >
+                              {product.stok}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19]">
+                            Rp {parseFloat(product.harga).toLocaleString('id-ID')}
+                          </td>
+                          <td className="px-6 py-5 font-['Inter',sans-serif] text-[14px] text-[#3e4a41]">
+                            {product.sales || 0} unit
+                          </td>
+                          <td className="px-6 py-5">
+                            <div className="flex flex-wrap gap-2">
+                              {(product.symptoms || []).map(
+                                (symptom: any, idx: number) => (
+                                  <span
+                                    key={idx}
+                                    className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 font-['Inter',sans-serif] text-[11px] font-medium text-blue-700"
+                                  >
+                                    {symptom.nama_gejala || symptom}
+                                  </span>
+                                )
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => {
+                                  setViewingProductDetail(product);
+                                  setIsDetailModalOpen(true);
+                                }}
+                                className="group inline-flex items-center gap-1.5 rounded-lg border border-[#0D6A36]/30 px-3 py-1.5 font-['Inter',sans-serif] text-xs font-semibold text-[#0D6A36] bg-[#0D6A36]/5 hover:bg-[#0D6A36] hover:text-white transition-all duration-200"
+                                title="Detail Produk"
+                              >
+                                <Eye size={14} />
+                                <span>Detail</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'settings' && (
             <div className="max-w-[1600px] mx-auto">
               <div className="mb-6">
@@ -1946,6 +2173,24 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                     </div>
                     {activeTab === 'orders' && <div className="w-1.5 h-5 bg-[#0D6A36] rounded-full" />}
                   </button>
+
+                  <button
+                    onClick={() => {
+                      setActiveTab('products');
+                      setIsMobileSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold transition-all duration-200 ${
+                      activeTab === 'products'
+                        ? 'bg-[#E7F5EC] text-[#0D6A36]'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Package className={`w-5 h-5 ${activeTab === 'products' ? 'text-[#0D6A36]' : 'text-slate-400'}`} />
+                      <span>Produk dan Stok</span>
+                    </div>
+                    {activeTab === 'products' && <div className="w-1.5 h-5 bg-[#0D6A36] rounded-full" />}
+                  </button>
                 </nav>
               </div>
 
@@ -1981,6 +2226,226 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
         )}
         </main>
       </div>
+      
+      {/* Product Detail Modal */}
+      {isDetailModalOpen && viewingProductDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            onClick={() => {
+              setIsDetailModalOpen(false);
+              setViewingProductDetail(null);
+            }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          />
+          
+          {/* Modal Body */}
+          <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden border border-[#E2E8F0] z-10 animate-in fade-in zoom-in-95 duration-200">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0] shrink-0">
+              <h3 className="font-['Roboto_Condensed',sans-serif] text-xl font-bold text-[#171d19]">
+                Detail Produk Obat
+              </h3>
+              <button 
+                onClick={() => {
+                  setIsDetailModalOpen(false);
+                  setViewingProductDetail(null);
+                }}
+                className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              
+              {/* Upper Grid (Image + Main Stats) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* Image Column */}
+                <div className="md:col-span-1 flex flex-col items-center">
+                  {viewingProductDetail.gambar ? (
+                    <img 
+                      src={viewingProductDetail.gambar.startsWith('http') ? viewingProductDetail.gambar : `/storage/${viewingProductDetail.gambar}`} 
+                      alt={viewingProductDetail.nama_obat} 
+                      className="w-full aspect-square rounded-2xl object-cover border border-[#E2E8F0] shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-full aspect-square rounded-2xl bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9] border border-[#E2E8F0] flex items-center justify-center text-slate-400">
+                      <Package size={48} className="opacity-40" />
+                    </div>
+                  )}
+                  
+                  <div className="mt-4 flex flex-col gap-2 w-full">
+                    {/* Golongan Obat Badge */}
+                    <div className="flex justify-between items-center px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl">
+                      <span className="font-['Inter',sans-serif] text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Golongan</span>
+                      <span
+                        className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                          viewingProductDetail.jenis_obat === 'bebas'
+                            ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+                            : viewingProductDetail.jenis_obat === 'keras'
+                            ? 'border border-red-200 bg-red-50 text-red-700'
+                            : 'border border-amber-200 bg-amber-50 text-amber-700'
+                        }`}
+                      >
+                        {viewingProductDetail.jenis_obat === 'bebas'
+                          ? 'Bebas'
+                          : viewingProductDetail.jenis_obat === 'keras'
+                          ? 'Keras'
+                          : 'Terbatas'}
+                      </span>
+                    </div>
+                    
+                    {/* Active Status Badge */}
+                    <div className="flex justify-between items-center px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl">
+                      <span className="font-['Inter',sans-serif] text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Status</span>
+                      <span
+                        className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                          viewingProductDetail.is_active
+                            ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+                            : 'border border-slate-200 bg-slate-50 text-slate-500'
+                        }`}
+                      >
+                        {viewingProductDetail.is_active ? 'Aktif' : 'Non-aktif'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Column */}
+                <div className="md:col-span-2 space-y-4">
+                  <div>
+                    <h4 className="font-['Roboto_Condensed',sans-serif] text-2xl font-bold text-[#171d19]">
+                      {viewingProductDetail.nama_obat}
+                    </h4>
+                    <p className="font-['Inter',sans-serif] text-sm text-[#0D6A36] font-semibold mt-1">
+                      Kategori: {viewingProductDetail.category?.nama_kategori || '-'}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Harga */}
+                    <div className="p-4 rounded-xl border border-slate-100 bg-[#F8FAFC]">
+                      <p className="font-['Inter',sans-serif] text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Harga Retail</p>
+                      <p className="font-['Roboto_Condensed',sans-serif] text-[18px] font-bold text-[#171d19] mt-1">
+                        Rp {parseFloat(viewingProductDetail.harga).toLocaleString('id-ID')}
+                      </p>
+                    </div>
+
+                    {/* Penjualan */}
+                    <div className="p-4 rounded-xl border border-slate-100 bg-[#F8FAFC]">
+                      <p className="font-['Inter',sans-serif] text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Penjualan</p>
+                      <p className="font-['Roboto_Condensed',sans-serif] text-[18px] font-bold text-[#171d19] mt-1">
+                        {viewingProductDetail.sales || 0} unit
+                      </p>
+                    </div>
+
+                    {/* Stok Sekarang */}
+                    <div className="p-4 rounded-xl border border-slate-100 bg-[#F8FAFC]">
+                      <p className="font-['Inter',sans-serif] text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Stok Sekarang</p>
+                      <p className={`font-['Roboto_Condensed',sans-serif] text-[18px] font-bold mt-1 ${
+                        viewingProductDetail.stok < 10
+                          ? 'text-red-700'
+                          : viewingProductDetail.stok < 50
+                          ? 'text-amber-700'
+                          : 'text-emerald-700'
+                      }`}>
+                        {viewingProductDetail.stok} unit
+                      </p>
+                    </div>
+
+                    {/* Stok Minimum */}
+                    <div className="p-4 rounded-xl border border-slate-100 bg-[#F8FAFC]">
+                      <p className="font-['Inter',sans-serif] text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Batas Stok Minimum</p>
+                      <p className="font-['Roboto_Condensed',sans-serif] text-[18px] font-bold text-slate-700 mt-1">
+                        {viewingProductDetail.stok_minimum} unit
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Gejala Tags */}
+                  <div>
+                    <p className="font-['Inter',sans-serif] text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Label Gejala Terkait</p>
+                    <div className="flex flex-wrap gap-2">
+                      {viewingProductDetail.symptoms && viewingProductDetail.symptoms.length > 0 ? (
+                        viewingProductDetail.symptoms.map((symptom: any, idx: number) => (
+                          <span
+                            key={idx}
+                            className="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 font-['Inter',sans-serif] text-xs font-semibold text-blue-700"
+                          >
+                            {symptom.nama_gejala || symptom}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">Tidak ada label gejala</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+              </div>
+
+              <hr className="border-[#E2E8F0]" />
+
+              {/* Lower Blocks */}
+              <div className="space-y-4 font-['Inter',sans-serif]">
+                
+                {/* Deskripsi */}
+                <div>
+                  <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Deskripsi Obat</h5>
+                  <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+                    {viewingProductDetail.deskripsi || '-'}
+                  </p>
+                </div>
+
+                {/* Indikasi */}
+                <div>
+                  <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Indikasi Umum</h5>
+                  <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+                    {viewingProductDetail.indikasi || '-'}
+                  </p>
+                </div>
+
+                {/* Aturan Pakai */}
+                <div>
+                  <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Aturan Pakai & Dosis</h5>
+                  <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+                    {viewingProductDetail.aturan_pakai || '-'}
+                  </p>
+                </div>
+
+                {/* Efek Samping */}
+                <div>
+                  <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Efek Samping</h5>
+                  <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+                    {viewingProductDetail.efek_samping || '-'}
+                  </p>
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-[#E2E8F0] bg-slate-50 flex justify-end shrink-0">
+              <button
+                onClick={() => {
+                  setIsDetailModalOpen(false);
+                  setViewingProductDetail(null);
+                }}
+                className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 font-['Inter',sans-serif] text-sm font-semibold hover:bg-slate-50 transition-colors"
+              >
+                Tutup
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
       <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
     </div>
   );

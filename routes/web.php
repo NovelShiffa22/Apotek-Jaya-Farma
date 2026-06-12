@@ -177,7 +177,7 @@ Route::middleware(['auth', 'role:user'])->group(function () {
 Route::middleware(['auth', 'role:pharmacist'])->group(function () {
     Route::get('/pharmacist', function () {
         $prescriptions = \App\Models\Prescription::with(['user.addresses', 'items.product', 'validator'])->latest()->get();
-        $products = \App\Models\Product::all();
+        $products = \App\Models\Product::with(['category', 'symptoms'])->latest()->get();
         $orders = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])->latest()->get();
         $statusChanges = \App\Models\OrderStatusHistory::with(['order.user', 'changedByUser'])
             ->latest()
