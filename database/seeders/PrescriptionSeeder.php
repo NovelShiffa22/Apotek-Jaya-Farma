@@ -12,7 +12,7 @@ class PrescriptionSeeder extends Seeder
      */
     public function run(): void
     {
-        $user = \App\Models\User::first();
+        $user = \App\Models\User::where('role', 'user')->first() ?: \App\Models\User::first();
         if (!$user) return;
 
         // Pending

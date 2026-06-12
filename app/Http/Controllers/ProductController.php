@@ -28,9 +28,15 @@ class ProductController extends Controller
 
         $products = Product::with(['category', 'symptoms'])
             ->when($catQuery && $catQuery !== 'all', function ($q) use ($catQuery) {
-                $q->whereHas('category', function ($q) use ($catQuery) {
-                    $q->where('slug', $catQuery);
+                $catArray = is_array($catQuery) ? $catQuery : explode(',', $catQuery);
+                $catArray = array_filter($catArray, function ($slug) {
+                    return $slug !== 'all';
                 });
+                if (!empty($catArray)) {
+                    $q->whereHas('category', function ($q) use ($catArray) {
+                        $q->whereIn('slug', $catArray);
+                    });
+                }
             })
             ->when($symQuery, function ($q) use ($symQuery) {
                 $symArray = is_array($symQuery) ? $symQuery : explode(',', $symQuery);
