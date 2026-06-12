@@ -14,6 +14,7 @@ use App\Models\Symptom;
 // Halaman Utama / Landing Page
 Route::get('/', function () {
     $featuredProducts = \App\Models\Product::with(['category', 'symptoms'])->inRandomOrder()->take(6)->get();
+    $featuredProducts = \App\Models\Product::attachSoldCounts($featuredProducts);
     return Inertia::render('Home', [
         'featuredProducts' => $featuredProducts
     ]);
@@ -135,10 +136,12 @@ Route::get('/profile', function () {
     }
 
     $addresses = \App\Models\Address::where('user_id', $user->id)->latest()->get();
+    $prescriptions = \App\Models\Prescription::withCount('orders')->where('user_id', $user->id)->latest()->get();
     return Inertia::render('Profile', [
         'user' => $user,
         'orders' => $orders,
-        'addresses' => $addresses
+        'addresses' => $addresses,
+        'prescriptions' => $prescriptions
     ]);
 })->middleware(['auth', 'role:user'])->name('profile');
 
@@ -156,14 +159,26 @@ Route::middleware(['auth', 'role:user'])->group(function () {
         }
         return redirect()->back()->with('error', 'Hanya pesanan yang dibatalkan yang dapat dihapus.');
     })->name('orders.destroy');
+    Route::delete('/profile/prescriptions/{id}', function ($id) {
+        $prescription = \App\Models\Prescription::where('user_id', auth()->id())->findOrFail($id);
+        if ($prescription->status_validasi === 'pending') {
+            $filePath = str_replace('storage/', '', $prescription->file_foto);
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($filePath)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($filePath);
+            }
+            $prescription->delete();
+            return redirect()->back()->with('success', 'Resep berhasil dibatalkan.');
+        }
+        return redirect()->back()->with('error', 'Hanya resep dengan status pending yang dapat dibatalkan.');
+    })->name('prescriptions.destroy');
 });
 
 // Ruang Portal Kerja Manajemen (Dashboard)
 Route::middleware(['auth', 'role:pharmacist'])->group(function () {
     Route::get('/pharmacist', function () {
-        $prescriptions = \App\Models\Prescription::with(['user', 'items.product'])->latest()->get();
+        $prescriptions = \App\Models\Prescription::with(['user.addresses', 'items.product', 'validator'])->latest()->get();
         $products = \App\Models\Product::all();
-        $orders = \App\Models\Order::with(['user', 'products', 'prescription'])->latest()->get();
+        $orders = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])->latest()->get();
 
         return Inertia::render('PharmacistDashboard', [
             'prescriptions' => $prescriptions,
@@ -211,30 +226,22 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
         return back()->with('success', 'Validasi resep berhasil disimpan');
     })->name('pharmacist.prescriptions.update');
 
-    Route::put('/pharmacist/products/{id}', function(\Illuminate\Http\Request $request, $id) {
-        $product = \App\Models\Product::findOrFail($id);
-        
-        $request->validate([
-            'indikasi' => 'nullable|string',
-            'aturan_pakai' => 'nullable|string',
-            'efek_samping' => 'nullable|string',
-            'deskripsi' => 'nullable|string',
-        ]);
 
-        $product->update([
-            'indikasi' => $request->indikasi ?? $product->indikasi,
-            'aturan_pakai' => $request->aturan_pakai ?? $product->aturan_pakai,
-            'efek_samping' => $request->efek_samping ?? $product->efek_samping,
-            'deskripsi' => $request->deskripsi ?? $product->deskripsi,
-        ]);
-
-        return back()->with('success', 'Informasi obat berhasil diperbarui');
-    })->name('pharmacist.products.update');
 
     Route::put('/pharmacist/orders/{id}/status', function(\Illuminate\Http\Request $request, $id) {
         $request->validate(['status' => 'required|string|in:pending,diproses,disiapkan,dikirim,selesai,dibatalkan']);
         $order = \App\Models\Order::findOrFail($id);
+        $statusSebelum = $order->status;
         $order->update(['status' => $request->status]);
+
+        \App\Models\OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'changed_by' => auth()->id(),
+            'status_sebelum' => $statusSebelum,
+            'status_sesudah' => $request->status,
+            'keterangan' => 'Status diubah oleh apoteker: ' . auth()->user()->name
+        ]);
+
         return back()->with('success', 'Status pesanan berhasil diperbarui');
     })->name('pharmacist.orders.status');
 
@@ -277,7 +284,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         $categories = \App\Models\Category::all();
         $users = \App\Models\User::all();
         $symptoms = \App\Models\Symptom::all();
-        $orders = \App\Models\Order::with(['user', 'products', 'prescription'])->latest()->get();
+        $orders = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])->latest()->get();
         
         return Inertia::render('AdminDashboard', [
             'products' => $products,
@@ -348,7 +355,17 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('/admin/orders/{id}/status', function(Illuminate\Http\Request $request, $id) {
         $request->validate(['status' => 'required|string|in:diproses,disiapkan,dikirim,selesai']);
         $order = \App\Models\Order::findOrFail($id);
+        $statusSebelum = $order->status;
         $order->update(['status' => $request->status]);
+
+        \App\Models\OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'changed_by' => auth()->id(),
+            'status_sebelum' => $statusSebelum,
+            'status_sesudah' => $request->status,
+            'keterangan' => 'Status diubah oleh admin: ' . auth()->user()->name
+        ]);
+
         return back()->with('success', 'Status pesanan berhasil diperbarui');
     })->name('admin.orders.status');
 });

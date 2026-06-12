@@ -65,7 +65,7 @@ export default function ProductDetail({ product }: { product: any }) {
               {[
                 { icon: Shield, text: '100% Original', color: 'bg-[#ecfdf5]', iconColor: 'text-[#006a3f]' },
                 { icon: Clock, text: 'Pengiriman Cepat', color: 'bg-[#eff6ff]', iconColor: 'text-[#2d5f9f]' },
-                { icon: Heart, text: 'Quality Check', color: 'bg-[#fef2f2]', iconColor: 'text-[#ba1a1a]' }
+                { icon: Heart, text: 'Kualitas Terjamin', color: 'bg-[#fef2f2]', iconColor: 'text-[#ba1a1a]' }
               ].map((badge, idx) => (
                 <div key={idx} className={`${badge.color} rounded-xl p-4 text-center border border-[#f1f5f9]`}>
                   <badge.icon className={`w-6 h-6 mx-auto mb-2 ${badge.iconColor}`} />
@@ -107,48 +107,14 @@ export default function ProductDetail({ product }: { product: any }) {
                 <p className="font-['Roboto_Condensed',sans-serif] text-[48px] text-[#006a3f] font-semibold tracking-[-1px]">
                   Rp {Number(product.harga).toLocaleString('id-ID')}
                 </p>
-                <p className="font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">per box</p>
+                <p className="font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">per boks</p>
               </div>
               <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70] mb-8">
                 Sudah termasuk pajak
               </p>
             </div>
 
-            {/* Medical Information */}
-            <div className="bg-white rounded-2xl p-8 mb-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
-              <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-8 font-semibold">
-                Informasi Medis
-              </h2>
 
-              <div className="space-y-8">
-                <div className="border-l-4 border-[#006a3f] pl-6 py-1">
-                  <p className="font-['Inter',sans-serif] text-[11px] font-bold text-[#6e7a70] tracking-wider uppercase mb-2">
-                    INDIKASI
-                  </p>
-                  <p className="font-['Inter',sans-serif] text-[15px] text-[#171d19] leading-relaxed whitespace-pre-line">
-                    {product.indikasi || 'Tidak ada informasi indikasi.'}
-                  </p>
-                </div>
-
-                <div className="border-l-4 border-[#006a3f] pl-6 py-1">
-                  <p className="font-['Inter',sans-serif] text-[11px] font-bold text-[#6e7a70] tracking-wider uppercase mb-2">
-                    ATURAN PAKAI
-                  </p>
-                  <p className="font-['Inter',sans-serif] text-[15px] text-[#171d19] leading-relaxed whitespace-pre-line">
-                    {product.aturan_pakai || 'Tidak ada informasi aturan pakai.'}
-                  </p>
-                </div>
-
-                <div className="border-l-4 border-[#006a3f] pl-6 py-1">
-                  <p className="font-['Inter',sans-serif] text-[11px] font-bold text-[#6e7a70] tracking-wider uppercase mb-2">
-                    EFEK SAMPING
-                  </p>
-                  <p className="font-['Inter',sans-serif] text-[15px] text-[#171d19] leading-relaxed whitespace-pre-line">
-                    {product.efek_samping || 'Belum ada data efek samping.'}
-                  </p>
-                </div>
-              </div>
-            </div>
 
             {/* Action Buttons */}
             <div className="space-y-4">

@@ -68,8 +68,8 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
   // Handle item removal
   const removeItem = (id: number) => {
     if (confirm('Apakah Anda yakin ingin menghapus produk ini dari keranjang?')) {
-      router.delete(`/cart/${id}`, { 
-        preserveScroll: true, 
+      router.delete(`/cart/${id}`, {
+        preserveScroll: true,
         preserveState: true,
         onSuccess: () => {
           setCheckedItems(prev => prev.filter(itemId => itemId !== id));
@@ -99,17 +99,17 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
         <h1 className="text-3xl font-bold text-[#171d19] mb-8">Keranjang Belanja</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* SISI KIRI: Daftar Keranjang & Rekomendasi */}
           <div className="lg:col-span-2">
-            
+
             {/* Header: Pilih Semua */}
             <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center justify-between mb-4">
               <label className="flex items-center gap-3 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  className="hidden" 
-                  checked={isAllChecked} 
+                <input
+                  type="checkbox"
+                  className="hidden"
+                  checked={isAllChecked}
                   onChange={toggleAll}
                 />
                 <div className={`w-[22px] h-[22px] rounded border flex items-center justify-center transition-colors ${isAllChecked ? 'bg-[#006a3f] border-[#006a3f]' : 'border-gray-300 group-hover:border-[#006a3f]'}`}>
@@ -117,12 +117,12 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                 </div>
                 <span className="font-bold text-gray-900 text-lg">Pilih Semua</span>
               </label>
-              
-              <button 
-                onClick={() => setCheckedItems([])} 
+
+              <button
+                onClick={() => setCheckedItems([])}
                 className="text-sm font-bold flex items-center gap-1.5 text-red-500 hover:text-red-700 transition-colors"
               >
-                <Trash2 size={16} strokeWidth={2.5}/>
+                <Trash2 size={16} strokeWidth={2.5} />
                 Hapus Pilihan
               </button>
             </div>
@@ -138,12 +138,12 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                   const isChecked = checkedItems.includes(item.id);
                   return (
                     <div key={item.id} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center gap-5 transition-all hover:shadow-md">
-                      
+
                       <label className="flex-shrink-0 cursor-pointer pt-2 sm:pt-0 group">
-                        <input 
-                          type="checkbox" 
-                          className="hidden" 
-                          checked={isChecked} 
+                        <input
+                          type="checkbox"
+                          className="hidden"
+                          checked={isChecked}
                           onChange={() => toggleItem(item.id)}
                         />
                         <div className={`w-[22px] h-[22px] rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#006a3f] border-[#006a3f]' : 'border-gray-300 group-hover:border-[#006a3f]'}`}>
@@ -156,7 +156,7 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                           <img src={item.foto} alt={item.nama} className="w-full h-full object-contain" />
                         ) : (
                           <div className="text-gray-300 flex flex-col items-center">
-                            <span className="text-[10px] font-medium mt-1">No Image</span>
+                            <span className="text-[10px] font-medium mt-1">Tidak ada gambar</span>
                           </div>
                         )}
                       </div>
@@ -165,7 +165,7 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                         <div>
                           <div className="flex justify-between items-start">
                             <h3 className="font-bold text-gray-900 text-[18px] leading-tight truncate pr-4">{item.nama}</h3>
-                            <button 
+                            <button
                               onClick={() => removeItem(item.id)}
                               className="text-gray-400 hover:text-red-500 transition-colors p-1"
                             >
@@ -177,7 +177,7 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                         <div className="flex items-end justify-between mt-4">
                           <p className="font-bold text-[#006a3f] text-xl">Rp {item.harga.toLocaleString('id-ID')}</p>
                           <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden h-10 w-[110px]">
-                            <button 
+                            <button
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
                               disabled={item.quantity <= 1}
                               className="w-10 h-full flex items-center justify-center bg-white hover:bg-gray-50 text-gray-600 disabled:opacity-30 transition-colors"
@@ -187,7 +187,7 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                             <div className="flex-1 h-full flex items-center justify-center font-bold text-gray-900 border-x border-gray-200 bg-white">
                               {item.quantity}
                             </div>
-                            <button 
+                            <button
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
                               className="w-10 h-full flex items-center justify-center bg-white hover:bg-gray-50 text-gray-600 transition-colors"
                             >
@@ -202,10 +202,10 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
               )}
             </div>
 
-            {/* Sering Dibeli Bersama */}
+            {/* Obat Terkait */}
             {frequentlyBought && frequentlyBought.length > 0 && (
               <div className="mt-10">
-                <h2 className="text-[22px] font-bold text-gray-900 mb-5">Sering Dibeli Bersama</h2>
+                <h2 className="text-[22px] font-bold text-gray-900 mb-5">{cartItems.length === 0 ? 'Produk Terlaris' : 'Produk Terkait'}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {frequentlyBought.map((product) => (
                     <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-all">
@@ -213,14 +213,14 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                         {product.foto ? (
                           <img src={product.foto} alt={product.nama} className="w-full h-full object-contain" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-300">Image</div>
+                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-300">Gambar</div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-gray-900 text-sm truncate">{product.nama}</h4>
                         <p className="font-semibold text-[#006a3f] text-[15px] mt-1">Rp {product.harga.toLocaleString('id-ID')}</p>
                       </div>
-                      <button 
+                      <button
                         onClick={() => addToCart(product.id)}
                         className="w-8 h-8 rounded-full bg-[#006a3f] text-white flex items-center justify-center hover:bg-[#005632] transition-colors shadow-sm flex-shrink-0"
                       >
@@ -237,7 +237,7 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
           {/* SISI KANAN: Ringkasan Pesanan (Sticky) */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl p-7 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 sticky top-24">
-              
+
               <h2 className="text-[22px] font-bold text-gray-900 mb-6">Ringkasan Pesanan</h2>
 
               <div className="space-y-4 mb-8">
@@ -245,7 +245,7 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                   <span className="text-gray-600">Subtotal ({checkedItems.length} item)</span>
                   <span className="font-medium text-gray-900">Rp {subtotal.toLocaleString('id-ID')}</span>
                 </div>
-                
+
                 {subtotal > 0 && (
                   <>
                     <div className="flex justify-between items-center text-[15px]">
@@ -263,7 +263,7 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                 </span>
               </div>
 
-              <button 
+              <button
                 onClick={handleCheckout}
                 disabled={checkedItems.length === 0}
                 className="w-full bg-[#006a3f] text-white rounded-xl py-[18px] flex items-center justify-center gap-2 font-bold text-[16px] hover:bg-[#005632] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"

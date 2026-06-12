@@ -48,6 +48,8 @@ class ProductController extends Controller
                 $q->where('harga', '<=', $priceMax);
             })
             ->get();
+        
+        $products = Product::attachSoldCounts($products);
 
         return Inertia::render('Catalog', [
             'products' => $products,

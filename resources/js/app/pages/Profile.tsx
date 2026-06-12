@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
-import { User, MapPin, Package, LogOut, X, CheckCircle2, Pencil, Trash2 } from 'lucide-react';
+import { User, MapPin, Package, LogOut, X, CheckCircle2, Pencil, Trash2, FileText } from 'lucide-react';
 import { usePage, Link, useForm, router } from '@inertiajs/react';
 import ConfirmModal from '../components/ConfirmModal';
+import { regions } from '../data/regions';
 
-export default function Profile({ user, orders = [], addresses = [] }: any) {
-  const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders'>('profile');
+export default function Profile({ user, orders = [], addresses = [], prescriptions = [] }: any) {
+  const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders' | 'prescriptions'>('profile');
   const [orderTab, setOrderTab] = useState<string>('Pending');
+  const [prescriptionTab, setPrescriptionTab] = useState<'Diproses' | 'Disetujui' | 'Ditolak' | 'Telah dipesan'>('Diproses');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
-    if (tabParam === 'orders' || tabParam === 'address' || tabParam === 'profile') {
-      setActiveTab(tabParam);
+    if (tabParam === 'orders' || tabParam === 'address' || tabParam === 'profile' || tabParam === 'prescriptions') {
+      setActiveTab(tabParam as any);
     }
   }, []);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -47,6 +49,10 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
     is_default: false,
   });
 
+  const availableCities = formAddress.provinsi
+    ? regions.find(r => r.name.toLowerCase() === formAddress.provinsi.toLowerCase())?.cities || []
+    : [];
+
   const { data: formProfile, setData: setFormProfile, patch: patchProfile, processing: processingProfile } = useForm({
     name: user?.name || '',
     email: user?.email || '',
@@ -74,15 +80,36 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
 
   const openEditModal = (address: any) => {
     setEditingAddressId(address.id);
+
+    const foundProv = regions.find(r => r.name.toLowerCase() === (address.provinsi || '').toLowerCase());
+    const normalizedProv = foundProv ? foundProv.name : address.provinsi;
+
+    let normalizedKota = address.kota;
+    if (foundProv) {
+      const foundCity = foundProv.cities.find(c => c.toLowerCase() === (address.kota || '').toLowerCase());
+      if (foundCity) {
+        normalizedKota = foundCity;
+      }
+    }
+
     setFormAddress({
       label: address.label,
       alamat_lengkap: address.alamat_lengkap,
-      kota: address.kota,
-      provinsi: address.provinsi,
+      kota: normalizedKota,
+      provinsi: normalizedProv,
       kode_pos: address.kode_pos,
       is_default: address.is_default
     });
     setIsAddressModalOpen(true);
+  };
+
+  const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setFormAddress({
+      ...formAddress,
+      provinsi: value,
+      kota: ''
+    });
   };
 
   const confirmDelete = (id: number) => {
@@ -157,12 +184,15 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('tab')) {
-      const tabParam = params.get('tab') as 'profile' | 'address' | 'orders';
-      if (['profile', 'address', 'orders'].includes(tabParam)) {
+      const tabParam = params.get('tab') as 'profile' | 'address' | 'orders' | 'prescriptions';
+      if (['profile', 'address', 'orders', 'prescriptions'].includes(tabParam)) {
         setActiveTab(tabParam);
       }
       if (tabParam === 'orders' && params.get('status')) {
         setOrderTab(params.get('status') as string);
+      }
+      if (tabParam === 'prescriptions' && params.get('status')) {
+        setPrescriptionTab(params.get('status') as any);
       }
     }
   }, []);
@@ -194,7 +224,8 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                 {[
                   { id: 'profile' as const, label: 'Profil', icon: User },
                   { id: 'address' as const, label: 'Alamat', icon: MapPin },
-                  { id: 'orders' as const, label: 'Riwayat Pesanan', icon: Package }
+                  { id: 'orders' as const, label: 'Riwayat Pesanan', icon: Package },
+                  { id: 'prescriptions' as const, label: 'Riwayat Resep', icon: FileText }
                 ].map(item => (
                   <button
                     key={item.id}
@@ -228,7 +259,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
           <div className="flex-1 w-full min-w-0">
             {activeTab === 'profile' && (
               <>
-                <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+                <div className="bg-white rounded-2xl p-4 sm:p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
                 <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-8 font-semibold">
                   Informasi Profil
                 </h2>
@@ -278,9 +309,9 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                 </form>
               </div>
 
-              <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)] mt-8">
+              <div className="bg-white rounded-2xl p-4 sm:p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)] mt-8">
                 <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-8 font-semibold">
-                  Ubah Password
+                  Ubah Kata Sandi
                 </h2>
                 <form onSubmit={submitPassword} className="space-y-6">
                   <div>
@@ -333,7 +364,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                     disabled={passwordForm.processing}
                     className="bg-[#171d19] hover:bg-[#2c362f] px-8 py-4 rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] text-white hover:shadow-[0_8px_20px_rgba(23,29,25,0.3)] transition-all duration-300 hover:-translate-y-0.5 font-medium disabled:opacity-50"
                   >
-                    {passwordForm.processing ? 'Menyimpan...' : 'Perbarui Password'}
+                    {passwordForm.processing ? 'Menyimpan...' : 'Perbarui Kata Sandi'}
                   </button>
                 </form>
               </div>
@@ -341,7 +372,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
             )}
 
             {activeTab === 'address' && (
-              <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+              <div className="bg-white rounded-2xl p-4 sm:p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
                 <div className="flex justify-between items-center mb-8">
                   <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] font-semibold">
                     Alamat Pengiriman
@@ -423,12 +454,12 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
             )}
 
             {activeTab === 'orders' && (
-              <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)] w-full text-left">
+              <div className="bg-white rounded-2xl p-4 sm:p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)] w-full text-left">
                 <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-6 font-semibold">
                   Riwayat Pesanan
                 </h2>
                 
-                <div className="flex gap-6 mb-8 border-b border-[#f1f5f9]">
+                <div className="flex gap-6 mb-8 border-b border-[#f1f5f9] overflow-x-auto pb-1 whitespace-nowrap">
                   {[
                     { id: 'Pending', label: 'Belum Bayar' },
                     { id: 'Lunas', label: 'Diproses' },
@@ -493,7 +524,7 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                           {order.status === 'Dibatalkan' ? (
                             <div className="bg-red-50 border border-red-200 px-4 py-2 rounded-full">
                               <p className="font-['Inter',sans-serif] text-[12px] font-bold tracking-wider text-red-600">
-                                TRANSAKSI KEDALUWARSA (<span className="italic font-medium">Expired</span>)
+                                TRANSAKSI KEDALUWARSA
                               </p>
                             </div>
                           ) : (
@@ -626,6 +657,137 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
                 </div>
               </div>
             )}
+
+            {activeTab === 'prescriptions' && (
+              <div className="bg-white rounded-2xl p-4 sm:p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)] w-full text-left">
+                <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-6 font-semibold">
+                  Riwayat Resep
+                </h2>
+
+                <div className="flex gap-6 mb-8 border-b border-[#f1f5f9] overflow-x-auto pb-1 whitespace-nowrap">
+                  {[
+                    { id: 'Diproses' as const, label: 'Diproses' },
+                    { id: 'Disetujui' as const, label: 'Disetujui' },
+                    { id: 'Ditolak' as const, label: 'Ditolak' },
+                    { id: 'Telah dipesan' as const, label: 'Telah Dipesan' }
+                  ].map(tab => {
+                    const count = prescriptions.filter((p: any) => {
+                      if (tab.id === 'Diproses') return p.status_validasi === 'pending';
+                      if (tab.id === 'Disetujui') return p.status_validasi === 'disetujui' && p.orders_count === 0;
+                      if (tab.id === 'Ditolak') return p.status_validasi === 'ditolak';
+                      if (tab.id === 'Telah dipesan') return p.status_validasi === 'disetujui' && p.orders_count > 0;
+                      return false;
+                    }).length;
+                    
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setPrescriptionTab(tab.id)}
+                        className={`pb-3 px-2 font-['Inter',sans-serif] text-[15px] font-semibold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 ${
+                          prescriptionTab === tab.id 
+                            ? 'border-emerald-600 text-emerald-700 font-bold' 
+                            : 'border-transparent text-gray-500 hover:text-gray-800'
+                        }`}
+                      >
+                        <span>{tab.label}</span>
+                        {count > 0 && (
+                          <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${
+                            prescriptionTab === tab.id ? 'bg-[#006a3f] text-white' : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="space-y-4">
+                  {(() => {
+                    const filteredPrescriptions = prescriptions.filter((p: any) => {
+                      if (prescriptionTab === 'Diproses') return p.status_validasi === 'pending';
+                      if (prescriptionTab === 'Disetujui') return p.status_validasi === 'disetujui' && p.orders_count === 0;
+                      if (prescriptionTab === 'Ditolak') return p.status_validasi === 'ditolak';
+                      if (prescriptionTab === 'Telah dipesan') return p.status_validasi === 'disetujui' && p.orders_count > 0;
+                      return false;
+                    });
+
+                    if (filteredPrescriptions.length === 0) {
+                      return (
+                        <div className="text-center text-gray-500 py-8 font-medium font-['Inter',sans-serif]">
+                          Tidak ada resep di kategori ini.
+                        </div>
+                      );
+                    }
+
+                    const cancelPrescription = (id: number) => {
+                      if (confirm('Apakah Anda yakin ingin membatalkan resep ini?')) {
+                        router.delete(`/profile/prescriptions/${id}`, {
+                          preserveScroll: true,
+                        });
+                      }
+                    };
+
+                    return filteredPrescriptions.map((p: any) => {
+                      return (
+                        <div
+                          key={p.id}
+                          className="border border-gray-200 rounded-2xl p-5 hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full text-left"
+                        >
+                          <div className="flex items-center gap-4 flex-1 min-w-0">
+                            {/* Mini Image Preview */}
+                            <div className="w-16 h-16 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
+                              <img 
+                                src={`/${p.file_foto}`} 
+                                alt={p.kode_resep} 
+                                className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                                onClick={() => window.open(`/${p.file_foto}`, '_blank')}
+                              />
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2 mb-1">
+                                <Link 
+                                  href={route('prescriptions.detail', { id: p.id })} 
+                                  className="font-['Roboto_Condensed',sans-serif] text-[16px] font-bold text-[#171d19] hover:text-[#006a3f] transition-colors"
+                                >
+                                  ID: {p.kode_resep}
+                                </Link>
+                              </div>
+                              <p className="text-[13px] text-gray-500 font-['Inter',sans-serif]">
+                                Tanggal: {new Date(p.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                              </p>
+                              {p.catatan_apoteker && (
+                                <p className="text-[12px] text-gray-600 font-['Inter',sans-serif] mt-2 bg-gray-50 p-2 rounded-lg border border-gray-100 line-clamp-1">
+                                  Catatan: {p.catatan_apoteker}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex sm:flex-col gap-2 shrink-0 w-full sm:w-auto sm:items-end justify-end">
+                            <Link 
+                              href={route('prescriptions.detail', { id: p.id })} 
+                              className="text-[13px] font-bold text-center bg-gray-50 border border-gray-300 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-100 transition-colors font-['Inter',sans-serif]"
+                            >
+                              Detail
+                            </Link>
+                            {p.status_validasi === 'pending' && (
+                              <button 
+                                onClick={() => cancelPrescription(p.id)}
+                                className="text-[13px] font-bold text-center bg-red-50 border border-red-300 text-red-600 px-4 py-2 rounded-xl hover:bg-red-100 transition-colors font-['Inter',sans-serif]"
+                              >
+                                Batalkan Resep
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
@@ -717,24 +879,33 @@ export default function Profile({ user, orders = [], addresses = [] }: any) {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Kota</label>
-                  <input 
-                    type="text" 
-                    value={formAddress.kota}
-                    onChange={e => setFormAddress('kota', e.target.value)}
+                  <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Provinsi</label>
+                  <select 
+                    value={formAddress.provinsi}
+                    onChange={handleProvinceChange}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                     required
-                  />
+                  >
+                    <option value="">Pilih Provinsi</option>
+                    {regions.map(r => (
+                      <option key={r.name} value={r.name}>{r.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
-                  <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Provinsi</label>
-                  <input 
-                    type="text" 
-                    value={formAddress.provinsi}
-                    onChange={e => setFormAddress('provinsi', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                  <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Kota</label>
+                  <select 
+                    value={formAddress.kota}
+                    onChange={e => setFormAddress('kota', e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     required
-                  />
+                    disabled={!formAddress.provinsi}
+                  >
+                    <option value="">Pilih Kota/Kabupaten</option>
+                    {availableCities.map(city => (
+                      <option key={city} value={city}>{city}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div>

@@ -163,12 +163,12 @@ export default function Checkout({ cartItems = [], address, shippingMethods = []
                         {item.foto ? (
                           <img src={item.foto} alt={item.nama} className="w-full h-full object-contain" />
                         ) : (
-                          <span className="text-[9px] text-gray-400 font-medium">No Img</span>
+                          <span className="text-[9px] text-gray-400 font-medium">Tidak Ada Gambar</span>
                         )}
                       </div>
                       <div className="flex-1 min-w-0 pr-2">
                         <p className="font-medium text-gray-800 text-[14px] leading-tight truncate">{item.nama}</p>
-                        <p className="text-[13px] text-gray-500 font-medium mt-0.5">Qty: {item.quantity}</p>
+                        <p className="text-[13px] text-gray-500 font-medium mt-0.5">Jumlah: {item.quantity}</p>
                       </div>
                       <p className="font-bold text-gray-900 text-[14px] whitespace-nowrap">
                         Rp {(item.harga * item.quantity).toLocaleString('id-ID')}
