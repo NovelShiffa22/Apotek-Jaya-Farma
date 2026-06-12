@@ -43,10 +43,12 @@ Route::prefix('prescriptions')->name('prescriptions.')->group(function () {
     Route::get('/', [\App\Http\Controllers\PrescriptionController::class, 'index'])->middleware('auth')->name('index');
     Route::get('/upload/step-1', function() { return Inertia::render('Prescriptions/UploadStep1'); })->name('upload.step1');
     Route::get('/upload/step-2', function() { 
-        $defaultAddress = \App\Models\Address::where('user_id', auth()->id())->where('is_default', true)->first() 
-                       ?? \App\Models\Address::where('user_id', auth()->id())->first();
+        $user = auth()->user();
+        $addresses = $user ? \App\Models\Address::where('user_id', $user->id)->latest()->get() : [];
+        $defaultAddress = $addresses->where('is_default', true)->first() ?? $addresses->first();
         return Inertia::render('Prescriptions/UploadStep2', [
-            'defaultAddress' => $defaultAddress
+            'defaultAddress' => $defaultAddress,
+            'addresses' => $addresses
         ]); 
     })->name('upload.step2');
     Route::get('/upload/step-3', function() { return Inertia::render('Prescriptions/UploadStep3'); })->name('upload.step3');

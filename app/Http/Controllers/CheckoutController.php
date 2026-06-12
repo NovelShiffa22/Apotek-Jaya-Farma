@@ -87,14 +87,14 @@ class CheckoutController extends Controller
         // 4. Data Alamat Pengiriman
         $user = auth()->user();
         $deliveryAddress = null;
+        $addresses = [];
 
         if ($user) {
-            $primaryAddress = \App\Models\Address::where('user_id', $user->id)
-                ->where('is_default', true)
-                ->first();
+            $addresses = \App\Models\Address::where('user_id', $user->id)->latest()->get();
+            $primaryAddress = $addresses->where('is_default', true)->first();
             
             if (!$primaryAddress) {
-                $primaryAddress = \App\Models\Address::where('user_id', $user->id)->first();
+                $primaryAddress = $addresses->first();
             }
 
             if ($primaryAddress) {
@@ -139,6 +139,7 @@ class CheckoutController extends Controller
         return Inertia::render('Checkout', [
             'cartItems' => $checkoutItems,
             'address' => $deliveryAddress,
+            'addresses' => $addresses,
             'shippingMethods' => $shippingMethods,
             'discount' => \Illuminate\Support\Facades\Cache::get('global_discount', 0),
             'isBuyNow' => $isBuyNow,
