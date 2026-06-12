@@ -101,66 +101,113 @@ export default function PrescriptionIndex({ prescriptions, filters }: { prescrip
                             </div>
                         </div>
 
-                        <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left min-w-[800px]">
-                                    <thead className="bg-[#f9fafb]">
+                        {/* Desktop Table View */}
+                        <div className="hidden md:block overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                            <table className="w-full text-left">
+                                <thead className="bg-[#f9fafb]">
+                                    <tr>
+                                        <th className="px-6 py-4 font-['Poppins',sans-serif] text-[12px] font-semibold text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                        <th className="px-6 py-4 font-['Poppins',sans-serif] text-[12px] font-semibold text-gray-500 uppercase tracking-wider">ID Resep</th>
+                                        <th className="px-6 py-4 font-['Poppins',sans-serif] text-[12px] font-semibold text-gray-500 uppercase tracking-wider">Berkas Resep</th>
+                                        <th className="px-6 py-4 font-['Poppins',sans-serif] text-[12px] font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th className="px-6 py-4 font-['Poppins',sans-serif] text-[12px] font-semibold text-gray-500 uppercase tracking-wider text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {prescriptions.data.length === 0 ? (
                                         <tr>
-                                            <th className="px-6 py-4 font-['Poppins',sans-serif] text-[12px] font-semibold text-gray-500 uppercase tracking-wider">Tanggal</th>
-                                            <th className="px-6 py-4 font-['Poppins',sans-serif] text-[12px] font-semibold text-gray-500 uppercase tracking-wider">ID Resep</th>
-                                            <th className="px-6 py-4 font-['Poppins',sans-serif] text-[12px] font-semibold text-gray-500 uppercase tracking-wider">Berkas Resep</th>
-                                            <th className="px-6 py-4 font-['Poppins',sans-serif] text-[12px] font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                                            <th className="px-6 py-4 font-['Poppins',sans-serif] text-[12px] font-semibold text-gray-500 uppercase tracking-wider text-right">Aksi</th>
+                                            <td colSpan={5} className="px-6 py-8 text-center text-gray-500 font-['Poppins',sans-serif] text-[14px]">
+                                                Data tidak ditemukan.
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {prescriptions.data.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={5} className="px-6 py-8 text-center text-gray-500 font-['Poppins',sans-serif] text-[14px]">
-                                                    Data tidak ditemukan.
+                                    ) : (
+                                        prescriptions.data.map((prescription: any, idx: number) => {
+                                            const statusInfo = getStatusStyle(prescription.status_validasi);
+                                            return (
+                                            <tr key={idx} className="transition-colors hover:bg-gray-50">
+                                                <td className="px-6 py-5 font-['Poppins',sans-serif] text-[14px] text-gray-700">
+                                                    {formatDate(prescription.created_at)}
+                                                </td>
+                                                <td className="px-6 py-5 font-['Poppins',sans-serif] text-[14px] font-semibold text-[#006a3f]">
+                                                    {prescription.kode_resep}
+                                                </td>
+                                                <td className="px-6 py-5">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100">
+                                                            <FileText size={18} className="text-gray-500" />
+                                                        </div>
+                                                        <span className="font-['Poppins',sans-serif] text-[14px] text-gray-700">
+                                                            {prescription.file_foto?.split('/').pop() || 'resep_obat.png'}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-5">
+                                                    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-['Poppins',sans-serif] text-[12px] font-medium ${statusInfo.bg}`}>
+                                                        <div className={`h-1.5 w-1.5 rounded-full ${statusInfo.dot}`} />
+                                                        {statusInfo.label}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-5 text-right">
+                                                    <Link 
+                                                        href={route('prescriptions.detail', { id: prescription.id })}
+                                                        className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-2 font-['Poppins',sans-serif] text-[13px] font-semibold text-[#006a3f] transition-colors hover:bg-emerald-100"
+                                                    >
+                                                        Detail
+                                                    </Link>
                                                 </td>
                                             </tr>
-                                        ) : (
-                                            prescriptions.data.map((prescription: any, idx: number) => {
-                                                const statusInfo = getStatusStyle(prescription.status_validasi);
-                                                return (
-                                                <tr key={idx} className="transition-colors hover:bg-gray-50">
-                                                    <td className="px-6 py-5 font-['Poppins',sans-serif] text-[14px] text-gray-700">
-                                                        {formatDate(prescription.created_at)}
-                                                    </td>
-                                                    <td className="px-6 py-5 font-['Poppins',sans-serif] text-[14px] font-semibold text-[#006a3f]">
-                                                        {prescription.kode_resep}
-                                                    </td>
-                                                    <td className="px-6 py-5">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100">
-                                                                <FileText size={18} className="text-gray-500" />
-                                                            </div>
-                                                            <span className="font-['Poppins',sans-serif] text-[14px] text-gray-700">
-                                                                {prescription.file_foto?.split('/').pop() || 'resep_obat.png'}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-5">
-                                                        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-['Poppins',sans-serif] text-[12px] font-medium ${statusInfo.bg}`}>
-                                                            <div className={`h-1.5 w-1.5 rounded-full ${statusInfo.dot}`} />
-                                                            {statusInfo.label}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-5 text-right">
-                                                        <Link 
-                                                            href={route('prescriptions.detail', { id: prescription.id })}
-                                                            className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-2 font-['Poppins',sans-serif] text-[13px] font-semibold text-[#006a3f] transition-colors hover:bg-emerald-100"
-                                                        >
-                                                            Detail
-                                                        </Link>
-                                                    </td>
-                                                </tr>
-                                            )})
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                                        )})
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile Cards View */}
+                        <div className="block md:hidden space-y-4">
+                            {prescriptions.data.length === 0 ? (
+                                <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center text-gray-500 font-['Poppins',sans-serif] text-[14px] shadow-sm">
+                                    Data tidak ditemukan.
+                                </div>
+                            ) : (
+                                prescriptions.data.map((prescription: any, idx: number) => {
+                                    const statusInfo = getStatusStyle(prescription.status_validasi);
+                                    return (
+                                        <div key={idx} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <span className="font-['Poppins',sans-serif] text-[15px] font-semibold text-[#006a3f]">
+                                                    {prescription.kode_resep}
+                                                </span>
+                                                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-['Poppins',sans-serif] text-[12px] font-medium ${statusInfo.bg}`}>
+                                                    <div className={`h-1.5 w-1.5 rounded-full ${statusInfo.dot}`} />
+                                                    {statusInfo.label}
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="space-y-2 text-[14px] font-['Poppins',sans-serif]">
+                                                <div className="flex justify-between text-gray-500">
+                                                    <span>Tanggal:</span>
+                                                    <span className="text-[#171d19] font-medium">{formatDate(prescription.created_at)}</span>
+                                                </div>
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <span className="text-gray-500 shrink-0">Berkas:</span>
+                                                    <span className="text-[#171d19] truncate max-w-[180px] font-medium text-right font-mono text-[12px]">
+                                                        {prescription.file_foto?.split('/').pop() || 'resep_obat.png'}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-2 border-t border-gray-50 flex justify-end">
+                                                <Link 
+                                                    href={route('prescriptions.detail', { id: prescription.id })}
+                                                    className="w-full text-center inline-block rounded-xl bg-emerald-50 py-2.5 font-['Poppins',sans-serif] text-[14px] font-semibold text-[#006a3f] transition-all hover:bg-emerald-100 active:scale-[0.98]"
+                                                >
+                                                    Detail Resep
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
                         </div>
 
                         {/* Pagination Links */}

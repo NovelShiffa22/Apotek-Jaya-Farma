@@ -179,11 +179,16 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
         $prescriptions = \App\Models\Prescription::with(['user.addresses', 'items.product', 'validator'])->latest()->get();
         $products = \App\Models\Product::all();
         $orders = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])->latest()->get();
+        $statusChanges = \App\Models\OrderStatusHistory::with(['order.user', 'changedByUser'])
+            ->latest()
+            ->take(30)
+            ->get();
 
         return Inertia::render('PharmacistDashboard', [
             'prescriptions' => $prescriptions,
             'products' => $products,
-            'orders' => $orders
+            'orders' => $orders,
+            'statusChanges' => $statusChanges
         ]);
     })->name('pharmacist.dashboard');
 
@@ -285,13 +290,18 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         $users = \App\Models\User::all();
         $symptoms = \App\Models\Symptom::all();
         $orders = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])->latest()->get();
+        $statusChanges = \App\Models\OrderStatusHistory::with(['order.user', 'changedByUser'])
+            ->latest()
+            ->take(30)
+            ->get();
         
         return Inertia::render('AdminDashboard', [
             'products' => $products,
             'categories' => $categories,
             'users' => $users,
             'symptoms' => $symptoms,
-            'orders' => $orders
+            'orders' => $orders,
+            'statusChanges' => $statusChanges
         ]);
     })->name('admin.dashboard');
 

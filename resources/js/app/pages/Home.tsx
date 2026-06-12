@@ -53,7 +53,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
     <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
       <Header cartCount={0} />
 
-      <main className="max-w-[1440px] mx-auto px-8 py-12">
+      <main className="max-w-[1440px] mx-auto px-4 sm:px-8 py-6 sm:py-12">
         {/* Hero Section - Enhanced */}
         <section className="mb-20">
           <div className="bg-gradient-to-r from-emerald-700 to-teal-600 rounded-2xl overflow-hidden shadow-[0_8px_24px_rgba(0,106,63,0.2)] relative">
@@ -65,14 +65,14 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
               />
             </div>
 
-            <div className="relative px-16 py-20 max-w-[650px]">
+            <div className="relative px-6 py-12 sm:px-16 sm:py-20 max-w-[650px]">
               <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
                 <p className="font-['Inter',sans-serif] text-[12px] text-white tracking-wider uppercase font-bold">
                   Apotek Terpercaya
                 </p>
               </div>
 
-              <h1 className="font-['Roboto_Condensed',sans-serif] font-light text-[56px] tracking-[-1.4px] text-white leading-[1.1] mb-6">
+              <h1 className="font-['Roboto_Condensed',sans-serif] font-light text-[32px] md:text-[56px] tracking-[-1.4px] text-white leading-[1.1] mb-6">
                 Solusi Kesehatan Terpercaya Untuk Keluarga Anda
               </h1>
 
@@ -104,7 +104,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
         <section className="mb-20">
           <div className="flex items-end justify-between mb-10">
             <div>
-              <h2 className="font-['Roboto_Condensed',sans-serif] font-light text-[40px] tracking-[-1px] text-[#171d19] mb-2">
+              <h2 className="font-['Roboto_Condensed',sans-serif] font-light text-[24px] sm:text-[40px] tracking-[-1px] text-[#171d19] mb-2">
                 Kategori Obat
               </h2>
               <p className="font-['Inter',sans-serif] text-[16px] text-[#3e4a41]">
@@ -119,7 +119,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
             {categories.map(category => (
               <Link
                 key={category.id}
@@ -141,7 +141,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
         <section className="mb-20">
           <div className="flex items-end justify-between mb-10">
             <div>
-              <h2 className="font-['Roboto_Condensed',sans-serif] font-light text-[40px] tracking-[-1px] text-[#171d19] mb-2">
+              <h2 className="font-['Roboto_Condensed',sans-serif] font-light text-[24px] sm:text-[40px] tracking-[-1px] text-[#171d19] mb-2">
                 Produk Terlaris
               </h2>
               <p className="font-['Inter',sans-serif] text-[16px] text-[#3e4a41]">
@@ -156,7 +156,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
             </Link>
           </div>
 
-          <div className="w-full max-w-full overflow-hidden px-4 md:px-8">
+          <div className="w-full max-w-full overflow-hidden">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 w-full">
             {featuredProducts.map((product: any) => (
               <ProductCard 
@@ -178,7 +178,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
 
         {/* Trust Section - Enhanced from Figma */}
         <section className="mb-20">
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 icon: ShieldCheck,
@@ -226,7 +226,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
             </div>
 
             <div className="relative z-10">
-              <h2 className="font-['Roboto_Condensed',sans-serif] font-light text-[40px] tracking-[-1px] text-[#171d19] mb-4">
+              <h2 className="font-['Roboto_Condensed',sans-serif] font-light text-[24px] sm:text-[40px] tracking-[-1px] text-[#171d19] mb-4">
                 Apoteker Kami Siap Membantu
               </h2>
               <p className="font-['Inter',sans-serif] text-[16px] text-[#3e4a41] mb-8 max-w-[600px] mx-auto">

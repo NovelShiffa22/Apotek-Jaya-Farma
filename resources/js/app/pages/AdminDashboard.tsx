@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import {
     AlertTriangle,
+    Bell,
     Calendar,
     DollarSign,
     Edit2,
@@ -19,6 +20,7 @@ import {
     Users,
     X,
     Settings,
+    Menu,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import CreateProduct from './CreateProduct';
@@ -32,11 +34,74 @@ interface AdminDashboardProps {
     users?: any[];
     symptoms?: any[];
     orders?: any[];
+    statusChanges?: any[];
 }
 
-export default function AdminDashboard({ products = [], categories = [], users = [], symptoms = [], orders = [] }: AdminDashboardProps) {
+export default function AdminDashboard({ products = [], categories = [], users = [], symptoms = [], orders = [], statusChanges = [] }: AdminDashboardProps) {
     const { auth } = usePage<any>().props;
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+    const [isNotifOpen, setIsNotifOpen] = useState(false);
+    const [notifications, setNotifications] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (statusChanges && statusChanges.length > 0) {
+            const lastReadTime = localStorage.getItem('admin_notif_last_read') || '0';
+            const readTimeMs = parseInt(lastReadTime, 10);
+
+            const mapped = statusChanges.map((sc: any) => {
+                const timeMs = new Date(sc.created_at).getTime();
+                const pharmacistName = sc.changed_by_user?.name || 'Apoteker';
+                const isSelf = sc.changed_by === auth?.user?.id;
+                
+                let text = '';
+                const statusLabels: Record<string, string> = {
+                    menunggu_pembayaran: 'Menunggu Pembayaran',
+                    diproses: 'Diproses',
+                    disiapkan: 'Disiapkan',
+                    dikirim: 'Dikirim',
+                    selesai: 'Selesai',
+                    dibatalkan: 'Dibatalkan',
+                };
+
+                const displayStatus = statusLabels[sc.status_sesudah] || sc.status_sesudah;
+
+                if (isSelf) {
+                    text = `Anda mengubah status Pesanan #${sc.order?.kode_pesanan || sc.order_id} menjadi "${displayStatus}"`;
+                } else {
+                    text = `${pharmacistName} mengubah status Pesanan #${sc.order?.kode_pesanan || sc.order_id} menjadi "${displayStatus}"`;
+                }
+
+                const dateObj = new Date(sc.created_at);
+                const timeFormatted = dateObj.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                return {
+                    id: sc.id,
+                    text,
+                    time: timeFormatted,
+                    isRead: timeMs <= readTimeMs,
+                    orderId: sc.order_id,
+                    timeMs
+                };
+            });
+
+            setNotifications(mapped);
+        }
+    }, [statusChanges, auth?.user?.id]);
+
+    const unreadCount = notifications.filter(n => !n.isRead).length;
+
+    const markAllRead = () => {
+        const maxTimeMs = Math.max(...notifications.map(n => n.timeMs), 0);
+        localStorage.setItem('admin_notif_last_read', maxTimeMs.toString());
+        setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+    };
 
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -144,29 +209,41 @@ export default function AdminDashboard({ products = [], categories = [], users =
         string,
         { label: string; color: string; bg: string; border: string }
     > = {
-        diproses: {
-            label: 'Diproses',
+        menunggu_pembayaran: {
+            label: 'Menunggu Pembayaran',
             color: 'text-amber-700',
             bg: 'bg-amber-50',
             border: 'border-amber-200',
         },
-        disiapkan: {
-            label: 'Disiapkan',
+        diproses: {
+            label: 'Diproses',
             color: 'text-blue-700',
             bg: 'bg-blue-50',
             border: 'border-blue-200',
         },
-        dikirim: {
-            label: 'Dikirim',
+        disiapkan: {
+            label: 'Disiapkan',
             color: 'text-purple-700',
             bg: 'bg-purple-50',
             border: 'border-purple-200',
+        },
+        dikirim: {
+            label: 'Dikirim',
+            color: 'text-indigo-700',
+            bg: 'bg-indigo-50',
+            border: 'border-indigo-200',
         },
         selesai: {
             label: 'Selesai',
             color: 'text-emerald-700',
             bg: 'bg-emerald-50',
             border: 'border-emerald-200',
+        },
+        dibatalkan: {
+            label: 'Dibatalkan',
+            color: 'text-red-700',
+            bg: 'bg-red-50',
+            border: 'border-red-200',
         },
     };
 
@@ -185,11 +262,77 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             </p>
                         </div>
 
-                        {/* Profile Dropdown */}
-                        <div className="relative">
-                            <button 
-                                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                                className="flex items-center gap-3 rounded-xl border border-[#f1f5f9] bg-white p-2 pr-4 transition-all hover:border-[#006a3f] hover:shadow-sm"
+                        {/* Notification Bell */}
+                        <div className="flex items-center gap-4">
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsNotifOpen(!isNotifOpen)}
+                                    className="p-2.5 text-slate-400 hover:text-[#006a3f] hover:bg-slate-50 rounded-xl transition-all relative border border-[#f1f5f9] bg-white shadow-sm"
+                                >
+                                    <Bell size={20} />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse">
+                                            {unreadCount}
+                                        </span>
+                                    )}
+                                </button>
+
+                                {isNotifOpen && (
+                                    <div className="absolute right-0 mt-3 w-80 bg-white border border-[#f1f5f9] rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] z-50 overflow-hidden py-1">
+                                        <div className="px-4 py-3 border-b border-[#f1f5f9] flex justify-between items-center bg-[#f9fafb]">
+                                            <span className="font-['Inter',sans-serif] font-bold text-sm text-slate-800">Notifikasi</span>
+                                            {unreadCount > 0 && (
+                                                <button
+                                                    onClick={markAllRead}
+                                                    className="text-xs font-semibold text-[#006a3f] hover:underline"
+                                                >
+                                                    Tandai dibaca
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="max-h-72 overflow-y-auto">
+                                            {notifications.length > 0 ? (
+                                                notifications.map((notif: any) => (
+                                                    <div
+                                                        key={notif.id}
+                                                        className={`px-4 py-3 border-b border-gray-100 last:border-0 hover:bg-[#fafaf8] transition-colors text-left cursor-pointer ${
+                                                            !notif.isRead ? 'bg-[#006a3f]/5' : ''
+                                                        }`}
+                                                        onClick={() => {
+                                                            if (notif.orderId) {
+                                                                const ord = orders.find((o: any) => o.id === notif.orderId);
+                                                                if (ord) {
+                                                                    setActiveTab('orders');
+                                                                    setViewingOrder(ord);
+                                                                }
+                                                            }
+                                                            setNotifications(notifications.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
+                                                            setIsNotifOpen(false);
+                                                        }}
+                                                    >
+                                                        <p className="font-['Inter',sans-serif] text-xs text-slate-800 font-medium leading-relaxed">
+                                                            {notif.text}
+                                                        </p>
+                                                        <span className="text-[10px] text-slate-400 mt-1 block">
+                                                            {notif.time}
+                                                        </span>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="px-4 py-6 text-center text-slate-400 font-['Inter',sans-serif] text-xs">
+                                                    Tidak ada notifikasi baru
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Profile Dropdown */}
+                            <div className="relative">
+                                <button 
+                                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                                    className="flex items-center gap-3 rounded-xl border border-[#f1f5f9] bg-white p-2 pr-4 transition-all hover:border-[#006a3f] hover:shadow-sm"
                             >
                                 <div className="text-right hidden md:block">
                                     <p className="font-['Roboto_Condensed',sans-serif] text-[15px] font-semibold text-[#171d19]">
@@ -206,33 +349,34 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                 </div>
                             </button>
 
-                            {isProfileDropdownOpen && (
-                                <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-[#f1f5f9] bg-white p-2 shadow-[0_8px_24px_rgba(0,0,0,0.12)] z-50">
-                                    <Link
-                                        href="/admin/settings"
-                                        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:bg-[#f9fafb] hover:text-[#006a3f]"
-                                    >
-                                        <UserCog size={16} />
-                                        <span>Setting Profile</span>
-                                    </Link>
-                                    <div className="my-1 h-[1px] w-full bg-[#f1f5f9]"></div>
-                                    <button
-                                        onClick={handleAdminLogout}
-                                        className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-['Inter',sans-serif] text-[13px] font-medium text-[#ba1a1a] transition-all hover:bg-red-50"
-                                    >
-                                        <LogOut size={16} />
-                                        <span>Keluar</span>
-                                    </button>
+                                    {isProfileDropdownOpen && (
+                                        <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-[#f1f5f9] bg-white p-2 shadow-[0_8px_24px_rgba(0,0,0,0.12)] z-50">
+                                            <Link
+                                                href="/admin/settings"
+                                                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:bg-[#f9fafb] hover:text-[#006a3f]"
+                                            >
+                                                <UserCog size={16} />
+                                                <span>Setting Profile</span>
+                                            </Link>
+                                            <div className="my-1 h-[1px] w-full bg-[#f1f5f9]"></div>
+                                            <button
+                                                onClick={handleAdminLogout}
+                                                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-['Inter',sans-serif] text-[13px] font-medium text-[#ba1a1a] transition-all hover:bg-red-50"
+                                            >
+                                                <LogOut size={16} />
+                                                <span>Keluar</span>
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
+                            </div>
                     </div>
                 </div>
             </header>
 
             <main className="mx-auto max-w-[1600px] px-8 py-8">
                 {/* Enhanced Tab Navigation */}
-                <div className="mb-8 flex gap-3">
+                <div className="mb-8 flex gap-3 overflow-x-auto whitespace-nowrap pb-2 scrollbar-none">
                     {[
                         {
                             id: 'analytics' as const,
@@ -258,7 +402,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-3 rounded-xl px-6 py-3 font-['Inter',sans-serif] text-[14px] font-medium transition-all duration-200 ${
+                            className={`flex items-center gap-3 rounded-xl px-6 py-3 font-['Inter',sans-serif] text-[14px] font-medium transition-all duration-200 shrink-0 ${
                                 activeTab === tab.id
                                     ? 'bg-[#006a3f] text-white shadow-[0_4px_12px_rgba(0,106,63,0.25)]'
                                     : 'border border-[#f1f5f9] bg-white text-[#171d19] hover:border-[#006a3f] hover:shadow-sm'
@@ -274,7 +418,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 {activeTab === 'analytics' && (
                     <div className="space-y-8">
                         {/* Enhanced Stats Cards */}
-                        <div className="grid grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             {(() => {
                                 const completedOrders = orders.filter((o) => o.status === 'selesai');
                                 const totalPenjualan = completedOrders.reduce((sum, o) => sum + parseFloat(o.total_biaya || 0), 0);
@@ -283,12 +427,17 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                 const avgOrderValue = jumlahTransaksi > 0 ? totalPenjualan / jumlahTransaksi : 0;
 
                                 const formatCurrency = (value: number) => {
-                                    if (value >= 1000000) {
-                                        return `Rp ${(value / 1000000).toFixed(1)}M`;
+                                    if (value >= 1000000000) {
+                                        const val = value / 1000000000;
+                                        return `Rp ${val % 1 === 0 ? val : val.toFixed(1)} M`;
+                                    } else if (value >= 1000000) {
+                                        const val = value / 1000000;
+                                        return `Rp ${val % 1 === 0 ? val : val.toFixed(1)} Jt`;
                                     } else if (value >= 1000) {
-                                        return `Rp ${(value / 1000).toFixed(1)}K`;
+                                        const val = value / 1000;
+                                        return `Rp ${val % 1 === 0 ? val : val.toFixed(1)} rb`;
                                     }
-                                    return `Rp ${value}`;
+                                    return `Rp ${value.toLocaleString('id-ID')}`;
                                 };
 
                                 return [
@@ -545,7 +694,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
 
                         {/* Search & Filter Bar */}
                         <div className="mb-6 rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
-                            <div className="flex gap-4">
+                            <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="relative flex-1">
                                     <Search
                                         className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6e7a70]"
@@ -740,7 +889,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
 
                         {/* Search & Filter Bar */}
                         <div className="mb-6 rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
-                            <div className="flex gap-4">
+                            <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="relative flex-1">
                                     <Search
                                         className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6e7a70]"
@@ -766,10 +915,12 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-3 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
                                 >
                                     <option value="all">Semua Status</option>
+                                    <option value="menunggu_pembayaran">Menunggu Pembayaran</option>
                                     <option value="diproses">Diproses</option>
                                     <option value="disiapkan">Disiapkan</option>
                                     <option value="dikirim">Dikirim</option>
                                     <option value="selesai">Selesai</option>
+                                    <option value="dibatalkan">Dibatalkan</option>
                                 </select>
                             </div>
                         </div>
@@ -797,11 +948,11 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                         key={order.id}
                                         className="rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
                                     >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex flex-1 items-center gap-4 md:gap-6">
+                                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                                            <div className="flex flex-col sm:flex-row sm:items-center flex-1 gap-4 md:gap-6">
                                                 {/* Order Info */}
-                                                <div className="w-[220px] md:w-[280px] shrink-0">
-                                                    <div className="flex items-center gap-2 mb-1">
+                                                <div className="flex-1 min-w-[200px]">
+                                                    <div className="flex items-center flex-wrap gap-2 mb-1">
                                                         <p className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
                                                             {order.kode_pesanan}
                                                         </p>
@@ -818,7 +969,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                 </div>
 
                                                 {/* Items Count */}
-                                                <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 w-[80px] shrink-0">
+                                                <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 w-full sm:w-20 shrink-0">
                                                     <p className="mb-0.5 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
                                                         Items
                                                     </p>
@@ -828,40 +979,69 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                 </div>
 
                                                 {/* Total */}
-                                                <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 w-[140px] shrink-0">
+                                                <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 w-full sm:w-36 shrink-0">
                                                     <p className="mb-0.5 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
                                                         Total
                                                     </p>
                                                     <p className="font-['Roboto_Condensed',sans-serif] text-[18px] font-semibold text-[#006a3f] truncate">
                                                         Rp{' '}
-                                                        {parseFloat(order.total_biaya || 0).toLocaleString(
-                                                            'id-ID',
-                                                        )}
+                                                        {parseFloat(order.total_biaya || 0).toLocaleString('id-ID')}
                                                     </p>
                                                 </div>
                                             </div>
 
                                             {/* Status & Actions */}
-                                            <div className="flex shrink-0 items-center gap-3">
+                                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full lg:w-auto justify-between sm:justify-end pt-4 lg:pt-0 border-t lg:border-t-0 border-[#f1f5f9]">
                                                 <select
                                                     value={order.status}
                                                     onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                                                    className={`w-[130px] rounded-xl border-2 px-3 py-2.5 font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none ${config.bg} ${config.color} ${config.border}`}
+                                                    className={`w-full sm:w-[190px] rounded-xl border-2 px-3 py-2.5 font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none ${config.bg} ${config.color} ${config.border}`}
                                                 >
+                                                    <option value="menunggu_pembayaran">Menunggu Pembayaran</option>
                                                     <option value="diproses">Diproses</option>
                                                     <option value="disiapkan">Disiapkan</option>
                                                     <option value="dikirim">Dikirim</option>
                                                     <option value="selesai">Selesai</option>
+                                                    <option value="dibatalkan">Dibatalkan</option>
                                                 </select>
-
+ 
                                                 <button 
                                                     onClick={() => setViewingOrder(order)}
-                                                    className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:border-[#006a3f] hover:bg-white"
+                                                    className="w-full sm:w-auto justify-center rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:border-[#006a3f] hover:bg-white flex items-center"
                                                 >
                                                     Detail
                                                 </button>
                                             </div>
                                         </div>
+
+                                        {/* Status Change History Timeline */}
+                                        {order.status_histories && order.status_histories.length > 0 && (
+                                            <div className="mt-4 pt-4 border-t border-dashed border-[#e2e8f0]">
+                                                <p className="font-['Inter',sans-serif] text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                                    Riwayat Status ({order.status_histories.length})
+                                                </p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {order.status_histories.map((hist: any, hIdx: number) => {
+                                                        const statusLabels: Record<string, string> = {
+                                                            menunggu_pembayaran: 'Menunggu Pembayaran',
+                                                            diproses: 'Diproses',
+                                                            disiapkan: 'Disiapkan',
+                                                            dikirim: 'Dikirim',
+                                                            selesai: 'Selesai',
+                                                            dibatalkan: 'Dibatalkan',
+                                                        };
+                                                        return (
+                                                            <span key={hIdx} className="inline-flex items-center gap-1 rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-1 text-[11px] font-['Inter',sans-serif] text-slate-600">
+                                                                <span className="font-semibold text-slate-800">{statusLabels[hist.status_sesudah] || hist.status_sesudah}</span>
+                                                                <span className="text-slate-400">oleh</span>
+                                                                <span className="font-bold text-[#006a3f]">{hist.changed_by_user?.name || 'Sistem'}</span>
+                                                                <span className="text-[10px] text-slate-400">({new Date(hist.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})})</span>
+                                                            </span>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -896,7 +1076,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                         </div>
 
                         {/* Stats Cards */}
-                        <div className="mb-6 grid grid-cols-4 gap-6">
+                        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             {[
                                 {
                                     label: 'Total Users',
@@ -963,7 +1143,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
 
                         {/* Search & Filter Bar */}
                         <div className="mb-6 rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
-                            <div className="flex gap-4">
+                            <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="relative flex-1">
                                     <Search
                                         className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6e7a70]"
