@@ -1409,6 +1409,58 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                 </div>
                             </div>
 
+                            {/* Status History Timeline */}
+                            {viewingOrder.status_histories && viewingOrder.status_histories.length > 0 && (
+                                <div>
+                                    <h3 className="mb-3 font-['Inter',sans-serif] text-[12px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                        Riwayat Perubahan Status
+                                    </h3>
+                                    <div className="relative space-y-0 max-h-[200px] overflow-y-auto pr-1">
+                                        {viewingOrder.status_histories.map((history: any, idx: number) => {
+                                            const statusLabels: Record<string, string> = {
+                                                menunggu_pembayaran: 'Menunggu Pembayaran',
+                                                diproses: 'Diproses',
+                                                disiapkan: 'Disiapkan',
+                                                dikirim: 'Dikirim',
+                                                selesai: 'Selesai',
+                                                dibatalkan: 'Dibatalkan',
+                                            };
+                                            const statusColors: Record<string, string> = {
+                                                menunggu_pembayaran: 'bg-amber-500',
+                                                diproses: 'bg-blue-500',
+                                                disiapkan: 'bg-purple-500',
+                                                dikirim: 'bg-indigo-500',
+                                                selesai: 'bg-emerald-500',
+                                                dibatalkan: 'bg-red-500',
+                                            };
+                                            const dotColor = statusColors[history.status_sesudah] || 'bg-gray-400';
+                                            return (
+                                                <div key={idx} className="flex gap-3 pb-3 last:pb-0">
+                                                    <div className="flex flex-col items-center">
+                                                        <div className={`mt-1 h-2.5 w-2.5 rounded-full shrink-0 ${dotColor}`} />
+                                                        {idx < viewingOrder.status_histories.length - 1 && (
+                                                            <div className="w-px flex-1 bg-gray-200 mt-1" />
+                                                        )}
+                                                    </div>
+                                                    <div className="pb-1">
+                                                        <p className="font-['Inter',sans-serif] text-[12px] font-semibold text-[#171d19]">
+                                                            {history.status_sebelum
+                                                                ? `${statusLabels[history.status_sebelum] || history.status_sebelum} → ${statusLabels[history.status_sesudah] || history.status_sesudah}`
+                                                                : statusLabels[history.status_sesudah] || history.status_sesudah
+                                                            }
+                                                        </p>
+                                                        <p className="font-['Inter',sans-serif] text-[11px] text-[#6e7a70]">
+                                                            {history.changed_by_user?.name || 'Sistem'} &bull;{' '}
+                                                            {new Date(history.created_at).toLocaleString('id-ID', {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'})}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Summary */}
                             <div className="flex items-center justify-between border-t border-gray-100 pt-4">
                                 <span className="font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19]">Total Pembayaran</span>

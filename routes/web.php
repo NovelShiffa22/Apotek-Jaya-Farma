@@ -176,9 +176,9 @@ Route::middleware(['auth', 'role:user'])->group(function () {
 // Ruang Portal Kerja Manajemen (Dashboard)
 Route::middleware(['auth', 'role:pharmacist'])->group(function () {
     Route::get('/pharmacist', function () {
-        $prescriptions = \App\Models\Prescription::with(['user', 'items.product'])->latest()->get();
+        $prescriptions = \App\Models\Prescription::with(['user.addresses', 'items.product', 'validator'])->latest()->get();
         $products = \App\Models\Product::all();
-        $orders = \App\Models\Order::with(['user', 'products', 'prescription'])->latest()->get();
+        $orders = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])->latest()->get();
 
         return Inertia::render('PharmacistDashboard', [
             'prescriptions' => $prescriptions,
@@ -226,30 +226,22 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
         return back()->with('success', 'Validasi resep berhasil disimpan');
     })->name('pharmacist.prescriptions.update');
 
-    Route::put('/pharmacist/products/{id}', function(\Illuminate\Http\Request $request, $id) {
-        $product = \App\Models\Product::findOrFail($id);
-        
-        $request->validate([
-            'indikasi' => 'nullable|string',
-            'aturan_pakai' => 'nullable|string',
-            'efek_samping' => 'nullable|string',
-            'deskripsi' => 'nullable|string',
-        ]);
 
-        $product->update([
-            'indikasi' => $request->indikasi ?? $product->indikasi,
-            'aturan_pakai' => $request->aturan_pakai ?? $product->aturan_pakai,
-            'efek_samping' => $request->efek_samping ?? $product->efek_samping,
-            'deskripsi' => $request->deskripsi ?? $product->deskripsi,
-        ]);
-
-        return back()->with('success', 'Informasi obat berhasil diperbarui');
-    })->name('pharmacist.products.update');
 
     Route::put('/pharmacist/orders/{id}/status', function(\Illuminate\Http\Request $request, $id) {
         $request->validate(['status' => 'required|string|in:pending,diproses,disiapkan,dikirim,selesai,dibatalkan']);
         $order = \App\Models\Order::findOrFail($id);
+        $statusSebelum = $order->status;
         $order->update(['status' => $request->status]);
+
+        \App\Models\OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'changed_by' => auth()->id(),
+            'status_sebelum' => $statusSebelum,
+            'status_sesudah' => $request->status,
+            'keterangan' => 'Status diubah oleh apoteker: ' . auth()->user()->name
+        ]);
+
         return back()->with('success', 'Status pesanan berhasil diperbarui');
     })->name('pharmacist.orders.status');
 
@@ -292,7 +284,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         $categories = \App\Models\Category::all();
         $users = \App\Models\User::all();
         $symptoms = \App\Models\Symptom::all();
-        $orders = \App\Models\Order::with(['user', 'products', 'prescription'])->latest()->get();
+        $orders = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])->latest()->get();
         
         return Inertia::render('AdminDashboard', [
             'products' => $products,
@@ -363,7 +355,17 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('/admin/orders/{id}/status', function(Illuminate\Http\Request $request, $id) {
         $request->validate(['status' => 'required|string|in:diproses,disiapkan,dikirim,selesai']);
         $order = \App\Models\Order::findOrFail($id);
+        $statusSebelum = $order->status;
         $order->update(['status' => $request->status]);
+
+        \App\Models\OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'changed_by' => auth()->id(),
+            'status_sebelum' => $statusSebelum,
+            'status_sesudah' => $request->status,
+            'keterangan' => 'Status diubah oleh admin: ' . auth()->user()->name
+        ]);
+
         return back()->with('success', 'Status pesanan berhasil diperbarui');
     })->name('admin.orders.status');
 });

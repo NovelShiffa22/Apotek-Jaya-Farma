@@ -259,7 +259,7 @@ export default function Profile({ user, orders = [], addresses = [], prescriptio
           <div className="flex-1 w-full min-w-0">
             {activeTab === 'profile' && (
               <>
-                <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+                <div className="bg-white rounded-2xl p-4 sm:p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
                 <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-8 font-semibold">
                   Informasi Profil
                 </h2>
@@ -309,7 +309,7 @@ export default function Profile({ user, orders = [], addresses = [], prescriptio
                 </form>
               </div>
 
-              <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)] mt-8">
+              <div className="bg-white rounded-2xl p-4 sm:p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)] mt-8">
                 <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-8 font-semibold">
                   Ubah Kata Sandi
                 </h2>
@@ -372,7 +372,7 @@ export default function Profile({ user, orders = [], addresses = [], prescriptio
             )}
 
             {activeTab === 'address' && (
-              <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+              <div className="bg-white rounded-2xl p-4 sm:p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
                 <div className="flex justify-between items-center mb-8">
                   <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] font-semibold">
                     Alamat Pengiriman
@@ -454,12 +454,12 @@ export default function Profile({ user, orders = [], addresses = [], prescriptio
             )}
 
             {activeTab === 'orders' && (
-              <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)] w-full text-left">
+              <div className="bg-white rounded-2xl p-4 sm:p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)] w-full text-left">
                 <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-6 font-semibold">
                   Riwayat Pesanan
                 </h2>
                 
-                <div className="flex gap-6 mb-8 border-b border-[#f1f5f9]">
+                <div className="flex gap-6 mb-8 border-b border-[#f1f5f9] overflow-x-auto pb-1 whitespace-nowrap">
                   {[
                     { id: 'Pending', label: 'Belum Bayar' },
                     { id: 'Lunas', label: 'Diproses' },
@@ -659,12 +659,12 @@ export default function Profile({ user, orders = [], addresses = [], prescriptio
             )}
 
             {activeTab === 'prescriptions' && (
-              <div className="bg-white rounded-2xl p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)] w-full text-left">
+              <div className="bg-white rounded-2xl p-4 sm:p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)] w-full text-left">
                 <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-6 font-semibold">
                   Riwayat Resep
                 </h2>
 
-                <div className="flex gap-6 mb-8 border-b border-[#f1f5f9] overflow-x-auto pb-1">
+                <div className="flex gap-6 mb-8 border-b border-[#f1f5f9] overflow-x-auto pb-1 whitespace-nowrap">
                   {[
                     { id: 'Diproses' as const, label: 'Diproses' },
                     { id: 'Disetujui' as const, label: 'Disetujui' },

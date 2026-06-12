@@ -54,4 +54,12 @@ class Order extends Model
     {
         return $this->belongsTo(Prescription::class);
     }
+
+    /**
+     * Relasi One-to-Many ke tabel order_status_histories.
+     */
+    public function statusHistories()
+    {
+        return $this->hasMany(OrderStatusHistory::class)->latest();
+    }
 }

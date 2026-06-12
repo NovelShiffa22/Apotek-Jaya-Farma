@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title inertia>{{ config('app.name', 'Apotek Jaya Farma') }}</title>
+        <link rel="icon" type="image/png" href="/images/logo_favicon.png">
 
         <!-- Fonts -->
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
