@@ -19,7 +19,9 @@ class MidtransController extends Controller
             if ($transaction) {
                 if ($request->transaction_status == 'capture' || $request->transaction_status == 'settlement') {
                     $transaction->update(['status' => 'Lunas']);
-                } else if ($request->transaction_status == 'cancel' || $request->transaction_status == 'deny' || $request->transaction_status == 'expire') {
+                } else if ($request->transaction_status == 'expire') {
+                    $transaction->update(['status' => 'Expired']);
+                } else if ($request->transaction_status == 'cancel' || $request->transaction_status == 'deny') {
                     $transaction->update(['status' => 'Dibatalkan']);
                 } else if ($request->transaction_status == 'pending') {
                     $transaction->update(['status' => 'Pending']);

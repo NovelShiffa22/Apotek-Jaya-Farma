@@ -347,7 +347,9 @@ class CheckoutController extends Controller
                 $status = \Midtrans\Transaction::status($transaction->id);
                 if ($status->transaction_status == 'settlement' || $status->transaction_status == 'capture') {
                     $transaction->update(['status' => 'Lunas']);
-                } else if ($status->transaction_status == 'cancel' || $status->transaction_status == 'deny' || $status->transaction_status == 'expire') {
+                } else if ($status->transaction_status == 'expire') {
+                    $transaction->update(['status' => 'Expired']);
+                } else if ($status->transaction_status == 'cancel' || $status->transaction_status == 'deny') {
                     $transaction->update(['status' => 'Dibatalkan']);
                 }
             } catch (\Exception $e) {
