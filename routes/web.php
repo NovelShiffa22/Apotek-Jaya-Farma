@@ -478,6 +478,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
                         'id' => $item['id'] ?? $item['product_id'] ?? null,
                         'nama_obat' => $item['name'] ?? $item['nama'] ?? 'Produk',
                         'gambar' => $item['image'] ?? $item['gambar'] ?? null,
+                        'stok' => ($p = \App\Models\Product::find($item['id'] ?? $item['product_id'] ?? null)) ? $p->stok : 0,
                         'pivot' => [
                             'kuantitas' => $item['quantity'] ?? 1,
                             'harga_satuan' => $item['price'] ?? $item['harga'] ?? 0,
@@ -516,6 +517,61 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             'statusChanges' => $statusChanges
         ]);
     })->name('admin.dashboard');
+
+    Route::get('/admin/orders/{id}', function ($id) {
+        if (str_starts_with($id, 'vt_')) {
+            $vtId = str_replace('vt_', '', $id);
+            $vt = \App\Models\VirtualTransaction::with(['user', 'prescription', 'pharmacist'])->findOrFail($vtId);
+            
+            $statusMap = [
+                'Pending' => 'menunggu_pembayaran',
+                'Belum Bayar' => 'menunggu_pembayaran',
+                'Lunas' => 'diproses',
+                'Dikirim' => 'dikirim',
+                'Selesai' => 'selesai',
+                'Dibatalkan' => 'dibatalkan'
+            ];
+            $mappedStatus = $statusMap[$vt->status] ?? strtolower($vt->status);
+
+            $order = [
+                'id' => 'vt_' . $vt->id,
+                'kode_pesanan' => $vt->va_number ?? 'VT-' . $vt->id,
+                'user' => $vt->user,
+                'payment_method' => $vt->payment_method,
+                'products' => collect($vt->items)->map(function ($item) {
+                    return [
+                        'id' => $item['id'] ?? $item['product_id'] ?? null,
+                        'nama_obat' => $item['name'] ?? $item['nama'] ?? 'Produk',
+                        'gambar' => $item['image'] ?? $item['gambar'] ?? null,
+                        'stok' => ($p = \App\Models\Product::find($item['id'] ?? $item['product_id'] ?? null)) ? $p->stok : 0,
+                        'pivot' => [
+                            'kuantitas' => $item['quantity'] ?? 1,
+                            'harga_satuan' => $item['price'] ?? $item['harga'] ?? 0,
+                        ],
+                    ];
+                }),
+                'prescription' => $vt->prescription,
+                'status_histories' => $vt->pharmacist ? [
+                    [
+                        'status_sebelum' => 'menunggu_pembayaran',
+                        'status_sesudah' => 'diproses',
+                        'changed_by_user' => ['name' => $vt->pharmacist->name],
+                        'created_at' => $vt->updated_at,
+                    ]
+                ] : [],
+                'status' => $mappedStatus,
+                'total_biaya' => $vt->total_amount,
+                'created_at' => $vt->created_at,
+                'updated_at' => $vt->updated_at,
+            ];
+        } else {
+            $order = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])->findOrFail($id);
+        }
+
+        return Inertia::render('AdminOrderDetail', [
+            'order' => $order
+        ]);
+    })->name('admin.orders.show');
 
     Route::get('/admin/settings', function () {
         $globalDiscount = \Illuminate\Support\Facades\Cache::get('global_discount', 0);
