@@ -520,6 +520,11 @@ export default function Profile({ user, orders = [], addresses = [], prescriptio
                                 year: 'numeric'
                               })} • {order.payment_method || 'Virtual Account'}
                             </p>
+                            {order.status === 'Lunas' && (new Date().getHours() < 8 || new Date().getHours() >= 18) && (
+                              <p className="text-amber-600 text-xs mt-1 italic font-medium">
+                                ⚠️ Pesanan Anda akan diverifikasi & dikemas saat jam operasional besok pagi (08.00 WIB).
+                              </p>
+                            )}
                           </div>
                           {order.status === 'Dibatalkan' ? (
                             <div className="bg-red-50 border border-red-200 px-4 py-2 rounded-full">

@@ -293,6 +293,10 @@ export default function Invoice({ transaction }: Props) {
                     </button>
                 ) : (
                     <>
+                        <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm p-4 rounded-xl flex items-start gap-2.5 mb-6 text-left">
+                            <AlertCircle size={20} className="text-amber-600 shrink-0 mt-0.5" />
+                            <p className="leading-relaxed">⚠️ Jam Operasional Pengemasan & Pengiriman: 08.00-18.00 WIB. Pembayaran di luar jam tersebut akan diproses esok hari.</p>
+                        </div>
                         <button 
                           onClick={handlePayMidtrans}
                           className="w-full flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl py-4 px-6 transition duration-200 text-base shadow-lg"
