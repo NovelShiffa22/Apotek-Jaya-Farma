@@ -32,6 +32,14 @@ class Product extends Model
                     ->withTimestamps();
     }
 
+    /**
+     * Relasi One-to-Many ke tabel product_stock_histories.
+     */
+    public function stockHistories()
+    {
+        return $this->hasMany(ProductStockHistory::class);
+    }
+
     public static function attachSoldCounts($products)
     {
         $productIds = $products->pluck('id')->toArray();

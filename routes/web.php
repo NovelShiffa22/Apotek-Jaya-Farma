@@ -508,6 +508,31 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             ->latest()
             ->take(30)
             ->get();
+            
+        $today = now()->startOfDay();
+        $thisMonth = now()->startOfMonth();
+
+        $completedOrders = $orders->where('status', 'selesai');
+        $completedVts = $vts->where('status', 'Selesai');
+
+        $incomeToday = $completedOrders->where('created_at', '>=', $today)->sum('total_biaya') + 
+                       $completedVts->where('created_at', '>=', $today)->sum('total_amount');
+                       
+        $incomeThisMonth = $completedOrders->where('created_at', '>=', $thisMonth)->sum('total_biaya') + 
+                           $completedVts->where('created_at', '>=', $thisMonth)->sum('total_amount');
+                           
+        $incomeAllTime = $completedOrders->sum('total_biaya') + $completedVts->sum('total_amount');
+
+        $totalPrescriptionsVerified = \App\Models\Prescription::where('status_validasi', 'disetujui')->count();
+        $totalPrescriptionsRejected = \App\Models\Prescription::where('status_validasi', 'ditolak')->count();
+
+        $analytics = [
+            'income_today' => $incomeToday,
+            'income_this_month' => $incomeThisMonth,
+            'income_all_time' => $incomeAllTime,
+            'prescriptions_verified' => $totalPrescriptionsVerified,
+            'prescriptions_rejected' => $totalPrescriptionsRejected,
+        ];
         
         return Inertia::render('AdminDashboard', [
             'products' => $products,
@@ -515,7 +540,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             'users' => $users,
             'symptoms' => $symptoms,
             'orders' => $allOrders,
-            'statusChanges' => $statusChanges
+            'statusChanges' => $statusChanges,
+            'analytics' => $analytics
         ]);
     })->name('admin.dashboard');
 
@@ -618,6 +644,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
         return back()->with('success', 'Profil berhasil diperbarui');
     })->name('admin.settings.update');
+
+    Route::put('/admin/products/{id}/stock', [ProductController::class, 'updateStock'])->name('admin.products.update_stock');
 
     Route::get('/admin/products/create', [ProductController::class, 'create'])->name('admin.products.create');
     Route::post('/admin/products', [ProductController::class, 'store'])->name('products.store');

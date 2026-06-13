@@ -7,6 +7,7 @@ import {
     Eye,
     DollarSign,
     Edit2,
+    FileText,
     Filter,
     LogOut,
     Mail,
@@ -37,9 +38,11 @@ interface AdminDashboardProps {
     symptoms?: any[];
     orders?: any[];
     statusChanges?: any[];
+    stockHistories?: any[];
+    analytics?: any;
 }
 
-export default function AdminDashboard({ products = [], categories = [], users = [], symptoms = [], orders = [], statusChanges = [] }: AdminDashboardProps) {
+export default function AdminDashboard({ products = [], categories = [], users = [], symptoms = [], orders = [], statusChanges = [], stockHistories = [], analytics = {} }: AdminDashboardProps) {
     const { auth } = usePage<any>().props;
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
@@ -413,12 +416,6 @@ export default function AdminDashboard({ products = [], categories = [], users =
                         {/* Enhanced Stats Cards */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             {(() => {
-                                const completedOrders = orders.filter((o) => o.status === 'selesai');
-                                const totalPenjualan = completedOrders.reduce((sum, o) => sum + parseFloat(o.total_biaya || 0), 0);
-                                const jumlahTransaksi = completedOrders.length;
-                                const pelangganAktif = users.filter((u) => u.role === 'user').length;
-                                const avgOrderValue = jumlahTransaksi > 0 ? totalPenjualan / jumlahTransaksi : 0;
-
                                 const formatCurrency = (value: number) => {
                                     if (value >= 1000000000) {
                                         const val = value / 1000000000;
@@ -435,35 +432,35 @@ export default function AdminDashboard({ products = [], categories = [], users =
 
                                 return [
                                     {
-                                        label: 'Total Penjualan',
-                                        value: formatCurrency(totalPenjualan),
-                                        change: '+18.5%', // Data historis bisa ditambahkan nanti
+                                        label: 'Pendapatan Hari Ini',
+                                        value: formatCurrency(analytics.income_today || 0),
+                                        change: 'Hari Ini',
                                         trend: 'up',
                                         icon: DollarSign,
                                         color: 'from-emerald-500 to-emerald-600',
                                     },
                                     {
-                                        label: 'Jumlah Transaksi',
-                                        value: jumlahTransaksi.toString(),
-                                        change: '+12.3%',
+                                        label: 'Pendapatan Bulan Ini',
+                                        value: formatCurrency(analytics.income_this_month || 0),
+                                        change: 'Bulan Ini',
                                         trend: 'up',
-                                        icon: ShoppingBag,
+                                        icon: TrendingUp,
                                         color: 'from-blue-500 to-blue-600',
                                     },
                                     {
-                                        label: 'Pelanggan Aktif',
-                                        value: pelangganAktif.toString(),
-                                        change: '+8.7%',
+                                        label: 'Total Pendapatan',
+                                        value: formatCurrency(analytics.income_all_time || 0),
+                                        change: 'Seluruh Waktu',
                                         trend: 'up',
-                                        icon: Users,
+                                        icon: Package,
                                         color: 'from-purple-500 to-purple-600',
                                     },
                                     {
-                                        label: 'Rata-rata Pesanan',
-                                        value: formatCurrency(avgOrderValue),
-                                        change: '-2.4%',
-                                        trend: 'down',
-                                        icon: TrendingDown,
+                                        label: 'Total Resep (Verif / Tolak)',
+                                        value: `${analytics.prescriptions_verified || 0} / ${analytics.prescriptions_rejected || 0}`,
+                                        change: 'Resep',
+                                        trend: 'up',
+                                        icon: FileText,
                                         color: 'from-amber-500 to-amber-600',
                                     },
                                 ];
@@ -643,10 +640,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                 </div>
                                             </div>
                                             <button 
-                                                onClick={() => {
-                                                    setEditingProduct(product);
-                                                    setIsProductModalOpen(true);
-                                                }}
+                                                onClick={() => router.visit(`/admin/products/${product.id}/edit`)}
                                                 className="w-full rounded-lg bg-[#006a3f] px-4 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-white transition-all hover:bg-[#005632] hover:shadow-lg"
                                             >
                                                 Restock Sekarang
@@ -836,12 +830,9 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             </td>
                                             <td className="px-6 py-5">
                                                 <div className="flex justify-end gap-2">
-                                                    {/* REVISI: Tombol Edit Produk Diubah Menjadi Modal Trigger */}
+                                                    {/* REVISI: Tombol Edit Produk Diubah Menjadi Link Halaman Penuh */}
                                                     <button
-                                                        onClick={() => {
-                                                            setEditingProduct(product);
-                                                            setIsProductModalOpen(true);
-                                                        }}
+                                                        onClick={() => router.visit(`/admin/products/${product.id}/edit`)}
                                                         className="group inline-block rounded-lg p-2 transition-colors hover:bg-[#f9fafb]"
                                                         title="Edit Produk"
                                                     >
@@ -1488,6 +1479,8 @@ export default function AdminDashboard({ products = [], categories = [], users =
                         )}
                     </div>
                 )}
+
+
             </main>
 
             {/* Modal Tambah/Edit Produk */}

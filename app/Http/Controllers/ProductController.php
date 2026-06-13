@@ -153,12 +153,14 @@ class ProductController extends Controller
 
         // format symptom_ids
         $product->symptom_ids = $product->symptoms->pluck('id')->toArray();
+        $stockHistories = \App\Models\ProductStockHistory::with('user')->where('product_id', $id)->orderBy('created_at', 'desc')->get();
 
-        return Inertia::render('CreateProduct', [
+        return Inertia::render('EditProduct', [
             'isEdit' => true,
             'initialData' => $product,
             'categories' => $categories,
-            'symptoms' => $symptoms
+            'symptoms' => $symptoms,
+            'stockHistories' => $stockHistories
         ]);
     }
 
@@ -271,5 +273,56 @@ class ProductController extends Controller
         $product->delete();
 
         return redirect()->back()->with('success', 'Produk berhasil dihapus');
+    }
+
+
+
+    /**
+     * Menyesuaikan stok spesifik dari modal (+ Kelola Stok).
+     */
+    public function updateStock(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+
+        $validated = $request->validate([
+            'action' => 'required|in:inbound_purchase,adjustment_damaged,adjustment_lost',
+            'quantity' => 'required|integer|min:1',
+            'reason' => 'required|string|max:255',
+            'supplier' => 'nullable|required_if:action,inbound_purchase|string|max:255',
+            'buy_price' => 'nullable|required_if:action,inbound_purchase|numeric|min:0',
+        ]);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $product) {
+            $type = $validated['action'];
+            
+            if ($type === 'inbound_purchase') {
+                $product->stok += $validated['quantity'];
+                if (isset($validated['buy_price']) && $validated['buy_price'] > 0) {
+                    // Update the product's selling price if necessary, or just track it in history.
+                    // $product->harga = max($product->harga, $validated['buy_price']); 
+                }
+            } else {
+                // For damaged or lost
+                if ($product->stok < $validated['quantity']) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'quantity' => 'Stok tidak cukup untuk dikurangi sebesar itu.'
+                    ]);
+                }
+                $product->stok -= $validated['quantity'];
+            }
+            $product->save();
+
+            \App\Models\ProductStockHistory::create([
+                'product_id' => $product->id,
+                'type' => $type,
+                'quantity' => $validated['quantity'],
+                'reason' => $validated['reason'],
+                'supplier' => $type === 'inbound_purchase' ? ($validated['supplier'] ?? null) : null,
+                'buy_price' => $type === 'inbound_purchase' ? ($validated['buy_price'] ?? null) : null,
+                'user_id' => auth()->id(),
+            ]);
+        });
+
+        return redirect()->back()->with('success', 'Penyesuaian stok berhasil disimpan.');
     }
 }
