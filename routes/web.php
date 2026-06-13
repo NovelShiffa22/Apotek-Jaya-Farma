@@ -82,9 +82,10 @@ Route::delete('/cart/{id}', [CartController::class, 'remove'])->name('cart.remov
 
 Route::get('/profile', function () {
     $user = auth()->user();
-    $orders = \App\Models\VirtualTransaction::where('user_id', $user->id)->latest()->get();
+    
+    // SINKRONISASI MIDTRANS LOKAL (DIRECT STATUS CHECK) HANYA UNTUK YANG PENDING
+    $pendingOrders = \App\Models\VirtualTransaction::where('user_id', $user->id)->where('status', 'Pending')->get();
 
-    // SINKRONISASI MIDTRANS LOKAL (DIRECT STATUS CHECK)
     \Midtrans\Config::$serverKey = config('midtrans.server_key');
     \Midtrans\Config::$isProduction = config('midtrans.is_production');
     \Midtrans\Config::$curlOptions = [
@@ -93,67 +94,98 @@ Route::get('/profile', function () {
         CURLOPT_HTTPHEADER => []
     ];
 
-    $needsRefresh = false;
-    foreach ($orders as $order) {
-        if ($order->status === 'Pending') {
-            try {
-                $status = \Midtrans\Transaction::status($order->id);
-                if ($status->transaction_status === 'expire' || $status->transaction_status === 'cancel') {
-                    $order->update(['status' => 'Dibatalkan']);
-                    
-                    // Kembalikan stok obat
-                    if (is_array($order->items)) {
-                        foreach ($order->items as $item) {
-                            $productId = $item['id'] ?? $item['product_id'] ?? null;
-                            if ($productId) {
-                                $product = \App\Models\Product::find($productId);
-                                if ($product) {
-                                    $product->increment('stok', $item['quantity'] ?? 1);
-                                }
+    foreach ($pendingOrders as $order) {
+        try {
+            $status = \Midtrans\Transaction::status($order->id);
+            if ($status->transaction_status === 'expire' || $status->transaction_status === 'cancel') {
+                $order->update(['status' => 'Dibatalkan']);
+                
+                // Kembalikan stok obat
+                if (is_array($order->items)) {
+                    foreach ($order->items as $item) {
+                        $productId = $item['id'] ?? $item['product_id'] ?? null;
+                        if ($productId) {
+                            $product = \App\Models\Product::find($productId);
+                            if ($product) {
+                                $product->increment('stok', $item['quantity'] ?? 1);
                             }
                         }
                     }
-                    $needsRefresh = true;
-                } elseif ($status->transaction_status === 'settlement' || $status->transaction_status === 'capture') {
-                    $order->update(['status' => 'Lunas']);
-                    $needsRefresh = true;
                 }
-            } catch (\Exception $e) {
-                // Abaikan jika belum ada di Midtrans
+            } elseif ($status->transaction_status === 'settlement' || $status->transaction_status === 'capture') {
+                $order->update(['status' => 'Lunas']);
             }
+        } catch (\Exception $e) {
+            // Abaikan jika belum ada di Midtrans
+        }
 
-            // Fallback cek waktu lokal (20 menit kedaluwarsa)
-            if ($order->status === 'Pending') {
-                $createdAt = \Carbon\Carbon::parse($order->created_at);
-                if (now()->diffInMinutes($createdAt, true) >= 20 && $createdAt->isPast()) {
-                    $order->update(['status' => 'Dibatalkan']);
-                    
-                    if (is_array($order->items)) {
-                        foreach ($order->items as $item) {
-                            $productId = $item['id'] ?? $item['product_id'] ?? null;
-                            if ($productId) {
-                                $product = \App\Models\Product::find($productId);
-                                if ($product) {
-                                    $product->increment('stok', $item['quantity'] ?? 1);
-                                }
+        // Fallback cek waktu lokal (20 menit kedaluwarsa)
+        if ($order->status === 'Pending') {
+            $createdAt = \Carbon\Carbon::parse($order->created_at);
+            if (now()->diffInMinutes($createdAt, true) >= 20 && $createdAt->isPast()) {
+                $order->update(['status' => 'Dibatalkan']);
+                
+                if (is_array($order->items)) {
+                    foreach ($order->items as $item) {
+                        $productId = $item['id'] ?? $item['product_id'] ?? null;
+                        if ($productId) {
+                            $product = \App\Models\Product::find($productId);
+                            if ($product) {
+                                $product->increment('stok', $item['quantity'] ?? 1);
                             }
                         }
                     }
-                    $needsRefresh = true;
                 }
             }
         }
     }
 
-    if ($needsRefresh) {
-        $orders = \App\Models\VirtualTransaction::where('user_id', $user->id)->latest()->get();
-    }
+    $counts = [
+        'Pending' => \App\Models\VirtualTransaction::where('user_id', $user->id)->whereIn('status', ['Pending', 'Belum Bayar'])->count(),
+        'Lunas' => \App\Models\VirtualTransaction::where('user_id', $user->id)->where('status', 'Lunas')->count(),
+        'Dikirim' => \App\Models\VirtualTransaction::where('user_id', $user->id)->where('status', 'Dikirim')->count(),
+        'Selesai' => \App\Models\VirtualTransaction::where('user_id', $user->id)->where('status', 'Selesai')->count(),
+        'Dibatalkan' => \App\Models\VirtualTransaction::where('user_id', $user->id)->where('status', 'Dibatalkan')->count(),
+    ];
+
+    $currentStatus = request('status', 'Pending');
+    $statusArray = $currentStatus === 'Pending' ? ['Pending', 'Belum Bayar'] : [$currentStatus];
+
+    $orders = \App\Models\VirtualTransaction::where('user_id', $user->id)
+        ->whereIn('status', $statusArray)
+        ->latest()
+        ->paginate(5)
+        ->withQueryString();
 
     $addresses = \App\Models\Address::where('user_id', $user->id)->latest()->get();
-    $prescriptions = \App\Models\Prescription::withCount('orders')->where('user_id', $user->id)->latest()->get();
+
+    $prescriptionCounts = [
+        'Diproses' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'pending')->count(),
+        'Disetujui' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'disetujui')->whereDoesntHave('orders')->count(),
+        'Ditolak' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'ditolak')->count(),
+        'Telah dipesan' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'disetujui')->whereHas('orders')->count(),
+    ];
+
+    $currentPrescriptionStatus = request('prescription_status', 'Diproses');
+    
+    $prescriptionsQuery = \App\Models\Prescription::withCount('orders')->where('user_id', $user->id);
+    if ($currentPrescriptionStatus === 'Diproses') {
+        $prescriptionsQuery->where('status_validasi', 'pending');
+    } elseif ($currentPrescriptionStatus === 'Disetujui') {
+        $prescriptionsQuery->where('status_validasi', 'disetujui')->whereDoesntHave('orders');
+    } elseif ($currentPrescriptionStatus === 'Ditolak') {
+        $prescriptionsQuery->where('status_validasi', 'ditolak');
+    } elseif ($currentPrescriptionStatus === 'Telah dipesan') {
+        $prescriptionsQuery->where('status_validasi', 'disetujui')->whereHas('orders');
+    }
+
+    $prescriptions = $prescriptionsQuery->latest()->paginate(5, ['*'], 'prescription_page')->withQueryString();
+    
     return Inertia::render('Profile', [
         'user' => $user,
         'orders' => $orders,
+        'counts' => $counts,
+        'prescriptionCounts' => $prescriptionCounts,
         'addresses' => $addresses,
         'prescriptions' => $prescriptions
     ]);

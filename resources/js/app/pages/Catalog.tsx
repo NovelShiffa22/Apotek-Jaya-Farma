@@ -5,12 +5,12 @@ import ProductCard from '../components/ProductCard';
 import { SlidersHorizontal } from 'lucide-react';
 
 export default function Catalog({ 
-  products = [], 
+  products = { data: [], links: [] }, 
   masterCategories = [], 
   masterSymptoms = [], 
   filters = {} 
 }: { 
-  products?: any[];
+  products?: any;
   masterCategories?: any[];
   masterSymptoms?: any[];
   filters?: any;
@@ -91,7 +91,7 @@ export default function Catalog({
   };
 
   // We no longer filter manually here because backend already filtered
-  const filteredProducts = products;
+  const filteredProducts = Array.isArray(products) ? products : (products.data || []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
@@ -121,7 +121,7 @@ export default function Catalog({
           <div className="flex items-center gap-2 text-[#6e7a70]">
             <SlidersHorizontal size={16} />
             <span className="font-['Inter',sans-serif] text-[14px]">
-              {filteredProducts.length} Produk
+              {products.total !== undefined ? products.total : filteredProducts.length} Produk
             </span>
           </div>
         </div>
@@ -245,21 +245,51 @@ export default function Catalog({
           {/* Product Grid */}
           <div className="flex-1 w-full">
             {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full">
-                {filteredProducts.map((product: any) => (
-                  <ProductCard 
-                    key={product.id} 
-                    id={product.id.toString()}
-                    nama_obat={product.nama_obat}
-                    harga={Number(product.harga)}
-                    jenis_obat={product.jenis_obat}
-                    gambar={product.gambar}
-                    deskripsi={product.deskripsi || product.indikasi}
-                    kategori_nama={product.category?.nama_kategori}
-                    stok={product.stok}
-                    terjual={product.terjual}
-                  />
-                ))}
+              <div className="flex flex-col gap-8 w-full">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full">
+                  {filteredProducts.map((product: any) => (
+                    <ProductCard 
+                      key={product.id} 
+                      id={product.id.toString()}
+                      nama_obat={product.nama_obat}
+                      harga={Number(product.harga)}
+                      jenis_obat={product.jenis_obat}
+                      gambar={product.gambar}
+                      deskripsi={product.deskripsi || product.indikasi}
+                      kategori_nama={product.category?.nama_kategori}
+                      stok={product.stok}
+                      terjual={product.terjual}
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {!Array.isArray(products) && products.links && products.links.length > 3 && (
+                  <div className="flex items-center justify-center gap-2 mt-4 mb-8">
+                    {products.links.map((link: any, i: number) => {
+                      const url = link.url ? new URL(link.url, window.location.origin) : null;
+                      const finalUrl = url ? url.toString().replace(window.location.origin, '') : null;
+                      
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            if (finalUrl) {
+                              router.get(finalUrl, {}, { preserveState: true, preserveScroll: true });
+                            }
+                          }}
+                          disabled={!finalUrl}
+                          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${
+                            link.active
+                              ? 'bg-[#006a3f] text-white border-[#006a3f]'
+                              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                          } ${!finalUrl ? 'opacity-50 cursor-not-allowed text-gray-400' : ''}`}
+                          dangerouslySetInnerHTML={{ __html: link.label }}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-20">

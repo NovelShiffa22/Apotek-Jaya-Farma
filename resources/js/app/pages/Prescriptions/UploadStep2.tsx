@@ -1,5 +1,5 @@
 import { Link, router, useForm, usePage } from '@inertiajs/react';
-import { FilePlus, MapPin, X, Image as ImageIcon, ArrowLeft, Plus, CheckCircle2 } from 'lucide-react';
+import { FilePlus, MapPin, X, Image as ImageIcon, ArrowLeft, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import Header from '../../components/Header';
 import { regions } from '../../data/regions';
@@ -288,6 +288,10 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                             </div>
 
                             <div className="mt-8">
+                                <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm p-4 rounded-xl flex items-start gap-2.5 mb-6 text-left">
+                                    <AlertCircle size={20} className="text-amber-600 shrink-0 mt-0.5" />
+                                    <p className="leading-relaxed">⚠️ Jam Operasional Verifikasi Resep: 08.00-18.00 WIB. Di luar jam tersebut, resep akan diperiksa esok hari.</p>
+                                </div>
                                 <button 
                                     type="submit"
                                     disabled={processing || !data.prescription_file}

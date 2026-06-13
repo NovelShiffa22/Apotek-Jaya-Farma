@@ -55,9 +55,10 @@ class ProductController extends Controller
             ->when(!is_null($priceMax), function ($q) use ($priceMax) {
                 $q->where('harga', '<=', $priceMax);
             })
-            ->get();
+            ->paginate(12)
+            ->withQueryString();
         
-        foreach ($products as $product) {
+        foreach ($products->items() as $product) {
             $product->terjual = (int) $product->total_sold;
         }
 

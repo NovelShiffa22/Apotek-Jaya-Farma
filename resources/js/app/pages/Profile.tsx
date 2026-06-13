@@ -5,7 +5,7 @@ import { usePage, Link, useForm, router } from '@inertiajs/react';
 import ConfirmModal from '../components/ConfirmModal';
 import { regions } from '../data/regions';
 
-export default function Profile({ user, orders = [], addresses = [], prescriptions = [] }: any) {
+export default function Profile({ user, orders = { data: [], links: [] }, counts = {}, prescriptionCounts = {}, addresses = [], prescriptions = { data: [], links: [] } }: any) {
   const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders' | 'prescriptions'>('profile');
   const [orderTab, setOrderTab] = useState<string>('Pending');
   const [prescriptionTab, setPrescriptionTab] = useState<'Diproses' | 'Disetujui' | 'Ditolak' | 'Telah dipesan'>('Diproses');
@@ -466,32 +466,37 @@ export default function Profile({ user, orders = [], addresses = [], prescriptio
                     { id: 'Dikirim', label: 'Dikirim' },
                     { id: 'Selesai', label: 'Selesai' },
                     { id: 'Dibatalkan', label: 'Dibatalkan' }
-                  ].map(tab => (
+                  ].map(tab => {
+                    const count = counts[tab.id] || 0;
+                    return (
                     <button
                       key={tab.id}
-                      onClick={() => setOrderTab(tab.id)}
-                      className={`pb-3 px-2 font-['Inter',sans-serif] text-[15px] font-semibold transition-all border-b-2 ${
+                      onClick={() => {
+                        setOrderTab(tab.id);
+                        router.get('/profile', { tab: 'orders', status: tab.id }, { preserveState: true, preserveScroll: true });
+                      }}
+                      className={`pb-3 px-2 font-['Inter',sans-serif] text-[15px] font-semibold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 ${
                         orderTab === tab.id 
                           ? 'border-emerald-600 text-emerald-700 font-bold' 
                           : 'border-transparent text-gray-500 hover:text-gray-800'
                       }`}
                     >
-                      {tab.label}
+                      <span>{tab.label}</span>
+                      {count > 0 && (
+                        <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${
+                          orderTab === tab.id ? 'bg-[#006a3f] text-white' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {count}
+                        </span>
+                      )}
                     </button>
-                  ))}
+                  )})}
                 </div>
 
                 <div className="space-y-4">
                   {(() => {
-                    const filteredOrders = orders.filter((order: any) => {
-                      if (orderTab === 'Pending') {
-                        return order.status === 'Pending' || order.status === 'Belum Bayar';
-                      }
-                      if (orderTab === 'Dibatalkan') {
-                        return order.status === 'Dibatalkan';
-                      }
-                      return order.status === orderTab;
-                    });
+                    const ordersData = Array.isArray(orders) ? orders : (orders.data || []);
+                    const filteredOrders = ordersData;
 
                     if (filteredOrders.length === 0) {
                       return (
@@ -501,13 +506,15 @@ export default function Profile({ user, orders = [], addresses = [], prescriptio
                       );
                     }
 
-                    return filteredOrders.map((order: any) => {
-                      const isPending = order.status === 'Pending' || order.status === 'Belum Bayar';
                     return (
-                      <div
-                        key={order.id}
-                        className="border-b border-gray-300 pb-6 mb-6 last:border-0 last:pb-0 last:mb-0 w-full text-left"
-                      >
+                      <>
+                        {filteredOrders.map((order: any) => {
+                          const isPending = order.status === 'Pending' || order.status === 'Belum Bayar';
+                          return (
+                            <div
+                              key={order.id}
+                              className="border-b border-gray-300 pb-6 mb-6 last:border-0 last:pb-0 last:mb-0 w-full text-left"
+                            >
                         <div className="flex items-start justify-between mb-4">
                           <div>
                             <p className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#171d19] mb-1 font-semibold">
@@ -520,6 +527,11 @@ export default function Profile({ user, orders = [], addresses = [], prescriptio
                                 year: 'numeric'
                               })} • {order.payment_method || 'Virtual Account'}
                             </p>
+                            {order.status === 'Lunas' && (new Date().getHours() < 8 || new Date().getHours() >= 18) && (
+                              <p className="text-amber-600 text-xs mt-1 italic font-medium">
+                                ⚠️ Pesanan Anda akan diverifikasi & dikemas saat jam operasional besok pagi (08.00 WIB).
+                              </p>
+                            )}
                           </div>
                           {order.status === 'Dibatalkan' ? (
                             <div className="bg-red-50 border border-red-200 px-4 py-2 rounded-full">
@@ -653,7 +665,41 @@ export default function Profile({ user, orders = [], addresses = [], prescriptio
                         </div>
                       </div>
                     );
-                  })})()}
+                  })}
+                  
+                  {!Array.isArray(orders) && orders.links && orders.links.length > 3 && (
+                    <div className="flex items-center justify-center gap-2 mt-8 mb-4">
+                      {orders.links.map((link: any, i: number) => {
+                        const url = link.url ? new URL(link.url, window.location.origin) : null;
+                        if (url) {
+                          url.searchParams.set('tab', 'orders');
+                          url.searchParams.set('status', orderTab);
+                        }
+                        const finalUrl = url ? url.toString().replace(window.location.origin, '') : null;
+                        
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => {
+                              if (finalUrl) {
+                                router.get(finalUrl, {}, { preserveState: true, preserveScroll: true });
+                              }
+                            }}
+                            disabled={!finalUrl}
+                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${
+                              link.active
+                                ? 'bg-[#006a3f] text-white border-[#006a3f]'
+                                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                            } ${!finalUrl ? 'opacity-50 cursor-not-allowed text-gray-400' : ''}`}
+                            dangerouslySetInnerHTML={{ __html: link.label }}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                  </>
+                  );
+                })()}
                 </div>
               </div>
             )}
@@ -671,18 +717,15 @@ export default function Profile({ user, orders = [], addresses = [], prescriptio
                     { id: 'Ditolak' as const, label: 'Ditolak' },
                     { id: 'Telah dipesan' as const, label: 'Telah Dipesan' }
                   ].map(tab => {
-                    const count = prescriptions.filter((p: any) => {
-                      if (tab.id === 'Diproses') return p.status_validasi === 'pending';
-                      if (tab.id === 'Disetujui') return p.status_validasi === 'disetujui' && p.orders_count === 0;
-                      if (tab.id === 'Ditolak') return p.status_validasi === 'ditolak';
-                      if (tab.id === 'Telah dipesan') return p.status_validasi === 'disetujui' && p.orders_count > 0;
-                      return false;
-                    }).length;
+                    const count = prescriptionCounts[tab.id] || 0;
                     
                     return (
                       <button
                         key={tab.id}
-                        onClick={() => setPrescriptionTab(tab.id)}
+                        onClick={() => {
+                          setPrescriptionTab(tab.id);
+                          router.get('/profile', { tab: 'prescriptions', prescription_status: tab.id }, { preserveState: true, preserveScroll: true });
+                        }}
                         className={`pb-3 px-2 font-['Inter',sans-serif] text-[15px] font-semibold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5 ${
                           prescriptionTab === tab.id 
                             ? 'border-emerald-600 text-emerald-700 font-bold' 
@@ -704,13 +747,8 @@ export default function Profile({ user, orders = [], addresses = [], prescriptio
 
                 <div className="space-y-4">
                   {(() => {
-                    const filteredPrescriptions = prescriptions.filter((p: any) => {
-                      if (prescriptionTab === 'Diproses') return p.status_validasi === 'pending';
-                      if (prescriptionTab === 'Disetujui') return p.status_validasi === 'disetujui' && p.orders_count === 0;
-                      if (prescriptionTab === 'Ditolak') return p.status_validasi === 'ditolak';
-                      if (prescriptionTab === 'Telah dipesan') return p.status_validasi === 'disetujui' && p.orders_count > 0;
-                      return false;
-                    });
+                    const prescriptionsData = Array.isArray(prescriptions) ? prescriptions : (prescriptions.data || []);
+                    const filteredPrescriptions = prescriptionsData;
 
                     if (filteredPrescriptions.length === 0) {
                       return (
@@ -728,62 +766,111 @@ export default function Profile({ user, orders = [], addresses = [], prescriptio
                       }
                     };
 
-                    return filteredPrescriptions.map((p: any) => {
-                      return (
-                        <div
-                          key={p.id}
-                          className="border border-gray-200 rounded-2xl p-5 hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full text-left"
-                        >
-                          <div className="flex items-center gap-4 flex-1 min-w-0">
-                            {/* Mini Image Preview */}
-                            <div className="w-16 h-16 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden shrink-0 flex items-center justify-center">
-                              <img 
-                                src={`/${p.file_foto}`} 
-                                alt={p.kode_resep} 
-                                className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
-                                onClick={() => window.open(`/${p.file_foto}`, '_blank')}
-                              />
-                            </div>
-                            
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-wrap items-center gap-2 mb-1">
-                                <Link 
-                                  href={route('prescriptions.detail', { id: p.id })} 
-                                  className="font-['Roboto_Condensed',sans-serif] text-[16px] font-bold text-[#171d19] hover:text-[#006a3f] transition-colors"
-                                >
-                                  ID: {p.kode_resep}
-                                </Link>
+                    return (
+                      <>
+                        {filteredPrescriptions.map((p: any) => (
+                          <div
+                            key={p.id}
+                            className="flex flex-col sm:flex-row sm:items-start justify-between p-4 sm:p-6 border border-gray-200 rounded-xl hover:border-emerald-200 hover:shadow-sm transition-all bg-white gap-4 w-full"
+                          >
+                            <div className="flex-1 min-w-0 flex items-start gap-4 w-full">
+                              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-xl border border-gray-200 p-2 shrink-0 flex items-center justify-center overflow-hidden">
+                                {p.file_foto ? (
+                                  <img 
+                                    src={`/storage/${p.file_foto.replace('storage/', '')}`} 
+                                    alt="Resep" 
+                                    className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform" 
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.src = p.file_foto; // Fallback to raw string
+                                    }}
+                                  />
+                                ) : (
+                                  <FileText className="text-gray-400 w-8 h-8 sm:w-10 sm:h-10" />
+                                )}
                               </div>
-                              <p className="text-[13px] text-gray-500 font-['Inter',sans-serif]">
-                                Tanggal: {new Date(p.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-                              </p>
-                              {p.catatan_apoteker && (
-                                <p className="text-[12px] text-gray-600 font-['Inter',sans-serif] mt-2 bg-gray-50 p-2 rounded-lg border border-gray-100 line-clamp-1">
-                                  Catatan: {p.catatan_apoteker}
-                                </p>
+                              <div className="flex flex-col gap-1 w-full text-left">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="font-['Roboto_Condensed',sans-serif] text-[18px] sm:text-[20px] font-bold text-[#171d19]">
+                                    Resep Dokter
+                                  </h3>
+                                  <span className={`px-2 py-0.5 rounded-full text-[12px] font-semibold border font-['Inter',sans-serif] whitespace-nowrap ${
+                                    p.status_validasi === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                                    p.status_validasi === 'disetujui' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                                    'bg-red-50 text-red-600 border-red-200'
+                                  }`}>
+                                    {p.status_validasi.toUpperCase()}
+                                  </span>
+                                </div>
+                                <span className="font-['Inter',sans-serif] text-[13px] text-gray-500 block mb-1">
+                                  {new Date(p.created_at).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                </span>
+                                <div className="space-y-1">
+                                  {p.doctor_name && (
+                                    <p className="font-['Inter',sans-serif] text-[13px] text-gray-600">
+                                      Dokter: <span className="font-medium">{p.doctor_name}</span>
+                                    </p>
+                                  )}
+                                  {p.catatan_apoteker && (
+                                    <p className="font-['Inter',sans-serif] text-[13px] text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-100 mt-2">
+                                      <span className="font-semibold text-amber-800">Catatan Apoteker:</span> {p.catatan_apoteker}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex sm:flex-col gap-2 shrink-0 w-full sm:w-auto sm:items-end justify-end">
+                              <Link 
+                                href={route('prescriptions.detail', { id: p.id })} 
+                                className="text-[13px] font-bold text-center bg-gray-50 border border-gray-300 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-100 transition-colors font-['Inter',sans-serif]"
+                              >
+                                Detail
+                              </Link>
+                              {p.status_validasi === 'pending' && (
+                                <button 
+                                  onClick={() => cancelPrescription(p.id)}
+                                  className="text-[13px] font-bold text-center bg-red-50 border border-red-300 text-red-600 px-4 py-2 rounded-xl hover:bg-red-100 transition-colors font-['Inter',sans-serif]"
+                                >
+                                  Batalkan Resep
+                                </button>
                               )}
                             </div>
                           </div>
-
-                          <div className="flex sm:flex-col gap-2 shrink-0 w-full sm:w-auto sm:items-end justify-end">
-                            <Link 
-                              href={route('prescriptions.detail', { id: p.id })} 
-                              className="text-[13px] font-bold text-center bg-gray-50 border border-gray-300 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-100 transition-colors font-['Inter',sans-serif]"
-                            >
-                              Detail
-                            </Link>
-                            {p.status_validasi === 'pending' && (
-                              <button 
-                                onClick={() => cancelPrescription(p.id)}
-                                className="text-[13px] font-bold text-center bg-red-50 border border-red-300 text-red-600 px-4 py-2 rounded-xl hover:bg-red-100 transition-colors font-['Inter',sans-serif]"
-                              >
-                                Batalkan Resep
-                              </button>
-                            )}
+                        ))}
+                        
+                        {!Array.isArray(prescriptions) && prescriptions.links && prescriptions.links.length > 3 && (
+                          <div className="flex items-center justify-center gap-2 mt-8 mb-4">
+                            {prescriptions.links.map((link: any, i: number) => {
+                              const url = link.url ? new URL(link.url, window.location.origin) : null;
+                              if (url) {
+                                url.searchParams.set('tab', 'prescriptions');
+                                url.searchParams.set('prescription_status', prescriptionTab);
+                              }
+                              const finalUrl = url ? url.toString().replace(window.location.origin, '') : null;
+                              
+                              return (
+                                <button
+                                  key={i}
+                                  onClick={() => {
+                                    if (finalUrl) {
+                                      router.get(finalUrl, {}, { preserveState: true, preserveScroll: true });
+                                    }
+                                  }}
+                                  disabled={!finalUrl}
+                                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${
+                                    link.active
+                                      ? 'bg-[#006a3f] text-white border-[#006a3f]'
+                                      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                                  } ${!finalUrl ? 'opacity-50 cursor-not-allowed text-gray-400' : ''}`}
+                                  dangerouslySetInnerHTML={{ __html: link.label }}
+                                />
+                              );
+                            })}
                           </div>
-                        </div>
-                      );
-                    });
+                        )}
+                      </>
+                    );
                   })()}
                 </div>
               </div>
