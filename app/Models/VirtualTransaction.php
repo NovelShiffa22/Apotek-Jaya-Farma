@@ -11,6 +11,8 @@ class VirtualTransaction extends Model
 
     protected $fillable = [
         'user_id',
+        'prescription_id',
+        'pharmacist_id',
         'va_number',
         'payment_method',
         'total_amount',
@@ -22,4 +24,19 @@ class VirtualTransaction extends Model
     protected $casts = [
         'items' => 'array',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function prescription()
+    {
+        return $this->belongsTo(Prescription::class);
+    }
+
+    public function pharmacist()
+    {
+        return $this->belongsTo(User::class, 'pharmacist_id');
+    }
 }
