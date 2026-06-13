@@ -79,44 +79,83 @@ export default function ProductDetail({ product }: { product: any }) {
 
           {/* Product Info */}
           <div>
-            <div className="mb-10">
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 ${
-                product.jenis_obat === 'bebas' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                product.jenis_obat === 'keras' ? 'bg-red-50 text-red-700 border border-red-200' :
-                'bg-amber-50 text-amber-700 border border-amber-200'
-              }`}>
-                <div className={`w-2 h-2 rounded-full ${
-                  product.jenis_obat === 'bebas' ? 'bg-emerald-500' :
-                  product.jenis_obat === 'keras' ? 'bg-red-500' :
-                  'bg-amber-500'
-                }`} />
-                <p className="font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase">
-                  {product.jenis_obat === 'bebas' ? 'Obat Bebas' : product.jenis_obat === 'keras' ? 'Obat Keras' : 'Obat Terbatas'}
-                </p>
+            <div className="mb-8">
+              <div className="flex flex-wrap items-center gap-3 mb-6">
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
+                  product.jenis_obat === 'bebas' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                  product.jenis_obat === 'keras' ? 'bg-red-50 text-red-700 border border-red-200' :
+                  'bg-amber-50 text-amber-700 border border-amber-200'
+                }`}>
+                  <div className={`w-2 h-2 rounded-full ${
+                    product.jenis_obat === 'bebas' ? 'bg-emerald-500' :
+                    product.jenis_obat === 'keras' ? 'bg-red-500' :
+                    'bg-amber-500'
+                  }`} />
+                  <p className="font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase">
+                    {product.jenis_obat === 'bebas' ? 'Obat Bebas' : product.jenis_obat === 'keras' ? 'Obat Keras' : 'Obat Terbatas'}
+                  </p>
+                </div>
+                {product.category?.nama_kategori && (
+                  <div className="inline-flex items-center px-4 py-2 rounded-full bg-slate-50 text-slate-600 border border-slate-200">
+                    <p className="font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase">
+                      {product.category.nama_kategori}
+                    </p>
+                  </div>
+                )}
               </div>
 
-              <h1 className="font-['Roboto_Condensed',sans-serif] font-light text-[32px] md:text-[56px] tracking-[-1.4px] text-[#171d19] leading-[1.1] mb-6">
+              <h1 className="font-['Roboto_Condensed',sans-serif] font-light text-[32px] md:text-[48px] tracking-[-1.4px] text-[#171d19] leading-[1.1] mb-6">
                 {product.nama_obat}
               </h1>
 
-              <p className="font-['Inter',sans-serif] text-[16px] text-[#3e4a41] mb-8 leading-relaxed max-w-[540px]">
-                {product.deskripsi}
-              </p>
-
               <div className="flex items-baseline gap-3 mb-2">
-                <p className="font-['Roboto_Condensed',sans-serif] text-[48px] text-[#006a3f] font-semibold tracking-[-1px]">
+                <p className="font-['Roboto_Condensed',sans-serif] text-[40px] text-[#006a3f] font-semibold tracking-[-1px]">
                   Rp {Number(product.harga).toLocaleString('id-ID')}
                 </p>
-                <p className="font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">per boks</p>
+                <p className="font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">/ {product.unit || 'kemasan'}</p>
               </div>
               <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70] mb-8">
                 Sudah termasuk pajak
               </p>
-            </div>
 
-
-
-            {/* Action Buttons */}
+              {/* Detail Keterangan Obat */}
+              <div className="bg-white rounded-2xl border border-[#f1f5f9] p-6 shadow-sm mb-8 space-y-6">
+                {product.deskripsi && (
+                  <div>
+                    <h3 className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19] uppercase tracking-wider mb-2">Deskripsi</h3>
+                    <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] leading-relaxed">
+                      {product.deskripsi}
+                    </p>
+                  </div>
+                )}
+                {product.indikasi && (
+                  <div>
+                    <h3 className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19] uppercase tracking-wider mb-2">Indikasi Umum</h3>
+                    <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] leading-relaxed">
+                      {product.indikasi}
+                    </p>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {product.aturan_pakai && (
+                    <div>
+                      <h3 className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19] uppercase tracking-wider mb-2">Aturan Pakai</h3>
+                      <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] leading-relaxed">
+                        {product.aturan_pakai}
+                      </p>
+                    </div>
+                  )}
+                  {product.efek_samping && (
+                    <div>
+                      <h3 className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19] uppercase tracking-wider mb-2">Efek Samping</h3>
+                      <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] leading-relaxed">
+                        {product.efek_samping}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>            {/* Action Buttons */}
             <div className="space-y-4">
               {isRestricted ? (
                 <>
