@@ -245,6 +245,17 @@ class CheckoutController extends Controller
             'items' => $purchasedItems,
         ]);
 
+        // Kurangi stok obat
+        foreach ($purchasedItems as $item) {
+            $productId = $item['id'] ?? $item['product_id'] ?? null;
+            if ($productId) {
+                $product = \App\Models\Product::find($productId);
+                if ($product) {
+                    $product->decrement('stok', $item['quantity'] ?? 1);
+                }
+            }
+        }
+
         // Konfigurasi Midtrans
         \Midtrans\Config::$serverKey = config('midtrans.server_key');
         \Midtrans\Config::$isProduction = config('midtrans.is_production');
