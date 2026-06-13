@@ -97,14 +97,14 @@ export default function Header() {
             {navLinks.map((link) => (
               <Link
                 key={link.name}
-                href={link.href}
+                href={link.name === 'Rekomendasi AI' && !user ? route('login') : link.href}
                 className="font-['Inter',sans-serif] text-[14px] font-semibold text-[#3e4a41] hover:text-[#006a3f] transition-colors"
               >
                 {link.name}
               </Link>
             ))}
             <Link
-              href="/prescriptions/upload/step-1"
+              href={!user ? route('login') : "/prescriptions/upload/step-1"}
               className="border border-emerald-600 text-emerald-600 text-sm font-medium px-4 py-1.5 rounded-xl hover:bg-emerald-50 transition duration-200"
             >
               Unggah Resep
@@ -180,7 +180,7 @@ export default function Header() {
             {navLinks.map((link) => (
               <Link
                 key={link.name}
-                href={link.href}
+                href={link.name === 'Rekomendasi AI' && !user ? route('login') : link.href}
                 className="font-['Inter',sans-serif] text-[15px] font-medium text-[#171d19] py-3 px-4 hover:bg-[#f9fafb] rounded-xl transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -188,7 +188,7 @@ export default function Header() {
               </Link>
             ))}
             <Link
-              href="/prescriptions/upload/step-1"
+              href={!user ? route('login') : "/prescriptions/upload/step-1"}
               className="font-['Inter',sans-serif] text-[15px] font-bold text-emerald-600 py-3 px-4 hover:bg-emerald-50 rounded-xl transition-colors border border-emerald-100 mt-1"
               onClick={() => setIsMenuOpen(false)}
             >

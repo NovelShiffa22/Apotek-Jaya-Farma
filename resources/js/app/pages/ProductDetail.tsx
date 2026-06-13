@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { Upload, ShoppingCart, ArrowLeft, Shield, Clock, Heart, ShoppingBag, Plus, Minus } from 'lucide-react';
 import Header from '../components/Header';
 
 export default function ProductDetail({ product }: { product: any }) {
+  const { auth } = usePage().props as any;
+  const user = auth?.user;
   const navigate = (path: any) => typeof path === 'number' ? window.history.back() : router.visit(path);
   const isRestricted = product.is_prescription_required;
   const [qty, setQty] = useState(1);
@@ -15,6 +17,10 @@ export default function ProductDetail({ product }: { product: any }) {
   };
 
   const handleAddToCart = () => {
+    if (!user) {
+      router.visit(route('login'));
+      return;
+    }
     router.post('/cart/add', {
       product_id: product.id,
       quantity: qty
@@ -27,6 +33,10 @@ export default function ProductDetail({ product }: { product: any }) {
   };
 
   const handleBuyNow = () => {
+    if (!user) {
+      router.visit(route('login'));
+      return;
+    }
     router.visit(`/checkout?buy_now_product_id=${product.id}&buy_now_quantity=${qty}`);
   };
 
@@ -166,7 +176,13 @@ export default function ProductDetail({ product }: { product: any }) {
                     </span>
                   </button>
                   <button
-                    onClick={() => router.visit(`/prescriptions/upload/step-1?product_id=${product.id}`)}
+                    onClick={() => {
+                        if (!user) {
+                            router.visit(route('login'));
+                            return;
+                        }
+                        router.visit(`/prescriptions/upload/step-1?product_id=${product.id}`);
+                    }}
                     className="w-full bg-[#8B5cf6] hover:bg-[#7c3aed] px-8 py-5 rounded-xl hover:shadow-[0_12px_32px_rgba(139,92,246,0.3)] transition-all duration-300 hover:-translate-y-0.5 group"
                   >
                     <span className="font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] text-white flex items-center justify-center gap-3 font-medium">

@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { ShoppingCart, UploadCloud } from 'lucide-react';
 
 interface ProductCardProps {
@@ -20,6 +20,8 @@ interface ProductCardProps {
 }
 
 export default function ProductCard(props: ProductCardProps) {
+  const { auth } = usePage().props as any;
+  const user = auth?.user;
   const { id } = props;
   const productName = props.nama_obat || props.name || 'Produk';
   const productPrice = props.harga ?? props.price ?? 0;
@@ -110,9 +112,9 @@ export default function ProductCard(props: ProductCardProps) {
           </div>
 
           <Link 
-            href={isPrescriptionRequired ? '/prescriptions/upload/step-1' : `/products/${id}`}
+            href={isPrescriptionRequired ? (!user ? route('login') : '/prescriptions/upload/step-1') : `/products/${id}`}
             className={`w-10 h-10 shrink-0 ${isPrescriptionRequired ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#006a3f] hover:bg-[#005632]'} text-white rounded-xl opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 flex items-center justify-center`}
-            title={isPrescriptionRequired ? 'Upload Resep' : 'Tambah ke Keranjang'}
+            title={isPrescriptionRequired ? 'Upload Resep' : 'Lihat Produk'}
           >
             {isPrescriptionRequired ? <UploadCloud className="w-5 h-5 text-white" /> : <ShoppingCart className="w-5 h-5 text-white" />}
           </Link>

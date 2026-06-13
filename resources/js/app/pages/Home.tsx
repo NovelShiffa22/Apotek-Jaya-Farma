@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
 import { Pill, Thermometer, Heart, Stethoscope, Baby, Activity, ShieldCheck, Clock, HeartHandshake, ShoppingCart, Lightbulb } from 'lucide-react';
@@ -49,6 +49,9 @@ const categories = [
 ];
 
 export default function Home({ featuredProducts = [] }: { featuredProducts?: any[] }) {
+  const { auth } = usePage().props as any;
+  const user = auth?.user;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
       <Header cartCount={0} />
@@ -89,7 +92,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
                   Belanja Sekarang
                 </Link>
                 <Link
-                  href="/recommendation"
+                  href={!user ? route('login') : "/recommendation"}
                   className="bg-transparent border-2 border-white text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-white/10 transition flex items-center w-full sm:w-auto justify-center"
                 >
                   <Lightbulb className="w-5 h-5 mr-2 inline-block text-yellow-300" />
@@ -233,7 +236,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
                 Dapatkan rekomendasi obat yang tepat berdasarkan gejala yang Anda alami dalam 2 langkah mudah
               </p>
               <Link
-                href="/recommendation"
+                href={!user ? route('login') : "/recommendation"}
                 className="inline-block bg-[#006a3f] px-10 py-4 rounded-lg font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] text-white hover:shadow-[0_12px_32px_rgba(0,106,63,0.25)] transition-all duration-300 hover:-translate-y-0.5 font-medium"
               >
                 Mulai Konsultasi
