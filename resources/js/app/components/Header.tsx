@@ -9,11 +9,32 @@ export default function Header() {
   const { auth } = usePage().props as any;
   const user = auth?.user;
   const [cartCount, setCartCount] = useState(initialCartCount);
+  const [hasUnreadNotifs, setHasUnreadNotifs] = useState(true);
 
   useEffect(() => {
     const handleCartUpdate = (e: any) => setCartCount(e.detail);
     window.addEventListener('cartUpdated', handleCartUpdate);
-    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+    
+    const checkUnreadNotifs = () => {
+      const savedReadStatus = typeof window !== 'undefined' ? localStorage.getItem('readNotifications') : null;
+      if (savedReadStatus) {
+        const readIds = JSON.parse(savedReadStatus);
+        // initialNotifications in Notifications.tsx has id 1 as unread initially.
+        if (readIds.includes(1)) {
+          setHasUnreadNotifs(false);
+          return;
+        }
+      }
+      setHasUnreadNotifs(true);
+    };
+
+    checkUnreadNotifs();
+    window.addEventListener('notificationsUpdated', checkUnreadNotifs);
+
+    return () => {
+      window.removeEventListener('cartUpdated', handleCartUpdate);
+      window.removeEventListener('notificationsUpdated', checkUnreadNotifs);
+    };
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -83,7 +104,7 @@ export default function Header() {
               </Link>
             ))}
             <Link
-              href="/resep"
+              href="/prescriptions/upload/step-1"
               className="border border-emerald-600 text-emerald-600 text-sm font-medium px-4 py-1.5 rounded-xl hover:bg-emerald-50 transition duration-200"
             >
               Unggah Resep
@@ -103,7 +124,9 @@ export default function Header() {
 
               <Link href={route('notifications.index')} className="p-2 hover:bg-[#f9fafb] rounded-xl transition-colors group relative" title="Notifikasi">
                 <Bell size={22} className="text-[#171d19] group-hover:text-[#006a3f] transition-colors" />
-                <span className="absolute top-2.5 right-2.5 bg-red-500 w-2 h-2 rounded-full border border-white" />
+                {hasUnreadNotifs && (
+                  <span className="absolute top-2.5 right-2.5 bg-red-500 w-2 h-2 rounded-full border border-white" />
+                )}
               </Link>
 
               <Link href="/profile" className="p-2 hover:bg-[#f9fafb] rounded-xl transition-colors group hidden sm:block" title="Profil">
@@ -165,7 +188,7 @@ export default function Header() {
               </Link>
             ))}
             <Link
-              href="/resep"
+              href="/prescriptions/upload/step-1"
               className="font-['Inter',sans-serif] text-[15px] font-bold text-emerald-600 py-3 px-4 hover:bg-emerald-50 rounded-xl transition-colors border border-emerald-100 mt-1"
               onClick={() => setIsMenuOpen(false)}
             >

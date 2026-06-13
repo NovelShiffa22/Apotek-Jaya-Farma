@@ -1,41 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import { FileText, CheckCircle2, Truck, Bell } from 'lucide-react';
 import Header from '../components/Header';
 
+const initialNotifications = [
+    {
+        id: 1,
+        type: 'verified',
+        title: 'Resep Obat Sudah Diverifikasi',
+        desc: 'Resep dokter nomor #AP-9921 telah diverifikasi oleh apoteker kami. Silakan lanjutkan ke pembayaran atau pengambilan.',
+        time: '2 jam yang lalu',
+        icon: <FileText size={24} className="text-[#006a3f]" />,
+        unread: true,
+        bgColor: 'bg-emerald-50'
+    },
+    {
+        id: 2,
+        type: 'shipping',
+        title: 'Pesanan Sedang Dikirim',
+        desc: 'Paket untuk pesanan #JK-1020 sedang diproses oleh kurir kami. Estimasi tiba pukul 15:30 hari ini.',
+        time: '5 jam yang lalu',
+        icon: <Truck size={24} className="text-gray-500" />,
+        unread: false,
+        bgColor: 'bg-gray-50'
+    },
+    {
+        id: 3,
+        type: 'delivered',
+        title: 'Pesanan Telah Diterima',
+        desc: 'Terima kasih! Pesanan #JK-1019 telah sampai di tujuan. Bagaimana kualitas layanan kami?',
+        time: '1 hari yang lalu',
+        icon: <CheckCircle2 size={24} className="text-gray-500" />,
+        unread: false,
+        bgColor: 'bg-gray-50'
+    }
+];
+
 export default function Notifications() {
-    const [notifications, setNotifications] = useState([
-        {
-            id: 1,
-            type: 'verified',
-            title: 'Resep Obat Sudah Diverifikasi',
-            desc: 'Resep dokter nomor #AP-9921 telah diverifikasi oleh apoteker kami. Silakan lanjutkan ke pembayaran atau pengambilan.',
-            time: '2 jam yang lalu',
-            icon: <FileText size={24} className="text-[#006a3f]" />,
-            unread: true,
-            bgColor: 'bg-emerald-50'
-        },
-        {
-            id: 2,
-            type: 'shipping',
-            title: 'Pesanan Sedang Dikirim',
-            desc: 'Paket untuk pesanan #JK-1020 sedang diproses oleh kurir kami. Estimasi tiba pukul 15:30 hari ini.',
-            time: '5 jam yang lalu',
-            icon: <Truck size={24} className="text-gray-500" />,
-            unread: false,
-            bgColor: 'bg-gray-50'
-        },
-        {
-            id: 3,
-            type: 'delivered',
-            title: 'Pesanan Telah Diterima',
-            desc: 'Terima kasih! Pesanan #JK-1019 telah sampai di tujuan. Bagaimana kualitas layanan kami?',
-            time: '1 hari yang lalu',
-            icon: <CheckCircle2 size={24} className="text-gray-500" />,
-            unread: false,
-            bgColor: 'bg-gray-50'
+    const [notifications, setNotifications] = useState(() => {
+        const savedReadStatus = typeof window !== 'undefined' ? localStorage.getItem('readNotifications') : null;
+        if (savedReadStatus) {
+            const readIds = JSON.parse(savedReadStatus);
+            return initialNotifications.map(notif => 
+                readIds.includes(notif.id) ? { ...notif, unread: false } : notif
+            );
         }
-    ]);
+        return initialNotifications;
+    });
+
+    useEffect(() => {
+        const readIds = notifications.filter(n => !n.unread).map(n => n.id);
+        localStorage.setItem('readNotifications', JSON.stringify(readIds));
+        window.dispatchEvent(new Event('notificationsUpdated'));
+    }, [notifications]);
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
