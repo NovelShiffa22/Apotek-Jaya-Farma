@@ -188,18 +188,20 @@ class CheckoutController extends Controller
             }
         } elseif ($isBuyNow) {
             $buyNowProductIds = $request->input('item_ids', []);
+            $quantities = $request->input('quantities', []);
             if (!empty($buyNowProductIds)) {
                 $product = \App\Models\Product::with('category')->find($buyNowProductIds[0]);
                 if ($product) {
+                    $qty = isset($quantities[0]) ? (int)$quantities[0] : 1;
                     $purchasedItems[] = [
                         'id' => $product->id,
                         'name' => $product->nama_obat,
                         'category' => $product->category ? $product->category->nama_kategori : 'Satuan',
                         'price' => $product->harga,
-                        'quantity' => 1,
+                        'quantity' => $qty,
                         'image' => $product->gambar,
                     ];
-                    $subtotal += $product->harga;
+                    $subtotal += $product->harga * $qty;
                 }
             }
         } else {
@@ -254,11 +256,40 @@ class CheckoutController extends Controller
             CURLOPT_HTTPHEADER => []
         ];
 
+        $itemDetails = [];
+        foreach ($purchasedItems as $item) {
+            $itemDetails[] = [
+                'id' => substr((string)$item['id'], 0, 50),
+                'price' => (int)$item['price'],
+                'quantity' => (int)$item['quantity'],
+                'name' => substr($item['name'], 0, 50),
+            ];
+        }
+
+        if ($shippingCost > 0) {
+            $itemDetails[] = [
+                'id' => 'SHIPPING',
+                'price' => (int)$shippingCost,
+                'quantity' => 1,
+                'name' => 'Biaya Pengiriman',
+            ];
+        }
+
+        if ($discount > 0) {
+            $itemDetails[] = [
+                'id' => 'DISCOUNT',
+                'price' => -(int)$discount,
+                'quantity' => 1,
+                'name' => 'Potongan Harga',
+            ];
+        }
+
         $params = [
             'transaction_details' => [
                 'order_id' => $transaction->id,
-                'gross_amount' => $totalAmount,
+                'gross_amount' => (int)$totalAmount,
             ],
+            'item_details' => $itemDetails,
             'customer_details' => [
                 'first_name' => auth()->check() ? auth()->user()->name : 'Guest',
                 'email' => auth()->check() ? auth()->user()->email : 'guest@example.com',

@@ -151,6 +151,7 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
     setIsConfirmModalOpen(false);
     router.post('/checkout/proses', {
       item_ids: cartItems.map(item => item.id),
+      quantities: cartItems.map(item => item.quantity),
       shipping_method: shippingMethod,
       payment_method: 'Midtrans Payment Gateway',
       is_buy_now: isBuyNow,
