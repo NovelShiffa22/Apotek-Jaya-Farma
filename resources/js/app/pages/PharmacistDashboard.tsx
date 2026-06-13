@@ -21,12 +21,16 @@ import {
   Camera,
   Menu,
   Package,
-  Eye
+  Eye,
+  List,
+  Loader,
+  Truck
 } from 'lucide-react';
 import { Link, router, usePage, useForm } from '@inertiajs/react';
 import ConfirmModal from '../components/ConfirmModal';
+import Pagination from '../components/Pagination';
 
-export default function PharmacistDashboard({ prescriptions = [], products = [], orders = [], statusChanges = [] }: any) {
+export default function PharmacistDashboard({ prescriptions = [], products = [], orders = [], statusChanges = [], analytics = {} }: any) {
   const { auth } = usePage().props as any;
   const user = auth?.user;
 
@@ -79,61 +83,27 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
       });
   };
 
-  const pendingPrescriptions = prescriptions.filter((p: any) => p.status_validasi === 'pending');
-  const approvedPrescriptions = prescriptions.filter((p: any) => p.status_validasi === 'disetujui');
-  const rejectedPrescriptions = prescriptions.filter((p: any) => p.status_validasi === 'ditolak');
-  const paymentQueue = orders;
+  // Server-side analytics mapping
+  const totalResepHariIni = analytics?.total_resep_hari_ini || 0;
+  const pesananHariIni = analytics?.pesanan_hari_ini || 0;
+  
+  const pendingCount = analytics?.pending_count || 0;
+  const approvedCount = analytics?.approved_count || 0;
+  const rejectedCount = analytics?.rejected_count || 0;
 
-  const toLocalDateString = (d: Date) => {
-    const pad = (n: number) => n < 10 ? '0' + n : n;
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  };
-
-  const todayStr = toLocalDateString(new Date());
-  const totalResepHariIni = prescriptions.filter((p: any) => (p.created_at || '').startsWith(todayStr)).length;
-  const pesananHariIni = orders.filter((o: any) => (o.created_at || '').startsWith(todayStr)).length;
-
-  const recentActivities = [...prescriptions]
-    .filter((p: any) => p.status_validasi === 'disetujui' || p.status_validasi === 'ditolak')
-    .sort((a: any, b: any) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-    .slice(0, 5)
-    .map((p: any) => ({
+  const recentActivities = (analytics?.recent_activities || []).map((p: any) => ({
       action: p.status_validasi === 'disetujui' ? 'Approved' : 'Rejected',
       info: `Resep #${p.kode_resep || p.id} ${p.status_validasi === 'disetujui' ? 'telah diverifikasi' : 'ditolak'}`,
       detail: `${new Date(p.updated_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} ${p.catatan_apoteker ? `· ${p.catatan_apoteker}` : ''}`,
       isSuccess: p.status_validasi === 'disetujui',
       isDanger: p.status_validasi === 'ditolak',
       raw: p
-    }));
+  }));
 
   const [verifikasiFilterDays, setVerifikasiFilterDays] = useState(7);
-
-  const chartData = (() => {
-    const data = [];
-    const now = new Date();
-    for (let i = verifikasiFilterDays - 1; i >= 0; i--) {
-        const d = new Date(now);
-        d.setDate(now.getDate() - i);
-        
-        const count = prescriptions.filter((p: any) => {
-          if (p.status_validasi !== 'disetujui' && p.status_validasi !== 'ditolak') return false;
-          const targetDate = new Date(p.updated_at || p.created_at);
-          if (isNaN(targetDate.getTime())) return false;
-          return targetDate.getFullYear() === d.getFullYear() && 
-                 targetDate.getMonth() === d.getMonth() && 
-                 targetDate.getDate() === d.getDate();
-        }).length;
-            
-        data.push({
-            day: d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }),
-            value: count,
-            active: i === 0
-        });
-    }
-    return data;
-  })();
+  const chartData = analytics?.chart_data || [];
   
-  const maxChartValue = Math.max(...chartData.map(d => d.value), 10);
+  const maxChartValue = Math.max(...chartData.map((d: any) => d.value), 10);
 
   const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'prescriptions' | 'settings' | 'products'>(() => {
     if (typeof window !== 'undefined') {
@@ -157,23 +127,24 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
   const [viewingProductDetail, setViewingProductDetail] = useState<any>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  // Compute completed orders sales count for each product
-  const productsWithSales = products.map((product: any) => {
-    let sales = 0;
-    orders.forEach((order: any) => {
-      if (order.status === 'selesai' && order.products) {
-        order.products.forEach((op: any) => {
-          if (op.id === product.id) {
-            sales += op.pivot?.kuantitas || 0;
-          }
-        });
-      }
-    });
-    return {
-      ...product,
-      sales
-    };
-  });
+  useEffect(() => {
+    const handler = setTimeout(() => {
+        if (activeTab === 'products') {
+            const params: any = {};
+            if (productSearchQuery) params.product_search = productSearchQuery;
+            if (productCategoryFilter !== 'all') params.product_category = productCategoryFilter;
+
+            router.get('/pharmacist', params, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+                only: ['products']
+            });
+        }
+    }, 300);
+
+    return () => clearTimeout(handler);
+  }, [productSearchQuery, productCategoryFilter, activeTab]);
   const [prescriptionView, setPrescriptionView] = useState<'list' | 'detail'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [prescriptionDateFilter, setPrescriptionDateFilter] = useState('');
@@ -392,30 +363,47 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
     }
   };
 
-  const getFilteredList = () => {
-    let rawList = [];
-    if (activeSubTab === 'menunggu') rawList = pendingPrescriptions;
-    else if (activeSubTab === 'disetujui') rawList = approvedPrescriptions;
-    else if (activeSubTab === 'ditolak') rawList = rejectedPrescriptions;
-    else if (activeSubTab === 'pembayaran') rawList = paymentQueue;
-    
-    return rawList.filter((rx: any) => {
-      const idStr = (rx.kode_resep || rx.id || '').toString().toLowerCase();
-      const nameStr = (rx.user?.name || rx.customer || '').toLowerCase();
-      const matchesSearch = idStr.includes(searchQuery.toLowerCase()) || nameStr.includes(searchQuery.toLowerCase());
+  useEffect(() => {
+    const handler = setTimeout(() => {
+        const params: any = {};
+        
+        if (activeTab === 'prescriptions') {
+            if (activeSubTab !== 'pembayaran') {
+                params.prescription_status = activeSubTab;
+                if (searchQuery) params.prescription_search = searchQuery;
+                if (prescriptionDateFilter) params.prescription_date = prescriptionDateFilter;
+            } else {
+                params.order_status = 'menunggu_pembayaran';
+                if (searchQuery) params.order_search = searchQuery;
+                if (orderDateFilter) params.order_date = orderDateFilter;
+            }
+            router.get('/pharmacist', params, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+                only: ['prescriptions', 'orders']
+            });
+        } else if (activeTab === 'orders') {
+            params.order_status = orderStatusFilter;
+            if (orderSearchQuery) params.order_search = orderSearchQuery;
+            if (orderDateFilter) params.order_date = orderDateFilter;
+            
+            router.get('/pharmacist', params, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+                only: ['orders']
+            });
+        }
 
-      let matchesDate = true;
-      if (prescriptionDateFilter && (rx.created_at || rx.waktu_masuk)) {
-        const d = new Date(rx.created_at || rx.waktu_masuk);
-        const localDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        matchesDate = localDateStr === prescriptionDateFilter;
-      }
+    }, 300);
 
-      return matchesSearch && matchesDate;
-    });
-  };
+    return () => clearTimeout(handler);
+  }, [activeTab, activeSubTab, searchQuery, prescriptionDateFilter, orderSearchQuery, orderDateFilter, orderStatusFilter]);
 
-  const activeFilteredList = getFilteredList();
+  const activeFilteredList = activeSubTab === 'pembayaran' 
+    ? (orders?.data || []) 
+    : (prescriptions?.data || []);
 
   // Calculate Grand Total from dynamic items
   const totalHargaVal = prescriptionItems.reduce((acc, item) => acc + (item.subtotal || 0), 0);
@@ -814,31 +802,29 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
                   {/* Sub Navigation Tabs */}
                   <div className="mb-6 border-b border-[#E2E8F0]">
-                      <div className="flex gap-8 overflow-x-auto scrollbar-hide">
+                      <div className="flex gap-10 overflow-x-auto scrollbar-hide">
                           {[
-                            { id: 'all', label: 'Semua' },
-                            { id: 'menunggu_pembayaran', label: 'Menunggu Pembayaran' },
-                            { id: 'diproses', label: 'Diproses' },
-                            { id: 'dikirim', label: 'Dikirim' },
-                            { id: 'selesai', label: 'Selesai' },
-                            { id: 'dibatalkan', label: 'Dibatalkan' }
+                            { id: 'all', label: 'Semua', icon: List },
+                            { id: 'menunggu_pembayaran', label: 'Menunggu Pembayaran', icon: Clock },
+                            { id: 'diproses', label: 'Diproses', icon: Loader },
+                            { id: 'dikirim', label: 'Dikirim', icon: Truck },
+                            { id: 'selesai', label: 'Selesai', icon: CheckCircle },
+                            { id: 'dibatalkan', label: 'Dibatalkan', icon: XCircle }
                           ].map((tab) => {
                             const isActive = orderStatusFilter === tab.id;
-                            const count = tab.id === 'all' ? orders.length : orders.filter((o: any) => o.status === tab.id).length;
+                            const Icon = tab.icon;
                             return (
                               <button
                                 key={tab.id}
                                 onClick={() => setOrderStatusFilter(tab.id)}
-                                className={`font-['Inter',sans-serif] text-sm font-semibold pb-4 relative transition-all whitespace-nowrap flex items-center gap-2 ${
+                                className={`font-['Inter',sans-serif] text-sm font-medium pb-4 relative transition-all whitespace-nowrap flex items-center gap-2.5 ${
                                   isActive
                                     ? 'text-[#0D6A36] border-b-2 border-[#0D6A36]'
                                     : 'text-slate-400 hover:text-slate-600 border-b-2 border-transparent'
                                 }`}
                               >
+                                <Icon size={16} className={isActive ? "text-[#0D6A36]" : "text-slate-400"} />
                                 {tab.label}
-                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-[#0D6A36] text-white' : 'bg-slate-100 text-slate-500'}`}>
-                                  {count}
-                                </span>
                               </button>
                             );
                           })}
@@ -869,21 +855,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
                   {/* Orders Table */}
                   {(() => {
-                    const filteredOrders = orders.filter((order: any) => {
-                        const customerName = order.user?.name || '';
-                        const orderCode = order.kode_pesanan || '';
-                        const matchesSearch =
-                          customerName.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
-                          orderCode.toLowerCase().includes(orderSearchQuery.toLowerCase());
-                        const matchesStatus = orderStatusFilter === 'all' || order.status === orderStatusFilter;
-                        let matchesDate = true;
-                        if (orderDateFilter && order.created_at) {
-                            const d = new Date(order.created_at);
-                            const localDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                            matchesDate = localDateStr === orderDateFilter;
-                        }
-                        return matchesSearch && matchesStatus && matchesDate;
-                    });
+                    const filteredOrders = orders?.data || [];
 
                     if (filteredOrders.length === 0) {
                       return (
@@ -914,6 +886,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                             </thead>
                             <tbody className="divide-y divide-[#f1f5f9]">
                               {filteredOrders.map((order: any, index: number) => {
+                                const startIndex = ((orders.current_page || 1) - 1) * (orders.per_page || 10);
                                 const totalQty = order.products
                                   ? order.products.reduce((sum: number, p: any) => sum + (p.pivot?.kuantitas || 1), 0)
                                   : 0;
@@ -942,7 +915,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                 return (
                                   <tr key={order.id} className="group transition-colors hover:bg-[#f8fafc]">
                                     <td className="px-5 py-4">
-                                      <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-400">{index + 1}</span>
+                                      <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-400">{startIndex + index + 1}</span>
                                     </td>
                                     <td className="px-5 py-4">
                                       <div className="flex flex-col gap-0.5">
@@ -1040,10 +1013,13 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                             </tbody>
                           </table>
                         </div>
-                        <div className="px-5 py-3 border-t border-[#f1f5f9] bg-[#f8fafc]">
+                        <div className="px-5 py-3 border-t border-[#f1f5f9] bg-[#f8fafc] flex items-center justify-between">
                           <p className="font-['Inter',sans-serif] text-[12px] text-slate-400">
-                            Menampilkan <span className="font-bold text-slate-600">{filteredOrders.length}</span> pesanan
+                            Menampilkan <span className="font-bold text-slate-600">{orders?.total || 0}</span> pesanan
                           </p>
+                          {orders?.links && (
+                            <Pagination links={orders.links} />
+                          )}
                         </div>
                       </div>
                     );
@@ -1064,14 +1040,15 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
               {/* Sub Navigation Tabs */}
               <div className="mb-6 border-b border-[#E2E8F0]">
-                  <div className="flex gap-8">
+                  <div className="flex gap-10 overflow-x-auto scrollbar-hide">
                       {[
-                        { id: 'menunggu' as const, label: 'Menunggu' },
-                        { id: 'disetujui' as const, label: 'Disetujui' },
-                        { id: 'ditolak' as const, label: 'Ditolak' },
-                        { id: 'pembayaran' as const, label: 'Pembayaran' }
+                        { id: 'menunggu' as const, label: 'Menunggu', icon: Clock },
+                        { id: 'disetujui' as const, label: 'Disetujui', icon: CheckCircle },
+                        { id: 'ditolak' as const, label: 'Ditolak', icon: XCircle },
+                        { id: 'pembayaran' as const, label: 'Pembayaran', icon: ShoppingBag }
                       ].map((tab) => {
                         const isActive = activeSubTab === tab.id;
+                        const Icon = tab.icon;
                         return (
                           <button
                             key={tab.id}
@@ -1080,12 +1057,13 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                               setPrescriptionView('list');
                               setSearchQuery('');
                             }}
-                            className={`font-['Inter',sans-serif] text-sm font-semibold pb-4 relative transition-all ${
+                            className={`font-['Inter',sans-serif] text-sm font-medium pb-4 relative transition-all whitespace-nowrap flex items-center gap-2.5 ${
                               isActive
                                 ? 'text-[#0D6A36] border-b-2 border-[#0D6A36]'
                                 : 'text-slate-400 hover:text-slate-600 border-b-2 border-transparent'
                             }`}
                           >
+                            <Icon size={16} className={isActive ? "text-[#0D6A36]" : "text-slate-400"} />
                             {tab.label}
                           </button>
                         );
@@ -1180,11 +1158,27 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                   </div>
                               );
                           })}
-                          
                           {activeFilteredList.length === 0 && (
                               <div className="rounded-2xl border border-[#f1f5f9] bg-white p-12 text-center shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
                                   <AlertCircle className="mx-auto text-slate-300 mb-3" size={48} />
-                                  <p className="font-['Inter',sans-serif] text-base text-slate-500 font-medium">Tidak ada resep dalam kategori ini</p>
+                                  <p className="font-['Inter',sans-serif] text-base text-slate-500 font-medium">Tidak ada {activeSubTab === 'pembayaran' ? 'pesanan' : 'resep'} dalam kategori ini</p>
+                              </div>
+                          )}
+
+                          {activeSubTab !== 'pembayaran' && prescriptions?.links && (
+                              <div className="mt-6 rounded-2xl border border-[#f1f5f9] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.04)] px-5 py-4 flex items-center justify-between">
+                                  <p className="font-['Inter',sans-serif] text-[12px] text-slate-400">
+                                      Menampilkan <span className="font-bold text-slate-600">{prescriptions?.total || 0}</span> resep
+                                  </p>
+                                  <Pagination links={prescriptions.links} />
+                              </div>
+                          )}
+                          {activeSubTab === 'pembayaran' && orders?.links && (
+                              <div className="mt-6 rounded-2xl border border-[#f1f5f9] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.04)] px-5 py-4 flex items-center justify-between">
+                                  <p className="font-['Inter',sans-serif] text-[12px] text-slate-400">
+                                      Menampilkan <span className="font-bold text-slate-600">{orders?.total || 0}</span> pesanan
+                                  </p>
+                                  <Pagination links={orders.links} />
                               </div>
                           )}
                       </div>
@@ -1760,53 +1754,51 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
               </div>
 
               {/* Enhanced Product Table */}
-              <div className="overflow-hidden rounded-2xl border border-[#f1f5f9] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-[#f1f5f9] bg-gradient-to-r from-[#f9fafb] to-[#f5f7f6]">
-                      <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
-                        Produk
-                      </th>
-                      <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
-                        Kategori Induk
-                      </th>
-                      <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
-                        Golongan Obat
-                      </th>
-                      <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
-                        Stok
-                      </th>
-                      <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
-                        Harga
-                      </th>
-                      <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
-                        Penjualan
-                      </th>
-                      <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
-                        Label Gejala
-                      </th>
-                      <th className="px-6 py-4 text-right font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
-                        Aksi
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {productsWithSales
-                      .filter((product: any) => {
-                        const matchesSearch = product.nama_obat
-                          .toLowerCase()
-                          .includes(productSearchQuery.toLowerCase());
-                        const matchesCategory =
-                          productCategoryFilter === 'all' ||
-                          product.jenis_obat === productCategoryFilter;
-                        return matchesSearch && matchesCategory;
-                      })
-                      .map((product: any) => (
+              <div className="rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[960px] border-collapse text-left">
+                    <thead>
+                      <tr className="bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9] border-b border-[#E2E8F0]">
+                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase w-12">No.</th>
+                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+                          Produk
+                        </th>
+                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+                          Kategori Induk
+                        </th>
+                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+                          Golongan Obat
+                        </th>
+                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+                          Stok
+                        </th>
+                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+                          Harga
+                        </th>
+                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+                          Penjualan
+                        </th>
+                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+                          Label Gejala
+                        </th>
+                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-right">
+                          Aksi
+                        </th>
+                      </tr>
+                    </thead>
+                  <tbody className="divide-y divide-[#f1f5f9]">
+                    {(products?.data || [])
+                      .map((product: any, index: number) => {
+                        const startIndex = ((products.current_page || 1) - 1) * (products.per_page || 10);
+                        return (
                         <tr
                           key={product.id}
-                          className="border-b border-[#f1f5f9] transition-colors last:border-0 hover:bg-[#fafaf8]"
+                          className="group transition-colors hover:bg-[#f8fafc]"
                         >
-                          <td className="px-6 py-5">
+                          <td className="px-5 py-4">
+                            <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-400">{startIndex + index + 1}</span>
+                          </td>
+                          <td className="px-5 py-4">
                             <div className="flex items-center gap-4">
                               {product.gambar ? (
                                 <img
@@ -1895,9 +1887,19 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      );
+                      })}
                   </tbody>
                 </table>
+              </div>
+                <div className="px-5 py-3 border-t border-[#f1f5f9] bg-[#f8fafc] flex items-center justify-between">
+                    <p className="font-['Inter',sans-serif] text-[12px] text-slate-400">
+                        Menampilkan <span className="font-bold text-slate-600">{products?.total || 0}</span> produk
+                    </p>
+                    {products?.links && (
+                        <Pagination links={products.links} />
+                    )}
+                </div>
               </div>
             </div>
           )}

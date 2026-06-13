@@ -24,19 +24,27 @@ import {
     X,
     Settings,
     Menu,
+    List,
+    Clock,
+    Loader,
+    Truck,
+    CheckCircle,
+    XCircle,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import CreateProduct from './CreateProduct';
 import CreateUser from './CreateUser';
+import Pagination from '../components/Pagination';
 import { router, usePage } from '@inertiajs/react';
 import ConfirmModal from '../components/ConfirmModal';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 interface AdminDashboardProps {
-    products?: any[];
+    products?: any;
     categories?: any[];
-    users?: any[];
+    users?: any;
     symptoms?: any[];
-    orders?: any[];
+    orders?: any;
     statusChanges?: any[];
     stockHistories?: any[];
     analytics?: any;
@@ -47,6 +55,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(false);
     const [isNotifOpen, setIsNotifOpen] = useState(false);
     const [notifications, setNotifications] = useState<any[]>([]);
 
@@ -160,6 +169,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
     const [roleFilter, setRoleFilter] = useState<
         'all' | 'admin' | 'pharmacist' | 'user'
     >('all');
+    const [productSearchQuery, setProductSearchQuery] = useState('');
     const [productCategoryFilter, setProductCategoryFilter] = useState('all');
     const [orderSearchQuery, setOrderSearchQuery] = useState('');
     const [orderStatusFilter, setOrderStatusFilter] = useState('all');
@@ -172,41 +182,55 @@ export default function AdminDashboard({ products = [], categories = [], users =
         });
     };
 
-    // Compute chart data based on orders and filter
-    const revenueChartData = (() => {
-        const data = [];
-        const now = new Date();
-        for (let i = revenueFilterDays - 1; i >= 0; i--) {
-            const d = new Date(now);
-            d.setDate(now.getDate() - i);
-            const dateStr = d.toISOString().split('T')[0];
-            
-            const dayTotal = orders
-                .filter((o) => o.status === 'selesai' && o.created_at?.startsWith(dateStr))
-                .reduce((sum, o) => sum + parseFloat(o.total_biaya || 0), 0);
-                
-            data.push({
-                date: d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }),
-                total: dayTotal
-            });
-        }
-        return data;
-    })();
-    const maxRevenue = Math.max(...revenueChartData.map(d => d.total), 1);
+    // Use server-side chart data
+    const revenueChartData = analytics?.revenue_chart_data || [];
+    const maxRevenue = Math.max(...revenueChartData.map((d: any) => d.total), 1);
+    const productsWithSales = analytics?.top_products || [];
 
-    const productsWithSales = products.map(product => {
-        let sales = 0;
-        orders.forEach(order => {
-            if (order.status === 'selesai' && order.products) {
-                order.products.forEach((op: any) => {
-                    if (op.id === product.id) {
-                        sales += op.pivot?.kuantitas || 0;
-                    }
-                });
-            }
-        });
-        return { ...product, sales };
-    });
+    // Fetch data using Inertia router when filters change
+    useEffect(() => {
+        // Debounce to avoid too many requests while typing
+        const handler = setTimeout(() => {
+            const params: any = {};
+            
+            if (searchQuery) params.user_search = searchQuery;
+            if (roleFilter !== 'all') params.user_role = roleFilter;
+            
+            if (productSearchQuery) params.product_search = productSearchQuery;
+            if (productCategoryFilter !== 'all') params.product_category = productCategoryFilter;
+            
+            if (orderSearchQuery) params.order_search = orderSearchQuery;
+            if (orderStatusFilter !== 'all') params.order_status = orderStatusFilter;
+            if (orderDateFilter) params.order_date = orderDateFilter;
+
+            // Use Inertia to reload the current page with new query params
+            router.get('/admin', params, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+                only: ['users', 'orders', 'products']
+            });
+        }, 300);
+
+        return () => clearTimeout(handler);
+    }, [searchQuery, roleFilter, productSearchQuery, productCategoryFilter, orderSearchQuery, orderStatusFilter, orderDateFilter]);
+
+    // Fetch analytics data when revenue filter changes
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            const params: any = {};
+            if (revenueFilterDays !== 7) params.revenue_days = revenueFilterDays;
+            
+            router.get('/admin', params, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+                only: ['analytics']
+            });
+        }, 300);
+
+        return () => clearTimeout(handler);
+    }, [revenueFilterDays]);
 
     const statusConfig: Record<
         string,
@@ -245,18 +269,179 @@ export default function AdminDashboard({ products = [], categories = [], users =
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
-            {/* Enhanced Header */}
-            <header className="sticky top-0 z-50 border-b border-[#f1f5f9] bg-white/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur-md">
-                <div className="mx-auto max-w-[1600px] px-8 py-5">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="font-['Roboto_Condensed',sans-serif] text-[32px] font-bold tracking-[-0.8px] text-[#171d19]">
-                                Dashboard Admin
+        <div className="flex min-h-screen bg-[#F8FAFC]">
+            {/* Sidebar Navigation */}
+            <aside className={`hidden md:flex bg-white border-r border-[#E2E8F0] flex-col justify-between sticky top-0 h-screen z-30 transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
+                <div>
+                    {/* Logo Brand */}
+                    <div className="flex items-center justify-center gap-3 px-4 h-20 border-b border-[#E2E8F0]">
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </div>
+                        {!isCollapsed && (
+                            <div className="overflow-hidden whitespace-nowrap transition-all duration-300">
+                                <h2 className="font-['Inter',sans-serif] font-bold text-sm text-[#1A1A1A] leading-tight">
+                                    Apotek Jaya Farma
+                                </h2>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Navigation Links */}
+                    <nav className="px-3 py-6 space-y-1.5">
+                        {[
+                            { id: 'analytics' as const, label: 'Analitik', icon: TrendingUp },
+                            { id: 'products' as const, label: 'Produk & Stok', icon: Package },
+                            { id: 'orders' as const, label: 'Manajemen Pesanan', icon: ShoppingBag },
+                            { id: 'users' as const, label: 'Manajemen User', icon: UserCog },
+                        ].map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                title={isCollapsed ? tab.label : undefined}
+                                className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-4'} py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold transition-all duration-200 relative group ${
+                                    activeTab === tab.id
+                                        ? 'bg-[#E7F5EC] text-[#0D6A36]'
+                                        : 'text-slate-600 hover:bg-slate-50'
+                                }`}
+                            >
+                                <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 w-full'}`}>
+                                    <tab.icon size={20} className={activeTab === tab.id ? 'text-[#0D6A36]' : 'text-slate-400'} />
+                                    {!isCollapsed && <span className="whitespace-nowrap">{tab.label}</span>}
+                                </div>
+                                {activeTab === tab.id && !isCollapsed && <div className="w-1.5 h-5 bg-[#0D6A36] rounded-full shrink-0" />}
+                                {activeTab === tab.id && isCollapsed && <div className="absolute left-0 w-1 h-5 bg-[#0D6A36] rounded-r-full shrink-0" />}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+
+                {/* Bottom Actions */}
+                <div className="p-3 border-t border-[#E2E8F0]">
+                    <Link
+                        href="/admin/settings"
+                        title={isCollapsed ? "Informasi Apotek" : undefined}
+                        className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-4'} py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all duration-200`}
+                    >
+                        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+                            <Settings size={20} className="text-slate-400" />
+                            {!isCollapsed && <span className="whitespace-nowrap">Informasi Apotek</span>}
+                        </div>
+                    </Link>
+                    <button
+                        onClick={handleAdminLogout}
+                        title={isCollapsed ? "Keluar" : undefined}
+                        className={`w-full mt-1 flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-4'} py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold text-red-600 hover:bg-red-50 transition-all duration-200`}
+                    >
+                        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+                            <LogOut size={20} className="text-red-500" />
+                            {!isCollapsed && <span className="whitespace-nowrap">Keluar</span>}
+                        </div>
+                    </button>
+                </div>
+            </aside>
+
+            {/* Main Content Area */}
+            <div className="flex-1 w-full bg-slate-50 flex flex-col min-w-0">
+                {/* Mobile Header */}
+                <div className="md:hidden flex items-center justify-between px-6 h-20 bg-white border-b border-[#E2E8F0] sticky top-0 z-40">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-lg flex items-center justify-center shrink-0">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-white">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </div>
+                        <h2 className="font-['Inter',sans-serif] font-bold text-sm text-[#1A1A1A]">
+                            Apotek Jaya Farma
+                        </h2>
+                    </div>
+                    <button onClick={() => setIsMobileSidebarOpen(true)} className="p-2 text-slate-600">
+                        <Menu size={24} />
+                    </button>
+                </div>
+
+                {/* Mobile Sidebar Overlay */}
+                {isMobileSidebarOpen && (
+                    <div className="md:hidden fixed inset-0 z-50 flex">
+                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setIsMobileSidebarOpen(false)} />
+                        <aside className="relative w-64 max-w-[80%] bg-white h-full flex flex-col shadow-2xl">
+                            <div className="flex items-center justify-between px-6 h-20 border-b border-[#E2E8F0]">
+                                <h2 className="font-['Inter',sans-serif] font-bold text-sm text-[#1A1A1A]">Menu Admin</h2>
+                                <button onClick={() => setIsMobileSidebarOpen(false)} className="p-2 text-slate-400 hover:text-slate-600">
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1.5">
+                                {[
+                                    { id: 'analytics' as const, label: 'Analitik', icon: TrendingUp },
+                                    { id: 'products' as const, label: 'Produk & Stok', icon: Package },
+                                    { id: 'orders' as const, label: 'Manajemen Pesanan', icon: ShoppingBag },
+                                    { id: 'users' as const, label: 'Manajemen User', icon: UserCog },
+                                ].map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => { setActiveTab(tab.id); setIsMobileSidebarOpen(false); }}
+                                        className={`w-full flex items-center px-4 py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold transition-all duration-200 ${
+                                            activeTab === tab.id
+                                                ? 'bg-[#E7F5EC] text-[#0D6A36]'
+                                                : 'text-slate-600 hover:bg-slate-50'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3 w-full">
+                                            <tab.icon size={20} className={activeTab === tab.id ? 'text-[#0D6A36]' : 'text-slate-400'} />
+                                            <span>{tab.label}</span>
+                                        </div>
+                                        {activeTab === tab.id && <div className="w-1.5 h-5 bg-[#0D6A36] rounded-full shrink-0" />}
+                                    </button>
+                                ))}
+                            </nav>
+                            <div className="p-4 border-t border-[#E2E8F0]">
+                                <Link
+                                    href="/admin/settings"
+                                    onClick={() => setIsMobileSidebarOpen(false)}
+                                    className="w-full flex items-center px-4 py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all duration-200"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Settings size={20} className="text-slate-400" />
+                                        <span>Informasi Apotek</span>
+                                    </div>
+                                </Link>
+                                <button
+                                    onClick={(e) => { setIsMobileSidebarOpen(false); handleAdminLogout(e); }}
+                                    className="w-full mt-1 flex items-center px-4 py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold text-red-600 hover:bg-red-50 transition-all duration-200"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <LogOut size={20} className="text-red-500" />
+                                        <span>Keluar</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </aside>
+                    </div>
+                )}
+
+                {/* Enhanced Top Bar */}
+                <header className="hidden md:block sticky top-0 z-20 border-b border-[#E2E8F0] bg-white/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur-md">
+                    <div className="px-8 h-20 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => setIsCollapsed(!isCollapsed)}
+                                className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                            >
+                                <Menu size={20} />
+                            </button>
+                            <h1 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold tracking-[-0.5px] text-[#171d19]">
+                                {activeTab === 'analytics' && 'Analitik Dashboard'}
+                                {activeTab === 'products' && 'Produk & Stok'}
+                                {activeTab === 'orders' && 'Manajemen Pesanan'}
+                                {activeTab === 'users' && 'Manajemen User'}
                             </h1>
-                            <p className="mt-1 font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">
-                                Kelola produk, pesanan, dan analitik
-                            </p>
                         </div>
 
                         {/* Notification Bell */}
@@ -367,49 +552,9 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                 </div>
                             </div>
                     </div>
-                </div>
-            </header>
+                </header>
 
-            <main className="mx-auto max-w-[1600px] px-8 py-8">
-                {/* Enhanced Tab Navigation */}
-                <div className="mb-8 flex gap-3 overflow-x-auto whitespace-nowrap pb-2 scrollbar-none">
-                    {[
-                        {
-                            id: 'analytics' as const,
-                            label: 'Analitik',
-                            icon: TrendingUp,
-                        },
-                        {
-                            id: 'products' as const,
-                            label: 'Produk & Stok',
-                            icon: Package,
-                        },
-                        {
-                            id: 'orders' as const,
-                            label: 'Manajemen Pesanan',
-                            icon: ShoppingBag,
-                        },
-                        {
-                            id: 'users' as const,
-                            label: 'Manajemen User',
-                            icon: UserCog,
-                        },
-                    ].map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-3 rounded-xl px-6 py-3 font-['Inter',sans-serif] text-[14px] font-medium transition-all duration-200 shrink-0 ${
-                                activeTab === tab.id
-                                    ? 'bg-[#006a3f] text-white shadow-[0_4px_12px_rgba(0,106,63,0.25)]'
-                                    : 'border border-[#f1f5f9] bg-white text-[#171d19] hover:border-[#006a3f] hover:shadow-sm'
-                            }`}
-                        >
-                            <tab.icon size={18} />
-                            {tab.label}
-
-                        </button>
-                    ))}
-                </div>
+                <main className="p-8">
 
                 {activeTab === 'analytics' && (
                     <div className="space-y-8">
@@ -523,22 +668,62 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                         <option value={90}>90 Hari Terakhir</option>
                                     </select>
                                 </div>
-                                {/* Bar Chart Implementation */}
-                                <div className={`flex h-64 items-end ${revenueFilterDays === 7 ? 'gap-4' : revenueFilterDays === 30 ? 'gap-1.5' : 'gap-[2px]'} rounded-xl border border-[#f1f5f9] bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9] p-4 relative`}>
-                                    {revenueChartData.map((item, idx) => (
-                                        <div key={idx} className="group relative flex flex-1 flex-col items-center justify-end h-full">
-                                            {/* Tooltip */}
-                                            <div className="absolute -top-10 hidden whitespace-nowrap rounded-md bg-[#171d19] px-2 py-1 text-xs text-white group-hover:block z-10">
-                                                {item.date}: Rp {item.total.toLocaleString('id-ID')}
-                                            </div>
-                                            {/* Bar */}
-                                            <div 
-                                                className="w-full rounded-t-sm bg-gradient-to-t from-[#006a3f] to-[#00a86b] transition-all duration-300 hover:opacity-80"
-                                                style={{ height: `${(item.total / maxRevenue) * 100}%`, minHeight: item.total > 0 ? '4px' : '0' }}
-                                            />
-
+                                {/* Area Chart Implementation */}
+                                <div className="h-72 w-full mt-4">
+                                    {!revenueChartData.some((item: any) => item.total > 0) ? (
+                                        <div className="flex h-full w-full items-center justify-center rounded-xl border border-[#f1f5f9] bg-[#f9fafb]">
+                                            <p className="font-['Inter',sans-serif] text-sm font-medium text-[#6e7a70]">
+                                                Belum ada pendapatan pada periode ini
+                                            </p>
                                         </div>
-                                    ))}
+                                    ) : (
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart
+                                                data={revenueChartData}
+                                                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                                            >
+                                                <defs>
+                                                    <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#006a3f" stopOpacity={0.3}/>
+                                                        <stop offset="95%" stopColor="#006a3f" stopOpacity={0}/>
+                                                    </linearGradient>
+                                                </defs>
+                                                <XAxis 
+                                                    dataKey="date" 
+                                                    axisLine={false} 
+                                                    tickLine={false} 
+                                                    tick={{ fill: '#6e7a70', fontSize: 12, fontFamily: 'Inter, sans-serif' }} 
+                                                    dy={10}
+                                                />
+                                                <YAxis 
+                                                    axisLine={false} 
+                                                    tickLine={false} 
+                                                    tick={{ fill: '#6e7a70', fontSize: 12, fontFamily: 'Inter, sans-serif' }}
+                                                    tickFormatter={(value) => {
+                                                        if (value >= 1000000) return `Rp${(value / 1000000).toFixed(1)}Jt`;
+                                                        if (value >= 1000) return `Rp${(value / 1000).toFixed(0)}rb`;
+                                                        return `Rp${value}`;
+                                                    }}
+                                                />
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                                <RechartsTooltip 
+                                                    formatter={(value: any) => [`Rp ${value.toLocaleString('id-ID')}`, 'Pendapatan']}
+                                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                                    labelStyle={{ color: '#171d19', fontWeight: 'bold', marginBottom: '4px', fontFamily: 'Inter, sans-serif' }}
+                                                    itemStyle={{ color: '#006a3f', fontWeight: 'bold', fontFamily: 'Inter, sans-serif' }}
+                                                />
+                                                <Area 
+                                                    type="monotone" 
+                                                    dataKey="total" 
+                                                    stroke="#006a3f" 
+                                                    strokeWidth={3}
+                                                    fillOpacity={1} 
+                                                    fill="url(#colorTotal)" 
+                                                    activeDot={{ r: 6, fill: '#006a3f', stroke: '#fff', strokeWidth: 2 }}
+                                                />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    )}
                                 </div>
                             </div>
 
@@ -596,8 +781,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     </h2>
                                     <p className="font-['Inter',sans-serif] text-[14px] text-[#3e4a41]">
                                         {
-                                            productsWithSales.filter((p) => p.stok <= (p.stok_minimum || 10))
-                                                .length
+                                            (analytics?.critical_stock_products || []).length
                                         }{' '}
                                         produk memerlukan restock segera
                                     </p>
@@ -605,9 +789,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                {productsWithSales
-                                    .filter((p) => p.stok <= (p.stok_minimum || 10))
-                                    .map((product) => (
+                                {(analytics?.critical_stock_products || []).map((product: any) => (
                                         <div
                                             key={product.id}
                                             className="rounded-xl border border-red-100 bg-white p-6 shadow-sm transition-all hover:shadow-md"
@@ -654,22 +836,45 @@ export default function AdminDashboard({ products = [], categories = [], users =
 
                 {activeTab === 'products' && (
                     <div>
-                        {/* Header Section */}
-                        <div className="mb-6 flex items-center justify-between">
-                            <div>
-                                <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] font-semibold tracking-[-0.7px] text-[#171d19]">
-                                    Produk & Stok
-                                </h2>
-                                <p className="mt-1 font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">
-                                    Kelola katalog obat dan pantau ketersediaan stok
-                                </p>
+                        {/* Control Bar: Search, Filter, and Action */}
+                        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-[#f1f5f9] bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+                            <div className="flex w-full sm:w-auto items-center gap-4">
+                                {/* Search Bar */}
+                                <div className="relative w-full sm:w-96">
+                                    <Search
+                                        className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6e7a70]"
+                                        size={18}
+                                    />
+                                    <input
+                                        type="text"
+                                        value={productSearchQuery}
+                                        onChange={(e) =>
+                                            setProductSearchQuery(e.target.value)
+                                        }
+                                        placeholder="Cari produk..."
+                                        className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-4 pl-11 font-['Inter',sans-serif] text-[14px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#006a3f] focus:bg-white focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                    />
+                                </div>
+                                {/* Dropdown Filter */}
+                                <select 
+                                    value={productCategoryFilter}
+                                    onChange={(e) => setProductCategoryFilter(e.target.value)}
+                                    className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2.5 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                >
+                                    <option value="all">Semua Jenis Obat</option>
+                                    <option value="bebas">Obat Bebas</option>
+                                    <option value="terbatas">Obat Terbatas</option>
+                                    <option value="keras">Obat Keras</option>
+                                </select>
                             </div>
+                            
+                            {/* Action Button */}
                             <button 
                                 onClick={() => {
                                     setEditingProduct(null);
                                     setIsProductModalOpen(true);
                                 }}
-                                className="flex items-center gap-2 rounded-xl bg-[#006a3f] px-6 py-3 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]"
+                                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#006a3f] px-6 py-2.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]"
                             >
                                 <Plus size={18} />
                                 <span className="font-['Roboto_Condensed',sans-serif] text-[14px] font-medium">
@@ -678,80 +883,51 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             </button>
                         </div>
 
-
-                        {/* Search & Filter Bar */}
-                        <div className="mb-6 rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="relative flex-1">
-                                    <Search
-                                        className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6e7a70]"
-                                        size={20}
-                                    />
-                                    <input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) =>
-                                            setSearchQuery(e.target.value)
-                                        }
-                                        placeholder="Cari produk..."
-                                        className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-3 pr-4 pl-12 font-['Inter',sans-serif] text-[14px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#006a3f] focus:bg-white focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
-                                    />
-                                </div>
-                                <select 
-                                    value={productCategoryFilter}
-                                    onChange={(e) => setProductCategoryFilter(e.target.value)}
-                                    className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-3 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
-                                >
-                                    <option value="all">Semua Jenis Obat</option>
-                                    <option value="bebas">Obat Bebas</option>
-                                    <option value="terbatas">Obat Terbatas</option>
-                                    <option value="keras">Obat Keras</option>
-                                </select>
-                            </div>
-                        </div>
-
                         {/* Enhanced Product Table */}
-                        <div className="overflow-hidden rounded-2xl border border-[#f1f5f9] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
-                            <table className="w-full">
+                        <div className="rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
+                          <div className="overflow-x-auto">
+                            <table className="w-full min-w-[960px] border-collapse text-left">
                                 <thead>
-                                    <tr className="border-b border-[#f1f5f9] bg-gradient-to-r from-[#f9fafb] to-[#f5f7f6]">
-                                        <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                    <tr className="bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9] border-b border-[#E2E8F0]">
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase w-12">No.</th>
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                             Produk
                                         </th>
-                                        <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                             Kategori Induk
                                         </th>
-                                        <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                             Golongan Obat
                                         </th>
-                                        <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                             Stok
                                         </th>
-                                        <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                             Harga
                                         </th>
-                                        <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                             Penjualan
                                         </th>
-                                        <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                             Label Gejala
                                         </th>
-                                        <th className="px-6 py-4 text-right font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-right">
                                             Aksi
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    {productsWithSales.filter(product => {
-                                        const matchesSearch = product.nama_obat.toLowerCase().includes(searchQuery.toLowerCase());
-                                        const matchesCategory = productCategoryFilter === 'all' || product.jenis_obat === productCategoryFilter;
-                                        return matchesSearch && matchesCategory;
-                                    }).map((product) => (
+                                <tbody className="divide-y divide-[#f1f5f9]">
+                                    {(products.data || []).map((product: any, index: number) => {
+                                        const startIndex = ((products.current_page || 1) - 1) * (products.per_page || 10);
+                                        return (
                                         <tr
                                             key={product.id}
-                                            className="border-b border-[#f1f5f9] transition-colors last:border-0 hover:bg-[#fafaf8]"
+                                            className="group transition-colors hover:bg-[#f8fafc]"
                                         >
-                                            <td className="px-6 py-5">
+                                            <td className="px-5 py-4">
+                                                <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-400">{startIndex + index + 1}</span>
+                                            </td>
+                                            <td className="px-5 py-4">
                                                 <div className="flex items-center gap-4">
                                                     {product.gambar ? (
                                                         <img 
@@ -853,51 +1029,50 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))}
+                                    );
+                                    })}
                                 </tbody>
                             </table>
+                          </div>
+                        <div className="px-5 py-3 border-t border-[#f1f5f9] bg-[#f8fafc] flex items-center justify-between">
+                            <p className="font-['Inter',sans-serif] text-[12px] text-slate-400">
+                                Menampilkan <span className="font-bold text-slate-600">{products?.total || 0}</span> produk
+                            </p>
+                            {products.links && (
+                                <Pagination links={products.links} />
+                            )}
                         </div>
+                      </div>
                     </div>
                 )}
 
           {activeTab === 'orders' && (
               <div className="max-w-[1600px] mx-auto">
-                  <div className="mb-6">
-                      <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] font-semibold tracking-[-0.7px] text-[#171d19]">
-                          Daftar Pesanan
-                      </h2>
-                      <p className="mt-1 font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">
-                          Kelola dan perbarui status pesanan pelanggan.
-                      </p>
-                  </div>
-
                   {/* Sub Navigation Tabs */}
                   <div className="mb-6 border-b border-[#E2E8F0]">
-                      <div className="flex gap-8 overflow-x-auto scrollbar-hide">
+                      <div className="flex gap-10 overflow-x-auto scrollbar-hide">
                           {[
-                            { id: 'all', label: 'Semua' },
-                            { id: 'menunggu_pembayaran', label: 'Menunggu Pembayaran' },
-                            { id: 'diproses', label: 'Diproses' },
-                            { id: 'dikirim', label: 'Dikirim' },
-                            { id: 'selesai', label: 'Selesai' },
-                            { id: 'dibatalkan', label: 'Dibatalkan' }
+                            { id: 'all', label: 'Semua', icon: List },
+                            { id: 'menunggu_pembayaran', label: 'Menunggu Pembayaran', icon: Clock },
+                            { id: 'diproses', label: 'Diproses', icon: Loader },
+                            { id: 'dikirim', label: 'Dikirim', icon: Truck },
+                            { id: 'selesai', label: 'Selesai', icon: CheckCircle },
+                            { id: 'dibatalkan', label: 'Dibatalkan', icon: XCircle }
                           ].map((tab) => {
                             const isActive = orderStatusFilter === tab.id;
-                            const count = tab.id === 'all' ? orders.length : orders.filter((o: any) => o.status === tab.id).length;
+                            const Icon = tab.icon;
                             return (
                               <button
                                 key={tab.id}
                                 onClick={() => setOrderStatusFilter(tab.id)}
-                                className={`font-['Inter',sans-serif] text-sm font-semibold pb-4 relative transition-all whitespace-nowrap flex items-center gap-2 ${
+                                className={`font-['Inter',sans-serif] text-sm font-medium pb-4 relative transition-all whitespace-nowrap flex items-center gap-2.5 ${
                                   isActive
                                     ? 'text-[#0D6A36] border-b-2 border-[#0D6A36]'
                                     : 'text-slate-400 hover:text-slate-600 border-b-2 border-transparent'
                                 }`}
                               >
+                                <Icon size={16} className={isActive ? "text-[#0D6A36]" : "text-slate-400"} />
                                 {tab.label}
-                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-[#0D6A36] text-white' : 'bg-slate-100 text-slate-500'}`}>
-                                  {count}
-                                </span>
                               </button>
                             );
                           })}
@@ -928,21 +1103,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
 
                   {/* Orders Table */}
                   {(() => {
-                    const filteredOrders = orders.filter((order: any) => {
-                        const customerName = order.user?.name || '';
-                        const orderCode = order.kode_pesanan || '';
-                        const matchesSearch =
-                          customerName.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
-                          orderCode.toLowerCase().includes(orderSearchQuery.toLowerCase());
-                        const matchesStatus = orderStatusFilter === 'all' || order.status === orderStatusFilter;
-                        let matchesDate = true;
-                        if (orderDateFilter && order.created_at) {
-                            const d = new Date(order.created_at);
-                            const localDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                            matchesDate = localDateStr === orderDateFilter;
-                        }
-                        return matchesSearch && matchesStatus && matchesDate;
-                    });
+                    const filteredOrders = orders.data || [];
 
                     if (filteredOrders.length === 0) {
                       return (
@@ -973,6 +1134,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             </thead>
                             <tbody className="divide-y divide-[#f1f5f9]">
                               {filteredOrders.map((order: any, index: number) => {
+                                const startIndex = ((orders.current_page || 1) - 1) * (orders.per_page || 10);
                                 const totalQty = order.products
                                   ? order.products.reduce((sum: number, p: any) => sum + (p.pivot?.kuantitas || 1), 0)
                                   : 0;
@@ -1001,7 +1163,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                 return (
                                   <tr key={order.id} className="group transition-colors hover:bg-[#f8fafc]">
                                     <td className="px-5 py-4">
-                                      <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-400">{index + 1}</span>
+                                      <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-400">{startIndex + index + 1}</span>
                                     </td>
                                     <td className="px-5 py-4">
                                       <div className="flex flex-col gap-0.5">
@@ -1099,10 +1261,13 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             </tbody>
                           </table>
                         </div>
-                        <div className="px-5 py-3 border-t border-[#f1f5f9] bg-[#f8fafc]">
+                        <div className="px-5 py-3 border-t border-[#f1f5f9] bg-[#f8fafc] flex items-center justify-between">
                           <p className="font-['Inter',sans-serif] text-[12px] text-slate-400">
-                            Menampilkan <span className="font-bold text-slate-600">{filteredOrders.length}</span> pesanan
+                            Menampilkan <span className="font-bold text-slate-600">{orders?.total || 0}</span> pesanan
                           </p>
+                          {orders.links && (
+                            <Pagination links={orders.links} />
+                          )}
                         </div>
                       </div>
                     );
@@ -1112,36 +1277,14 @@ export default function AdminDashboard({ products = [], categories = [], users =
 
                 {activeTab === 'users' && (
                     <div>
-                        {/* Header Section */}
-                        <div className="mb-6 flex items-center justify-between">
-                            <div>
-                                <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] font-semibold tracking-[-0.7px] text-[#171d19]">
-                                    Manajemen User
-                                </h2>
-                                <p className="mt-1 font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">
-                                    Kelola akses dan peran pengguna sistem
-                                </p>
-                            </div>
-                            <button 
-                                onClick={() => {
-                                    setEditingUser(null);
-                                    setIsUserModalOpen(true);
-                                }}
-                                className="flex items-center gap-2 rounded-xl bg-[#006a3f] px-6 py-3 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]"
-                            >
-                                <Plus size={18} />
-                                <span className="font-['Roboto_Condensed',sans-serif] text-[14px] font-medium">
-                                    Tambah User Baru
-                                </span>
-                            </button>
-                        </div>
+
 
                         {/* Stats Cards */}
                         <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             {[
                                 {
                                     label: 'Total Users',
-                                    value: users.length,
+                                    value: analytics?.user_counts?.total || 0,
                                     icon: Users,
                                     color: 'from-blue-500 to-blue-600',
                                     bg: 'bg-blue-50',
@@ -1149,9 +1292,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                 },
                                 {
                                     label: 'Admin',
-                                    value: users.filter(
-                                        (u) => u.role === 'admin',
-                                    ).length,
+                                    value: analytics?.user_counts?.admin || 0,
                                     icon: Shield,
                                     color: 'from-purple-500 to-purple-600',
                                     bg: 'bg-purple-50',
@@ -1159,9 +1300,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                 },
                                 {
                                     label: 'Apoteker',
-                                    value: users.filter(
-                                        (u) => u.role === 'pharmacist',
-                                    ).length,
+                                    value: analytics?.user_counts?.pharmacist || 0,
                                     icon: UserCog,
                                     color: 'from-emerald-500 to-emerald-600',
                                     bg: 'bg-emerald-50',
@@ -1169,9 +1308,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                 },
                                 {
                                     label: 'Pelanggan',
-                                    value: users.filter(
-                                        (u) => u.role === 'user',
-                                    ).length,
+                                    value: analytics?.user_counts?.customer || 0,
                                     icon: Users,
                                     color: 'from-amber-500 to-amber-600',
                                     bg: 'bg-amber-50',
@@ -1202,13 +1339,14 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             ))}
                         </div>
 
-                        {/* Search & Filter Bar */}
-                        <div className="mb-6 rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="relative flex-1">
+                        {/* Control Bar: Search, Filter, and Action */}
+                        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-[#f1f5f9] bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+                            <div className="flex w-full sm:w-auto items-center gap-4">
+                                {/* Search Bar */}
+                                <div className="relative w-full sm:w-96">
                                     <Search
                                         className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6e7a70]"
-                                        size={20}
+                                        size={18}
                                     />
                                     <input
                                         type="text"
@@ -1217,15 +1355,16 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             setSearchQuery(e.target.value)
                                         }
                                         placeholder="Cari berdasarkan nama atau email..."
-                                        className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-3 pr-4 pl-12 font-['Inter',sans-serif] text-[14px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#006a3f] focus:bg-white focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                        className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-4 pl-11 font-['Inter',sans-serif] text-[14px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#006a3f] focus:bg-white focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
                                     />
                                 </div>
+                                {/* Dropdown Filter */}
                                 <select
                                     value={roleFilter}
                                     onChange={(e) =>
                                         setRoleFilter(e.target.value as any)
                                     }
-                                    className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-3 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                    className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2.5 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
                                 >
                                     <option value="all">Semua Role</option>
                                     <option value="admin">Admin</option>
@@ -1233,56 +1372,56 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     <option value="user">Pelanggan</option>
                                 </select>
                             </div>
+
+                            {/* Action Button */}
+                            <button 
+                                onClick={() => {
+                                    setEditingUser(null);
+                                    setIsUserModalOpen(true);
+                                }}
+                                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#006a3f] px-6 py-2.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]"
+                            >
+                                <Plus size={18} />
+                                <span className="font-['Roboto_Condensed',sans-serif] text-[14px] font-medium">
+                                    Tambah User Baru
+                                </span>
+                            </button>
                         </div>
 
                         {/* User Table */}
-                        <div className="overflow-hidden rounded-2xl border border-[#f1f5f9] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
-                            <table className="w-full">
+                        <div className="rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
+                          <div className="overflow-x-auto">
+                            <table className="w-full min-w-[960px] border-collapse text-left">
                                 <thead>
-                                    <tr className="border-b border-[#f1f5f9] bg-gradient-to-r from-[#f9fafb] to-[#f5f7f6]">
-                                        <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                    <tr className="bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9] border-b border-[#E2E8F0]">
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase w-12">No.</th>
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                             User
                                         </th>
-                                        <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                             Email
                                         </th>
-                                        <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                             Role
                                         </th>
-                                        <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                             Status
                                         </th>
-                                        <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                             Bergabung
                                         </th>
-                                        <th className="px-6 py-4 text-left font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                             Terakhir Aktif
                                         </th>
-                                        <th className="px-6 py-4 text-right font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-right">
                                             Aksi
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    {users
-                                        .filter((user) => {
-                                            const matchesSearch =
-                                                user.name
-                                                    .toLowerCase()
-                                                    .includes(
-                                                        searchQuery.toLowerCase(),
-                                                    ) ||
-                                                user.email
-                                                    .toLowerCase()
-                                                    .includes(
-                                                        searchQuery.toLowerCase(),
-                                                    );
-                                            const matchesRole =
-                                                roleFilter === 'all' ||
-                                                user.role === roleFilter;
-                                            return matchesSearch && matchesRole;
-                                        })
-                                        .map((user) => {
+                                <tbody className="divide-y divide-[#f1f5f9]">
+                                    {(users.data || [])
+                                        .map((user: any, index: number) => {
+                                            const startIndex = ((users.current_page || 1) - 1) * (users.per_page || 10);
                                             const roleConfig = {
                                                 admin: {
                                                     label: 'Admin',
@@ -1321,9 +1460,12 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             return (
                                                 <tr
                                                     key={user.id}
-                                                    className="border-b border-[#f1f5f9] transition-colors last:border-0 hover:bg-[#fafaf8]"
+                                                    className="group transition-colors hover:bg-[#f8fafc]"
                                                 >
-                                                    <td className="px-6 py-5">
+                                                    <td className="px-5 py-4">
+                                                        <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-400">{startIndex + index + 1}</span>
+                                                    </td>
+                                                    <td className="px-5 py-4">
                                                         <div className="flex items-center gap-3">
                                                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#006a3f] to-[#005632]">
                                                                 <span className="font-['Roboto_Condensed',sans-serif] text-[14px] font-semibold text-white">
@@ -1446,22 +1588,20 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                         })}
                                 </tbody>
                             </table>
+                          </div>
+                        
+                        <div className="px-5 py-3 border-t border-[#f1f5f9] bg-[#f8fafc] flex items-center justify-between">
+                            <p className="font-['Inter',sans-serif] text-[12px] text-slate-400">
+                                Menampilkan <span className="font-bold text-slate-600">{users?.total || 0}</span> user
+                            </p>
+                            {users.links && (
+                                <Pagination links={users.links} />
+                            )}
+                        </div>
                         </div>
 
                         {/* Empty State */}
-                        {users.filter((user) => {
-                            const matchesSearch =
-                                user.name
-                                    .toLowerCase()
-                                    .includes(searchQuery.toLowerCase()) ||
-                                user.email
-                                    .toLowerCase()
-                                    .includes(searchQuery.toLowerCase());
-                            const matchesRole =
-                                roleFilter === 'all' ||
-                                user.role === roleFilter;
-                            return matchesSearch && matchesRole;
-                        }).length === 0 && (
+                        {(users.data || []).length === 0 && (
                             <div className="rounded-2xl border border-[#f1f5f9] bg-white p-16 text-center shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
                                 <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#f9fafb]">
                                     <Users
@@ -1481,7 +1621,8 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 )}
 
 
-            </main>
+                </main>
+            </div>
 
             {/* Modal Tambah/Edit Produk */}
             <CreateProduct 

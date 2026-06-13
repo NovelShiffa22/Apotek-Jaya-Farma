@@ -1,11 +1,13 @@
 import { Link, usePage, useForm, router } from '@inertiajs/react';
 import ConfirmModal from '../components/ConfirmModal';
-import { LogOut, UserCog, ChevronLeft, Camera } from 'lucide-react';
+import { LogOut, UserCog, ChevronLeft, Camera, TrendingUp, Package, ShoppingBag, Settings, Menu, X } from 'lucide-react';
 import { useState, useRef } from 'react';
 
 export default function AdminSettings() {
     const { auth, globalDiscount = 0 } = usePage<any>().props;
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [modalConfig, setModalConfig] = useState<{
@@ -83,18 +85,165 @@ export default function AdminSettings() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
-            {/* Enhanced Header (Duplicated from AdminDashboard) */}
-            <header className="sticky top-0 z-50 border-b border-[#f1f5f9] bg-white/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur-md">
-                <div className="mx-auto max-w-[1600px] px-8 py-5">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="font-['Roboto_Condensed',sans-serif] text-[32px] font-bold tracking-[-0.8px] text-[#171d19]">
-                                Dashboard Admin
+        <div className="flex min-h-screen bg-[#F8FAFC]">
+            {/* Sidebar Navigation */}
+            <aside className={`hidden md:flex bg-white border-r border-[#E2E8F0] flex-col justify-between sticky top-0 h-screen z-30 transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
+                <div>
+                    {/* Logo Brand */}
+                    <div className="flex items-center justify-center gap-3 px-4 h-20 border-b border-[#E2E8F0]">
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </div>
+                        {!isCollapsed && (
+                            <div className="overflow-hidden whitespace-nowrap transition-all duration-300">
+                                <h2 className="font-['Inter',sans-serif] font-bold text-sm text-[#1A1A1A] leading-tight">
+                                    Apotek Jaya Farma
+                                </h2>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Navigation Links */}
+                    <nav className="px-3 py-6 space-y-1.5">
+                        {[
+                            { id: 'analytics' as const, label: 'Analitik', icon: TrendingUp },
+                            { id: 'products' as const, label: 'Produk & Stok', icon: Package },
+                            { id: 'orders' as const, label: 'Manajemen Pesanan', icon: ShoppingBag },
+                            { id: 'users' as const, label: 'Manajemen User', icon: UserCog },
+                        ].map((tab) => (
+                            <Link
+                                key={tab.id}
+                                href={`/admin?tab=${tab.id}`}
+                                title={isCollapsed ? tab.label : undefined}
+                                className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-4'} py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all duration-200`}
+                            >
+                                <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 w-full'}`}>
+                                    <tab.icon size={20} className="text-slate-400" />
+                                    {!isCollapsed && <span className="whitespace-nowrap">{tab.label}</span>}
+                                </div>
+                            </Link>
+                        ))}
+                    </nav>
+                </div>
+
+                {/* Bottom Actions */}
+                <div className="p-3 border-t border-[#E2E8F0]">
+                    <div
+                        title={isCollapsed ? "Informasi Apotek" : undefined}
+                        className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-4'} py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold bg-[#E7F5EC] text-[#0D6A36] transition-all duration-200 relative group`}
+                    >
+                        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 w-full'}`}>
+                            <Settings size={20} className="text-[#0D6A36]" />
+                            {!isCollapsed && <span className="whitespace-nowrap">Informasi Apotek</span>}
+                        </div>
+                        {!isCollapsed && <div className="w-1.5 h-5 bg-[#0D6A36] rounded-full shrink-0" />}
+                        {isCollapsed && <div className="absolute left-0 w-1 h-5 bg-[#0D6A36] rounded-r-full shrink-0" />}
+                    </div>
+                    <button
+                        onClick={handleAdminLogout}
+                        title={isCollapsed ? "Keluar" : undefined}
+                        className={`w-full mt-1 flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-4'} py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold text-red-600 hover:bg-red-50 transition-all duration-200`}
+                    >
+                        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+                            <LogOut size={20} className="text-red-500" />
+                            {!isCollapsed && <span className="whitespace-nowrap">Keluar</span>}
+                        </div>
+                    </button>
+                </div>
+            </aside>
+
+            {/* Main Content Area */}
+            <div className="flex-1 w-full bg-slate-50 flex flex-col min-w-0">
+                {/* Mobile Header */}
+                <div className="md:hidden flex items-center justify-between px-6 h-20 bg-white border-b border-[#E2E8F0] sticky top-0 z-40">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-lg flex items-center justify-center shrink-0">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-white">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </div>
+                        <h2 className="font-['Inter',sans-serif] font-bold text-sm text-[#1A1A1A]">
+                            Apotek Jaya Farma
+                        </h2>
+                    </div>
+                    <button onClick={() => setIsMobileSidebarOpen(true)} className="p-2 text-slate-600">
+                        <Menu size={24} />
+                    </button>
+                </div>
+
+                {/* Mobile Sidebar Overlay */}
+                {isMobileSidebarOpen && (
+                    <div className="md:hidden fixed inset-0 z-50 flex">
+                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setIsMobileSidebarOpen(false)} />
+                        <aside className="relative w-64 max-w-[80%] bg-white h-full flex flex-col shadow-2xl">
+                            <div className="flex items-center justify-between px-6 h-20 border-b border-[#E2E8F0]">
+                                <h2 className="font-['Inter',sans-serif] font-bold text-sm text-[#1A1A1A]">Menu Admin</h2>
+                                <button onClick={() => setIsMobileSidebarOpen(false)} className="p-2 text-slate-400 hover:text-slate-600">
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1.5">
+                                {[
+                                    { id: 'analytics' as const, label: 'Analitik', icon: TrendingUp },
+                                    { id: 'products' as const, label: 'Produk & Stok', icon: Package },
+                                    { id: 'orders' as const, label: 'Manajemen Pesanan', icon: ShoppingBag },
+                                    { id: 'users' as const, label: 'Manajemen User', icon: UserCog },
+                                ].map((tab) => (
+                                    <Link
+                                        key={tab.id}
+                                        href={`/admin?tab=${tab.id}`}
+                                        className="w-full flex items-center px-4 py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all duration-200"
+                                    >
+                                        <div className="flex items-center gap-3 w-full">
+                                            <tab.icon size={20} className="text-slate-400" />
+                                            <span>{tab.label}</span>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </nav>
+                            <div className="p-4 border-t border-[#E2E8F0]">
+                                <div
+                                    className="w-full flex items-center px-4 py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold bg-[#E7F5EC] text-[#0D6A36] transition-all duration-200"
+                                >
+                                    <div className="flex items-center gap-3 w-full">
+                                        <Settings size={20} className="text-[#0D6A36]" />
+                                        <span>Informasi Apotek</span>
+                                    </div>
+                                    <div className="w-1.5 h-5 bg-[#0D6A36] rounded-full shrink-0" />
+                                </div>
+                                <button
+                                    onClick={(e) => { setIsMobileSidebarOpen(false); handleAdminLogout(e); }}
+                                    className="w-full mt-1 flex items-center px-4 py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold text-red-600 hover:bg-red-50 transition-all duration-200"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <LogOut size={20} className="text-red-500" />
+                                        <span>Keluar</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </aside>
+                    </div>
+                )}
+
+                {/* Enhanced Top Bar */}
+                <header className="hidden md:block sticky top-0 z-20 border-b border-[#E2E8F0] bg-white/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur-md">
+                    <div className="px-8 h-20 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => setIsCollapsed(!isCollapsed)}
+                                className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                            >
+                                <Menu size={20} />
+                            </button>
+                            <h1 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold tracking-[-0.5px] text-[#171d19]">
+                                Informasi Apotek
                             </h1>
-                            <p className="mt-1 font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">
-                                Pengaturan Profil Administrator
-                            </p>
                         </div>
 
                         {/* Profile Dropdown */}
@@ -136,11 +285,10 @@ export default function AdminSettings() {
                             )}
                         </div>
                     </div>
-                </div>
-            </header>
+                </header>
 
-            <main className="mx-auto max-w-[1600px] px-8 py-8">
-                <div className="mx-auto max-w-[1000px] mb-6">
+            <main className="p-8">
+                <div className="mx-auto max-w-[1000px] mb-6 hidden md:block">
                     <Link 
                         href="/admin" 
                         className="inline-flex items-center gap-2 rounded-lg py-2 font-['Inter',sans-serif] text-[14px] font-medium text-[#6e7a70] transition-colors hover:text-[#006a3f]"
@@ -314,6 +462,7 @@ export default function AdminSettings() {
                 </form>
             </main>
             <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
+            </div>
         </div>
     );
 }
