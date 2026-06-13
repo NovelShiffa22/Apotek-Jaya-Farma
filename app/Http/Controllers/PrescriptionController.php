@@ -23,7 +23,7 @@ class PrescriptionController extends Controller
         $request->validate([
             'prescription_file' => 'required|mimes:jpg,jpeg,png,pdf|max:5120',
             'nama_pasien' => 'nullable|string|max:255',
-            'nama_dokter' => 'nullable|string|max:255',
+            'tanggal_lahir_pasien' => 'nullable|date',
             'whatsapp' => 'nullable|string|max:20',
             'catatan' => 'nullable|string|max:1000',
             'is_legal_agreed' => 'accepted'
@@ -48,7 +48,7 @@ class PrescriptionController extends Controller
             'file_foto' => 'storage/' . $path,
             'status_validasi' => 'pending',
             'nama_pasien' => $request->nama_pasien,
-            'nama_dokter' => $request->nama_dokter,
+            'tanggal_lahir_pasien' => $request->tanggal_lahir_pasien,
             'whatsapp' => $request->whatsapp,
             'catatan' => $request->catatan,
             'is_legal_agreed' => $request->is_legal_agreed ? true : false,

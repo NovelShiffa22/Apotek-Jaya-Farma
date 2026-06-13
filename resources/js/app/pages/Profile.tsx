@@ -839,6 +839,11 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                                         <span className="font-semibold text-amber-800">Catatan Apoteker:</span> {p.catatan_apoteker}
                                       </p>
                                     )}
+                                    {p.status_validasi === 'ditolak' && p.rejection_reason && (
+                                      <p className="font-['Inter',sans-serif] text-[13px] text-red-700 bg-red-50 p-2 rounded-lg border border-red-100 mt-2">
+                                        <span className="font-semibold text-red-800">Alasan Penolakan:</span> {p.rejection_reason}
+                                      </p>
+                                    )}
                                   </div>
                                 </div>
                               </div>

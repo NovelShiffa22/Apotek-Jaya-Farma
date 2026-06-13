@@ -13,14 +13,14 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
     const { data, setData, post, processing, errors } = useForm<{ 
         prescription_file: File | null;
         nama_pasien: string;
-        nama_dokter: string;
+        tanggal_lahir_pasien: string;
         whatsapp: string;
         catatan: string;
         is_legal_agreed: boolean;
     }>({
         prescription_file: null,
         nama_pasien: '',
-        nama_dokter: '',
+        tanggal_lahir_pasien: '',
         whatsapp: '',
         catatan: '',
         is_legal_agreed: false,
@@ -260,15 +260,14 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                     {errors.nama_pasien && <p className="mt-1 text-xs text-red-500 font-medium">{errors.nama_pasien}</p>}
                                 </div>
                                 <div>
-                                    <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5">Nama Dokter</label>
+                                    <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5">Tanggal Lahir Pasien</label>
                                     <input 
-                                        type="text" 
-                                        value={data.nama_dokter}
-                                        onChange={(e) => setData('nama_dokter', e.target.value)}
-                                        placeholder="Contoh: dr. Ahmad Subarjo, Sp.A" 
+                                        type="date" 
+                                        value={data.tanggal_lahir_pasien}
+                                        onChange={(e) => setData('tanggal_lahir_pasien', e.target.value)}
                                         className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                                     />
-                                    {errors.nama_dokter && <p className="mt-1 text-xs text-red-500 font-medium">{errors.nama_dokter}</p>}
+                                    {errors.tanggal_lahir_pasien && <p className="mt-1 text-xs text-red-500 font-medium">{errors.tanggal_lahir_pasien}</p>}
                                 </div>
                                 <div>
                                     <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5">Nomor WhatsApp Aktif</label>
@@ -380,7 +379,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                         processing || 
                                         !data.prescription_file || 
                                         !data.nama_pasien || 
-                                        !data.nama_dokter || 
+                                        !data.tanggal_lahir_pasien || 
                                         !data.whatsapp || 
                                         !data.is_legal_agreed
                                     }

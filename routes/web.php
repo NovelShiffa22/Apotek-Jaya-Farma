@@ -349,11 +349,14 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
         $prescription->update([
             'status_validasi' => $request->status_validasi,
             'doctor_name' => $request->doctor_name,
+            'nama_dokter' => $request->doctor_name,
             'doctor_poli' => $request->doctor_poli,
             'doctor_ppk' => $request->doctor_ppk,
             'doctor_alamat' => $request->doctor_alamat,
             'total_biaya' => $request->total_biaya,
             'catatan_apoteker' => $request->catatan_apoteker,
+            'rejection_reason' => $request->rejection_reason,
+            'verifier_name' => auth()->user()->name,
             'validated_by' => auth()->id(),
             'validated_at' => now(),
         ]);

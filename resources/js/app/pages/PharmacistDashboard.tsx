@@ -314,7 +314,9 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
   };
 
   // Doctor detail state (Mockup 3)
-  const [doctorName, setDoctorName] = useState('Dr. Hermawan');
+  const [doctorName, setDoctorName] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [showRejectForm, setShowRejectForm] = useState(false);
   const [doctorPoli, setDoctorPoli] = useState('Umum');
   const [doctorPPK, setDoctorPPK] = useState('Puskesmas Tebet');
   const [doctorAlamat, setDoctorAlamat] = useState('Jl. Raya Kemerdekaan No. 10, Jakarta Selatan');
@@ -376,9 +378,12 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
     setPrescriptionView('detail');
     setValidationNotes(rx.catatan_apoteker || '');
     if (rx.doctor_name) setDoctorName(rx.doctor_name);
+    else setDoctorName('');
     if (rx.doctor_poli) setDoctorPoli(rx.doctor_poli);
     if (rx.doctor_ppk) setDoctorPPK(rx.doctor_ppk);
     if (rx.doctor_alamat) setDoctorAlamat(rx.doctor_alamat);
+    setRejectionReason('');
+    setShowRejectForm(false);
     
     if (rx.items && rx.items.length > 0) {
       setPrescriptionItems(rx.items);
@@ -1621,6 +1626,20 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                             </div>
                           </div>
 
+                          {/* Info Dokter Form */}
+                          {activeSubTab === 'menunggu' && (
+                              <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-2">NAMA DOKTER (DARI RESEP)</p>
+                                  <input 
+                                      type="text"
+                                      value={doctorName}
+                                      onChange={(e) => setDoctorName(e.target.value)}
+                                      placeholder="Ketik nama dokter..."
+                                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36]"
+                                  />
+                              </div>
+                          )}
+
                           {/* Total Harga Summary Card */}
                           <div className="bg-white rounded-xl p-5 border border-slate-200 flex items-center justify-between text-right shadow-sm">
                             <div className="text-left">
@@ -1656,16 +1675,34 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                             </button>
                             <button 
                               onClick={() => {
-                                router.put(`/pharmacist/prescriptions/${selectedPrescription.id}`, {
-                                  status_validasi: 'ditolak',
-                                  catatan_apoteker: validationNotes
-                                }, { onSuccess: () => setPrescriptionView('list') });
+                                if (showRejectForm) {
+                                  router.put(`/pharmacist/prescriptions/${selectedPrescription.id}`, {
+                                    status_validasi: 'ditolak',
+                                    catatan_apoteker: validationNotes,
+                                    rejection_reason: rejectionReason
+                                  }, { onSuccess: () => setPrescriptionView('list') });
+                                } else {
+                                  setShowRejectForm(true);
+                                }
                               }}
                               className="w-full border border-red-500 text-red-500 hover:bg-red-50 py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all"
                             >
                               <XCircle size={15} />
-                              <span>TOLAK</span>
+                              <span>{showRejectForm ? 'KONFIRMASI TOLAK' : 'TOLAK'}</span>
                             </button>
+                            {showRejectForm && (
+                              <div className="pt-2 animate-fadeIn">
+                                <p className="text-[9px] text-red-500 font-bold uppercase tracking-wider mb-1">ALASAN PENOLAKAN</p>
+                                <textarea 
+                                  rows={2}
+                                  value={rejectionReason}
+                                  onChange={(e) => setRejectionReason(e.target.value)}
+                                  placeholder="Masukkan alasan penolakan..."
+                                  className="w-full px-3 py-2 border border-red-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 bg-red-50/30 text-red-900"
+                                />
+                                <button onClick={() => setShowRejectForm(false)} className="text-xs text-slate-500 hover:text-slate-700 mt-2 font-medium w-full text-center">Batal Tolak</button>
+                              </div>
+                            )}
                           </div>
 
                         </div>

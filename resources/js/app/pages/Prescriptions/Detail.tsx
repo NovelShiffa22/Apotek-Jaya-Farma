@@ -69,8 +69,15 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                         <h1 className="font-['Poppins',sans-serif] text-[36px] font-bold text-[#171d19] tracking-tight">
                             Detail Resep
                         </h1>
-                        <div className="inline-flex items-center gap-2 bg-[#f0f9f4] text-[#006a3f] px-6 py-2 rounded-full font-['Poppins',sans-serif] font-bold text-[15px]">
-                            <CheckCircle2 size={20} /> Disetujui
+                        <div className="flex flex-col items-end gap-1">
+                            <div className="inline-flex items-center gap-2 bg-[#f0f9f4] text-[#006a3f] px-6 py-2 rounded-full font-['Poppins',sans-serif] font-bold text-[15px]">
+                                <CheckCircle2 size={20} /> Disetujui
+                            </div>
+                            {prescription.verifier_name && (
+                                <p className="font-['Poppins',sans-serif] text-[12px] font-medium text-gray-500 mr-2 mt-1">
+                                    Diverifikasi oleh: {prescription.verifier_name}
+                                </p>
+                            )}
                         </div>
                     </div>
                 )}
@@ -82,7 +89,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                         <div>
                             <h4 className="font-['Poppins',sans-serif] font-bold text-red-800 text-[16px]">Alasan Penolakan</h4>
                             <p className="font-['Poppins',sans-serif] text-[14px] text-red-700 mt-1 leading-relaxed">
-                                Alasan: Foto resep tidak terbaca jelas (buram). Mohon pastikan seluruh bagian resep terlihat jelas dengan pencahayaan yang cukup saat mengunggah kembali.
+                                Alasan: {prescription.rejection_reason || 'Foto resep tidak terbaca jelas atau tidak sesuai ketentuan.'}
                             </p>
                         </div>
                     </div>
@@ -144,7 +151,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Tanggal Lahir</span>
-                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{user.dob || '-'}</span>
+                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{prescription.tanggal_lahir_pasien || user.dob || '-'}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Nomor Telepon</span>
