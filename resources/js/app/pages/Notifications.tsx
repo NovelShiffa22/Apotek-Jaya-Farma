@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { FileText, CheckCircle2, Truck, Bell } from 'lucide-react';
 import Header from '../components/Header';
 
 export default function Notifications() {
-    const notifications = [
+    const [notifications, setNotifications] = useState([
         {
             id: 1,
             type: 'verified',
@@ -34,7 +35,16 @@ export default function Notifications() {
             unread: false,
             bgColor: 'bg-gray-50'
         }
-    ];
+    ]);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+    const totalPages = Math.ceil(notifications.length / itemsPerPage);
+
+    const paginatedNotifications = notifications.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     return (
         <div className="min-h-screen bg-[#fafaf8]">
@@ -45,13 +55,16 @@ export default function Notifications() {
                     <h1 className="font-['Poppins',sans-serif] text-[32px] font-bold text-[#171d19] tracking-tight">
                         Notifikasi Anda
                     </h1>
-                    <button className="text-[#006a3f] font-['Poppins',sans-serif] text-[14px] font-bold hover:underline">
+                    <button 
+                        onClick={() => setNotifications(prev => prev.map(n => ({ ...n, unread: false })))}
+                        className="text-[#006a3f] font-['Poppins',sans-serif] text-[14px] font-bold hover:underline"
+                    >
                         Tandai semua telah dibaca
                     </button>
                 </div>
 
                 <div className="space-y-4 mb-12">
-                    {notifications.map(notif => (
+                    {paginatedNotifications.map(notif => (
                         <div 
                             key={notif.id} 
                             className={`relative flex items-start gap-6 p-6 rounded-2xl border ${notif.unread ? 'border-transparent bg-white shadow-sm' : 'border-gray-200 bg-white'}`}
@@ -86,15 +99,39 @@ export default function Notifications() {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-center gap-2">
-                    <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">&lt;</button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#006a3f] text-white font-['Poppins',sans-serif] font-bold">1</button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-700 font-['Poppins',sans-serif] hover:bg-gray-50">2</button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-700 font-['Poppins',sans-serif] hover:bg-gray-50">3</button>
-                    <span className="w-10 h-10 flex items-center justify-center text-gray-500">...</span>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-700 font-['Poppins',sans-serif] hover:bg-gray-50">12</button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">&gt;</button>
-                </div>
+                {totalPages > 0 && (
+                    <div className="flex items-center justify-center gap-2">
+                        <button 
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                        >
+                            &lt;
+                        </button>
+                        
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                            <button
+                                key={page}
+                                onClick={() => setCurrentPage(page)}
+                                className={`w-10 h-10 flex items-center justify-center rounded-lg ${
+                                    currentPage === page
+                                        ? "bg-[#006a3f] text-white font-bold"
+                                        : "border border-gray-200 text-gray-700 hover:bg-gray-50"
+                                } font-['Poppins',sans-serif]`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+
+                        <button 
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                        >
+                            &gt;
+                        </button>
+                    </div>
+                )}
             </main>
         </div>
     );
