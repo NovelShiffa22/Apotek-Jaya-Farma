@@ -52,7 +52,6 @@ Route::get('/notifications', function () {
 
 // Rute Simulasi Resep (FE)
 Route::prefix('prescriptions')->name('prescriptions.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\PrescriptionController::class, 'index'])->middleware('auth')->name('index');
     Route::get('/upload/step-1', function() { return Inertia::render('Prescriptions/UploadStep1'); })->name('upload.step1');
     Route::get('/upload/step-2', function() { 
         $user = auth()->user();
@@ -63,7 +62,6 @@ Route::prefix('prescriptions')->name('prescriptions.')->group(function () {
             'addresses' => $addresses
         ]); 
     })->name('upload.step2');
-    Route::get('/upload/step-3', function() { return Inertia::render('Prescriptions/UploadStep3'); })->name('upload.step3');
     Route::get('/{id}', [\App\Http\Controllers\PrescriptionController::class, 'show'])->name('detail');
     Route::post('/', [\App\Http\Controllers\PrescriptionController::class, 'store'])->middleware('auth')->name('store');
 });
@@ -160,16 +158,16 @@ Route::get('/profile', function () {
     $addresses = \App\Models\Address::where('user_id', $user->id)->latest()->get();
 
     $prescriptionCounts = [
-        'Diproses' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'pending')->count(),
+        'Menunggu Verifikasi' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'pending')->count(),
         'Disetujui' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'disetujui')->whereDoesntHave('orders')->count(),
         'Ditolak' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'ditolak')->count(),
         'Telah dipesan' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'disetujui')->whereHas('orders')->count(),
     ];
 
-    $currentPrescriptionStatus = request('prescription_status', 'Diproses');
+    $currentPrescriptionStatus = request('prescription_status', 'Menunggu Verifikasi');
     
     $prescriptionsQuery = \App\Models\Prescription::withCount('orders')->where('user_id', $user->id);
-    if ($currentPrescriptionStatus === 'Diproses') {
+    if ($currentPrescriptionStatus === 'Menunggu Verifikasi') {
         $prescriptionsQuery->where('status_validasi', 'pending');
     } elseif ($currentPrescriptionStatus === 'Disetujui') {
         $prescriptionsQuery->where('status_validasi', 'disetujui')->whereDoesntHave('orders');

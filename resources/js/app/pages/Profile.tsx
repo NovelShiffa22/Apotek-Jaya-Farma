@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
-import { User, MapPin, Package, LogOut, X, CheckCircle2, Pencil, Trash2, FileText } from 'lucide-react';
+import { User, MapPin, Package, LogOut, X, CheckCircle2, Pencil, Trash2, FileText, Plus } from 'lucide-react';
 import { usePage, Link, useForm, router } from '@inertiajs/react';
 import ConfirmModal from '../components/ConfirmModal';
 import { regions } from '../data/regions';
@@ -8,7 +8,7 @@ import { regions } from '../data/regions';
 export default function Profile({ user, orders = { data: [], links: [] }, counts = {}, prescriptionCounts = {}, addresses = [], prescriptions = { data: [], links: [] } }: any) {
   const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders' | 'prescriptions'>('profile');
   const [orderTab, setOrderTab] = useState<string>('Pending');
-  const [prescriptionTab, setPrescriptionTab] = useState<'Diproses' | 'Disetujui' | 'Ditolak' | 'Telah dipesan'>('Diproses');
+  const [prescriptionTab, setPrescriptionTab] = useState<'Menunggu Verifikasi' | 'Disetujui' | 'Ditolak' | 'Telah dipesan'>('Menunggu Verifikasi');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -527,9 +527,9 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                                 year: 'numeric'
                               })} • {order.payment_method || 'Virtual Account'} {order.va_number && `(VA: ${order.va_number})`}
                             </p>
-                            {order.status === 'Lunas' && (new Date().getHours() < 8 || new Date().getHours() >= 18) && (
+                            {['Lunas', 'Diproses'].includes(order.status) && (new Date().getHours() < 8 || new Date().getHours() >= 18) && (
                               <p className="text-amber-600 text-xs mt-1 italic font-medium">
-                                ⚠️ Pesanan Anda akan diverifikasi & dikemas saat jam operasional besok pagi (08.00 WIB).
+                                ⚠️ Pesanan Anda akan dikemas & dikirim saat jam operasional besok pagi (08.00 WIB).
                               </p>
                             )}
                           </div>
@@ -712,13 +712,22 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
 
             {activeTab === 'prescriptions' && (
               <div className="bg-white rounded-2xl p-4 sm:p-8 border border-[#f1f5f9] shadow-[0_8px_24px_rgba(0,0,0,0.06)] w-full text-left">
-                <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] mb-6 font-semibold">
-                  Riwayat Resep
-                </h2>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                  <h2 className="font-['Roboto_Condensed',sans-serif] text-[28px] tracking-[-0.7px] text-[#171d19] font-semibold">
+                    Riwayat Resep
+                  </h2>
+                  <Link 
+                    href="/prescriptions/upload/step-1"
+                    className="inline-flex items-center justify-center gap-2 bg-[#006a3f] text-white px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-[#005632] shadow-sm hover:shadow-md transition-all"
+                  >
+                    <Plus size={18} />
+                    Unggah Resep Baru
+                  </Link>
+                </div>
 
                 <div className="flex gap-6 mb-8 border-b border-[#f1f5f9] overflow-x-auto pb-1 whitespace-nowrap">
                   {[
-                    { id: 'Diproses' as const, label: 'Diproses' },
+                    { id: 'Menunggu Verifikasi' as const, label: 'Menunggu Verifikasi' },
                     { id: 'Disetujui' as const, label: 'Disetujui' },
                     { id: 'Ditolak' as const, label: 'Ditolak' },
                     { id: 'Telah dipesan' as const, label: 'Telah Dipesan' }
@@ -754,7 +763,8 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 <div className="space-y-4">
                   {(() => {
                     const prescriptionsData = Array.isArray(prescriptions) ? prescriptions : (prescriptions.data || []);
-                    const filteredPrescriptions = prescriptionsData;
+                    let filteredPrescriptions = prescriptionsData;
+                    if (prescriptionTab === 'Menunggu Verifikasi') filteredPrescriptions = filteredPrescriptions.filter((p: any) => p.status_validasi === 'pending');
 
                     if (filteredPrescriptions.length === 0) {
                       return (
@@ -765,11 +775,19 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                     }
 
                     const cancelPrescription = (id: number) => {
-                      if (confirm('Apakah Anda yakin ingin membatalkan resep ini?')) {
-                        router.delete(`/profile/prescriptions/${id}`, {
-                          preserveScroll: true,
-                        });
-                      }
+                      setModalConfig({
+                          isOpen: true,
+                          type: 'warning',
+                          title: 'Batalkan Resep',
+                          message: 'Apakah Anda yakin ingin membatalkan resep ini? Aksi ini tidak dapat dibatalkan.',
+                          confirmText: 'Ya, Batalkan',
+                          onConfirm: () => {
+                              closeConfirmModal();
+                              router.delete(`/profile/prescriptions/${id}`, {
+                                  preserveScroll: true,
+                              });
+                          }
+                      });
                     };
 
                     return (
@@ -777,70 +795,85 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                         {filteredPrescriptions.map((p: any) => (
                           <div
                             key={p.id}
-                            className="flex flex-col sm:flex-row sm:items-start justify-between p-4 sm:p-6 border border-gray-200 rounded-xl hover:border-emerald-200 hover:shadow-sm transition-all bg-white gap-4 w-full"
+                            className="flex flex-col justify-between p-4 sm:p-6 border border-gray-200 rounded-xl hover:border-emerald-200 hover:shadow-sm transition-all bg-white gap-4 w-full"
                           >
-                            <div className="flex-1 min-w-0 flex items-start gap-4 w-full">
-                              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-xl border border-gray-200 p-2 shrink-0 flex items-center justify-center overflow-hidden">
-                                {p.file_foto ? (
-                                  <img 
-                                    src={`/storage/${p.file_foto.replace('storage/', '')}`} 
-                                    alt="Resep" 
-                                    className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform" 
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      target.src = p.file_foto; // Fallback to raw string
-                                    }}
-                                  />
-                                ) : (
-                                  <FileText className="text-gray-400 w-8 h-8 sm:w-10 sm:h-10" />
-                                )}
+                            <div className="flex items-start justify-between w-full">
+                              <div className="flex-1 min-w-0 flex items-start gap-4 w-full">
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-xl border border-gray-200 p-2 shrink-0 flex items-center justify-center overflow-hidden">
+                                  {p.file_foto ? (
+                                    <img 
+                                      src={`/storage/${p.file_foto.replace('storage/', '')}`} 
+                                      alt="Resep" 
+                                      className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform" 
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.src = p.file_foto; // Fallback to raw string
+                                      }}
+                                    />
+                                  ) : (
+                                    <FileText className="text-gray-400 w-8 h-8 sm:w-10 sm:h-10" />
+                                  )}
+                                </div>
+                                <div className="flex flex-col gap-1 w-full text-left">
+                                  <div className="flex flex-col gap-1">
+                                    <h3 className="font-['Roboto_Condensed',sans-serif] text-[18px] sm:text-[20px] font-bold text-[#171d19]">
+                                      No. Resep: {p.kode_resep} <span className="text-gray-500 font-medium text-[16px] sm:text-[18px]">({p.nama_pasien || 'Pasien Umum'})</span>
+                                    </h3>
+                                    <span className="font-['Inter',sans-serif] text-[13px] text-gray-500 block mb-1">
+                                      {new Date(p.created_at).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                    </span>
+                                  </div>
+                                  <div className="space-y-1 mt-1">
+                                    {(p.nama_dokter || p.doctor_name) && (
+                                      <p className="font-['Inter',sans-serif] text-[13px] text-gray-600">
+                                        Dokter: <span className="font-medium text-gray-800">{p.nama_dokter || p.doctor_name}</span>
+                                      </p>
+                                    )}
+                                    {p.status_validasi === 'pending' && (new Date().getHours() < 8 || new Date().getHours() >= 18) && (
+                                      <p className="text-amber-600 text-xs mt-1 italic font-medium">
+                                        ⚠️ Resep Anda akan diverifikasi & diperiksa saat jam operasional besok pagi (08.00 WIB).
+                                      </p>
+                                    )}
+                                    {p.catatan_apoteker && (
+                                      <p className="font-['Inter',sans-serif] text-[13px] text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-100 mt-2">
+                                        <span className="font-semibold text-amber-800">Catatan Apoteker:</span> {p.catatan_apoteker}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex flex-col gap-1 w-full text-left">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h3 className="font-['Roboto_Condensed',sans-serif] text-[18px] sm:text-[20px] font-bold text-[#171d19]">
-                                    Resep Dokter
-                                  </h3>
-                                  <span className={`px-2 py-0.5 rounded-full text-[12px] font-semibold border font-['Inter',sans-serif] whitespace-nowrap ${
-                                    p.status_validasi === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                                    p.status_validasi === 'disetujui' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                                    'bg-red-50 text-red-600 border-red-200'
-                                  }`}>
-                                    {p.status_validasi.toUpperCase()}
-                                  </span>
-                                </div>
-                                <span className="font-['Inter',sans-serif] text-[13px] text-gray-500 block mb-1">
-                                  {new Date(p.created_at).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                              
+                              {/* Status Badge (Top Right) */}
+                              <div className="shrink-0 pl-2 text-right">
+                                <span className={`px-3 py-1.5 rounded-full text-[12px] font-bold border font-['Inter',sans-serif] whitespace-nowrap ${
+                                  p.status_validasi === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                                  p.status_validasi === 'disetujui' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                                  'bg-red-50 text-red-600 border-red-200'
+                                }`}>
+                                  {p.status_validasi === 'pending' ? 'Menunggu Verifikasi' :
+                                   p.status_validasi === 'disetujui' ? 'Resep Disetujui' :
+                                   p.status_validasi === 'ditolak' ? 'Resep Ditolak' : 
+                                   p.status_validasi.toUpperCase()}
                                 </span>
-                                <div className="space-y-1">
-                                  {p.doctor_name && (
-                                    <p className="font-['Inter',sans-serif] text-[13px] text-gray-600">
-                                      Dokter: <span className="font-medium">{p.doctor_name}</span>
-                                    </p>
-                                  )}
-                                  {p.catatan_apoteker && (
-                                    <p className="font-['Inter',sans-serif] text-[13px] text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-100 mt-2">
-                                      <span className="font-semibold text-amber-800">Catatan Apoteker:</span> {p.catatan_apoteker}
-                                    </p>
-                                  )}
-                                </div>
                               </div>
                             </div>
 
-                            <div className="flex sm:flex-col gap-2 shrink-0 w-full sm:w-auto sm:items-end justify-end">
-                              <Link 
-                                href={route('prescriptions.detail', { id: p.id })} 
-                                className="text-[13px] font-bold text-center bg-gray-50 border border-gray-300 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-100 transition-colors font-['Inter',sans-serif]"
-                              >
-                                Detail
-                              </Link>
+                            {/* Action Buttons (Bottom Right) */}
+                            <div className="flex flex-row gap-2 w-full justify-end mt-2 pt-4 border-t border-gray-100">
                               {p.status_validasi === 'pending' && (
                                 <button 
                                   onClick={() => cancelPrescription(p.id)}
-                                  className="text-[13px] font-bold text-center bg-red-50 border border-red-300 text-red-600 px-4 py-2 rounded-xl hover:bg-red-100 transition-colors font-['Inter',sans-serif]"
+                                  className="text-[13px] font-bold text-center bg-red-50 border border-red-200 text-red-600 px-5 py-2 rounded-xl hover:bg-red-100 transition-colors font-['Inter',sans-serif]"
                                 >
                                   Batalkan Resep
                                 </button>
                               )}
+                              <Link 
+                                href={route('prescriptions.detail', { id: p.id })} 
+                                className="text-[13px] font-bold text-center bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-xl hover:bg-gray-50 hover:text-[#006a3f] hover:border-[#006a3f] transition-all font-['Inter',sans-serif] shadow-sm"
+                              >
+                                Detail
+                              </Link>
                             </div>
                           </div>
                         ))}

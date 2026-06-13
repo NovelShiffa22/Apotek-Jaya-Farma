@@ -10,8 +10,20 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const { data, setData, post, processing, errors } = useForm<{ prescription_file: File | null }>({
+    const { data, setData, post, processing, errors } = useForm<{ 
+        prescription_file: File | null;
+        nama_pasien: string;
+        nama_dokter: string;
+        whatsapp: string;
+        catatan: string;
+        is_legal_agreed: boolean;
+    }>({
         prescription_file: null,
+        nama_pasien: '',
+        nama_dokter: '',
+        whatsapp: '',
+        catatan: '',
+        is_legal_agreed: false,
     });
 
     // Address Modal States
@@ -153,9 +165,9 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                     </p>
                 </div>
 
-                <form onSubmit={handleKirim} method="POST" encType="multipart/form-data" className="grid grid-cols-3 gap-8">
+                <form onSubmit={handleKirim} method="POST" encType="multipart/form-data" className="flex flex-col lg:flex-row gap-6 w-full">
                     {/* Left Column - Upload Box */}
-                    <div className="col-span-2 rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
+                    <div className="w-full lg:w-2/3 rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
                         <h2 className="mb-2 font-['Poppins',sans-serif] text-xl font-bold text-[#171d19]">
                             Foto Resep Dokter
                         </h2>
@@ -164,7 +176,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                         </p>
 
                         <div 
-                            className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-12 transition-colors ${dragActive ? 'border-[#006a3f] bg-emerald-50' : 'border-gray-200 bg-gray-50/50'}`}
+                            className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed min-h-[240px] p-8 overflow-hidden transition-colors ${dragActive ? 'border-[#006a3f] bg-emerald-50' : 'border-gray-200 bg-gray-50/50'}`}
                             onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                             onDragLeave={() => setDragActive(false)}
                             onDrop={(e) => {
@@ -182,7 +194,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                             {selectedImage ? (
                                 <div className="relative flex w-full justify-center">
                                     <div className="relative">
-                                        <img src={selectedImage} alt="Preview" className="w-full max-w-sm h-auto max-h-80 object-contain rounded-xl shadow-sm border border-gray-200 bg-white" />
+                                        <img src={selectedImage} alt="Preview" className="w-full h-full object-contain rounded-lg max-h-[220px]" />
                                         <button 
                                             type="button"
                                             onClick={(e) => { e.preventDefault(); setSelectedImage(null); setData('prescription_file', null); }}
@@ -229,10 +241,80 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                 </>
                             )}
                         </div>
+
+                        {/* Additional Information Form */}
+                        <div className="mt-8 pt-8 border-t border-gray-100">
+                            <h3 className="mb-4 font-['Poppins',sans-serif] text-lg font-bold text-[#171d19]">
+                                Informasi Tambahan
+                            </h3>
+                            <div className="flex flex-col gap-4 mb-4">
+                                <div>
+                                    <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5">Nama Pasien</label>
+                                    <input 
+                                        type="text" 
+                                        value={data.nama_pasien}
+                                        onChange={(e) => setData('nama_pasien', e.target.value)}
+                                        placeholder="Masukkan nama pasien yang tertera di resep" 
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                                    />
+                                    {errors.nama_pasien && <p className="mt-1 text-xs text-red-500 font-medium">{errors.nama_pasien}</p>}
+                                </div>
+                                <div>
+                                    <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5">Nama Dokter</label>
+                                    <input 
+                                        type="text" 
+                                        value={data.nama_dokter}
+                                        onChange={(e) => setData('nama_dokter', e.target.value)}
+                                        placeholder="Contoh: dr. Ahmad Subarjo, Sp.A" 
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                                    />
+                                    {errors.nama_dokter && <p className="mt-1 text-xs text-red-500 font-medium">{errors.nama_dokter}</p>}
+                                </div>
+                                <div>
+                                    <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5">Nomor WhatsApp Aktif</label>
+                                    <input 
+                                        type="text" 
+                                        value={data.whatsapp}
+                                        onChange={(e) => setData('whatsapp', e.target.value)}
+                                        placeholder="Contoh: 08123456789" 
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                                    />
+                                    {errors.whatsapp && <p className="mt-1 text-xs text-red-500 font-medium">{errors.whatsapp}</p>}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5">Catatan / Permintaan Khusus (Opsional)</label>
+                                <textarea 
+                                    value={data.catatan}
+                                    onChange={(e) => setData('catatan', e.target.value)}
+                                    placeholder="Contoh: Minta obat generik / Obat diganti sirup" 
+                                    rows={3}
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                                />
+                                {errors.catatan && <p className="mt-1 text-xs text-red-500 font-medium">{errors.catatan}</p>}
+                            </div>
+
+                            <div className="mt-6 flex items-start gap-3 bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
+                                <div className="flex items-center h-5 mt-0.5">
+                                    <input
+                                        id="is_legal_agreed"
+                                        type="checkbox"
+                                        required
+                                        checked={data.is_legal_agreed}
+                                        onChange={(e) => setData('is_legal_agreed', e.target.checked)}
+                                        className="w-5 h-5 rounded border-gray-300 text-[#006a3f] focus:ring-[#006a3f] transition-colors cursor-pointer"
+                                    />
+                                </div>
+                                <label htmlFor="is_legal_agreed" className="font-['Inter',sans-serif] text-[13px] text-[#171d19] leading-relaxed cursor-pointer select-none">
+                                    Saya menyatakan bahwa dokumen resep yang diunggah adalah asli, sah dari dokter, dan belum pernah ditebus sebelumnya.
+                                </label>
+                            </div>
+                            {errors.is_legal_agreed && <p className="mt-2 text-xs text-red-500 font-medium">{errors.is_legal_agreed}</p>}
+                        </div>
                     </div>
 
                     {/* Right Column - Address & Detail */}
-                    <div className="col-span-1 space-y-6">
+                    <div className="w-full lg:w-1/3 space-y-6">
                         
                         {/* Address Card */}
                         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
@@ -294,8 +376,15 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                 </div>
                                 <button 
                                     type="submit"
-                                    disabled={processing || !data.prescription_file}
-                                    className="block w-full rounded-xl bg-[#006a3f] py-3.5 text-center font-['Poppins',sans-serif] text-[14px] font-bold text-white transition-all hover:bg-[#005632] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={
+                                        processing || 
+                                        !data.prescription_file || 
+                                        !data.nama_pasien || 
+                                        !data.nama_dokter || 
+                                        !data.whatsapp || 
+                                        !data.is_legal_agreed
+                                    }
+                                    className="block w-full rounded-xl bg-[#006a3f] py-3.5 text-center font-['Poppins',sans-serif] text-[14px] font-bold text-white transition-all hover:bg-[#005632] hover:shadow-lg disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed disabled:hover:shadow-none"
                                 >
                                     {processing ? 'Memproses...' : 'Kirim Resep'}
                                 </button>

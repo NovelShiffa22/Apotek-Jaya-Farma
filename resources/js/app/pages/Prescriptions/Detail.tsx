@@ -38,7 +38,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
             <main className="mx-auto max-w-6xl px-8 py-10">
                 {status !== 'Disetujui' && (
                     <div className="mb-6">
-                        <Link href={route('prescriptions.index')} className="text-[#006a3f] hover:underline font-['Poppins',sans-serif] text-[13px] font-medium">
+                        <Link href="/profile?tab=prescriptions" className="text-[#006a3f] hover:underline font-['Poppins',sans-serif] text-[13px] font-medium">
                             &larr; Kembali ke Riwayat Resep
                         </Link>
                     </div>
@@ -140,7 +140,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
                                         <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Nama Lengkap</span>
-                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{user.name || '-'}</span>
+                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{prescription.nama_pasien || user.name || '-'}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Tanggal Lahir</span>
@@ -148,7 +148,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Nomor Telepon</span>
-                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{user.phone || '-'}</span>
+                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{prescription.whatsapp || user.phone || '-'}</span>
                                     </div>
                                 </div>
                             </div>
@@ -165,26 +165,10 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                 </div>
                                 
                                 <div className="space-y-4">
-                                    {status === 'Verifikasi' ? (
-                                        <p className="font-['Poppins',sans-serif] text-[13px] text-gray-500 text-center py-4">
-                                            Informasi akan diperbarui setelah diverifikasi oleh apoteker.
-                                        </p>
-                                    ) : (
-                                        <>
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Nama Dokter</span>
-                                                <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">dr. Aris Munandar, Sp.PD</span>
-                                            </div>
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Instansi</span>
-                                                <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">RS Umum Jaya Sehat</span>
-                                            </div>
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">SIP</span>
-                                                <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">21.04.1.2.000192</span>
-                                            </div>
-                                        </>
-                                    )}
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Nama Dokter</span>
+                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{prescription.nama_dokter || '-'}</span>
+                                    </div>
                                 </div>
                             </div>
 
