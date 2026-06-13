@@ -28,6 +28,7 @@ declare global {
 export default function Invoice({ transaction }: Props) {
   const [isLunasState, setIsLunasState] = useState(transaction.status === 'Lunas');
   const [isExpired, setIsExpired] = useState(transaction.status === 'Dibatalkan' || transaction.status === 'Expired');
+  const [isRedirecting, setIsRedirecting] = useState(false);
   
   // Timer: 20 minutes from created_at
   const [timeLeft, setTimeLeft] = useState(20 * 60);
@@ -96,16 +97,7 @@ export default function Invoice({ transaction }: Props) {
     if (transaction.snap_token) {
         window.snap.pay(transaction.snap_token, {
           onSuccess: function(result: any){
-            setIsLunasState(true);
-            setModalConfig({
-                isOpen: true,
-                title: 'Pembayaran Berhasil!',
-                message: 'Transaksi Anda telah lunas. Nota tagihan resmi telah diterbitkan.',
-                confirmText: 'Tutup',
-                cancelText: '',
-                type: 'warning',
-                onConfirm: closeModal
-            });
+            setIsRedirecting(true);
           },
           onPending: function(result: any){
             // Tetap di halaman
@@ -156,6 +148,16 @@ export default function Invoice({ transaction }: Props) {
     });
   };
 
+  if (isRedirecting) {
+    return (
+      <div className="min-h-screen bg-[#fafaf8] font-['Poppins',sans-serif] flex flex-col items-center justify-center">
+        <div className="w-16 h-16 border-4 border-[#006a3f] border-t-transparent rounded-full animate-spin mb-6"></div>
+        <h2 className="text-xl font-bold text-[#171d19] mb-2 font-['Roboto_Condensed',sans-serif]">Memverifikasi Pembayaran...</h2>
+        <p className="text-gray-500 text-sm">Mohon tunggu sebentar, sistem sedang menyinkronkan data.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#fafaf8] font-['Poppins',sans-serif]">
       <Head title="Invoice Pembayaran - Apotek Jaya Farma" />
@@ -187,7 +189,7 @@ export default function Invoice({ transaction }: Props) {
                 </div>
                 <div className="inline-flex items-center gap-2 bg-emerald-50 text-[#006a3f] px-5 py-2.5 rounded-full border border-emerald-100 font-bold shadow-sm self-start sm:self-auto">
                   <CheckCircle size={20} />
-                  [✓] PEMBAYARAN LUNAS
+                  PEMBAYARAN LUNAS
                 </div>
               </div>
 
@@ -201,6 +203,11 @@ export default function Invoice({ transaction }: Props) {
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Status Pengiriman</p>
                   <p className="font-semibold text-gray-900 mb-1">Diproses</p>
                   <p className="text-sm text-gray-500">Apoteker sedang menyiapkan pesanan Anda.</p>
+                  {(new Date().getHours() < 8 || new Date().getHours() >= 18) && (
+                    <span className="text-amber-600 text-xs mt-1 block italic font-medium max-w-xs">
+                      ⚠️ Catatan: Pembayaran di luar jam kerja akan dikemas dan dikirim saat jam operasional esok hari (mulai pukul 08.00 WIB).
+                    </span>
+                  )}
                 </div>
               </div>
 

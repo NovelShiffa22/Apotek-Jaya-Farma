@@ -344,10 +344,10 @@ class CheckoutController extends Controller
             }
         }
 
-        // REDIRECT JIKA LUNAS
-        if ($transaction->status === 'Lunas' || $transaction->status === 'Diproses') {
-            return redirect('/profile?tab=orders')->with('success', 'Pembayaran Berhasil! Pesanan Anda sedang diproses.');
-        }
+        // TIDAK DILAKUKAN REDIRECT OTOMATIS AGAR HALAMAN SUCCESS (STRUK) BISA DIRENDER DI FRONTEND
+        // if ($transaction->status === 'Lunas' || $transaction->status === 'Diproses') {
+        //     return redirect('/profile?tab=orders')->with('success', 'Pembayaran Berhasil! Pesanan Anda sedang diproses.');
+        // }
         
         return Inertia::render('Invoice', [
             'transaction' => $transaction
