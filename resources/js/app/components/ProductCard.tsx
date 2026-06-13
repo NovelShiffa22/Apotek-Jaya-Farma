@@ -98,20 +98,20 @@ export default function ProductCard(props: ProductCardProps) {
         )}
 
         {/* Price & CTA */}
-        <div className="flex items-center justify-between mt-auto pt-4">
-          <div>
+        <div className="flex items-end justify-between mt-auto pt-4 gap-2">
+          <div className="flex-1 min-w-0">
             <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70] uppercase tracking-wider mb-1">
               Harga
             </p>
-            <p className="font-['Roboto_Condensed',sans-serif] font-semibold text-[20px] text-[#006a3f]">
+            <p className="font-['Roboto_Condensed',sans-serif] font-semibold text-[17px] text-[#006a3f]">
               Rp {productPrice.toLocaleString('id-ID')}
-              {unit && <span className="text-[14px] font-normal text-[#6e7a70]"> / {unit}</span>}
+              {unit && <span className="text-[12px] font-normal text-[#6e7a70]"> / {unit}</span>}
             </p>
           </div>
 
           <Link 
             href={isPrescriptionRequired ? '/prescriptions/upload/step-1' : `/products/${id}`}
-            className={`w-full max-w-[120px] ${isPrescriptionRequired ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#006a3f] hover:bg-[#005632]'} text-white py-3 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2`}
+            className={`w-10 h-10 shrink-0 ${isPrescriptionRequired ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#006a3f] hover:bg-[#005632]'} text-white rounded-xl opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 flex items-center justify-center`}
             title={isPrescriptionRequired ? 'Upload Resep' : 'Tambah ke Keranjang'}
           >
             {isPrescriptionRequired ? <UploadCloud className="w-5 h-5 text-white" /> : <ShoppingCart className="w-5 h-5 text-white" />}
