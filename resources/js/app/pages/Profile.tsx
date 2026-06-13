@@ -518,14 +518,14 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                         <div className="flex items-start justify-between mb-4">
                           <div>
                             <p className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#171d19] mb-1 font-semibold">
-                              VA: {order.va_number}
+                              No. Pesanan: {order.id.toString().padStart(6, '0')}
                             </p>
                             <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
                               {new Date(order.created_at).toLocaleDateString('id-ID', {
                                 day: 'numeric',
                                 month: 'long', 
                                 year: 'numeric'
-                              })} • {order.payment_method || 'Virtual Account'}
+                              })} • {order.payment_method || 'Virtual Account'} {order.va_number && `(VA: ${order.va_number})`}
                             </p>
                             {order.status === 'Lunas' && (new Date().getHours() < 8 || new Date().getHours() >= 18) && (
                               <p className="text-amber-600 text-xs mt-1 italic font-medium">
@@ -533,10 +533,16 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                               </p>
                             )}
                           </div>
-                          {order.status === 'Dibatalkan' ? (
-                            <div className="bg-red-50 border border-red-200 px-4 py-2 rounded-full">
-                              <p className="font-['Inter',sans-serif] text-[12px] font-bold tracking-wider text-red-600">
-                                TRANSAKSI KEDALUWARSA
+                          {['Expired', 'expired', 'Kedaluwarsa', 'expire'].includes(order.status) ? (
+                            <div className="bg-gray-100 border border-gray-200 px-2.5 py-1 rounded-full">
+                              <p className="font-['Inter',sans-serif] text-xs font-semibold text-gray-700">
+                                Pembayaran Kedaluwarsa
+                              </p>
+                            </div>
+                          ) : ['Dibatalkan', 'cancelled', 'rejected', 'Cancelled', 'Rejected', 'cancel', 'deny'].includes(order.status) ? (
+                            <div className="bg-red-50 border border-red-200 px-2.5 py-1 rounded-full">
+                              <p className="font-['Inter',sans-serif] text-xs font-semibold text-red-700">
+                                Pesanan Dibatalkan
                               </p>
                             </div>
                           ) : (
