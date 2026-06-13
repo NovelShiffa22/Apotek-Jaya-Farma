@@ -26,6 +26,8 @@ declare global {
 }
 
 export default function Invoice({ transaction }: Props) {
+  const { apotekInfo } = usePage<any>().props;
+  const jamOp = apotekInfo?.jam_operasional || '08.00 - 18.00 WIB';
   const [isLunasState, setIsLunasState] = useState(transaction.status === 'Lunas');
   const [isExpired, setIsExpired] = useState(transaction.status === 'Dibatalkan' || transaction.status === 'Expired');
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -205,7 +207,7 @@ export default function Invoice({ transaction }: Props) {
                   <p className="text-sm text-gray-500">Apoteker sedang menyiapkan pesanan Anda.</p>
                   {(new Date().getHours() < 8 || new Date().getHours() >= 18) && (
                     <span className="text-amber-600 text-xs mt-1 block italic font-medium max-w-xs">
-                      ⚠️ Catatan: Pembayaran di luar jam kerja akan dikemas dan dikirim saat jam operasional esok hari (mulai pukul 08.00 WIB).
+                      ⚠️ Catatan: Pembayaran di luar jam kerja akan dikemas dan dikirim saat jam operasional esok hari (mulai pukul {jamOp.split(' ')[0]} WIB).
                     </span>
                   )}
                 </div>
@@ -302,7 +304,7 @@ export default function Invoice({ transaction }: Props) {
                     <>
                         <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm p-4 rounded-xl flex items-start gap-2.5 mb-6 text-left">
                             <AlertCircle size={20} className="text-amber-600 shrink-0 mt-0.5" />
-                            <p className="leading-relaxed">⚠️ Jam Operasional Pengemasan & Pengiriman: 08.00-18.00 WIB. Pembayaran di luar jam tersebut akan diproses esok hari.</p>
+                             <p className="leading-relaxed">⚠️ Jam Operasional Pengemasan & Pengiriman: {jamOp}. Pembayaran di luar jam tersebut akan diproses esok hari.</p>
                         </div>
                         <button 
                           onClick={handlePayMidtrans}

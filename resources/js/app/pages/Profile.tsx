@@ -6,6 +6,8 @@ import ConfirmModal from '../components/ConfirmModal';
 import { regions } from '../data/regions';
 
 export default function Profile({ user, orders = { data: [], links: [] }, counts = {}, prescriptionCounts = {}, addresses = [], prescriptions = { data: [], links: [] } }: any) {
+  const { apotekInfo } = usePage<any>().props;
+  const jamOp = apotekInfo?.jam_operasional || '08.00 - 18.00 WIB';
   const [activeTab, setActiveTab] = useState<'profile' | 'address' | 'orders' | 'prescriptions'>('profile');
   const [orderTab, setOrderTab] = useState<string>('Pending');
   const [prescriptionTab, setPrescriptionTab] = useState<'Menunggu Verifikasi' | 'Disetujui' | 'Ditolak' | 'Telah dipesan'>('Menunggu Verifikasi');
@@ -529,7 +531,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                             </p>
                             {['Lunas', 'Diproses'].includes(order.status) && (new Date().getHours() < 8 || new Date().getHours() >= 18) && (
                               <p className="text-amber-600 text-xs mt-1 italic font-medium">
-                                ⚠️ Pesanan Anda akan dikemas & dikirim saat jam operasional besok pagi (08.00 WIB).
+                                ⚠️ Pesanan Anda akan dikemas & dikirim saat jam operasional besok pagi ({jamOp.split(' ')[0]} WIB).
                               </p>
                             )}
                           </div>
@@ -831,7 +833,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                                     )}
                                     {p.status_validasi === 'pending' && (new Date().getHours() < 8 || new Date().getHours() >= 18) && (
                                       <p className="text-amber-600 text-xs mt-1 italic font-medium">
-                                        ⚠️ Resep Anda akan diverifikasi & diperiksa saat jam operasional besok pagi (08.00 WIB).
+                                        ⚠️ Resep Anda akan diverifikasi & diperiksa saat jam operasional besok pagi ({jamOp.split(' ')[0]} WIB).
                                       </p>
                                     )}
                                     {p.catatan_apoteker && (

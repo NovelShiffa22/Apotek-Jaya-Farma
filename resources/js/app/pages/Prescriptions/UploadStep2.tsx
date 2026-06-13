@@ -5,7 +5,8 @@ import Header from '../../components/Header';
 import { regions } from '../../data/regions';
 
 export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
-    const { auth } = usePage().props as any;
+    const { auth, apotekInfo } = usePage().props as any;
+    const jamOp = apotekInfo?.jam_operasional || '08.00 - 18.00 WIB';
     const [dragActive, setDragActive] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -371,7 +372,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                             <div className="mt-8">
                                 <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm p-4 rounded-xl flex items-start gap-2.5 mb-6 text-left">
                                     <AlertCircle size={20} className="text-amber-600 shrink-0 mt-0.5" />
-                                    <p className="leading-relaxed">⚠️ Jam Operasional Verifikasi Resep: 08.00-18.00 WIB. Di luar jam tersebut, resep akan diperiksa esok hari.</p>
+                                    <p className="leading-relaxed">⚠️ Jam Operasional Verifikasi Resep: {jamOp}. Di luar jam tersebut, resep akan diperiksa esok hari.</p>
                                 </div>
                                 <button 
                                     type="submit"

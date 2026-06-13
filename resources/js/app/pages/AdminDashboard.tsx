@@ -30,6 +30,7 @@ import {
     Truck,
     CheckCircle,
     XCircle,
+    Building2,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import CreateProduct from './CreateProduct';
@@ -321,14 +322,24 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 </div>
 
                 {/* Bottom Actions */}
-                <div className="p-3 border-t border-[#E2E8F0]">
+                <div className="p-3 border-t border-[#E2E8F0] space-y-1">
                     <Link
                         href="/admin/settings"
-                        title={isCollapsed ? "Informasi Apotek" : undefined}
+                        title={isCollapsed ? "Pengaturan Profil" : undefined}
                         className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-4'} py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all duration-200`}
                     >
                         <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
                             <Settings size={20} className="text-slate-400" />
+                            {!isCollapsed && <span className="whitespace-nowrap">Pengaturan Profil</span>}
+                        </div>
+                    </Link>
+                    <Link
+                        href="/admin/pharmacy-info"
+                        title={isCollapsed ? "Informasi Apotek" : undefined}
+                        className={`w-full flex items-center ${isCollapsed ? 'justify-center px-0' : 'px-4'} py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all duration-200`}
+                    >
+                        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+                            <Building2 size={20} className="text-slate-400" />
                             {!isCollapsed && <span className="whitespace-nowrap">Informasi Apotek</span>}
                         </div>
                     </Link>
@@ -401,7 +412,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     </button>
                                 ))}
                             </nav>
-                            <div className="p-4 border-t border-[#E2E8F0]">
+                            <div className="p-4 border-t border-[#E2E8F0] space-y-1">
                                 <Link
                                     href="/admin/settings"
                                     onClick={() => setIsMobileSidebarOpen(false)}
@@ -409,6 +420,16 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                 >
                                     <div className="flex items-center gap-3">
                                         <Settings size={20} className="text-slate-400" />
+                                        <span>Pengaturan Profil</span>
+                                    </div>
+                                </Link>
+                                <Link
+                                    href="/admin/pharmacy-info"
+                                    onClick={() => setIsMobileSidebarOpen(false)}
+                                    className="w-full flex items-center px-4 py-3 rounded-xl font-['Inter',sans-serif] text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all duration-200"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Building2 size={20} className="text-slate-400" />
                                         <span>Informasi Apotek</span>
                                     </div>
                                 </Link>

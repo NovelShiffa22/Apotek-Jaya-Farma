@@ -863,11 +863,41 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     })->name('admin.orders.show');
 
     Route::get('/admin/settings', function () {
-        $globalDiscount = \Illuminate\Support\Facades\Cache::get('global_discount', 0);
-        return Inertia::render('AdminSettings', [
-            'globalDiscount' => $globalDiscount
-        ]);
+        return Inertia::render('AdminSettings');
     })->name('admin.settings');
+
+    Route::get('/admin/pharmacy-info', function () {
+        $settings = \Illuminate\Support\Facades\DB::table('apotek_settings')->get()->pluck('value', 'key');
+        $globalDiscount = \Illuminate\Support\Facades\Cache::get('global_discount', 0);
+        return Inertia::render('AdminPharmacyInfo', [
+            'apotekSettings' => [
+                'deskripsi'       => $settings->get('deskripsi', ''),
+                'alamat'          => $settings->get('alamat', ''),
+                'jam_operasional' => $settings->get('jam_operasional', ''),
+                'kontak'          => $settings->get('kontak', ''),
+            ],
+            'globalDiscount' => $globalDiscount,
+        ]);
+    })->name('admin.pharmacy-info');
+
+    Route::post('/admin/pharmacy-info', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'deskripsi'       => 'nullable|string|max:2000',
+            'alamat'          => 'nullable|string|max:500',
+            'jam_operasional' => 'nullable|string|max:200',
+            'kontak'          => 'nullable|string|max:100',
+        ]);
+
+        $fields = ['deskripsi', 'alamat', 'jam_operasional', 'kontak'];
+        foreach ($fields as $field) {
+            \Illuminate\Support\Facades\DB::table('apotek_settings')->updateOrInsert(
+                ['key' => $field],
+                ['value' => $request->input($field, ''), 'updated_at' => now()]
+            );
+        }
+
+        return back()->with('success', 'Informasi Apotek berhasil disimpan.');
+    })->name('admin.pharmacy-info.save');
 
     Route::post('/admin/settings/discount', function(\Illuminate\Http\Request $request) {
         $request->validate(['discount' => 'required|numeric|min:0']);
