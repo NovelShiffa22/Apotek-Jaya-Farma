@@ -330,6 +330,23 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
     }]);
   };
 
+  const updateItem = (index: number, field: string, value: any) => {
+    const newItems = [...prescriptionItems];
+    newItems[index] = { ...newItems[index], [field]: value };
+    
+    if (field === 'kuantitas_ambil' || field === 'harga_satuan') {
+      newItems[index].subtotal = (newItems[index].harga_satuan || 0) * (newItems[index].kuantitas_ambil || 0);
+    }
+    
+    setPrescriptionItems(newItems);
+  };
+
+  const removeItem = (index: number) => {
+    const newItems = [...prescriptionItems];
+    newItems.splice(index, 1);
+    setPrescriptionItems(newItems);
+  };
+
   // Product Editor State
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [productSearch, setProductSearch] = useState('');
@@ -394,12 +411,21 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                 replace: true,
                 only: ['orders']
             });
+        } else if (activeTab === 'dashboard') {
+            params.verifikasi_days = verifikasiFilterDays;
+            
+            router.get('/pharmacist', params, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+                only: ['analytics']
+            });
         }
 
     }, 300);
 
     return () => clearTimeout(handler);
-  }, [activeTab, activeSubTab, searchQuery, prescriptionDateFilter, orderSearchQuery, orderDateFilter, orderStatusFilter]);
+  }, [activeTab, activeSubTab, searchQuery, prescriptionDateFilter, orderSearchQuery, orderDateFilter, orderStatusFilter, verifikasiFilterDays]);
 
   const activeFilteredList = activeSubTab === 'pembayaran' 
     ? (orders?.data || []) 
@@ -640,14 +666,17 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
             <div className="space-y-8 max-w-[1600px] mx-auto">
               
               {/* Banner Welcome */}
-              <div className="relative bg-gradient-to-r from-[#09522C] to-[#0D6A36] rounded-2xl p-8 text-white overflow-hidden shadow-sm">
+              <div className="relative bg-gradient-to-r from-[#09522C] to-[#0D6A36] rounded-2xl py-6 px-8 min-h-[120px] h-auto text-white overflow-hidden shadow-sm">
                 <div className="relative z-10 max-w-2xl">
                   <h1 className="font-['Inter',sans-serif] font-bold text-2xl mb-2">
                     Selamat Pagi, {user?.name || 'Apoteker'}
                   </h1>
-                  <p className="font-['Inter',sans-serif] text-sm text-white/80 whitespace-nowrap">
-                    Berikut adalah ringkasan aktivitas apotek Anda hari ini. Semua sistem beroperasi dengan normal.
-                  </p>
+                  <div className="font-['Inter',sans-serif] text-sm text-white/80 whitespace-normal break-words space-y-1">
+                    <p>Berikut adalah ringkasan aktivitas apotek Anda hari ini.</p>
+                    {analytics && Object.keys(analytics).length > 0 && (
+                      <p>Semua sistem beroperasi dengan normal.</p>
+                    )}
+                  </div>
                 </div>
                 {/* SVG Shield Watermark */}
                 <svg className="absolute right-6 -bottom-6 h-36 w-auto opacity-10 text-white pointer-events-none select-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
@@ -657,33 +686,33 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
               </div>
 
               {/* Stats Panel */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 xl:gap-6">
                 {[
                   { label: 'Pesanan Hari Ini', value: pesananHariIni, sub: 'Semua pesanan masuk', badge: 'Hari ini', icon: ShoppingBag, iconBg: 'bg-[#eff6ff] text-[#2d5f9f]', hasBadge: true },
                   { label: 'Total Resep Hari Ini', value: totalResepHariIni, sub: 'Semua resep masuk hari ini', badge: 'Hari ini', icon: FileText, iconBg: 'bg-[#e7f5ec] text-[#0D6A36]', hasBadge: true },
-                  { label: 'Menunggu Verifikasi', value: pendingPrescriptions.length, sub: 'Segera periksa antrean', subColor: 'text-amber-600 font-semibold', icon: Clock, iconBg: 'bg-amber-50 text-amber-600' },
-                  { label: 'Resep Disetujui', value: approvedPrescriptions.length, sub: 'Telah diproses', icon: CheckCircle, iconBg: 'bg-[#e7f5ec] text-[#0D6A36]' },
-                  { label: 'Resep Ditolak', value: rejectedPrescriptions.length, sub: 'Memerlukan follow-up', icon: XCircle, iconBg: 'bg-red-50 text-red-600' }
+                  { label: 'Menunggu Verifikasi', value: pendingCount, sub: 'Segera periksa antrean', subColor: 'text-amber-600 font-semibold', icon: Clock, iconBg: 'bg-amber-50 text-amber-600' },
+                  { label: 'Resep Disetujui', value: approvedCount, sub: 'Telah diproses', icon: CheckCircle, iconBg: 'bg-[#e7f5ec] text-[#0D6A36]' },
+                  { label: 'Resep Ditolak', value: rejectedCount, sub: 'Memerlukan follow-up', icon: XCircle, iconBg: 'bg-red-50 text-red-600' }
                 ].map((stat, idx) => (
-                  <div key={idx} className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm flex flex-col justify-between h-44 hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between">
-                      <div className={`p-2.5 rounded-xl ${stat.iconBg}`}>
+                  <div key={idx} className="bg-white rounded-2xl p-4 xl:p-6 border border-[#E2E8F0] shadow-sm flex flex-col justify-between min-h-[11rem] h-auto hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className={`p-2.5 rounded-xl shrink-0 ${stat.iconBg}`}>
                         <stat.icon size={22} />
                       </div>
                       {stat.hasBadge && (
-                        <span className="text-xs font-semibold px-2.5 py-1 bg-emerald-50 text-[#0D6A36] rounded-full border border-emerald-100">
+                        <span className="text-[10px] xl:text-xs font-semibold px-2 py-1 bg-emerald-50 text-[#0D6A36] rounded-full border border-emerald-100 whitespace-nowrap text-center">
                           {stat.badge}
                         </span>
                       )}
                     </div>
                     <div className="mt-4">
-                      <p className="font-['Inter',sans-serif] text-xs text-slate-400 mb-0.5 font-medium">
+                      <p className="font-['Inter',sans-serif] text-xs text-slate-400 mb-0.5 font-medium leading-snug">
                         {stat.label}
                       </p>
                       <p className="font-['Inter',sans-serif] text-3xl text-slate-800 font-bold tracking-tight">
                         {stat.value}
                       </p>
-                      <p className={`font-['Inter',sans-serif] text-[11px] mt-1 ${stat.subColor || 'text-slate-400 font-medium'}`}>
+                      <p className={`font-['Inter',sans-serif] text-[10px] xl:text-[11px] mt-1 leading-snug ${stat.subColor || 'text-slate-400 font-medium'}`}>
                         {stat.sub}
                       </p>
                     </div>
@@ -718,8 +747,15 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                   
                   {/* The Chart Body */}
                   <div className={`flex-1 flex items-end ${verifikasiFilterDays === 7 ? 'gap-4' : verifikasiFilterDays === 30 ? 'gap-1.5' : 'gap-[2px]'} rounded-xl border border-[#E2E8F0] bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] p-4 relative`}>
+                    {chartData.reduce((acc: number, d: any) => acc + d.value, 0) === 0 && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <span className="text-sm font-medium text-slate-400 bg-white/60 px-3 py-1 rounded-full backdrop-blur-sm">
+                          Belum ada aktivitas di periode ini
+                        </span>
+                      </div>
+                    )}
                     {/* Bars */}
-                    {chartData.map((data, idx) => (
+                    {chartData.map((data: any, idx: number) => (
                       <div key={idx} className="group relative flex flex-1 flex-col items-center justify-end h-full">
                         {/* Tooltip on hover */}
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] px-2 py-1 rounded absolute bottom-full mb-1 shadow-md whitespace-nowrap pointer-events-none z-10">
