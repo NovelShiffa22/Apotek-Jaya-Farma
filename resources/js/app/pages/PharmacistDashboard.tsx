@@ -176,14 +176,14 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
   });
   const [prescriptionView, setPrescriptionView] = useState<'list' | 'detail'>('list');
   const [searchQuery, setSearchQuery] = useState('');
-  const [monthFilter, setMonthFilter] = useState('');
+  const [prescriptionDateFilter, setPrescriptionDateFilter] = useState('');
   const [validationNotes, setValidationNotes] = useState('');
   
   // Order states
   const [viewingOrder, setViewingOrder] = useState<any>(null);
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [orderDateFilter, setOrderDateFilter] = useState('');
-  const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+  const [orderStatusFilter, setOrderStatusFilter] = useState('menunggu_pembayaran');
 
   const [modalConfig, setModalConfig] = useState<{
       isOpen: boolean;
@@ -406,18 +406,14 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
       const nameStr = (rx.user?.name || rx.customer || '').toLowerCase();
       const matchesSearch = idStr.includes(searchQuery.toLowerCase()) || nameStr.includes(searchQuery.toLowerCase());
 
-      let matchesMonth = true;
-      if (monthFilter) {
-        const dateStr = rx.created_at || rx.waktu_masuk || '';
-        if (dateStr.length >= 7) {
-          const rxMonth = dateStr.substring(5, 7);
-          matchesMonth = rxMonth === monthFilter;
-        } else {
-          matchesMonth = false;
-        }
+      let matchesDate = true;
+      if (prescriptionDateFilter && (rx.created_at || rx.waktu_masuk)) {
+        const d = new Date(rx.created_at || rx.waktu_masuk);
+        const localDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        matchesDate = localDateStr === prescriptionDateFilter;
       }
 
-      return matchesSearch && matchesMonth;
+      return matchesSearch && matchesDate;
     });
   };
 
@@ -825,6 +821,35 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                       </p>
                   </div>
 
+                  {/* Sub Navigation Tabs */}
+                  <div className="mb-6 border-b border-[#E2E8F0]">
+                      <div className="flex gap-8 overflow-x-auto scrollbar-hide">
+                          {[
+                            { id: 'menunggu_pembayaran', label: 'Menunggu Pembayaran' },
+                            { id: 'diproses', label: 'Diproses' },
+                            { id: 'disiapkan', label: 'Disiapkan' },
+                            { id: 'dikirim', label: 'Dikirim' },
+                            { id: 'selesai', label: 'Selesai' },
+                            { id: 'dibatalkan', label: 'Dibatalkan' }
+                          ].map((tab) => {
+                            const isActive = orderStatusFilter === tab.id;
+                            return (
+                              <button
+                                key={tab.id}
+                                onClick={() => setOrderStatusFilter(tab.id)}
+                                className={`font-['Inter',sans-serif] text-sm font-semibold pb-4 relative transition-all whitespace-nowrap ${
+                                  isActive
+                                    ? 'text-[#0D6A36] border-b-2 border-[#0D6A36]'
+                                    : 'text-slate-400 hover:text-slate-600 border-b-2 border-transparent'
+                                }`}
+                              >
+                                {tab.label}
+                              </button>
+                            );
+                          })}
+                      </div>
+                  </div>
+
                   {/* Search & Filter Bar */}
                   <div className="mb-6 rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
                       <div className="flex flex-col sm:flex-row gap-4">
@@ -847,19 +872,6 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                               onChange={(e) => setOrderDateFilter(e.target.value)}
                               className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-3 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
                           />
-                          <select 
-                              value={orderStatusFilter}
-                              onChange={(e) => setOrderStatusFilter(e.target.value)}
-                              className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-3 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
-                          >
-                              <option value="all">Semua Status</option>
-                              <option value="menunggu_pembayaran">Menunggu Pembayaran</option>
-                              <option value="diproses">Diproses</option>
-                              <option value="disiapkan">Disiapkan</option>
-                              <option value="dikirim">Dikirim</option>
-                              <option value="selesai">Selesai</option>
-                              <option value="dibatalkan">Dibatalkan</option>
-                          </select>
                       </div>
                   </div>
 
@@ -1037,17 +1049,23 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                       
                       {/* Search & Filter Bar */}
                       <div className="mb-6 rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
-                          <div className="flex gap-4">
+                          <div className="flex flex-col sm:flex-row gap-4">
                               <div className="relative flex-1">
                                   <Search className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6e7a70]" size={20} />
                                   <input
                                       type="text"
                                       value={searchQuery}
                                       onChange={(e) => setSearchQuery(e.target.value)}
-                                      placeholder="Cari ID Resep atau Nama Pasien..."
+                                      placeholder="Cari berdasarkan ID Resep atau nama pasien..."
                                       className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-3 pr-4 pl-12 font-['Inter',sans-serif] text-[14px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#006a3f] focus:bg-white focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
                                   />
                               </div>
+                              <input
+                                  type="date"
+                                  value={prescriptionDateFilter}
+                                  onChange={(e) => setPrescriptionDateFilter(e.target.value)}
+                                  className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-3 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                              />
                           </div>
                       </div>
 
