@@ -27,6 +27,8 @@ class ProductController extends Controller
         $priceMax = $request->input('price_max');
 
         $products = Product::with(['category', 'symptoms'])
+            ->select('products.*')
+            ->selectRaw('(SELECT COALESCE(SUM(order_items.kuantitas), 0) FROM order_items JOIN orders ON orders.id = order_items.order_id WHERE order_items.product_id = products.id AND orders.status IN ("diproses", "disiapkan", "dikirim", "selesai")) as total_sold')
             ->when($catQuery && $catQuery !== 'all', function ($q) use ($catQuery) {
                 $catArray = is_array($catQuery) ? $catQuery : explode(',', $catQuery);
                 $catArray = array_filter($catArray, function ($slug) {
@@ -55,7 +57,9 @@ class ProductController extends Controller
             })
             ->get();
         
-        $products = Product::attachSoldCounts($products);
+        foreach ($products as $product) {
+            $product->terjual = (int) $product->total_sold;
+        }
 
         return Inertia::render('Catalog', [
             'products' => $products,

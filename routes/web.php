@@ -13,8 +13,20 @@ use App\Models\Symptom;
 
 // Halaman Utama / Landing Page
 Route::get('/', function () {
-    $featuredProducts = \App\Models\Product::with(['category', 'symptoms'])->inRandomOrder()->take(6)->get();
-    $featuredProducts = \App\Models\Product::attachSoldCounts($featuredProducts);
+    // Menggunakan subquery untuk menghitung total penjualan berdasarkan transaksi riil
+    // Subquery mencegah error ONLY_FULL_GROUP_BY pada mode strict Laravel/MySQL
+    $featuredProducts = \App\Models\Product::with(['category', 'symptoms'])
+        ->select('products.*')
+        ->selectRaw('(SELECT COALESCE(SUM(order_items.kuantitas), 0) FROM order_items JOIN orders ON orders.id = order_items.order_id WHERE order_items.product_id = products.id AND orders.status IN ("diproses", "disiapkan", "dikirim", "selesai")) as total_sold')
+        ->orderBy('total_sold', 'desc')
+        ->take(6)
+        ->get();
+
+    // Mapping nilai total_sold ke attribute terjual yang digunakan oleh frontend
+    foreach ($featuredProducts as $product) {
+        $product->terjual = (int) $product->total_sold;
+    }
+
     return Inertia::render('Home', [
         'featuredProducts' => $featuredProducts
     ]);
