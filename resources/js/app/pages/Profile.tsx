@@ -483,8 +483,8 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                     >
                       <span>{tab.label}</span>
                       {count > 0 && (
-                        <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${
-                          orderTab === tab.id ? 'bg-[#006a3f] text-white' : 'bg-gray-100 text-gray-600'
+                        <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold leading-none rounded-full ${
+                          orderTab === tab.id ? 'bg-[#006a3f] text-white' : 'bg-gray-200 text-gray-700'
                         }`}>
                           {count}
                         </span>
@@ -734,8 +734,8 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       >
                         <span>{tab.label}</span>
                         {count > 0 && (
-                          <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${
-                            prescriptionTab === tab.id ? 'bg-[#006a3f] text-white' : 'bg-gray-100 text-gray-600'
+                          <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold leading-none rounded-full ${
+                            prescriptionTab === tab.id ? 'bg-[#006a3f] text-white' : 'bg-gray-200 text-gray-700'
                           }`}>
                             {count}
                           </span>
