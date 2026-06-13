@@ -59,7 +59,6 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 const statusLabels: Record<string, string> = {
                     menunggu_pembayaran: 'Menunggu Pembayaran',
                     diproses: 'Diproses',
-                    disiapkan: 'Disiapkan',
                     dikirim: 'Dikirim',
                     selesai: 'Selesai',
                     dibatalkan: 'Dibatalkan',
@@ -163,7 +162,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
     const [orderDateFilter, setOrderDateFilter] = useState('');
     const [revenueFilterDays, setRevenueFilterDays] = useState(7);
 
-    const updateOrderStatus = (orderId: number, status: string) => {
+    const updateOrderStatus = (orderId: number | string, status: string) => {
         router.put(`/admin/orders/${orderId}/status`, { status }, {
             preserveScroll: true
         });
@@ -220,12 +219,6 @@ export default function AdminDashboard({ products = [], categories = [], users =
             color: 'text-blue-700',
             bg: 'bg-blue-50',
             border: 'border-blue-200',
-        },
-        disiapkan: {
-            label: 'Disiapkan',
-            color: 'text-purple-700',
-            bg: 'bg-purple-50',
-            border: 'border-purple-200',
         },
         dikirim: {
             label: 'Dikirim',
@@ -917,7 +910,6 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     <option value="all">Semua Status</option>
                                     <option value="menunggu_pembayaran">Menunggu Pembayaran</option>
                                     <option value="diproses">Diproses</option>
-                                    <option value="disiapkan">Disiapkan</option>
                                     <option value="dikirim">Dikirim</option>
                                     <option value="selesai">Selesai</option>
                                     <option value="dibatalkan">Dibatalkan</option>
@@ -999,7 +991,6 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                 >
                                                     <option value="menunggu_pembayaran">Menunggu Pembayaran</option>
                                                     <option value="diproses">Diproses</option>
-                                                    <option value="disiapkan">Disiapkan</option>
                                                     <option value="dikirim">Dikirim</option>
                                                     <option value="selesai">Selesai</option>
                                                     <option value="dibatalkan">Dibatalkan</option>
@@ -1025,7 +1016,6 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                         const statusLabels: Record<string, string> = {
                                                             menunggu_pembayaran: 'Menunggu Pembayaran',
                                                             diproses: 'Diproses',
-                                                            disiapkan: 'Disiapkan',
                                                             dikirim: 'Dikirim',
                                                             selesai: 'Selesai',
                                                             dibatalkan: 'Dibatalkan',
@@ -1600,7 +1590,6 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             const statusLabels: Record<string, string> = {
                                                 menunggu_pembayaran: 'Menunggu Pembayaran',
                                                 diproses: 'Diproses',
-                                                disiapkan: 'Disiapkan',
                                                 dikirim: 'Dikirim',
                                                 selesai: 'Selesai',
                                                 dibatalkan: 'Dibatalkan',
@@ -1608,7 +1597,6 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             const statusColors: Record<string, string> = {
                                                 menunggu_pembayaran: 'bg-amber-500',
                                                 diproses: 'bg-blue-500',
-                                                disiapkan: 'bg-purple-500',
                                                 dikirim: 'bg-indigo-500',
                                                 selesai: 'bg-emerald-500',
                                                 dibatalkan: 'bg-red-500',
