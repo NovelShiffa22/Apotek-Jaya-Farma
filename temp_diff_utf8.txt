@@ -1,0 +1,605 @@
+﻿diff --git a/resources/js/app/pages/PharmacistDashboard.tsx b/resources/js/app/pages/PharmacistDashboard.tsx
+index fbf1c2e..628545f 100644
+--- a/resources/js/app/pages/PharmacistDashboard.tsx
++++ b/resources/js/app/pages/PharmacistDashboard.tsx
+@@ -154,8 +154,6 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
+   // States for 'products' tab
+   const [productSearchQuery, setProductSearchQuery] = useState('');
+   const [productCategoryFilter, setProductCategoryFilter] = useState('all');
+-  const [viewingProductDetail, setViewingProductDetail] = useState<any>(null);
+-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+ 
+   // Compute completed orders sales count for each product
+   const productsWithSales = products.map((product: any) => {
+@@ -180,10 +178,9 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
+   const [validationNotes, setValidationNotes] = useState('');
+   
+   // Order states
+-  const [viewingOrder, setViewingOrder] = useState<any>(null);
+   const [orderSearchQuery, setOrderSearchQuery] = useState('');
+   const [orderDateFilter, setOrderDateFilter] = useState('');
+-  const [orderStatusFilter, setOrderStatusFilter] = useState('menunggu_pembayaran');
++  const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+ 
+   const [modalConfig, setModalConfig] = useState<{
+       isOpen: boolean;
+@@ -228,11 +225,6 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
+           color: 'text-blue-700',
+           border: 'border-blue-200',
+       },
+-      disiapkan: {
+-          bg: 'bg-purple-50',
+-          color: 'text-purple-700',
+-          border: 'border-purple-200',
+-      },
+       dikirim: {
+           bg: 'bg-indigo-50',
+           color: 'text-indigo-700',
+@@ -250,7 +242,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
+       },
+   };
+ 
+-  const updateOrderStatus = (id: number, status: string) => {
++  const updateOrderStatus = (id: number | string, status: string) => {
+       router.put(
+           `/pharmacist/orders/${id}/status`,
+           { status },
+@@ -276,7 +268,6 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
+         const statusLabels: Record<string, string> = {
+           menunggu_pembayaran: 'Menunggu Pembayaran',
+           diproses: 'Diproses',
+-          disiapkan: 'Disiapkan',
+           dikirim: 'Dikirim',
+           selesai: 'Selesai',
+           dibatalkan: 'Dibatalkan',
+@@ -601,13 +592,6 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
+                             !notif.isRead ? 'bg-[#E7F5EC]/30' : ''
+                           }`}
+                           onClick={() => {
+-                            if (notif.orderId) {
+-                              const ord = orders.find((o: any) => o.id === notif.orderId);
+-                              if (ord) {
+-                                setActiveTab('orders');
+-                                setViewingOrder(ord);
+-                              }
+-                            }
+                             // Mark this one as read in local state
+                             setNotifications(notifications.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
+                             setIsNotifOpen(false);
+@@ -825,25 +809,29 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
+                   <div className="mb-6 border-b border-[#E2E8F0]">
+                       <div className="flex gap-8 overflow-x-auto scrollbar-hide">
+                           {[
++                            { id: 'all', label: 'Semua' },
+                             { id: 'menunggu_pembayaran', label: 'Menunggu Pembayaran' },
+                             { id: 'diproses', label: 'Diproses' },
+-                            { id: 'disiapkan', label: 'Disiapkan' },
+                             { id: 'dikirim', label: 'Dikirim' },
+                             { id: 'selesai', label: 'Selesai' },
+                             { id: 'dibatalkan', label: 'Dibatalkan' }
+                           ].map((tab) => {
+                             const isActive = orderStatusFilter === tab.id;
++                            const count = tab.id === 'all' ? orders.length : orders.filter((o: any) => o.status === tab.id).length;
+                             return (
+                               <button
+                                 key={tab.id}
+                                 onClick={() => setOrderStatusFilter(tab.id)}
+-                                className={`font-['Inter',sans-serif] text-sm font-semibold pb-4 relative transition-all whitespace-nowrap ${
++                                className={`font-['Inter',sans-serif] text-sm font-semibold pb-4 relative transition-all whitespace-nowrap flex items-center gap-2 ${
+                                   isActive
+                                     ? 'text-[#0D6A36] border-b-2 border-[#0D6A36]'
+                                     : 'text-slate-400 hover:text-slate-600 border-b-2 border-transparent'
+                                 }`}
+                               >
+                                 {tab.label}
++                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? 'bg-[#0D6A36] text-white' : 'bg-slate-100 text-slate-500'}`}>
++                                  {count}
++                                </span>
+                               </button>
+                             );
+                           })}
+@@ -851,151 +839,208 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
+                   </div>
+ 
+                   {/* Search & Filter Bar */}
+-                  <div className="mb-6 rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
++                  <div className="mb-5 rounded-2xl border border-[#f1f5f9] bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+                       <div className="flex flex-col sm:flex-row gap-4">
+                           <div className="relative flex-1">
+-                              <Search
+-                                  className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6e7a70]"
+-                                  size={20}
+-                              />
++                              <Search className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6e7a70]" size={18} />
+                               <input
+                                   type="text"
+                                   value={orderSearchQuery}
+                                   onChange={(e) => setOrderSearchQuery(e.target.value)}
+                                   placeholder="Cari berdasarkan kode pesanan atau nama pelanggan..."
+-                                  className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-3 pr-4 pl-12 font-['Inter',sans-serif] text-[14px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#006a3f] focus:bg-white focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
++                                  className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-4 pl-11 font-['Inter',sans-serif] text-[13px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#0D6A36] focus:bg-white focus:ring-2 focus:ring-[#0D6A36]/20 focus:outline-none"
+                               />
+                           </div>
+                           <input
+                               type="date"
+                               value={orderDateFilter}
+                               onChange={(e) => setOrderDateFilter(e.target.value)}
+-                              className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-3 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
++                              className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all focus:border-[#0D6A36] focus:ring-2 focus:ring-[#0D6A36]/20 focus:outline-none"
+                           />
+                       </div>
+                   </div>
+ 
+-                  <div className="grid gap-4">
+-                      {orders.filter((order: any) => {
+-                          const customerName = order.user?.name || '';
+-                          const orderCode = order.kode_pesanan || '';
+-                          const matchesSearch = customerName.toLowerCase().includes(orderSearchQuery.toLowerCase()) || 
+-                                                orderCode.toLowerCase().includes(orderSearchQuery.toLowerCase());
+-                          const matchesStatus = orderStatusFilter === 'all' || order.status === orderStatusFilter;
+-                          
+-                          let matchesDate = true;
+-                          if (orderDateFilter && order.created_at) {
+-                              const d = new Date(order.created_at);
+-                              const localDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+-                              matchesDate = localDateStr === orderDateFilter;
+-                          }
+-                          
+-                          return matchesSearch && matchesStatus && matchesDate;
+-                      }).map((order: any) => {
+-                          const config = statusConfig[order.status] || { bg: 'bg-gray-50', color: 'text-gray-700', border: 'border-gray-200' };
+-                          return (
+-                              <div
+-                                  key={order.id}
+-                                  className="rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
+-                              >
+-                                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+-                                      <div className="flex flex-col sm:flex-row sm:items-center flex-1 gap-4 md:gap-6">
+-                                          {/* Order Info */}
+-                                          <div className="flex-1 min-w-[200px]">
+-                                              <div className="flex items-center flex-wrap gap-2 mb-1">
+-                                                  <p className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
+-                                                      {order.kode_pesanan}
+-                                                  </p>
+-                                                  {order.prescription && (
+-                                                      <span className="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700">
+-                                                          Resep Terlampir
+-                                                      </span>
+-                                                  )}
+-                                              </div>
+-                                              <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70] truncate">
+-                                                  {order.user?.name || 'Guest'} ÔÇó{' '}
+-                                                  {new Date(order.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}
+-                                              </p>
+-                                          </div>
+-
+-                                          {/* Items Count */}
+-                                          <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 w-full sm:w-20 shrink-0">
+-                                              <p className="mb-0.5 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+-                                                  Items
+-                                              </p>
+-                                              <p className="font-['Roboto_Condensed',sans-serif] text-[18px] font-semibold text-[#171d19]">
+-                                                  {order.products ? order.products.length : 0}
+-                                              </p>
+-                                          </div>
+-
+-                                          {/* Total */}
+-                                          <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 w-full sm:w-36 shrink-0">
+-                                              <p className="mb-0.5 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-[#6e7a70] uppercase">
+-                                                  Total
+-                                              </p>
+-                                              <p className="font-['Roboto_Condensed',sans-serif] text-[18px] font-semibold text-[#006a3f] truncate">
+-                                                  Rp{' '}
+-                                                  {parseFloat(order.total_biaya || 0).toLocaleString('id-ID')}
+-                                              </p>
+-                                          </div>
++                  {/* Orders Table */}
++                  {(() => {
++                    const filteredOrders = orders.filter((order: any) => {
++                        const customerName = order.user?.name || '';
++                        const orderCode = order.kode_pesanan || '';
++                        const matchesSearch =
++                          customerName.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
++                          orderCode.toLowerCase().includes(orderSearchQuery.toLowerCase());
++                        const matchesStatus = orderStatusFilter === 'all' || order.status === orderStatusFilter;
++                        let matchesDate = true;
++                        if (orderDateFilter && order.created_at) {
++                            const d = new Date(order.created_at);
++                            const localDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
++                            matchesDate = localDateStr === orderDateFilter;
++                        }
++                        return matchesSearch && matchesStatus && matchesDate;
++                    });
++
++                    if (filteredOrders.length === 0) {
++                      return (
++                        <div className="rounded-2xl border border-[#f1f5f9] bg-white p-12 text-center shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
++                          <AlertCircle className="mx-auto text-slate-300 mb-3" size={48} />
++                          <p className="font-['Inter',sans-serif] text-base text-slate-500 font-medium">Tidak ada pesanan dalam kategori ini</p>
++                          <p className="font-['Inter',sans-serif] text-sm text-slate-400 mt-1">Coba ubah filter atau kata kunci pencarian</p>
++                        </div>
++                      );
++                    }
++
++                    return (
++                      <div className="rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
++                        <div className="overflow-x-auto">
++                          <table className="w-full min-w-[960px] border-collapse text-left">
++                            <thead>
++                              <tr className="bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9] border-b border-[#E2E8F0]">
++                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase w-12">No.</th>
++                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">ID Pesanan</th>
++                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">User</th>
++                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">Tanggal Pemesanan</th>
++                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-center">Jml. Barang</th>
++                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-right">Total Harga</th>
++                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">Penanggung Jawab</th>
++                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-center">Resep / Non-Resep</th>
++                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-center">Action</th>
++                              </tr>
++                            </thead>
++                            <tbody className="divide-y divide-[#f1f5f9]">
++                              {filteredOrders.map((order: any, index: number) => {
++                                const totalQty = order.products
++                                  ? order.products.reduce((sum: number, p: any) => sum + (p.pivot?.kuantitas || 1), 0)
++                                  : 0;
++
++                                const penanggungJawab = (() => {
++                                  if (!order.status_histories || order.status_histories.length === 0) return null;
++                                  const found = [...order.status_histories].reverse().find((h: any) => h.changed_by_user?.name);
++                                  return found?.changed_by_user?.name || null;
++                                })();
++
++                                const hasPrescription = !!order.prescription;
++                                const prescriptionFileUrl = hasPrescription && order.prescription?.file_foto
++                                  ? (order.prescription.file_foto.startsWith('http')
++                                      ? order.prescription.file_foto
++                                      : (order.prescription.file_foto.startsWith('storage/') || order.prescription.file_foto.startsWith('/storage/')
++                                          ? (order.prescription.file_foto.startsWith('/') ? order.prescription.file_foto : `/${order.prescription.file_foto}`)
++                                          : `/storage/${order.prescription.file_foto}`))
++                                  : null;
++
++                                const cfg = statusConfig[order.status] || { bg: 'bg-gray-50', color: 'text-gray-600', border: 'border-gray-200' };
++                                const statusLabels: Record<string, string> = {
++                                  menunggu_pembayaran: 'Menunggu Bayar', diproses: 'Diproses',
++                                  dikirim: 'Dikirim', selesai: 'Selesai', dibatalkan: 'Dibatalkan',
++                                };
++
++                                return (
++                                  <tr key={order.id} className="group transition-colors hover:bg-[#f8fafc]">
++                                    <td className="px-5 py-4">
++                                      <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-400">{index + 1}</span>
++                                    </td>
++                                    <td className="px-5 py-4">
++                                      <div className="flex flex-col gap-0.5">
++                                        <span className="font-['Inter',sans-serif] text-[13px] font-bold text-slate-800">{order.kode_pesanan}</span>
++                                        <span className={`inline-flex items-center self-start px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
++                                          {statusLabels[order.status] || order.status}
++                                        </span>
+                                       </div>
+-                                      
+-                                      {/* Status & Actions */}
+-                                      <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full lg:w-auto justify-between sm:justify-end pt-4 lg:pt-0 border-t lg:border-t-0 border-[#f1f5f9]">
+-                                          <select
+-                                              value={order.status}
+-                                              onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+-                                              className={`w-full sm:w-[190px] rounded-xl border-2 px-3 py-2.5 font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none ${config.bg} ${config.color} ${config.border}`}
+-                                          >
+-                                              <option value="menunggu_pembayaran">Menunggu Pembayaran</option>
+-                                              <option value="diproses">Diproses</option>
+-                                              <option value="disiapkan">Disiapkan</option>
+-                                              <option value="dikirim">Dikirim</option>
+-                                              <option value="selesai">Selesai</option>
+-                                              <option value="dibatalkan">Dibatalkan</option>
+-                                          </select>
+- 
+-                                          <button 
+-                                              onClick={() => setViewingOrder(order)}
+-                                              className="w-full sm:w-auto justify-center rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:border-[#006a3f] hover:bg-white flex items-center"
+-                                          >
+-                                              Detail
+-                                          </button>
++                                    </td>
++                                    <td className="px-5 py-4">
++                                      <div className="flex items-center gap-2.5">
++                                        <div className="w-8 h-8 rounded-full bg-[#E7F5EC] text-[#0D6A36] flex items-center justify-center font-bold text-xs shrink-0">
++                                          {(order.user?.name || 'G').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
++                                        </div>
++                                        <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-800 truncate max-w-[130px]">
++                                          {order.user?.name || 'Guest'}
++                                        </span>
+                                       </div>
+-                                  </div>
+-
+-                                  {/* Status Change History Timeline */}
+-                                  {order.status_histories && order.status_histories.length > 0 && (
+-                                      <div className="mt-4 pt-4 border-t border-dashed border-[#e2e8f0]">
+-                                          <p className="font-['Inter',sans-serif] text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+-                                              Riwayat Status ({order.status_histories.length})
+-                                          </p>
+-                                          <div className="flex flex-wrap gap-2">
+-                                              {order.status_histories.map((hist: any, hIdx: number) => {
+-                                                  const statusLabels: Record<string, string> = {
+-                                                      menunggu_pembayaran: 'Menunggu Pembayaran',
+-                                                      diproses: 'Diproses',
+-                                                      disiapkan: 'Disiapkan',
+-                                                      dikirim: 'Dikirim',
+-                                                      selesai: 'Selesai',
+-                                                      dibatalkan: 'Dibatalkan',
+-                                                  };
+-                                                  return (
+-                                                      <span key={hIdx} className="inline-flex items-center gap-1 rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-1 text-[11px] font-['Inter',sans-serif] text-slate-600">
+-                                                          <span className="font-semibold text-slate-800">{statusLabels[hist.status_sesudah] || hist.status_sesudah}</span>
+-                                                          <span className="text-slate-400">oleh</span>
+-                                                          <span className="font-bold text-[#0D6A36]">{hist.changed_by_user?.name || 'Sistem'}</span>
+-                                                          <span className="text-[10px] text-slate-400">({new Date(hist.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})})</span>
+-                                                      </span>
+-                                                  );
+-                                              })}
++                                    </td>
++                                    <td className="px-5 py-4">
++                                      <div className="flex flex-col gap-0.5">
++                                        <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-700">
++                                          {new Date(order.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
++                                        </span>
++                                        <span className="font-['Inter',sans-serif] text-[11px] text-slate-400">
++                                          {new Date(order.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
++                                        </span>
++                                      </div>
++                                    </td>
++                                    <td className="px-5 py-4 text-center">
++                                      <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-slate-100 font-['Inter',sans-serif] text-[14px] font-bold text-slate-700">
++                                        {totalQty}
++                                      </span>
++                                    </td>
++                                    <td className="px-5 py-4 text-right">
++                                      <span className="font-['Inter',sans-serif] text-[13px] font-bold text-[#0D6A36]">
++                                        Rp {parseFloat(order.total_biaya || 0).toLocaleString('id-ID')}
++                                      </span>
++                                    </td>
++                                    <td className="px-5 py-4">
++                                      {penanggungJawab ? (
++                                        <div className="flex items-center gap-2">
++                                          <div className="w-6 h-6 rounded-full bg-[#0D6A36]/10 text-[#0D6A36] flex items-center justify-center font-bold text-[9px] shrink-0">
++                                            {penanggungJawab.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                                           </div>
++                                          <span className="font-['Inter',sans-serif] text-[12px] font-semibold text-slate-700 truncate max-w-[120px]">{penanggungJawab}</span>
++                                        </div>
++                                      ) : (
++                                        <span className="font-['Inter',sans-serif] text-[12px] text-slate-400 italic">Belum ditentukan</span>
++                                      )}
++                                    </td>
++                                    <td className="px-5 py-4 text-center">
++                                      {hasPrescription ? (
++                                        prescriptionFileUrl ? (
++                                          <a
++                                            href={prescriptionFileUrl}
++                                            target="_blank"
++                                            rel="noopener noreferrer"
++                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-['Inter',sans-serif] text-[11px] font-bold tracking-wide hover:bg-blue-100 transition-colors"
++                                            title="Klik untuk melihat file resep"
++                                          >
++                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
++                                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
++                                            </svg>
++                                            Resep
++                                          </a>
++                                        ) : (
++                                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-['Inter',sans-serif] text-[11px] font-bold tracking-wide">
++                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
++                                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
++                                            </svg>
++                                            Resep
++                                          </span>
++                                        )
++                                      ) : (
++                                        <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-50 text-slate-500 border border-slate-200 font-['Inter',sans-serif] text-[11px] font-semibold tracking-wide">
++                                          Non-Resep
++                                        </span>
++                                      )}
++                                    </td>
++                                    <td className="px-5 py-4 text-center">
++                                      <div className="flex items-center justify-center gap-2">
++                                        <Link
++                                          href={`/pharmacist/orders/${order.id}`}
++                                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-[#E2E8F0] font-['Inter',sans-serif] text-[12px] font-semibold text-slate-700 transition-all hover:bg-[#0D6A36] hover:text-white hover:border-[#0D6A36] hover:shadow-md"
++                                        >
++                                          <Eye size={13} />
++                                          Detail
++                                        </Link>
+                                       </div>
+-                                  )}
+-                              </div>
+-                          );
+-                      })}
+-                  </div>
++                                    </td>
++                                  </tr>
++                                );
++                              })}
++                            </tbody>
++                          </table>
++                        </div>
++                        <div className="px-5 py-3 border-t border-[#f1f5f9] bg-[#f8fafc]">
++                          <p className="font-['Inter',sans-serif] text-[12px] text-slate-400">
++                            Menampilkan <span className="font-bold text-slate-600">{filteredOrders.length}</span> pesanan
++                          </p>
++                        </div>
++                      </div>
++                    );
++                  })()}
+               </div>
+           )}
+ 
+@@ -1797,17 +1842,14 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
+                           </td>
+                           <td className="px-6 py-5">
+                             <div className="flex justify-end gap-2">
+-                              <button
+-                                onClick={() => {
+-                                  setViewingProductDetail(product);
+-                                  setIsDetailModalOpen(true);
+-                                }}
++                              <Link
++                                href={`/pharmacist/products/${product.id}`}
+                                 className="group inline-flex items-center gap-1.5 rounded-lg border border-[#0D6A36]/30 px-3 py-1.5 font-['Inter',sans-serif] text-xs font-semibold text-[#0D6A36] bg-[#0D6A36]/5 hover:bg-[#0D6A36] hover:text-white transition-all duration-200"
+                                 title="Detail Produk"
+                               >
+                                 <Eye size={14} />
+                                 <span>Detail</span>
+-                              </button>
++                              </Link>
+                             </div>
+                           </td>
+                         </tr>
+@@ -1953,150 +1995,6 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
+             </div>
+           </div>
+           )}
+-        {/* Modal Detail Pesanan */}
+-        {viewingOrder && (
+-            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 overflow-y-auto">
+-                <div className="relative w-full max-w-md rounded-2xl bg-white shadow-xl p-6 my-6">
+-                    <button
+-                        onClick={() => setViewingOrder(null)}
+-                        className="absolute right-4 top-4 rounded-full bg-gray-100 p-1.5 text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-900"
+-                    >
+-                        <X size={16} />
+-                    </button>
+-                    
+-                    <div className="mb-5">
+-                        <h2 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
+-                            {viewingOrder.kode_pesanan}
+-                        </h2>
+-                        <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
+-                            {new Date(viewingOrder.created_at).toLocaleString('id-ID', {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'})}
+-                        </p>
+-                    </div>
+-
+-                    <div className="space-y-5">
+-                        {/* User Info - Simplified */}
+-                        <div className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] p-4">
+-                            <div className="space-y-2">
+-                                <div className="flex justify-between items-start gap-4">
+-                                    <span className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">Pelanggan</span>
+-                                    <span className="font-['Inter',sans-serif] text-[12px] font-medium text-[#171d19] text-right">{viewingOrder.user?.name || 'Guest'}</span>
+-                                </div>
+-                                <div className="flex justify-between items-start gap-4">
+-                                    <span className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">Pembayaran</span>
+-                                    <span className="font-['Inter',sans-serif] text-[12px] font-medium text-[#171d19] text-right">{viewingOrder.payment_method || '-'}</span>
+-                                </div>
+-                                <div className="flex justify-between items-start gap-4">
+-                                    <span className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70] shrink-0">Alamat</span>
+-                                    <span className="font-['Inter',sans-serif] text-[12px] font-medium text-[#171d19] text-right line-clamp-2" title={viewingOrder.address?.alamat_lengkap || 'Ambil di Apotek'}>{viewingOrder.address?.alamat_lengkap || 'Ambil di Apotek'}</span>
+-                                </div>
+-                                {viewingOrder.prescription && (
+-                                    <div className="flex justify-between items-start gap-4 pt-2 mt-2 border-t border-[#f1f5f9]">
+-                                        <span className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70] shrink-0">Resep Dokter</span>
+-                                        <div className="text-right">
+-                                            <span className="font-['Inter',sans-serif] text-[12px] font-medium text-[#171d19] block">{viewingOrder.prescription.kode_resep}</span>
+-                                            <a 
+-                                                href={viewingOrder.prescription.file_foto?.startsWith('http') ? viewingOrder.prescription.file_foto : `/storage/${viewingOrder.prescription.file_foto}`} 
+-                                                target="_blank" 
+-                                                rel="noreferrer" 
+-                                                className="inline-block mt-1 text-[11px] font-medium text-blue-600 hover:text-blue-800 hover:underline"
+-                                            >
+-                                                Lihat Foto Resep
+-                                            </a>
+-                                        </div>
+-                                    </div>
+-                                )}
+-                            </div>
+-                        </div>
+-
+-                        {/* Order Items */}
+-                        <div>
+-                            <h3 className="mb-2 font-['Inter',sans-serif] text-[12px] font-bold tracking-wider text-[#6e7a70] uppercase">
+-                                Item ({viewingOrder.products?.length || 0})
+-                            </h3>
+-                            <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+-                                {viewingOrder.products?.map((item: any, idx: number) => (
+-                                    <div key={idx} className="flex items-center justify-between rounded-lg border border-gray-100 p-3">
+-                                        <div className="flex items-center gap-3">
+-                                            {item.gambar ? (
+-                                                <img src={item.gambar.startsWith('http') ? item.gambar : `/storage/${item.gambar}`} alt={item.nama_obat} className="h-10 w-10 rounded-md object-cover" />
+-                                            ) : (
+-                                                <div className="h-10 w-10 rounded-md bg-gray-100" />
+-                                            )}
+-                                            <div>
+-                                                <p className="font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] line-clamp-1">{item.nama_obat}</p>
+-                                                <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">
+-                                                    {item.pivot.kuantitas} x Rp {parseFloat(item.pivot.harga_satuan).toLocaleString('id-ID')}
+-                                                </p>
+-                                            </div>
+-                                        </div>
+-                                    </div>
+-                                ))}
+-                            </div>
+-                        </div>
+-
+-                        {/* Status History Timeline */}
+-                        {viewingOrder.status_histories && viewingOrder.status_histories.length > 0 && (
+-                            <div>
+-                                <h3 className="mb-3 font-['Inter',sans-serif] text-[12px] font-bold tracking-wider text-[#6e7a70] uppercase">
+-                                    Riwayat Perubahan Status
+-                                </h3>
+-                                <div className="relative space-y-0 max-h-[200px] overflow-y-auto pr-1">
+-                                    {viewingOrder.status_histories.map((history: any, idx: number) => {
+-                                        const statusLabels: Record<string, string> = {
+-                                            menunggu_pembayaran: 'Menunggu Pembayaran',
+-                                            diproses: 'Diproses',
+-                                            disiapkan: 'Disiapkan',
+-                                            dikirim: 'Dikirim',
+-                                            selesai: 'Selesai',
+-                                            dibatalkan: 'Dibatalkan',
+-                                        };
+-                                        const statusColors: Record<string, string> = {
+-                                            menunggu_pembayaran: 'bg-amber-500',
+-                                            diproses: 'bg-blue-500',
+-                                            disiapkan: 'bg-purple-500',
+-                                            dikirim: 'bg-indigo-500',
+-                                            selesai: 'bg-emerald-500',
+-                                            dibatalkan: 'bg-red-500',
+-                                        };
+-                                        const dotColor = statusColors[history.status_sesudah] || 'bg-gray-400';
+-                                        return (
+-                                            <div key={idx} className="flex gap-3 pb-3 last:pb-0">
+-                                                <div className="flex flex-col items-center">
+-                                                    <div className={`mt-1 h-2.5 w-2.5 rounded-full shrink-0 ${dotColor}`} />
+-                                                    {idx < viewingOrder.status_histories.length - 1 && (
+-                                                        <div className="w-px flex-1 bg-gray-200 mt-1" />
+-                                                    )}
+-                                                </div>
+-                                                <div className="pb-1">
+-                                                    <p className="font-['Inter',sans-serif] text-[12px] font-semibold text-[#171d19]">
+-                                                        {history.status_sebelum
+-                                                            ? `${statusLabels[history.status_sebelum] || history.status_sebelum} ÔåÆ ${statusLabels[history.status_sesudah] || history.status_sesudah}`
+-                                                            : statusLabels[history.status_sesudah] || history.status_sesudah
+-                                                        }
+-                                                    </p>
+-                                                    <p className="font-['Inter',sans-serif] text-[11px] text-[#6e7a70]">
+-                                                        {history.changed_by_user?.name || 'Sistem'} &bull;{' '}
+-                                                        {new Date(history.created_at).toLocaleString('id-ID', {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'})}
+-                                                    </p>
+-                                                </div>
+-                                            </div>
+-                                        );
+-                                    })}
+-                                </div>
+-                            </div>
+-                        )}
+-
+-                        {/* Summary */}
+-                        <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+-                            <span className="font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19]">Total Pembayaran</span>
+-                            <span className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-[#006a3f]">
+-                                Rp {parseFloat(viewingOrder.total_biaya || 0).toLocaleString('id-ID')}
+-                            </span>
+-                        </div>
+-                    </div>
+-                </div>
+-            </div>
+-        )}
+         {/* Mobile Sidebar Navigation Drawer */}
+         {isMobileSidebarOpen && (
+           <div className="fixed inset-0 z-50 flex md:hidden">

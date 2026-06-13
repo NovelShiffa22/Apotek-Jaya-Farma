@@ -17,7 +17,7 @@ Route::get('/', function () {
     // Subquery mencegah error ONLY_FULL_GROUP_BY pada mode strict Laravel/MySQL
     $featuredProducts = \App\Models\Product::with(['category', 'symptoms'])
         ->select('products.*')
-        ->selectRaw('(SELECT COALESCE(SUM(order_items.kuantitas), 0) FROM order_items JOIN orders ON orders.id = order_items.order_id WHERE order_items.product_id = products.id AND orders.status IN ("diproses", "disiapkan", "dikirim", "selesai")) as total_sold')
+        ->selectRaw('(SELECT COALESCE(SUM(order_items.kuantitas), 0) FROM order_items JOIN orders ON orders.id = order_items.order_id WHERE order_items.product_id = products.id AND orders.status IN ("diproses", "dikirim", "selesai")) as total_sold')
         ->orderBy('total_sold', 'desc')
         ->take(6)
         ->get();
@@ -224,7 +224,55 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
     Route::get('/pharmacist', function () {
         $prescriptions = \App\Models\Prescription::with(['user.addresses', 'items.product', 'validator'])->latest()->get();
         $products = \App\Models\Product::with(['category', 'symptoms'])->latest()->get();
+        
         $orders = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])->latest()->get();
+        $vts = \App\Models\VirtualTransaction::with(['user', 'prescription', 'pharmacist'])->latest()->get();
+        
+        $mappedVts = $vts->map(function ($vt) {
+            $statusMap = [
+                'Pending' => 'menunggu_pembayaran',
+                'Belum Bayar' => 'menunggu_pembayaran',
+                'Lunas' => 'diproses',
+                'Dikirim' => 'dikirim',
+                'Selesai' => 'selesai',
+                'Dibatalkan' => 'dibatalkan'
+            ];
+            $mappedStatus = $statusMap[$vt->status] ?? strtolower($vt->status);
+
+            return [
+                'id' => 'vt_' . $vt->id,
+                'kode_pesanan' => $vt->va_number ?? 'VT-' . $vt->id,
+                'user' => $vt->user,
+                'products' => collect($vt->items)->map(function ($item) {
+                    return [
+                        'id' => $item['id'] ?? $item['product_id'] ?? null,
+                        'nama_obat' => $item['name'] ?? $item['nama'] ?? 'Produk',
+                        'gambar' => $item['image'] ?? $item['gambar'] ?? null,
+                        'stok' => ($p = \App\Models\Product::find($item['id'] ?? $item['product_id'] ?? null)) ? $p->stok : 0,
+                        'pivot' => [
+                            'kuantitas' => $item['quantity'] ?? 1,
+                            'harga_satuan' => $item['price'] ?? $item['harga'] ?? 0,
+                        ],
+                    ];
+                }),
+                'prescription' => $vt->prescription,
+                'status_histories' => $vt->pharmacist ? [
+                    [
+                        'status_sebelum' => 'menunggu_pembayaran',
+                        'status_sesudah' => 'diproses',
+                        'changed_by_user' => ['name' => $vt->pharmacist->name],
+                        'created_at' => $vt->updated_at,
+                    ]
+                ] : [],
+                'status' => $mappedStatus,
+                'total_biaya' => $vt->total_amount,
+                'created_at' => $vt->created_at,
+                'updated_at' => $vt->updated_at,
+            ];
+        });
+
+        $allOrders = $orders->concat($mappedVts)->sortByDesc('created_at')->values();
+
         $statusChanges = \App\Models\OrderStatusHistory::with(['order.user', 'changedByUser'])
             ->latest()
             ->take(30)
@@ -233,10 +281,65 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
         return Inertia::render('PharmacistDashboard', [
             'prescriptions' => $prescriptions,
             'products' => $products,
-            'orders' => $orders,
+            'orders' => $allOrders,
             'statusChanges' => $statusChanges
         ]);
     })->name('pharmacist.dashboard');
+
+    Route::get('/pharmacist/orders/{id}', function ($id) {
+        if (str_starts_with($id, 'vt_')) {
+            $vtId = str_replace('vt_', '', $id);
+            $vt = \App\Models\VirtualTransaction::with(['user', 'prescription', 'pharmacist'])->findOrFail($vtId);
+            
+            $statusMap = [
+                'Pending' => 'menunggu_pembayaran',
+                'Belum Bayar' => 'menunggu_pembayaran',
+                'Lunas' => 'diproses',
+                'Dikirim' => 'dikirim',
+                'Selesai' => 'selesai',
+                'Dibatalkan' => 'dibatalkan'
+            ];
+            $mappedStatus = $statusMap[$vt->status] ?? strtolower($vt->status);
+
+            $order = [
+                'id' => 'vt_' . $vt->id,
+                'kode_pesanan' => $vt->va_number ?? 'VT-' . $vt->id,
+                'user' => $vt->user,
+                'payment_method' => $vt->payment_method,
+                'products' => collect($vt->items)->map(function ($item) {
+                    return [
+                        'id' => $item['id'] ?? $item['product_id'] ?? null,
+                        'nama_obat' => $item['name'] ?? $item['nama'] ?? 'Produk',
+                        'gambar' => $item['image'] ?? $item['gambar'] ?? null,
+                        'stok' => ($p = \App\Models\Product::find($item['id'] ?? $item['product_id'] ?? null)) ? $p->stok : 0,
+                        'pivot' => [
+                            'kuantitas' => $item['quantity'] ?? 1,
+                            'harga_satuan' => $item['price'] ?? $item['harga'] ?? 0,
+                        ],
+                    ];
+                }),
+                'prescription' => $vt->prescription,
+                'status_histories' => $vt->pharmacist ? [
+                    [
+                        'status_sebelum' => 'menunggu_pembayaran',
+                        'status_sesudah' => 'diproses',
+                        'changed_by_user' => ['name' => $vt->pharmacist->name],
+                        'created_at' => $vt->updated_at,
+                    ]
+                ] : [],
+                'status' => $mappedStatus,
+                'total_biaya' => $vt->total_amount,
+                'created_at' => $vt->created_at,
+                'updated_at' => $vt->updated_at,
+            ];
+        } else {
+            $order = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])->findOrFail($id);
+        }
+
+        return Inertia::render('PharmacistOrderDetail', [
+            'order' => $order
+        ]);
+    })->name('pharmacist.orders.show');
 
     Route::put('/pharmacist/prescriptions/{id}', function(\Illuminate\Http\Request $request, $id) {
         $prescription = \App\Models\Prescription::findOrFail($id);
@@ -280,7 +383,23 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
 
 
     Route::put('/pharmacist/orders/{id}/status', function(\Illuminate\Http\Request $request, $id) {
-        $request->validate(['status' => 'required|string|in:pending,diproses,disiapkan,dikirim,selesai,dibatalkan']);
+        $request->validate(['status' => 'required|string|in:pending,diproses,dikirim,selesai,dibatalkan']);
+        
+        if (str_starts_with($id, 'vt_')) {
+            $vtId = str_replace('vt_', '', $id);
+            $vt = \App\Models\VirtualTransaction::findOrFail($vtId);
+            $statusMap = [
+                'menunggu_pembayaran' => 'Pending',
+                'diproses' => 'Lunas',
+                'dikirim' => 'Dikirim',
+                'selesai' => 'Selesai',
+                'dibatalkan' => 'Dibatalkan'
+            ];
+            $newStatus = $statusMap[$request->status] ?? 'Pending';
+            $vt->update(['status' => $newStatus, 'pharmacist_id' => auth()->id()]);
+            return back()->with('success', 'Status pesanan virtual berhasil diperbarui');
+        }
+
         $order = \App\Models\Order::findOrFail($id);
         $statusSebelum = $order->status;
         $order->update(['status' => $request->status]);
@@ -335,7 +454,54 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         $categories = \App\Models\Category::all();
         $users = \App\Models\User::all();
         $symptoms = \App\Models\Symptom::all();
+        
         $orders = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])->latest()->get();
+        $vts = \App\Models\VirtualTransaction::with(['user', 'prescription', 'pharmacist'])->latest()->get();
+        
+        $mappedVts = $vts->map(function ($vt) {
+            $statusMap = [
+                'Pending' => 'menunggu_pembayaran',
+                'Belum Bayar' => 'menunggu_pembayaran',
+                'Lunas' => 'diproses',
+                'Dikirim' => 'dikirim',
+                'Selesai' => 'selesai',
+                'Dibatalkan' => 'dibatalkan'
+            ];
+            $mappedStatus = $statusMap[$vt->status] ?? strtolower($vt->status);
+
+            return [
+                'id' => 'vt_' . $vt->id,
+                'kode_pesanan' => $vt->va_number ?? 'VT-' . $vt->id,
+                'user' => $vt->user,
+                'products' => collect($vt->items)->map(function ($item) {
+                    return [
+                        'id' => $item['id'] ?? $item['product_id'] ?? null,
+                        'nama_obat' => $item['name'] ?? $item['nama'] ?? 'Produk',
+                        'gambar' => $item['image'] ?? $item['gambar'] ?? null,
+                        'pivot' => [
+                            'kuantitas' => $item['quantity'] ?? 1,
+                            'harga_satuan' => $item['price'] ?? $item['harga'] ?? 0,
+                        ],
+                    ];
+                }),
+                'prescription' => $vt->prescription,
+                'status_histories' => $vt->pharmacist ? [
+                    [
+                        'status_sebelum' => 'menunggu_pembayaran',
+                        'status_sesudah' => 'diproses',
+                        'changed_by_user' => ['name' => $vt->pharmacist->name],
+                        'created_at' => $vt->updated_at,
+                    ]
+                ] : [],
+                'status' => $mappedStatus,
+                'total_biaya' => $vt->total_amount,
+                'created_at' => $vt->created_at,
+                'updated_at' => $vt->updated_at,
+            ];
+        });
+
+        $allOrders = $orders->concat($mappedVts)->sortByDesc('created_at')->values();
+
         $statusChanges = \App\Models\OrderStatusHistory::with(['order.user', 'changedByUser'])
             ->latest()
             ->take(30)
@@ -346,7 +512,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             'categories' => $categories,
             'users' => $users,
             'symptoms' => $symptoms,
-            'orders' => $orders,
+            'orders' => $allOrders,
             'statusChanges' => $statusChanges
         ]);
     })->name('admin.dashboard');
@@ -408,8 +574,24 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('/admin/users/{id}', [AdminUserController::class, 'update'])->name('admin.users.update');
     Route::delete('/admin/users/{id}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
 
-    Route::put('/admin/orders/{id}/status', function(Illuminate\Http\Request $request, $id) {
-        $request->validate(['status' => 'required|string|in:diproses,disiapkan,dikirim,selesai']);
+    Route::put('/admin/orders/{id}/status', function(\Illuminate\Http\Request $request, $id) {
+        $request->validate(['status' => 'required|string|in:diproses,dikirim,selesai,dibatalkan']);
+        
+        if (str_starts_with($id, 'vt_')) {
+            $vtId = str_replace('vt_', '', $id);
+            $vt = \App\Models\VirtualTransaction::findOrFail($vtId);
+            $statusMap = [
+                'menunggu_pembayaran' => 'Pending',
+                'diproses' => 'Lunas',
+                'dikirim' => 'Dikirim',
+                'selesai' => 'Selesai',
+                'dibatalkan' => 'Dibatalkan'
+            ];
+            $newStatus = $statusMap[$request->status] ?? 'Pending';
+            $vt->update(['status' => $newStatus, 'pharmacist_id' => auth()->id()]);
+            return back()->with('success', 'Status pesanan virtual berhasil diperbarui');
+        }
+
         $order = \App\Models\Order::findOrFail($id);
         $statusSebelum = $order->status;
         $order->update(['status' => $request->status]);

@@ -235,6 +235,7 @@ class CheckoutController extends Controller
 
         $transaction = \App\Models\VirtualTransaction::create([
             'user_id' => auth()->id(),
+            'prescription_id' => $prescriptionId,
             'va_number' => $vaNumber,
             'payment_method' => $paymentMethod,
             'total_amount' => $totalAmount,
