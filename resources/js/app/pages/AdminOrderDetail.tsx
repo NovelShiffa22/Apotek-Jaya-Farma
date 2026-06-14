@@ -275,6 +275,10 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Metode Pembayaran</p>
                                     <p className="text-sm font-medium text-slate-800">{order.payment_method || '-'}</p>
                                 </div>
+                                <div>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Alamat Pengiriman</p>
+                                    <p className="text-sm font-medium text-slate-800">{order.shipping_address || 'Alamat belum diatur'}</p>
+                                </div>
                             </div>
                         </div>
 

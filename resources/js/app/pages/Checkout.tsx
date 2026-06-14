@@ -155,7 +155,8 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
       shipping_method: shippingMethod,
       payment_method: 'Midtrans Payment Gateway',
       is_buy_now: isBuyNow,
-      prescription_id: prescriptionId
+      prescription_id: prescriptionId,
+      shipping_address: selectedAddress?.alamat_lengkap || ''
     });
   };
 

@@ -961,6 +961,10 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                   <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">Virtual Account</span>
                   <span className="font-['Inter',sans-serif] text-[14px] font-bold text-indigo-600 tracking-wider">{selectedOrder.va_number || selectedOrder.status}</span>
                 </div>
+                <div className="flex justify-between items-start pt-2 border-t border-gray-50">
+                  <span className="font-['Inter',sans-serif] text-[14px] text-gray-500 min-w-[120px]">Alamat Pengiriman</span>
+                  <span className="font-['Inter',sans-serif] text-[13px] font-medium text-gray-800 text-right">{selectedOrder.shipping_address || 'Alamat belum diatur'}</span>
+                </div>
                 <div className="flex justify-between items-center pt-2">
                   <span className="font-['Inter',sans-serif] text-[14px] font-bold text-gray-900">Total Pembayaran</span>
                   <span className="font-['Poppins',sans-serif] text-[18px] font-black text-[#006a3f]">Rp {Number(selectedOrder.total_amount || 0).toLocaleString('id-ID')}</span>

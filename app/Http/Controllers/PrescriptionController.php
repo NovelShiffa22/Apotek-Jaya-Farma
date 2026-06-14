@@ -26,11 +26,13 @@ class PrescriptionController extends Controller
             'tanggal_lahir_pasien' => 'nullable|date',
             'whatsapp' => 'nullable|string|max:20',
             'catatan' => 'nullable|string|max:1000',
+            'shipping_address' => 'required|string',
             'is_legal_agreed' => 'accepted'
         ], [
             'prescription_file.required' => 'Mohon unggah berkas resep dokter Anda terlebih dahulu.',
             'prescription_file.mimes' => 'Format berkas tidak didukung. Sediakan file dalam format JPG, PNG, atau PDF.',
             'prescription_file.max' => 'Ukuran berkas terlalu besar. Maksimal ukuran file yang diperbolehkan adalah 5MB.',
+            'shipping_address.required' => 'Mohon pilih atau tambahkan alamat pengiriman.',
             'is_legal_agreed.accepted' => 'Anda harus menyetujui pernyataan legalitas resep.',
         ]);
 
@@ -51,6 +53,7 @@ class PrescriptionController extends Controller
             'tanggal_lahir_pasien' => $request->tanggal_lahir_pasien,
             'whatsapp' => $request->whatsapp,
             'catatan' => $request->catatan,
+            'shipping_address' => $request->shipping_address,
             'is_legal_agreed' => $request->is_legal_agreed ? true : false,
         ]);
 

@@ -243,6 +243,7 @@ class CheckoutController extends Controller
             'total_amount' => $totalAmount,
             'status' => 'Pending',
             'items' => $purchasedItems,
+            'shipping_address' => $request->input('shipping_address'),
         ]);
 
         // Kurangi stok obat

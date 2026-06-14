@@ -157,6 +157,10 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                         <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Nomor Telepon</span>
                                         <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{prescription.whatsapp || user.phone || '-'}</span>
                                     </div>
+                                    <div className="flex justify-between items-start gap-4 pt-2 border-t border-gray-50">
+                                        <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500 whitespace-nowrap">Alamat Pengiriman</span>
+                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19] text-right">{prescription.shipping_address || '-'}</span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -176,6 +180,24 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                         <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Nama Dokter</span>
                                         <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{prescription.nama_dokter || '-'}</span>
                                     </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                <div className="flex items-center gap-4 mb-6 border-b border-gray-100 pb-4">
+                                    <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-[#006a3f]">
+                                        <FileText size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-['Poppins',sans-serif] font-bold text-[16px] text-[#171d19]">Catatan / Permintaan Khusus</h3>
+                                        <p className="font-['Poppins',sans-serif] text-[11px] text-gray-400 uppercase tracking-wider font-semibold">Dari Pasien</p>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <p className="font-['Poppins',sans-serif] text-[14px] font-medium text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                        {prescription.catatan || '-'}
+                                    </p>
                                 </div>
                             </div>
 

@@ -1,8 +1,12 @@
 import { Link, router, useForm, usePage } from '@inertiajs/react';
-import { FilePlus, MapPin, X, Image as ImageIcon, ArrowLeft, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
+import { FilePlus, MapPin, X, Image as ImageIcon, ArrowLeft, Plus, CheckCircle2, AlertCircle, Calendar } from 'lucide-react';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import Header from '../../components/Header';
 import { regions } from '../../data/regions';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { id } from 'date-fns/locale';
+import InputMask from 'react-input-mask';
 
 export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
     const { auth, apotekInfo } = usePage().props as any;
@@ -11,12 +15,13 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const { data, setData, post, processing, errors } = useForm<{ 
+    const { data, setData, post, processing, errors, transform } = useForm<{ 
         prescription_file: File | null;
         nama_pasien: string;
         tanggal_lahir_pasien: string;
         whatsapp: string;
         catatan: string;
+        shipping_address: string;
         is_legal_agreed: boolean;
     }>({
         prescription_file: null,
@@ -24,6 +29,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
         tanggal_lahir_pasien: '',
         whatsapp: '',
         catatan: '',
+        shipping_address: '',
         is_legal_agreed: false,
     });
 
@@ -113,6 +119,12 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
 
     const handleKirim = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        transform((data) => ({
+            ...data,
+            shipping_address: selectedAddress ? `${selectedAddress.alamat_lengkap}, ${selectedAddress.kota}, ${selectedAddress.provinsi} ${selectedAddress.kode_pos}` : '',
+        }));
+        
         post(route('prescriptions.store'), { 
             forceFormData: true,
             onSuccess: (page) => console.log('Sukses:', page),
@@ -262,12 +274,31 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                 </div>
                                 <div>
                                     <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5">Tanggal Lahir Pasien</label>
-                                    <input 
-                                        type="date" 
-                                        value={data.tanggal_lahir_pasien}
-                                        onChange={(e) => setData('tanggal_lahir_pasien', e.target.value)}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
-                                    />
+                                    <div className="relative w-full">
+                                        <Calendar className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6e7a70] z-10 pointer-events-none" size={18} />
+                                        <DatePicker
+                                            selected={data.tanggal_lahir_pasien ? new Date(data.tanggal_lahir_pasien) : null}
+                                            onChange={(date: Date | null) => {
+                                                if (date) {
+                                                    const yyyy = date.getFullYear();
+                                                    const mm = String(date.getMonth() + 1).padStart(2, '0');
+                                                    const dd = String(date.getDate()).padStart(2, '0');
+                                                    setData('tanggal_lahir_pasien', `${yyyy}-${mm}-${dd}`);
+                                                } else {
+                                                    setData('tanggal_lahir_pasien', '');
+                                                }
+                                            }}
+                                            dateFormat="dd/MM/yyyy"
+                                            locale={id}
+                                            showYearDropdown
+                                            showMonthDropdown
+                                            dropdownMode="select"
+                                            isClearable
+                                            placeholderText="dd/mm/yyyy"
+                                            className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                                            wrapperClassName="w-full"
+                                        />
+                                    </div>
                                     {errors.tanggal_lahir_pasien && <p className="mt-1 text-xs text-red-500 font-medium">{errors.tanggal_lahir_pasien}</p>}
                                 </div>
                                 <div>
@@ -350,6 +381,11 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                     </p>
                                 )}
                             </div>
+                            {errors.shipping_address && (
+                                <p className="mt-2 font-['Poppins',sans-serif] text-[13px] font-bold text-red-500 bg-red-50 px-4 py-2 rounded-lg">
+                                    {errors.shipping_address}
+                                </p>
+                            )}
                         </div>
 
                         {/* Order Detail Card */}

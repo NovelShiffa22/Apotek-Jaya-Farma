@@ -1,4 +1,8 @@
 import { Link } from '@inertiajs/react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { id as localeID } from 'date-fns/locale';
+import InputMask from 'react-input-mask';
 import {
     AlertTriangle,
     AlertCircle,
@@ -32,13 +36,36 @@ import {
     XCircle,
     Building2,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import CreateProduct from './CreateProduct';
 import CreateUser from './CreateUser';
 import Pagination from '../components/Pagination';
 import { router, usePage } from '@inertiajs/react';
 import ConfirmModal from '../components/ConfirmModal';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+
+const DynamicPlaceholderInput = React.forwardRef(({ defaultPlaceholder, formatPlaceholder, ...props }: any, ref: any) => {
+    const [currentPlaceholder, setCurrentPlaceholder] = useState(defaultPlaceholder);
+    return (
+        <InputMask 
+            {...props} 
+            ref={ref} 
+            mask="99/99/9999"
+            maskChar={null}
+            placeholder={currentPlaceholder} 
+            onFocus={(e) => {
+                setCurrentPlaceholder(formatPlaceholder);
+                if (props.onFocus) props.onFocus(e);
+            }}
+            onBlur={(e) => {
+                if (!e.target.value) {
+                    setCurrentPlaceholder(defaultPlaceholder);
+                }
+                if (props.onBlur) props.onBlur(e);
+            }}
+        />
+    );
+});
 
 interface AdminDashboardProps {
     products?: any;
@@ -174,7 +201,8 @@ export default function AdminDashboard({ products = [], categories = [], users =
     const [productCategoryFilter, setProductCategoryFilter] = useState('all');
     const [orderSearchQuery, setOrderSearchQuery] = useState('');
     const [orderStatusFilter, setOrderStatusFilter] = useState('all');
-    const [orderDateFilter, setOrderDateFilter] = useState('');
+    const [orderStartDate, setOrderStartDate] = useState<Date | null>(null);
+    const [orderEndDate, setOrderEndDate] = useState<Date | null>(null);
     const [revenueFilterDays, setRevenueFilterDays] = useState(7);
 
     const updateOrderStatus = (orderId: number | string, status: string) => {
@@ -202,7 +230,16 @@ export default function AdminDashboard({ products = [], categories = [], users =
             
             if (orderSearchQuery) params.order_search = orderSearchQuery;
             if (orderStatusFilter !== 'all') params.order_status = orderStatusFilter;
-            if (orderDateFilter) params.order_date = orderDateFilter;
+            if (orderStartDate && orderEndDate) {
+                const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                params.order_date = `${format(orderStartDate)},${format(orderEndDate)}`;
+            } else if (orderStartDate) {
+                const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                params.order_date = `${format(orderStartDate)}`;
+            } else if (orderEndDate) {
+                const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                params.order_date = `${format(orderEndDate)}`;
+            }
 
             // Use Inertia to reload the current page with new query params
             router.get('/admin', params, {
@@ -214,7 +251,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
         }, 300);
 
         return () => clearTimeout(handler);
-    }, [searchQuery, roleFilter, productSearchQuery, productCategoryFilter, orderSearchQuery, orderStatusFilter, orderDateFilter]);
+    }, [searchQuery, roleFilter, productSearchQuery, productCategoryFilter, orderSearchQuery, orderStatusFilter, orderStartDate, orderEndDate]);
 
     // Fetch analytics data when revenue filter changes
     useEffect(() => {
@@ -272,7 +309,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
     return (
         <div className="flex min-h-screen bg-[#F8FAFC] w-full max-w-full overflow-x-hidden">
             {/* Sidebar Navigation */}
-            <aside className={`hidden md:flex bg-white border-r border-[#E2E8F0] flex-col justify-between sticky top-0 h-screen z-30 transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
+            <aside className={`hidden md:flex fixed left-0 top-0 h-screen z-40 bg-white border-r border-slate-100 flex-col justify-between transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
                 <div>
                     {/* Logo Brand */}
                     <div className="flex items-center justify-center gap-3 px-4 h-16 border-b border-slate-100">
@@ -357,7 +394,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
             </aside>
 
             {/* Main Content Area */}
-            <div className="flex-1 w-full max-w-full overflow-x-hidden bg-slate-50 flex flex-col min-w-0">
+            <div className={`flex-1 min-h-screen w-full bg-slate-50 flex flex-col min-w-0 transition-all duration-300 max-w-full overflow-x-hidden ${isCollapsed ? 'md:pl-20' : 'md:pl-64'}`}>
                 {/* Mobile Header */}
                 <div className="md:hidden flex items-center justify-between px-6 h-16 bg-white border-b border-slate-100 shadow-sm sticky top-0 z-40">
                     <div className="flex items-center gap-3">
@@ -1124,12 +1161,46 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                   className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-4 pl-11 font-['Inter',sans-serif] text-[13px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#0D6A36] focus:bg-white focus:ring-2 focus:ring-[#0D6A36]/20 focus:outline-none"
                               />
                           </div>
-                          <input
-                              type="date"
-                              value={orderDateFilter}
-                              onChange={(e) => setOrderDateFilter(e.target.value)}
-                              className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all focus:border-[#0D6A36] focus:ring-2 focus:ring-[#0D6A36]/20 focus:outline-none"
-                          />
+                          <div className="flex items-center gap-2 shrink-0">
+                              <div className="relative">
+                                  <Calendar className="absolute top-1/2 left-3 -translate-y-1/2 text-[#6e7a70] z-10 pointer-events-none" size={18} />
+                                  <DatePicker
+                                      selected={orderStartDate}
+                                      onChange={(date: Date | null) => setOrderStartDate(date)}
+                                      selectsStart
+                                      startDate={orderStartDate}
+                                      endDate={orderEndDate}
+                                      dateFormat="dd/MM/yyyy"
+                                      locale={localeID}
+                                      showYearDropdown
+                                      showMonthDropdown
+                                      dropdownMode="select"
+                                      isClearable
+                                      customInput={<DynamicPlaceholderInput defaultPlaceholder="Mulai" formatPlaceholder="dd/mm/yyyy" />}
+                                      className="w-full sm:w-[160px] rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-8 pl-10 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all focus:border-[#0D6A36] focus:ring-2 focus:ring-[#0D6A36]/20 focus:outline-none"
+                                  />
+                              </div>
+                              <span className="text-slate-400 font-medium">-</span>
+                              <div className="relative">
+                                  <Calendar className="absolute top-1/2 left-3 -translate-y-1/2 text-[#6e7a70] z-10 pointer-events-none" size={18} />
+                                  <DatePicker
+                                      selected={orderEndDate}
+                                      onChange={(date: Date | null) => setOrderEndDate(date)}
+                                      selectsEnd
+                                      startDate={orderStartDate}
+                                      endDate={orderEndDate}
+                                      minDate={orderStartDate}
+                                      dateFormat="dd/MM/yyyy"
+                                      locale={localeID}
+                                      showYearDropdown
+                                      showMonthDropdown
+                                      dropdownMode="select"
+                                      isClearable
+                                      customInput={<DynamicPlaceholderInput defaultPlaceholder="Akhir" formatPlaceholder="dd/mm/yyyy" />}
+                                      className="w-full sm:w-[160px] rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-8 pl-10 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all focus:border-[#0D6A36] focus:ring-2 focus:ring-[#0D6A36]/20 focus:outline-none"
+                                  />
+                              </div>
+                          </div>
                       </div>
                   </div>
 

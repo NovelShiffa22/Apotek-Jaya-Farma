@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { 
   CheckCircle, 
   XCircle, 
@@ -26,9 +27,37 @@ import {
   Loader,
   Truck
 } from 'lucide-react';
-import { Link, router, usePage, useForm } from '@inertiajs/react';
+import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
+import axios from 'axios';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { id as localeID } from 'date-fns/locale';
+import InputMask from 'react-input-mask';
 import ConfirmModal from '../components/ConfirmModal';
 import Pagination from '../components/Pagination';
+
+const DynamicPlaceholderInput = React.forwardRef(({ defaultPlaceholder, formatPlaceholder, ...props }: any, ref: any) => {
+    const [currentPlaceholder, setCurrentPlaceholder] = useState(defaultPlaceholder);
+    return (
+        <InputMask 
+            {...props} 
+            ref={ref} 
+            mask="99/99/9999"
+            maskChar={null}
+            placeholder={currentPlaceholder} 
+            onFocus={(e) => {
+                setCurrentPlaceholder(formatPlaceholder);
+                if (props.onFocus) props.onFocus(e);
+            }}
+            onBlur={(e) => {
+                if (!e.target.value) {
+                    setCurrentPlaceholder(defaultPlaceholder);
+                }
+                if (props.onBlur) props.onBlur(e);
+            }}
+        />
+    );
+});
 
 export default function PharmacistDashboard({ prescriptions = [], products = [], orders = [], statusChanges = [], analytics = {} }: any) {
   const { auth } = usePage().props as any;
@@ -147,12 +176,14 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
   }, [productSearchQuery, productCategoryFilter, activeTab]);
   const [prescriptionView, setPrescriptionView] = useState<'list' | 'detail'>('list');
   const [searchQuery, setSearchQuery] = useState('');
-  const [prescriptionDateFilter, setPrescriptionDateFilter] = useState('');
+  const [prescriptionStartDate, setPrescriptionStartDate] = useState<Date | null>(null);
+  const [prescriptionEndDate, setPrescriptionEndDate] = useState<Date | null>(null);
   const [validationNotes, setValidationNotes] = useState('');
   
   // Order states
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
-  const [orderDateFilter, setOrderDateFilter] = useState('');
+  const [orderStartDate, setOrderStartDate] = useState<Date | null>(null);
+  const [orderEndDate, setOrderEndDate] = useState<Date | null>(null);
   const [orderStatusFilter, setOrderStatusFilter] = useState('all');
 
   const [modalConfig, setModalConfig] = useState<{
@@ -288,9 +319,16 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
   const [doctorName, setDoctorName] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
-  const [doctorPoli, setDoctorPoli] = useState('Umum');
+  const [doctorPoli, setDoctorPoli] = useState('');
   const [doctorPPK, setDoctorPPK] = useState('Puskesmas Tebet');
   const [doctorAlamat, setDoctorAlamat] = useState('Jl. Raya Kemerdekaan No. 10, Jakarta Selatan');
+  const [prescriptionDate, setPrescriptionDate] = useState('');
+  const [sipDokter, setSipDokter] = useState('');
+  const [nikKtp, setNikKtp] = useState('');
+  const [jenisKelamin, setJenisKelamin] = useState('');
+  const [activeDropdownIndex, setActiveDropdownIndex] = useState<number | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Dynamic Prescription Items State
   const [prescriptionItems, setPrescriptionItems] = useState<any[]>([]);
@@ -369,9 +407,11 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
     else setDoctorName('');
     if (rx.doctor_poli) setDoctorPoli(rx.doctor_poli);
     if (rx.doctor_ppk) setDoctorPPK(rx.doctor_ppk);
-    if (rx.doctor_alamat) setDoctorAlamat(rx.doctor_alamat);
+    setDoctorAlamat(rx.doctor_alamat || '');
     setRejectionReason('');
     setShowRejectForm(false);
+    setNikKtp(rx.nik || '');
+    setJenisKelamin('');
     
     if (rx.items && rx.items.length > 0) {
       setPrescriptionItems(rx.items);
@@ -388,11 +428,29 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
             if (activeSubTab !== 'pembayaran') {
                 params.prescription_status = activeSubTab;
                 if (searchQuery) params.prescription_search = searchQuery;
-                if (prescriptionDateFilter) params.prescription_date = prescriptionDateFilter;
+                if (prescriptionStartDate && prescriptionEndDate) {
+                    const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    params.prescription_date = `${format(prescriptionStartDate)},${format(prescriptionEndDate)}`;
+                } else if (prescriptionStartDate) {
+                    const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    params.prescription_date = `${format(prescriptionStartDate)}`;
+                } else if (prescriptionEndDate) {
+                    const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    params.prescription_date = `${format(prescriptionEndDate)}`;
+                }
             } else {
                 params.order_status = 'menunggu_pembayaran';
                 if (searchQuery) params.order_search = searchQuery;
-                if (orderDateFilter) params.order_date = orderDateFilter;
+                if (orderStartDate && orderEndDate) {
+                    const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    params.order_date = `${format(orderStartDate)},${format(orderEndDate)}`;
+                } else if (orderStartDate) {
+                    const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    params.order_date = `${format(orderStartDate)}`;
+                } else if (orderEndDate) {
+                    const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    params.order_date = `${format(orderEndDate)}`;
+                }
             }
             router.get('/pharmacist', params, {
                 preserveState: true,
@@ -403,7 +461,16 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
         } else if (activeTab === 'orders') {
             params.order_status = orderStatusFilter;
             if (orderSearchQuery) params.order_search = orderSearchQuery;
-            if (orderDateFilter) params.order_date = orderDateFilter;
+            if (orderStartDate && orderEndDate) {
+                const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                params.order_date = `${format(orderStartDate)},${format(orderEndDate)}`;
+            } else if (orderStartDate) {
+                const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                params.order_date = `${format(orderStartDate)}`;
+            } else if (orderEndDate) {
+                const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                params.order_date = `${format(orderEndDate)}`;
+            }
             
             router.get('/pharmacist', params, {
                 preserveState: true,
@@ -425,7 +492,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
     }, 300);
 
     return () => clearTimeout(handler);
-  }, [activeTab, activeSubTab, searchQuery, prescriptionDateFilter, orderSearchQuery, orderDateFilter, orderStatusFilter, verifikasiFilterDays]);
+  }, [activeTab, activeSubTab, searchQuery, prescriptionStartDate, prescriptionEndDate, orderSearchQuery, orderStartDate, orderEndDate, orderStatusFilter, verifikasiFilterDays]);
 
   const activeFilteredList = activeSubTab === 'pembayaran' 
     ? (orders?.data || []) 
@@ -437,7 +504,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] w-full max-w-full overflow-x-hidden">
       {/* Sidebar Navigation */}
-      <aside className="hidden md:flex w-64 bg-white border-r border-[#E2E8F0] flex-col justify-between sticky top-0 h-screen z-30">
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 z-40 bg-white border-r border-slate-100 flex-col justify-between">
         <div>
           {/* Logo Brand */}
           <div className="flex items-center gap-3 px-6 h-16 border-b border-slate-100">
@@ -550,7 +617,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
       </aside>
 
       {/* Main Content Workspace */}
-      <div className="flex-1 max-w-full overflow-x-hidden flex flex-col min-w-0">
+      <div className="flex-1 min-h-screen w-full bg-slate-50 flex flex-col min-w-0 md:pl-64 max-w-full overflow-x-hidden">
         
         {/* Dynamic Header */}
         <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-20 shadow-sm">
@@ -880,12 +947,46 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                   className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-4 pl-11 font-['Inter',sans-serif] text-[13px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#0D6A36] focus:bg-white focus:ring-2 focus:ring-[#0D6A36]/20 focus:outline-none"
                               />
                           </div>
-                          <input
-                              type="date"
-                              value={orderDateFilter}
-                              onChange={(e) => setOrderDateFilter(e.target.value)}
-                              className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all focus:border-[#0D6A36] focus:ring-2 focus:ring-[#0D6A36]/20 focus:outline-none"
-                          />
+                          <div className="flex items-center gap-2 shrink-0">
+                              <div className="relative">
+                                  <Calendar className="absolute top-1/2 left-3 -translate-y-1/2 text-[#6e7a70] z-10 pointer-events-none" size={18} />
+                                  <DatePicker
+                                      selected={orderStartDate}
+                                      onChange={(date: Date | null) => setOrderStartDate(date)}
+                                      selectsStart
+                                      startDate={orderStartDate}
+                                      endDate={orderEndDate}
+                                      dateFormat="dd/MM/yyyy"
+                                      locale={localeID}
+                                      showYearDropdown
+                                      showMonthDropdown
+                                      dropdownMode="select"
+                                      isClearable
+                                      customInput={<DynamicPlaceholderInput defaultPlaceholder="Mulai" formatPlaceholder="dd/mm/yyyy" />}
+                                      className="w-full sm:w-[160px] rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-8 pl-10 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all focus:border-[#0D6A36] focus:ring-2 focus:ring-[#0D6A36]/20 focus:outline-none"
+                                  />
+                              </div>
+                              <span className="text-slate-400 font-medium">-</span>
+                              <div className="relative">
+                                  <Calendar className="absolute top-1/2 left-3 -translate-y-1/2 text-[#6e7a70] z-10 pointer-events-none" size={18} />
+                                  <DatePicker
+                                      selected={orderEndDate}
+                                      onChange={(date: Date | null) => setOrderEndDate(date)}
+                                      selectsEnd
+                                      startDate={orderStartDate}
+                                      endDate={orderEndDate}
+                                      minDate={orderStartDate}
+                                      dateFormat="dd/MM/yyyy"
+                                      locale={localeID}
+                                      showYearDropdown
+                                      showMonthDropdown
+                                      dropdownMode="select"
+                                      isClearable
+                                      customInput={<DynamicPlaceholderInput defaultPlaceholder="Akhir" formatPlaceholder="dd/mm/yyyy" />}
+                                      className="w-full sm:w-[160px] rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-8 pl-10 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all focus:border-[#0D6A36] focus:ring-2 focus:ring-[#0D6A36]/20 focus:outline-none"
+                                  />
+                              </div>
+                          </div>
                       </div>
                   </div>
 
@@ -1126,12 +1227,46 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                       className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-3 pr-4 pl-12 font-['Inter',sans-serif] text-[14px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#006a3f] focus:bg-white focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
                                   />
                               </div>
-                              <input
-                                  type="date"
-                                  value={prescriptionDateFilter}
-                                  onChange={(e) => setPrescriptionDateFilter(e.target.value)}
-                                  className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-5 py-3 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
-                              />
+                              <div className="flex items-center gap-2 shrink-0">
+                                  <div className="relative">
+                                      <Calendar className="absolute top-1/2 left-3 -translate-y-1/2 text-[#6e7a70] z-10 pointer-events-none" size={18} />
+                                      <DatePicker
+                                          selected={activeSubTab === 'pembayaran' ? orderStartDate : prescriptionStartDate}
+                                          onChange={(date: Date | null) => activeSubTab === 'pembayaran' ? setOrderStartDate(date) : setPrescriptionStartDate(date)}
+                                          selectsStart
+                                          startDate={activeSubTab === 'pembayaran' ? orderStartDate : prescriptionStartDate}
+                                          endDate={activeSubTab === 'pembayaran' ? orderEndDate : prescriptionEndDate}
+                                          dateFormat="dd/MM/yyyy"
+                                          locale={localeID}
+                                          showYearDropdown
+                                          showMonthDropdown
+                                          dropdownMode="select"
+                                          isClearable
+                                          customInput={<DynamicPlaceholderInput defaultPlaceholder="Mulai" formatPlaceholder="dd/mm/yyyy" />}
+                                          className="w-full sm:w-[160px] rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-3 pr-8 pl-10 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                      />
+                                  </div>
+                                  <span className="text-slate-400 font-medium">-</span>
+                                  <div className="relative">
+                                      <Calendar className="absolute top-1/2 left-3 -translate-y-1/2 text-[#6e7a70] z-10 pointer-events-none" size={18} />
+                                      <DatePicker
+                                          selected={activeSubTab === 'pembayaran' ? orderEndDate : prescriptionEndDate}
+                                          onChange={(date: Date | null) => activeSubTab === 'pembayaran' ? setOrderEndDate(date) : setPrescriptionEndDate(date)}
+                                          selectsEnd
+                                          startDate={activeSubTab === 'pembayaran' ? orderStartDate : prescriptionStartDate}
+                                          endDate={activeSubTab === 'pembayaran' ? orderEndDate : prescriptionEndDate}
+                                          minDate={activeSubTab === 'pembayaran' ? orderStartDate : prescriptionStartDate}
+                                          dateFormat="dd/MM/yyyy"
+                                          locale={localeID}
+                                          showYearDropdown
+                                          showMonthDropdown
+                                          dropdownMode="select"
+                                          isClearable
+                                          customInput={<DynamicPlaceholderInput defaultPlaceholder="Akhir" formatPlaceholder="dd/mm/yyyy" />}
+                                          className="w-full sm:w-[160px] rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-3 pr-8 pl-10 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                      />
+                                  </div>
+                              </div>
                           </div>
                       </div>
 
@@ -1243,60 +1378,90 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                           {/* Detail User Card */}
                           <div className="overflow-hidden rounded-xl shadow-sm border border-slate-200">
                             <div className="bg-[#0D6A36] text-white px-6 py-3.5 font-bold text-sm">
-                              Detail User
+                              Informasi Pemilik Resep (Pasien)
                             </div>
                             <div className="bg-white p-6">
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-y-5 gap-x-6">
-                                <div>
-                                  <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">NIK KTP</p>
-                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.nik || '3275084920000001'}</p>
-                                </div>
+                              {/* Baris 1: Nama, Tgl Lahir, Telp */}
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                 <div>
                                   <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Nama Lengkap</p>
-                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.user?.name || selectedPrescription.customer}</p>
+                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.nama_pasien || selectedPrescription.user?.name || selectedPrescription.customer}</p>
                                 </div>
                                 <div>
-                                  <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Tempat Tanggal Lahir</p>
-                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.dob || 'Jakarta, 12-05-1985'}</p>
-                                </div>
-                                <div>
-                                  <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Email</p>
-                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.user?.email || selectedPrescription.email || 'budi.s@example.com'}</p>
-                                </div>
-                                <div className="md:col-span-2">
-                                  <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Alamat</p>
+                                  <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Tanggal Lahir & Umur</p>
                                   <p className="font-bold text-slate-800 text-xs">
                                     {(() => {
-                                      const userAddress = selectedPrescription.user?.addresses?.find((addr: any) => addr.is_default) || selectedPrescription.user?.addresses?.[0];
-                                      return userAddress 
-                                        ? `${userAddress.alamat_lengkap}, ${userAddress.kota}, ${userAddress.provinsi} ${userAddress.kode_pos}`
-                                        : (selectedPrescription.alamat || 'Jl. Merdeka No. 45, Bekasi');
+                                        const dobString = selectedPrescription.tanggal_lahir_pasien || selectedPrescription.user?.dob || selectedPrescription.dob;
+                                        if (!dobString) return '-';
+                                        const dob = new Date(dobString);
+                                        const diff = Date.now() - dob.getTime();
+                                        const age = new Date(diff);
+                                        const ageStr = Math.abs(age.getUTCFullYear() - 1970);
+                                        return `${dob.toLocaleDateString('id-ID')} (${ageStr} Tahun)`;
                                     })()}
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Jenis Kelamin</p>
-                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.gender || 'Laki-laki'}</p>
+                                  <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">No. Telp (WhatsApp)</p>
+                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.whatsapp || selectedPrescription.user?.phone || selectedPrescription.phone || 'Tidak disebutkan'}</p>
+                                </div>
+                              </div>
+
+                              {/* Baris 2: Alamat */}
+                              <div className="w-full mb-4">
+                                <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Alamat</p>
+                                <p className="font-bold text-slate-800 text-xs leading-relaxed">
+                                  {(() => {
+                                    const userAddress = selectedPrescription.user?.addresses?.find((addr: any) => addr.is_default) || selectedPrescription.user?.addresses?.[0];
+                                    return userAddress 
+                                      ? `${userAddress.alamat_lengkap}, ${userAddress.kota}, ${userAddress.provinsi} ${userAddress.kode_pos}`
+                                      : (selectedPrescription.alamat || 'Tidak disebutkan');
+                                  })()}
+                                </p>
+                              </div>
+
+                              {/* Baris 3: NIK & Jenis Kelamin (Input) */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">NIK KTP <span className="text-red-500">*</span></p>
+                                  {activeSubTab === 'menunggu' ? (
+                                    <input 
+                                      type="text" 
+                                      value={nikKtp} 
+                                      onChange={(e) => setNikKtp(e.target.value)} 
+                                      placeholder="Ketik NIK (atau masukkan '-' jika tidak ada)"
+                                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#0D6A36] focus:ring-1 focus:ring-[#0D6A36]" 
+                                    />
+                                  ) : (
+                                    <p className="font-bold text-slate-800 text-xs">{nikKtp}</p>
+                                  )}
                                 </div>
                                 <div>
-                                  <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Status Perkawinan</p>
-                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.marital || 'Menikah'}</p>
+                                  <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Jenis Kelamin <span className="text-red-500">*</span></p>
+                                  {activeSubTab === 'menunggu' ? (
+                                    <select 
+                                      value={jenisKelamin} 
+                                      onChange={(e) => setJenisKelamin(e.target.value)} 
+                                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#0D6A36] focus:ring-1 focus:ring-[#0D6A36]"
+                                    >
+                                      <option value="" disabled>Pilih Jenis Kelamin</option>
+                                      <option value="Laki-laki">Laki-laki</option>
+                                      <option value="Perempuan">Perempuan</option>
+                                    </select>
+                                  ) : (
+                                    <p className="font-bold text-slate-800 text-xs">{jenisKelamin}</p>
+                                  )}
                                 </div>
-                                <div>
-                                  <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Pekerjaan</p>
-                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.job || 'Karyawan Swasta'}</p>
-                                </div>
-                                <div>
-                                  <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">No. Telp</p>
-                                  <p className="font-bold text-slate-800 text-xs">{selectedPrescription.user?.phone || selectedPrescription.phone || '+628123456789'}</p>
-                                </div>
+                              </div>
+
+                              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
+                                <span className="text-[10px] font-semibold text-slate-400 italic">Email Akun Pengunggah: <span className="font-bold text-slate-600">{selectedPrescription.user?.email || selectedPrescription.email || 'Tidak ditemukan'}</span></span>
                               </div>
                             </div>
                           </div>
-
                           {/* Detail Dokter Card */}
-                          <div className="overflow-hidden rounded-xl shadow-sm border border-slate-200">
-                            <div className="bg-[#0D6A36] text-white px-6 py-3.5 font-bold text-sm">
+                          <div className="rounded-xl shadow-sm border border-slate-200">
+                            <div className="bg-[#0D6A36] text-white px-6 py-3.5 font-bold text-sm rounded-t-xl">
                               Detail Dokter
                             </div>
                             <div className="bg-white p-6 space-y-4">
@@ -1321,12 +1486,50 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                     onChange={(e) => setDoctorPoli(e.target.value)}
                                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 font-semibold focus:outline-none focus:ring-1 focus:ring-[#0D6A36] focus:border-[#0D6A36] bg-white cursor-pointer"
                                   >
-                                    <option value="Umum">Pilih Poli</option>
+                                    <option value="" disabled>Pilih Poli</option>
                                     <option value="Umum">Poli Umum</option>
                                     <option value="Anak">Poli Anak</option>
                                     <option value="Gigi">Poli Gigi</option>
                                     <option value="Kardio">Poli Jantung</option>
                                   </select>
+                                </div>
+                                <div>
+                                  <label className="block text-slate-500 font-bold text-xs mb-1.5 font-['Inter',sans-serif]">Tanggal Resep <span className="text-red-500">*</span></label>
+                                  <div className="relative">
+                                    <Calendar className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400 z-10 pointer-events-none" size={14} />
+                                    <DatePicker
+                                      selected={prescriptionDate ? new Date(prescriptionDate) : null}
+                                      onChange={(date: Date | null) => {
+                                          if (date) {
+                                              const yyyy = date.getFullYear();
+                                              const mm = String(date.getMonth() + 1).padStart(2, '0');
+                                              const dd = String(date.getDate()).padStart(2, '0');
+                                              setPrescriptionDate(`${yyyy}-${mm}-${dd}`);
+                                          } else {
+                                              setPrescriptionDate('');
+                                          }
+                                      }}
+                                      dateFormat="dd/MM/yyyy"
+                                      locale={localeID}
+                                      showYearDropdown
+                                      showMonthDropdown
+                                      dropdownMode="select"
+                                      isClearable
+                                      placeholderText="dd/mm/yyyy"
+                                      className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 font-semibold focus:outline-none focus:ring-1 focus:ring-[#0D6A36] focus:border-[#0D6A36]"
+                                      wrapperClassName="w-full"
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block text-slate-500 font-bold text-xs mb-1.5 font-['Inter',sans-serif]">SIP Dokter <span className="text-red-500">*</span></label>
+                                  <input
+                                    type="text"
+                                    value={sipDokter}
+                                    onChange={(e) => setSipDokter(e.target.value)}
+                                    placeholder="No. SIP Dokter"
+                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 font-semibold focus:outline-none focus:ring-1 focus:ring-[#0D6A36] focus:border-[#0D6A36]"
+                                  />
                                 </div>
                                 <div>
                                   <label className="block text-slate-500 font-bold text-xs mb-1.5 font-['Inter',sans-serif]">PPK Asal <span className="text-red-500">*</span></label>
@@ -1375,7 +1578,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                   )}
                                 </div>
 
-                                <div className="overflow-x-auto border border-slate-100 rounded-xl">
+                                <div className="border border-slate-100 rounded-xl">
                                   <table className="w-full text-left text-xs border-collapse">
                                     <thead>
                                       <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold">
@@ -1396,28 +1599,54 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                         <tr key={globalIndex}>
                                           <td className="p-3">
                                             {activeSubTab === 'menunggu' ? (
-                                              <select 
-                                                value={item.product_id || ''} 
-                                                onChange={(e) => {
-                                                  const pId = e.target.value;
-                                                  const prod = products.find((p: any) => p.id.toString() === pId);
-                                                  const newItems = [...prescriptionItems];
-                                                  newItems[globalIndex].product_id = pId;
-                                                  if (prod) {
-                                                    newItems[globalIndex].product_name = prod.name;
-                                                    newItems[globalIndex].harga_satuan = prod.price || 0;
-                                                    newItems[globalIndex].satuan = prod.unit || 'Tablet';
-                                                    newItems[globalIndex].subtotal = calculateSubtotal(newItems[globalIndex]);
-                                                  }
-                                                  setPrescriptionItems(newItems);
-                                                }}
-                                                className="w-full py-1.5 px-2 border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none"
-                                              >
-                                                <option value="" disabled>Pilih Obat...</option>
-                                                {products.filter((p: any) => !p.is_racikan_only).map((p: any) => (
-                                                  <option key={p.id} value={p.id}>{p.name}</option>
-                                                ))}
-                                              </select>
+                                              <div className="relative">
+                                                <input 
+                                                  type="text"
+                                                  value={item.product_name}
+                                                  onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    updateItem(globalIndex, 'product_name', val);
+                                                    setActiveDropdownIndex(globalIndex);
+                                                  }}
+                                                  onFocus={() => setActiveDropdownIndex(globalIndex)}
+                                                  onBlur={() => setTimeout(() => setActiveDropdownIndex(null), 200)}
+                                                  placeholder="Ketik untuk cari obat..."
+                                                  className="w-full py-1.5 px-2 border border-slate-200 rounded-lg text-slate-700 text-sm font-normal placeholder:text-sm placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:border-[#0D6A36]"
+                                                />
+                                                {activeDropdownIndex === globalIndex && (
+                                                  <div className="absolute z-50 left-0 w-full bg-white shadow-xl rounded-xl border border-slate-100 mt-1 max-h-48 overflow-y-auto">
+                                                    {(products?.data || [])
+                                                      .filter((p: any) => !p.is_racikan_only && (p.name || p.nama_obat).toLowerCase().includes((item.product_name || '').toLowerCase()))
+                                                      .map((p: any) => (
+                                                        <div 
+                                                          key={p.id} 
+                                                          className="px-3 py-2 hover:bg-[#E7F5EC] cursor-pointer flex justify-between items-center border-b border-slate-50 last:border-0"
+                                                          onMouseDown={() => {
+                                                            const newItems = [...prescriptionItems];
+                                                            newItems[globalIndex].product_id = p.id;
+                                                            newItems[globalIndex].product_name = p.name || p.nama_obat;
+                                                            newItems[globalIndex].harga_satuan = p.harga || p.price || 0;
+                                                            newItems[globalIndex].satuan = p.unit || 'Tablet';
+                                                            newItems[globalIndex].subtotal = calculateSubtotal(newItems[globalIndex]);
+                                                            setPrescriptionItems(newItems);
+                                                            setActiveDropdownIndex(null);
+                                                          }}
+                                                        >
+                                                          <span className="font-semibold text-[11px] truncate max-w-[140px] text-slate-700">{p.name || p.nama_obat}</span>
+                                                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0 ${
+                                                            p.jenis_obat === 'keras' ? 'bg-red-100 text-red-600' : 
+                                                            p.jenis_obat === 'terbatas' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-[#0D6A36]'
+                                                          }`}>
+                                                            {p.jenis_obat === 'keras' ? 'Keras' : p.jenis_obat === 'terbatas' ? 'Terbatas' : 'Bebas'}
+                                                          </span>
+                                                        </div>
+                                                    ))}
+                                                    {(products?.data || []).filter((p: any) => !p.is_racikan_only && (p.name || p.nama_obat).toLowerCase().includes((item.product_name || '').toLowerCase())).length === 0 && (
+                                                      <div className="px-3 py-2 text-[10px] text-slate-400 italic">Tidak ada obat ditemukan</div>
+                                                    )}
+                                                  </div>
+                                                )}
+                                              </div>
                                             ) : (
                                               <span className="font-bold text-slate-800">{item.product_name || item.product?.name}</span>
                                             )}
@@ -1428,7 +1657,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                             {activeSubTab === 'menunggu' ? (
                                               <input
                                                 type="number"
-                                                value={item.kuantitas_resep}
+                                                value={item.kuantitas_resep === 0 ? '' : Number(item.kuantitas_resep)}
                                                 onChange={(e) => updateItem(globalIndex, 'kuantitas_resep', Math.max(0, parseInt(e.target.value) || 0))}
                                                 className="w-14 text-center py-1 border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none"
                                               />
@@ -1440,7 +1669,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                             {activeSubTab === 'menunggu' ? (
                                               <input
                                                 type="number"
-                                                value={item.kuantitas_ambil}
+                                                value={item.kuantitas_ambil === 0 ? '' : Number(item.kuantitas_ambil)}
                                                 onChange={(e) => updateItem(globalIndex, 'kuantitas_ambil', Math.max(0, parseInt(e.target.value) || 0))}
                                                 className="w-14 text-center py-1 border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none"
                                               />
@@ -1638,14 +1867,14 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                           <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
                             <div className="bg-[#0D6A36] text-white px-4 py-2.5 font-bold text-xs flex justify-between items-center">
                               <span>Resep</span>
-                              <Search size={14} className="cursor-pointer" />
+                              <Search size={14} className="cursor-pointer" onClick={() => setShowImageModal(true)} />
                             </div>
                             <div className="bg-white p-4">
-                              <div className="relative group overflow-hidden rounded-lg aspect-[3/4] border border-slate-100">
+                              <div className="relative group overflow-hidden rounded-lg aspect-[3/4] border border-slate-100 cursor-zoom-in" onClick={() => setShowImageModal(true)}>
                                 <img
                                   src={selectedPrescription.file_foto || "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&q=80&w=400"}
                                   alt="Surat Resep Asli"
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 cursor-zoom-in"
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                 />
                                 <div className="absolute inset-0 bg-slate-900/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                                   <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow">
@@ -1656,19 +1885,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                             </div>
                           </div>
 
-                          {/* Info Dokter Form */}
-                          {activeSubTab === 'menunggu' && (
-                              <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-2">NAMA DOKTER (DARI RESEP)</p>
-                                  <input 
-                                      type="text"
-                                      value={doctorName}
-                                      onChange={(e) => setDoctorName(e.target.value)}
-                                      placeholder="Ketik nama dokter..."
-                                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36]"
-                                  />
-                              </div>
-                          )}
+
 
                           {/* Total Harga Summary Card */}
                           <div className="bg-white rounded-xl p-5 border border-slate-200 flex items-center justify-between text-right shadow-sm">
@@ -1687,14 +1904,26 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                           <div className="space-y-3 pt-2">
                             <button 
                               onClick={() => {
+                                if (!jenisKelamin) {
+                                  setToastMessage('Jenis kelamin pasien wajib dipilih sebelum membuat resep.');
+                                  setTimeout(() => setToastMessage(null), 3000);
+                                  return;
+                                }
+
+                                const finalNik = !nikKtp.trim() ? '-' : nikKtp;
+
                                 router.put(`/pharmacist/prescriptions/${selectedPrescription.id}`, {
                                   status_validasi: 'disetujui',
                                   doctor_name: doctorName,
                                   doctor_poli: doctorPoli,
                                   doctor_ppk: doctorPPK,
                                   doctor_alamat: doctorAlamat,
+                                  tanggal_resep: prescriptionDate,
+                                  sip_dokter: sipDokter,
                                   catatan_apoteker: validationNotes,
                                   total_biaya: totalHargaVal,
+                                  nik: finalNik,
+                                  jenis_kelamin: jenisKelamin,
                                   items: prescriptionItems
                                 }, { onSuccess: () => setPrescriptionView('list') });
                               }}
@@ -2443,6 +2672,35 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
       )}
 
       <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
+
+      {/* Custom Alert Toast */}
+      {toastMessage && (
+        <div className="fixed top-4 right-4 z-50 bg-red-50 text-red-800 border border-red-200 shadow-md rounded-xl p-4 animate-fadeIn flex items-center gap-3">
+          <AlertCircle size={20} className="text-red-500" />
+          <p className="text-sm font-semibold font-['Inter',sans-serif]">{toastMessage}</p>
+        </div>
+      )}
+
+      {/* Image Zoom Modal */}
+      {showImageModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowImageModal(false)}>
+          <div className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            <img 
+              src={selectedPrescription?.file_foto || "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&q=80&w=400"} 
+              alt="Surat Resep Asli" 
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button 
+              onClick={() => setShowImageModal(false)}
+              className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white p-2 rounded-full backdrop-blur-md transition-all"
+            >
+              <X size={24} />
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
