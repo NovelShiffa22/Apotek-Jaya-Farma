@@ -8,12 +8,6 @@ export default function UploadStep1() {
             <Header />
             <main className="mx-auto max-w-4xl px-8 py-10">
                 
-                <div className="mb-6">
-                    <Link href="/profile?tab=prescriptions" className="inline-flex items-center gap-1 font-['Inter',sans-serif] text-[14px] text-gray-500 hover:text-gray-700 transition-colors">
-                        <ArrowLeft size={16} />
-                        Kembali ke Riwayat Resep
-                    </Link>
-                </div>
 
                 {/* Stepper */}
                 <div className="mb-12 flex items-center justify-center">

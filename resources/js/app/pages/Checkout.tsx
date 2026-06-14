@@ -168,10 +168,6 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
       <Header />
 
       <main className="max-w-[1200px] mx-auto px-4 py-8 mt-4">
-        <button onClick={() => window.history.back()} className="text-[#006a3f] hover:text-[#005632] flex items-center gap-2 mb-6 text-[14px] font-medium transition-colors w-fit">
-            &larr; Kembali
-        </button>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* SISI KIRI: Form Checkout */}

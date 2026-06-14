@@ -19,7 +19,7 @@
         <!-- Midtrans Snap SDK -->
         <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
     </head>
-    <body class="font-sans antialiased overflow-x-hidden">
+    <body class="font-sans antialiased overflow-x-clip">
         @inertia
     </body>
 </html>

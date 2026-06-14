@@ -138,16 +138,6 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
             <Header />
             <main className="mx-auto max-w-5xl px-8 py-10">
                 
-                {/* Back Button */}
-                <div className="mb-6">
-                    <Link 
-                        href={route('prescriptions.upload.step1')}
-                        className="inline-flex items-center gap-2 font-['Poppins',sans-serif] text-[14px] font-medium text-gray-500 transition-colors hover:text-[#006a3f]"
-                    >
-                        <ArrowLeft size={18} />
-                        Kembali
-                    </Link>
-                </div>
 
                 {/* Stepper */}
                 <div className="mb-12 flex items-center justify-center">
@@ -171,10 +161,10 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
 
                 <div className="text-center mb-10">
                     <h1 className="font-['Poppins',sans-serif] text-3xl font-bold text-[#171d19]">
-                        Langkah 2: Unggah & Alamat
+                        Langkah 2: Lengkapi Data Pasien & Resep
                     </h1>
                     <p className="mt-2 font-['Poppins',sans-serif] text-[14px] text-gray-600">
-                        Lengkapi dokumen resep dan tentukan lokasi pengiriman Anda.
+                        Lengkapi dokumen resep, data diri pasien, dan lokasi pengiriman Anda untuk proses skrining yang akurat.
                     </p>
                 </div>
 
