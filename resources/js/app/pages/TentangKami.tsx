@@ -164,41 +164,33 @@ export default function TentangKami({ apotekSettings }: Props) {
                                 Hubungi Kami
                             </a>
                         </div>
-                    </div>
-
-                    {/* Timeline / visual */}
-                    <div className="relative">
-                        <div className="bg-white rounded-3xl border border-[#f1f5f9] shadow-[0_8px_40px_rgba(0,0,0,0.08)] p-8 overflow-hidden">
-                            {/* Decorative top strip */}
-                            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#006a3f] via-emerald-400 to-teal-400 rounded-t-3xl" />
-
-                            <h3 className="font-['Roboto_Condensed',sans-serif] text-xl font-bold text-[#171d19] mb-6">
-                                Perjalanan Kami
-                            </h3>
-
-                            <div className="space-y-5">
-                                {[
-                                    { year: '1971', text: 'Apotek Jaya Farma berdiri di Jl. Malabar No. 50, Bandung — melayani masyarakat sekitar Kecamatan Lengkong.' },
-                                    { year: '2000-an', text: 'Ekspansi produk dan layanan, menambah stok obat generik dan produk kesehatan lengkap.' },
-                                    { year: '2020', text: 'Modernisasi sistem manajemen stok dan pelayanan resep dokter berbasis digital.' },
-                                    { year: '2024', text: 'Peluncuran platform belanja online dengan sistem pembayaran terintegrasi Midtrans.' },
-                                    { year: '2025', text: 'Sistem rekomendasi obat berbasis AI dan layanan konsultasi apoteker online.' },
-                                ].map((item, i) => (
-                                    <div key={i} className="flex gap-4 group">
-                                        <div className="flex flex-col items-center">
-                                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#006a3f] to-emerald-500 flex items-center justify-center shrink-0 shadow-md group-hover:shadow-lg transition-shadow">
-                                                <div className="w-2 h-2 bg-white rounded-full" />
-                                            </div>
-                                            {i < 4 && <div className="w-0.5 h-full bg-gradient-to-b from-emerald-200 to-transparent mt-1" />}
-                                        </div>
-                                        <div className="pb-5">
-                                            <span className="inline-block font-bold text-[#006a3f] text-sm bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100 mb-1.5">
-                                                {item.year}
-                                            </span>
-                                            <p className="text-[#3e4a41] text-[14px] leading-6">{item.text}</p>
-                                        </div>
-                                    </div>
-                                ))}
+                    </div>                    {/* Foto Apotek Jaya Farma */}
+                    <div className="relative group">
+                        {/* Decorative background gradients */}
+                        <div className="absolute -inset-1 bg-gradient-to-r from-[#006a3f] to-emerald-500 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
+                        
+                        <div className="relative bg-white rounded-3xl border border-[#f1f5f9] shadow-[0_8px_40px_rgba(0,0,0,0.08)] overflow-hidden p-3">
+                            <div className="relative h-[480px] w-full rounded-2xl overflow-hidden">
+                                <img 
+                                    src="/images/apotek_jaya_farma.png" 
+                                    alt="Foto Apotek Jaya Farma" 
+                                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
+                                />
+                                {/* Elegant gradient overlay at the bottom */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                                
+                                {/* Image badge/caption */}
+                                <div className="absolute bottom-6 left-6 right-6 text-white">
+                                    <span className="inline-block bg-[#006a3f] text-white font-bold text-xs uppercase tracking-wider px-3 py-1 rounded-full mb-2 shadow-md border border-white/10">
+                                        Gedung Apotek
+                                    </span>
+                                    <h4 className="font-['Roboto_Condensed',sans-serif] text-2xl font-black tracking-tight">
+                                        Apotek Jaya Farma
+                                    </h4>
+                                    <p className="text-emerald-100/90 text-sm mt-1 font-light">
+                                        Jl. Malabar No. 50, Bandung — Siap melayani kebutuhan kesehatan Anda setiap hari.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
