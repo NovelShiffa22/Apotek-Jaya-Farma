@@ -53,7 +53,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
   const user = auth?.user;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-b from-[#fafaf8] to-white">
       <Header cartCount={0} />
 
       <main className="max-w-[1440px] mx-auto px-4 sm:px-8 py-6 sm:py-12">

@@ -270,13 +270,13 @@ export default function AdminDashboard({ products = [], categories = [], users =
     };
 
     return (
-        <div className="flex min-h-screen bg-[#F8FAFC]">
+        <div className="flex min-h-screen bg-[#F8FAFC] w-full max-w-full overflow-x-hidden">
             {/* Sidebar Navigation */}
             <aside className={`hidden md:flex bg-white border-r border-[#E2E8F0] flex-col justify-between sticky top-0 h-screen z-30 transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
                 <div>
                     {/* Logo Brand */}
-                    <div className="flex items-center justify-center gap-3 px-4 h-20 border-b border-[#E2E8F0]">
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
+                    <div className="flex items-center justify-center gap-3 px-4 h-16 border-b border-slate-100">
+                        <div className="w-9 h-9 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
                                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -296,8 +296,8 @@ export default function AdminDashboard({ products = [], categories = [], users =
                     <nav className="px-3 py-6 space-y-1.5">
                         {[
                             { id: 'analytics' as const, label: 'Analitik', icon: TrendingUp },
-                            { id: 'products' as const, label: 'Produk & Stok', icon: Package },
                             { id: 'orders' as const, label: 'Manajemen Pesanan', icon: ShoppingBag },
+                            { id: 'products' as const, label: 'Produk & Stok', icon: Package },
                             { id: 'users' as const, label: 'Manajemen User', icon: UserCog },
                         ].map((tab) => (
                             <button
@@ -357,11 +357,11 @@ export default function AdminDashboard({ products = [], categories = [], users =
             </aside>
 
             {/* Main Content Area */}
-            <div className="flex-1 w-full bg-slate-50 flex flex-col min-w-0">
+            <div className="flex-1 w-full max-w-full overflow-x-hidden bg-slate-50 flex flex-col min-w-0">
                 {/* Mobile Header */}
-                <div className="md:hidden flex items-center justify-between px-6 h-20 bg-white border-b border-[#E2E8F0] sticky top-0 z-40">
+                <div className="md:hidden flex items-center justify-between px-6 h-16 bg-white border-b border-slate-100 shadow-sm sticky top-0 z-40">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-lg flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-lg flex items-center justify-center shrink-0">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-white">
                                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -382,7 +382,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                     <div className="md:hidden fixed inset-0 z-50 flex">
                         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setIsMobileSidebarOpen(false)} />
                         <aside className="relative w-64 max-w-[80%] bg-white h-full flex flex-col shadow-2xl">
-                            <div className="flex items-center justify-between px-6 h-20 border-b border-[#E2E8F0]">
+                            <div className="flex items-center justify-between px-6 h-16 border-b border-slate-100">
                                 <h2 className="font-['Inter',sans-serif] font-bold text-sm text-[#1A1A1A]">Menu Admin</h2>
                                 <button onClick={() => setIsMobileSidebarOpen(false)} className="p-2 text-slate-400 hover:text-slate-600">
                                     <X size={20} />
@@ -391,8 +391,8 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1.5">
                                 {[
                                     { id: 'analytics' as const, label: 'Analitik', icon: TrendingUp },
-                                    { id: 'products' as const, label: 'Produk & Stok', icon: Package },
                                     { id: 'orders' as const, label: 'Manajemen Pesanan', icon: ShoppingBag },
+                                    { id: 'products' as const, label: 'Produk & Stok', icon: Package },
                                     { id: 'users' as const, label: 'Manajemen User', icon: UserCog },
                                 ].map((tab) => (
                                     <button
@@ -448,8 +448,8 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 )}
 
                 {/* Enhanced Top Bar */}
-                <header className="hidden md:block sticky top-0 z-20 border-b border-[#E2E8F0] bg-white/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] backdrop-blur-md">
-                    <div className="px-8 h-20 flex items-center justify-between">
+                <header className="hidden md:block sticky top-0 z-20 border-b border-slate-100 bg-white/90 shadow-sm backdrop-blur-md">
+                    <div className="px-8 h-16 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={() => setIsCollapsed(!isCollapsed)}
@@ -457,12 +457,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             >
                                 <Menu size={20} />
                             </button>
-                            <h1 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold tracking-[-0.5px] text-[#171d19]">
-                                {activeTab === 'analytics' && 'Analitik Dashboard'}
-                                {activeTab === 'products' && 'Produk & Stok'}
-                                {activeTab === 'orders' && 'Manajemen Pesanan'}
-                                {activeTab === 'users' && 'Manajemen User'}
-                            </h1>
+                            <div></div>
                         </div>
 
                         {/* Notification Bell */}
@@ -537,10 +532,10 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     className="flex items-center gap-3 rounded-xl border border-[#f1f5f9] bg-white p-2 pr-4 transition-all hover:border-[#006a3f] hover:shadow-sm"
                             >
                                 <div className="text-right hidden md:block">
-                                    <p className="font-['Roboto_Condensed',sans-serif] text-[15px] font-semibold text-[#171d19]">
+                                    <p className="font-['Roboto_Condensed',sans-serif] text-sm font-semibold text-[#171d19]">
                                         {auth?.user?.name || 'Admin'}
                                     </p>
-                                    <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">
+                                    <p className="font-['Inter',sans-serif] text-xs text-slate-500">
                                         Administrator
                                     </p>
                                 </div>
@@ -575,7 +570,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                     </div>
                 </header>
 
-                <main className="p-8">
+                <main className="p-8 overflow-x-hidden">
 
                 {activeTab === 'analytics' && (
                     <div className="space-y-8">
@@ -856,9 +851,17 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 )}
 
                 {activeTab === 'products' && (
-                    <div>
+                    <div className="space-y-6">
+                        <div>
+                            <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold text-[#006a3f]">
+                                Produk & Stok
+                            </h2>
+                            <p className="font-['Inter',sans-serif] text-[14px] text-slate-500 mt-1">
+                                Kelola inventaris, kategori, dan harga produk apotek.
+                            </p>
+                        </div>
                         {/* Control Bar: Search, Filter, and Action */}
-                        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-[#f1f5f9] bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-[#f1f5f9] bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
                             <div className="flex w-full sm:w-auto items-center gap-4">
                                 {/* Search Bar */}
                                 <div className="relative w-full sm:w-96">
@@ -895,7 +898,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     setEditingProduct(null);
                                     setIsProductModalOpen(true);
                                 }}
-                                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#006a3f] px-6 py-2.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]"
+                                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-transparent bg-[#006a3f] px-6 py-2.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]"
                             >
                                 <Plus size={18} />
                                 <span className="font-['Roboto_Condensed',sans-serif] text-[14px] font-medium">
@@ -1068,9 +1071,17 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 )}
 
           {activeTab === 'orders' && (
-              <div className="max-w-[1600px] mx-auto">
+              <div className="max-w-[1600px] mx-auto space-y-6">
+                  <div>
+                      <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold text-[#006a3f]">
+                          Manajemen Pesanan
+                      </h2>
+                      <p className="font-['Inter',sans-serif] text-[14px] text-slate-500 mt-1">
+                          Pantau dan perbarui status pesanan pelanggan.
+                      </p>
+                  </div>
                   {/* Sub Navigation Tabs */}
-                  <div className="mb-6 border-b border-[#E2E8F0]">
+                  <div className="border-b border-[#E2E8F0]">
                       <div className="flex gap-10 overflow-x-auto scrollbar-hide">
                           {[
                             { id: 'all', label: 'Semua', icon: List },
@@ -1297,11 +1308,18 @@ export default function AdminDashboard({ products = [], categories = [], users =
           )}
 
                 {activeTab === 'users' && (
-                    <div>
-
+                    <div className="space-y-6">
+                        <div>
+                            <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold text-[#006a3f]">
+                                Manajemen User
+                            </h2>
+                            <p className="font-['Inter',sans-serif] text-[14px] text-slate-500 mt-1">
+                                Kelola hak akses, role, dan data pengguna sistem.
+                            </p>
+                        </div>
 
                         {/* Stats Cards */}
-                        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             {[
                                 {
                                     label: 'Total Users',
@@ -1400,7 +1418,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     setEditingUser(null);
                                     setIsUserModalOpen(true);
                                 }}
-                                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#006a3f] px-6 py-2.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]"
+                                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-transparent bg-[#006a3f] px-6 py-2.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]"
                             >
                                 <Plus size={18} />
                                 <span className="font-['Roboto_Condensed',sans-serif] text-[14px] font-medium">

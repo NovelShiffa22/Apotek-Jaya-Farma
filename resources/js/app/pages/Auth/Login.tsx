@@ -27,18 +27,20 @@ export default function Login({
     const hasErrors = Object.keys(errors).length > 0;
 
     return (
-        <div className="auth-container">
+        <div className="w-full h-screen min-h-screen flex flex-row overflow-hidden bg-white">
             <Head title="Masuk" />
 
             {/* Left Pane - Image backdrop */}
-            <div 
-                className="auth-left-pane"
-                style={{ backgroundImage: "url('/images/latar_auth.png')" }}
-            >
+            <div className="relative w-1/2 h-full flex flex-col justify-end p-8 text-white overflow-hidden">
+                <img 
+                    src="/images/latar_auth.png" 
+                    alt="Latar Apotek" 
+                    className="absolute inset-0 w-full h-full object-cover z-0" 
+                />
                 {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-0" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10" />
 
-                <div className="relative z-10 max-w-[480px]">
+                <div className="relative z-20 max-w-[480px]">
                     {/* Brand/Logo */}
                     <div className="flex items-center gap-3 mb-6">
                         <div className="w-10 h-10 bg-[#3e4a41]/70 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10 shadow-lg">
@@ -64,8 +66,8 @@ export default function Login({
             </div>
 
             {/* Right Pane - Form */}
-            <div className="auth-right-pane">
-                <div className="mx-auto w-full max-w-[420px]">
+            <div className="w-1/2 h-full flex flex-col justify-center items-center bg-white p-8 relative overflow-y-auto">
+                <div className="w-full max-w-[420px]">
                     <div className="mb-8">
                         <h1 className="font-['Roboto_Condensed',sans-serif] text-[36px] xl:text-[40px] font-bold text-[#171d19] tracking-tight mb-2">
                             Selamat Datang

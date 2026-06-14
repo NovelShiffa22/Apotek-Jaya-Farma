@@ -8,54 +8,20 @@
   * {
     font-family: "Poppins", sans-serif !important;
   }
-}
-
-.auth-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background-color: #ffffff;
-  font-family: 'Inter', sans-serif;
-}
-
-.auth-left-pane {
-  position: relative;
-  width: 100%;
-  min-height: 300px;
-  background-size: cover;
-  background-position: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 2rem;
-  color: #ffffff;
-}
-
-.auth-right-pane {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 3rem 1.5rem;
-  background-color: #ffffff;
-}
-
-@media (min-width: 768px) {
-  .auth-container {
-    flex-direction: row !important;
+  html, body {
+    overflow-x: hidden !important;
+    overscroll-behavior-x: none;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
   }
-  .auth-left-pane {
-    width: 41.666667% !important; /* 5/12 */
-    min-height: 100vh !important;
-    padding: 4rem !important;
-  }
-  .auth-right-pane {
-    padding: 3rem 5rem !important;
+
+  /* KILL HORIZONTAL SCROLLBAR ONLY ON ROOT (Preventing Windows Subpixel Bugs) */
+  html::-webkit-scrollbar:horizontal, 
+  body::-webkit-scrollbar:horizontal {
+    display: none !important;
+    height: 0 !important;
   }
 }
 
-@media (min-width: 1024px) {
-  .auth-left-pane {
-    width: 50% !important; /* 1/2 */
-  }
-}
+

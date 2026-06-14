@@ -435,13 +435,13 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
   const totalHargaVal = prescriptionItems.reduce((acc, item) => acc + (item.subtotal || 0), 0);
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
+    <div className="flex min-h-screen bg-[#F8FAFC] w-full max-w-full overflow-x-hidden">
       {/* Sidebar Navigation */}
       <aside className="hidden md:flex w-64 bg-white border-r border-[#E2E8F0] flex-col justify-between sticky top-0 h-screen z-30">
         <div>
           {/* Logo Brand */}
-          <div className="flex items-center gap-3 px-6 h-20 border-b border-[#E2E8F0]">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
+          <div className="flex items-center gap-3 px-6 h-16 border-b border-slate-100">
+            <div className="w-9 h-9 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -537,7 +537,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
             }`}
           >
             <Settings size={18} className={activeTab === 'settings' ? 'text-[#0D6A36]' : 'text-slate-400'} />
-            <span>Pengaturan</span>
+            <span>Pengaturan Profil</span>
           </button>
           <button
             onClick={handlePharmacistLogout}
@@ -550,10 +550,10 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
       </aside>
 
       {/* Main Content Workspace */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 max-w-full overflow-x-hidden flex flex-col min-w-0">
         
         {/* Dynamic Header */}
-        <header className="h-20 bg-white border-b border-[#E2E8F0] flex items-center justify-between px-4 sm:px-8 sticky top-0 z-20 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+        <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-20 shadow-sm">
           <button 
             onClick={() => setIsMobileSidebarOpen(true)}
             className="flex md:hidden p-2.5 text-slate-500 hover:bg-slate-100 rounded-xl mr-2 transition-all shrink-0"
@@ -638,10 +638,10 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <p className="font-['Inter',sans-serif] font-bold text-sm text-slate-800 leading-tight">
+                <p className="font-['Inter',sans-serif] font-semibold text-sm text-slate-800 leading-tight">
                   {user?.name || 'Apoteker'}
                 </p>
-                <p className="font-['Inter',sans-serif] text-[9px] font-bold tracking-wider text-slate-400 uppercase mt-0.5">
+                <p className="font-['Inter',sans-serif] text-xs text-slate-500 uppercase mt-0.5">
                   PHARMACIST
                 </p>
               </div>
@@ -661,7 +661,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
         </header>
 
         {/* Workspace Body */}
-        <main className="p-8 flex-1 overflow-y-auto">
+        <main className="p-8 flex-1 overflow-y-auto overflow-x-hidden">
           {activeTab === 'dashboard' && (
             <div className="space-y-8 max-w-[1600px] mx-auto">
               
@@ -2088,9 +2088,9 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
             <aside className="relative w-64 bg-white flex flex-col justify-between h-full shadow-2xl z-50">
               <div>
                 {/* Logo Brand */}
-                <div className="flex items-center justify-between px-6 h-20 border-b border-[#E2E8F0]">
+                <div className="flex items-center justify-between px-6 h-16 border-b border-slate-100">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
+                    <div className="w-9 h-9 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
                         <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
