@@ -34,6 +34,19 @@ Route::get('/', function () {
 
 Route::get('/catalog', [ProductController::class, 'index'])->name('catalog.index');
 
+// Halaman Tentang Kami (Public)
+Route::get('/tentang-kami', function () {
+    $settings = \Illuminate\Support\Facades\DB::table('apotek_settings')->get()->pluck('value', 'key');
+    return Inertia::render('TentangKami', [
+        'apotekSettings' => [
+            'deskripsi'       => $settings->get('deskripsi', 'Apotek Jaya Farma adalah unit usaha pelayanan kefarmasian dan produk kesehatan swasta yang telah berdiri sejak tahun 1971 di Kota Bandung.'),
+            'alamat'          => $settings->get('alamat', 'Jl. Malabar No. 50, Kecamatan Lengkong, Kota Bandung'),
+            'jam_operasional' => $settings->get('jam_operasional', '08.00 - 18.00 WIB (Buka setiap hari, kecuali hari libur)'),
+            'kontak'          => $settings->get('kontak', '+62 813-1532-4311'),
+        ],
+    ]);
+})->name('tentang-kami');
+
 Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 
 // Menampilkan halaman form input gejala
@@ -244,7 +257,12 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
 
         $prescriptionDate = request('prescription_date');
         if ($prescriptionDate) {
-            $prescriptionsQuery->whereDate('created_at', $prescriptionDate);
+            $dates = explode(',', $prescriptionDate);
+            if (count($dates) == 2) {
+                $prescriptionsQuery->whereBetween('created_at', [$dates[0] . ' 00:00:00', $dates[1] . ' 23:59:59']);
+            } else {
+                $prescriptionsQuery->whereDate('created_at', $dates[0]);
+            }
         }
 
         $paginatedPrescriptions = $prescriptionsQuery->paginate(10, ['*'], 'prescription_page')->withQueryString();
@@ -269,8 +287,23 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
         $orderStatus = request('order_status', 'all');
         $orderDate = request('order_date');
 
-        $ordersQuery = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])->latest();
-        $vtsQuery = \App\Models\VirtualTransaction::with(['user', 'prescription', 'pharmacist'])->latest();
+        $ordersQuery = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])
+            ->where(function($q) {
+                $q->whereNull('prescription_id')
+                  ->orWhereHas('prescription', function($pq) {
+                      $pq->where('status_validasi', 'disetujui');
+                  });
+            })
+            ->latest();
+            
+        $vtsQuery = \App\Models\VirtualTransaction::with(['user', 'prescription', 'pharmacist'])
+            ->where(function($q) {
+                $q->whereNull('prescription_id')
+                  ->orWhereHas('prescription', function($pq) {
+                      $pq->where('status_validasi', 'disetujui');
+                  });
+            })
+            ->latest();
 
         if ($orderSearch) {
             $ordersQuery->where(function($q) use ($orderSearch) {
@@ -302,8 +335,14 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
         }
 
         if ($orderDate) {
-            $ordersQuery->whereDate('created_at', $orderDate);
-            $vtsQuery->whereDate('created_at', $orderDate);
+            $dates = explode(',', $orderDate);
+            if (count($dates) == 2) {
+                $ordersQuery->whereBetween('created_at', [$dates[0] . ' 00:00:00', $dates[1] . ' 23:59:59']);
+                $vtsQuery->whereBetween('created_at', [$dates[0] . ' 00:00:00', $dates[1] . ' 23:59:59']);
+            } else {
+                $ordersQuery->whereDate('created_at', $dates[0]);
+                $vtsQuery->whereDate('created_at', $dates[0]);
+            }
         }
 
         $allRawOrders = $ordersQuery->get();
@@ -439,6 +478,7 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
                 'kode_pesanan' => $vt->va_number ?? 'VT-' . $vt->id,
                 'user' => $vt->user,
                 'payment_method' => $vt->payment_method,
+                'shipping_address' => $vt->shipping_address,
                 'products' => collect($vt->items)->map(function ($item) {
                     return [
                         'id' => $item['id'] ?? $item['product_id'] ?? null,
@@ -488,6 +528,8 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
             'doctor_poli' => $request->doctor_poli,
             'doctor_ppk' => $request->doctor_ppk,
             'doctor_alamat' => $request->doctor_alamat,
+            'tanggal_resep' => $request->tanggal_resep,
+            'sip_dokter' => $request->sip_dokter,
             'total_biaya' => $request->total_biaya,
             'catatan_apoteker' => $request->catatan_apoteker,
             'rejection_reason' => $request->rejection_reason,
@@ -657,8 +699,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         }
 
         if ($orderDate) {
-            $ordersQuery->whereDate('created_at', $orderDate);
-            $vtsQuery->whereDate('created_at', $orderDate);
+            $dates = explode(',', $orderDate);
+            if (count($dates) == 2) {
+                $ordersQuery->whereBetween('created_at', [$dates[0] . ' 00:00:00', $dates[1] . ' 23:59:59']);
+                $vtsQuery->whereBetween('created_at', [$dates[0] . ' 00:00:00', $dates[1] . ' 23:59:59']);
+            } else {
+                $ordersQuery->whereDate('created_at', $dates[0]);
+                $vtsQuery->whereDate('created_at', $dates[0]);
+            }
         }
 
         $allRawOrders = $ordersQuery->get();
@@ -827,6 +875,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
                 'kode_pesanan' => $vt->va_number ?? 'VT-' . $vt->id,
                 'user' => $vt->user,
                 'payment_method' => $vt->payment_method,
+                'shipping_address' => $vt->shipping_address,
                 'products' => collect($vt->items)->map(function ($item) {
                     return [
                         'id' => $item['id'] ?? $item['product_id'] ?? null,
