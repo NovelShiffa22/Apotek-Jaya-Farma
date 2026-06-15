@@ -2,6 +2,7 @@ import { Link, router, useForm, usePage } from '@inertiajs/react';
 import { FilePlus, MapPin, X, Image as ImageIcon, ArrowLeft, Plus, CheckCircle2, AlertCircle, Calendar } from 'lucide-react';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import Header from '../../components/Header';
+import ConfirmModal from '../../components/ConfirmModal';
 import { regions } from '../../data/regions';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -14,6 +15,37 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
     const [dragActive, setDragActive] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return sessionStorage.getItem('upload_cancel_modal') === 'true';
+        }
+        return false;
+    });
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem('upload_cancel_modal', isCancelModalOpen ? 'true' : 'false');
+        }
+    }, [isCancelModalOpen]);
+
+    useEffect(() => {
+        if (window.location.hash !== '#form') {
+            window.location.hash = 'form';
+        }
+
+        const handleHashChange = () => {
+            if (window.location.hash !== '#form') {
+                window.location.hash = 'form';
+                setIsCancelModalOpen(true);
+            }
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+
+        return () => {
+            window.removeEventListener('hashchange', handleHashChange);
+        };
+    }, []);
 
     const { data, setData, post, processing, errors, transform } = useForm<{ 
         prescription_file: File | null;
@@ -626,6 +658,21 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={isCancelModalOpen}
+                title="Batalkan Proses?"
+                message="Apakah Anda yakin ingin membatalkan unggah resep? Data yang sudah diisi akan hilang."
+                confirmText="Ya, Batal"
+                cancelText="Tutup"
+                type="danger"
+                onClose={() => setIsCancelModalOpen(false)}
+                onConfirm={() => {
+                    setIsCancelModalOpen(false);
+                    sessionStorage.removeItem('upload_cancel_modal');
+                    router.get('/cart');
+                }}
+            />
         </div>
     );
 }

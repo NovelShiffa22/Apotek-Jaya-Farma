@@ -53,6 +53,38 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isEmptyCartAlertOpen, setIsEmptyCartAlertOpen] = useState(false);
   const [showAddressError, setShowAddressError] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('checkout_cancel_modal') === 'true';
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('checkout_cancel_modal', isCancelModalOpen ? 'true' : 'false');
+    }
+  }, [isCancelModalOpen]);
+
+  useEffect(() => {
+    // Hash trap yang kebal remount Inertia
+    if (window.location.hash !== '#form') {
+      window.location.hash = 'form';
+    }
+
+    const handleHashChange = () => {
+      if (window.location.hash !== '#form') {
+        window.location.hash = 'form';
+        setIsCancelModalOpen(true);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
 
   // Address Modal State
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -498,6 +530,21 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
         onConfirm={() => {
             setIsEmptyCartAlertOpen(false);
             router.get('/catalog');
+        }}
+      />
+
+      <ConfirmModal
+        isOpen={isCancelModalOpen}
+        title="Batalkan Proses?"
+        message="Apakah Anda yakin ingin membatalkan proses checkout? Data alamat yang dipilih tidak akan tersimpan secara otomatis."
+        confirmText="Ya, Batal"
+        cancelText="Tutup"
+        type="danger"
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={() => {
+            setIsCancelModalOpen(false);
+            sessionStorage.removeItem('checkout_cancel_modal');
+            router.get('/cart');
         }}
       />
     </div>
