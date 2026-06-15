@@ -24,7 +24,7 @@ class PrescriptionController extends Controller
             'prescription_file' => 'required|mimes:jpg,jpeg,png,pdf|max:5120',
             'nama_pasien' => 'nullable|string|max:255',
             'tanggal_lahir_pasien' => 'nullable|date',
-            'whatsapp' => 'nullable|string|max:20',
+            'whatsapp' => ['required', 'numeric', 'digits_between:10,13', 'regex:/^(08|62)/'],
             'catatan' => 'nullable|string|max:1000',
             'shipping_address' => 'required|string',
             'is_legal_agreed' => 'accepted'
@@ -32,6 +32,10 @@ class PrescriptionController extends Controller
             'prescription_file.required' => 'Mohon unggah berkas resep dokter Anda terlebih dahulu.',
             'prescription_file.mimes' => 'Format berkas tidak didukung. Sediakan file dalam format JPG, PNG, atau PDF.',
             'prescription_file.max' => 'Ukuran berkas terlalu besar. Maksimal ukuran file yang diperbolehkan adalah 5MB.',
+            'whatsapp.required' => 'Nomor WhatsApp wajib diisi.',
+            'whatsapp.numeric' => 'Nomor WhatsApp hanya boleh berisi angka.',
+            'whatsapp.digits_between' => 'Nomor WhatsApp harus terdiri dari 10 hingga 13 digit angka.',
+            'whatsapp.regex' => 'Nomor WhatsApp harus diawali dengan 08 atau 62.',
             'shipping_address.required' => 'Mohon pilih atau tambahkan alamat pengiriman.',
             'is_legal_agreed.accepted' => 'Anda harus menyetujui pernyataan legalitas resep.',
         ]);

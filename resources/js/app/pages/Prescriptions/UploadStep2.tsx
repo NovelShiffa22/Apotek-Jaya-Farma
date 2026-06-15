@@ -1,5 +1,5 @@
 import { Link, router, useForm, usePage } from '@inertiajs/react';
-import { FilePlus, MapPin, X, Image as ImageIcon, ArrowLeft, Plus, CheckCircle2, AlertCircle, Calendar } from 'lucide-react';
+import { FilePlus, MapPin, X, Image as ImageIcon, ArrowLeft, Plus, CheckCircle2, AlertCircle, Calendar, FileText } from 'lucide-react';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import Header from '../../components/Header';
 import ConfirmModal from '../../components/ConfirmModal';
@@ -14,6 +14,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
     const jamOp = apotekInfo?.jam_operasional || '08.00 - 18.00 WIB';
     const [dragActive, setDragActive] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [fileSizeError, setFileSizeError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -139,6 +140,16 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+            
+            if (file.size > 5 * 1024 * 1024) {
+                setFileSizeError("Ukuran file terlalu besar! Maksimal ukuran file resep adalah 5 MB.");
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+                return;
+            }
+
+            setFileSizeError(null);
             setData('prescription_file', file);
             
             const reader = new FileReader();
@@ -229,10 +240,18 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                             {selectedImage ? (
                                 <div className="relative flex w-full justify-center">
                                     <div className="relative">
-                                        <img src={selectedImage} alt="Preview" className="w-full h-full object-contain rounded-lg max-h-[220px]" />
+                                        {data.prescription_file?.type === 'application/pdf' ? (
+                                            <div className="w-full min-w-[180px] max-w-[220px] aspect-[3/4] bg-red-50 border-2 border-red-200 rounded-xl flex flex-col items-center justify-center p-6 text-red-500">
+                                                <FileText size={48} className="mb-3" />
+                                                <p className="font-['Inter',sans-serif] text-sm font-bold text-center break-words w-full truncate px-2">{data.prescription_file.name}</p>
+                                                <span className="text-xs mt-2 bg-red-100 px-3 py-1 rounded-full text-red-600 font-bold tracking-wider">PDF DOCUMENT</span>
+                                            </div>
+                                        ) : (
+                                            <img src={selectedImage} alt="Preview" className="w-full h-full object-contain rounded-lg max-h-[220px]" />
+                                        )}
                                         <button 
                                             type="button"
-                                            onClick={(e) => { e.preventDefault(); setSelectedImage(null); setData('prescription_file', null); }}
+                                            onClick={(e) => { e.preventDefault(); setSelectedImage(null); setData('prescription_file', null); setFileSizeError(null); }}
                                             className="absolute -top-3 -right-3 z-10 bg-red-50 text-red-600 p-1.5 rounded-full shadow-md border-2 border-white hover:bg-red-100 hover:text-red-700 transition-colors"
                                         >
                                             <X size={18} />
@@ -268,7 +287,12 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                     <p className="mt-6 font-['Poppins',sans-serif] text-[12px] font-medium text-gray-400">
                                         Format: JPG, PNG, PDF (Maks. 5MB)
                                     </p>
-                                    {errors.prescription_file && (
+                                    {fileSizeError && (
+                                        <p className="mt-2 font-['Poppins',sans-serif] text-[13px] font-bold text-red-500 bg-red-50 px-4 py-2 rounded-lg border border-red-100 text-center">
+                                            {fileSizeError}
+                                        </p>
+                                    )}
+                                    {errors.prescription_file && !fileSizeError && (
                                         <p className="mt-2 font-['Poppins',sans-serif] text-[13px] font-bold text-red-500 bg-red-50 px-4 py-2 rounded-lg">
                                             {errors.prescription_file}
                                         </p>
@@ -328,7 +352,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                     <input 
                                         type="text" 
                                         value={data.whatsapp}
-                                        onChange={(e) => setData('whatsapp', e.target.value)}
+                                        onChange={(e) => setData('whatsapp', e.target.value.replace(/\D/g, ''))}
                                         placeholder="Contoh: 08123456789" 
                                         className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                                     />
@@ -446,6 +470,11 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                 >
                                     {processing ? 'Memproses...' : 'Kirim Resep'}
                                 </button>
+                                {errors.prescription_file && (
+                                    <p className="mt-3 font-['Poppins',sans-serif] text-[13px] font-bold text-red-500 bg-red-50 px-4 py-3 rounded-xl border border-red-100 text-center">
+                                        {errors.prescription_file}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
