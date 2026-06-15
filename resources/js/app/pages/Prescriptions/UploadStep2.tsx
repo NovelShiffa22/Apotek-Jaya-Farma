@@ -48,6 +48,16 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
     const [isSubmittingAddress, setIsSubmittingAddress] = useState(false);
     const [addressFormErrors, setAddressFormErrors] = useState<any>({});
 
+    const isKotaBandung = (addr: any) => {
+        if (!addr) return false;
+        const kota = (addr.kota || '').toLowerCase().trim();
+        const provinsi = (addr.provinsi || '').toLowerCase().trim();
+        return (
+            (provinsi === 'jawa barat' || provinsi === 'jawa-barat') &&
+            (kota === 'bandung' || kota === 'kota bandung')
+        );
+    };
+
     const availableCities = useMemo(() => {
         if (!newProvinsi) return [];
         return regions.find(r => r.name.toLowerCase() === newProvinsi.toLowerCase())?.cities || [];
@@ -59,12 +69,30 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
         setNewKota('');
     };
 
+    // Auto-fill and lock region when adding a new address for prescription
+    useEffect(() => {
+        if (isAddingNewAddress) {
+            setNewProvinsi('Jawa Barat');
+            setNewKota('Kota Bandung');
+        } else {
+            setNewProvinsi('');
+            setNewKota('');
+        }
+    }, [isAddingNewAddress]);
+
     // Initialize selectedAddress
     useEffect(() => {
-        if (defaultAddress) {
+        if (defaultAddress && isKotaBandung(defaultAddress)) {
             setSelectedAddress(defaultAddress);
+        } else {
+            const firstValid = addresses.find((addr: any) => isKotaBandung(addr));
+            if (firstValid) {
+                setSelectedAddress(firstValid);
+            } else {
+                setSelectedAddress(null);
+            }
         }
-    }, [defaultAddress]);
+    }, [defaultAddress, addresses]);
 
     // Handle select address
     const handleSelectAddress = (addr: any) => {
@@ -75,6 +103,15 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
     // Submit new address
     const handleSaveAddress = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Validasi kode pos (harus 5 digit angka)
+        if (!/^\d{5}$/.test(newKodePos)) {
+            setAddressFormErrors({
+                kode_pos: 'Kode pos harus terdiri dari 5 digit angka.'
+            });
+            return;
+        }
+
         setIsSubmittingAddress(true);
         setAddressFormErrors({});
 
@@ -408,7 +445,9 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                         !data.nama_pasien || 
                                         !data.tanggal_lahir_pasien || 
                                         !data.whatsapp || 
-                                        !data.is_legal_agreed
+                                        !data.is_legal_agreed ||
+                                        !selectedAddress ||
+                                        !isKotaBandung(selectedAddress)
                                     }
                                     className="block w-full rounded-xl bg-[#006a3f] py-3.5 text-center font-['Poppins',sans-serif] text-[14px] font-bold text-white transition-all hover:bg-[#005632] hover:shadow-lg disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed disabled:hover:shadow-none"
                                 >
@@ -465,15 +504,18 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                         {addresses.length > 0 ? (
                                             addresses.map((addr: any) => {
                                                 const isSelected = selectedAddress?.id === addr.id;
+                                                const isValid = isKotaBandung(addr);
 
                                                 return (
                                                     <div 
                                                         key={addr.id} 
-                                                        onClick={() => handleSelectAddress(addr)}
-                                                        className={`p-5 rounded-xl border transition-all cursor-pointer flex justify-between items-center gap-4 ${
-                                                            isSelected 
-                                                                ? 'border-[#006a3f] bg-[#006a3f]/[0.02] shadow-sm' 
-                                                                : 'border-gray-200 hover:border-[#006a3f]/50 hover:bg-gray-50/30'
+                                                        onClick={() => isValid && handleSelectAddress(addr)}
+                                                        className={`p-5 rounded-xl border transition-all flex justify-between items-center gap-4 ${
+                                                            !isValid
+                                                                ? 'opacity-60 bg-gray-50 border-gray-200 cursor-not-allowed select-none'
+                                                                : isSelected 
+                                                                    ? 'border-[#006a3f] bg-[#006a3f]/[0.02] shadow-sm cursor-pointer' 
+                                                                    : 'border-gray-200 hover:border-[#006a3f]/50 hover:bg-gray-50/30'
                                                         }`}
                                                     >
                                                         <div className="space-y-2 text-left flex-1">
@@ -485,12 +527,17 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <p className="text-[13px] text-gray-600 leading-relaxed font-['Inter',sans-serif]">
+                                                            <p className={`text-[13px] leading-relaxed font-['Inter',sans-serif] ${!isValid ? 'text-gray-400' : 'text-gray-600'}`}>
                                                                 {addr.alamat_lengkap}, {addr.kota}, {addr.provinsi} {addr.kode_pos}
                                                             </p>
+                                                            {!isValid && (
+                                                                <p className="font-['Inter',sans-serif] text-[11px] font-medium text-red-500 mt-1 leading-normal">
+                                                                    Alamat di luar jangkauan pengiriman resep obat keras (Khusus Kota Bandung).
+                                                                </p>
+                                                            )}
                                                         </div>
                                                         
-                                                        {isSelected && (
+                                                        {isSelected && isValid && (
                                                             <div className="text-[#006a3f] shrink-0 pr-1">
                                                                 <CheckCircle2 size={22} strokeWidth={2.5} />
                                                             </div>
@@ -548,13 +595,11 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                             <select 
                                                 value={newProvinsi}
                                                 onChange={handleProvinceChange}
-                                                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                                                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                                                 required
+                                                disabled={true}
                                             >
-                                                <option value="">Pilih Provinsi</option>
-                                                {regions.map(r => (
-                                                    <option key={r.name} value={r.name}>{r.name}</option>
-                                                ))}
+                                                <option value="Jawa Barat">Jawa Barat</option>
                                             </select>
                                             {addressFormErrors.provinsi && <p className="mt-1 text-xs text-red-500 font-medium">{addressFormErrors.provinsi}</p>}
                                         </div>
@@ -566,12 +611,9 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                                 onChange={e => setNewKota(e.target.value)}
                                                 className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                                                 required
-                                                disabled={!newProvinsi}
+                                                disabled={true}
                                             >
-                                                <option value="">Pilih Kota/Kabupaten</option>
-                                                {availableCities.map(city => (
-                                                    <option key={city} value={city}>{city}</option>
-                                                ))}
+                                                <option value="Kota Bandung">Kota Bandung</option>
                                             </select>
                                             {addressFormErrors.kota && <p className="mt-1 text-xs text-red-500 font-medium">{addressFormErrors.kota}</p>}
                                         </div>
@@ -582,7 +624,15 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                         <input 
                                             type="text" 
                                             value={newKodePos}
-                                            onChange={(e) => setNewKodePos(e.target.value)}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/\D/g, '');
+                                                if (val.length <= 5) {
+                                                    setNewKodePos(val);
+                                                }
+                                            }}
+                                            maxLength={5}
+                                            pattern="[0-9]{5}"
+                                            placeholder="Masukkan 5 digit kode pos"
                                             className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                                             required
                                         />

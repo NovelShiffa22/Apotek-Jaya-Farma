@@ -94,7 +94,7 @@ class ProfileController extends Controller
             'alamat_lengkap' => 'required|string',
             'kota' => 'required|string',
             'provinsi' => 'required|string',
-            'kode_pos' => 'required|string|max:10',
+            'kode_pos' => ['required', 'digits:5'],
         ]);
 
         $is_default = $request->input('is_default', false);
@@ -128,7 +128,7 @@ class ProfileController extends Controller
             'alamat_lengkap' => 'required|string',
             'kota' => 'required|string',
             'provinsi' => 'required|string',
-            'kode_pos' => 'required|string|max:10',
+            'kode_pos' => ['required', 'digits:5'],
         ]);
 
         $address = \App\Models\Address::where('user_id', auth()->id())->findOrFail($id);

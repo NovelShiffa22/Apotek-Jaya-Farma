@@ -42,7 +42,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
 
   const closeConfirmModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
 
-  const { data: formAddress, setData: setFormAddress, post: postAddress, processing: processingAddress, reset: resetAddress } = useForm({
+  const { data: formAddress, setData: setFormAddress, post: postAddress, processing: processingAddress, reset: resetAddress, errors: addressErrors, setError: setAddressError, clearErrors: clearAddressErrors } = useForm({
     label: '',
     alamat_lengkap: '',
     kota: '',
@@ -132,6 +132,15 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
 
   const submitAddress = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validasi kode pos (harus 5 digit angka)
+    if (!/^\d{5}$/.test(formAddress.kode_pos)) {
+      setAddressError('kode_pos', 'Kode pos harus terdiri dari 5 digit angka.');
+      return;
+    }
+    
+    clearAddressErrors('kode_pos');
+
     if (editingAddressId) {
       router.patch(`/profile/address/${editingAddressId}`, formAddress as any, {
         onSuccess: () => {
@@ -1050,10 +1059,19 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 <input 
                   type="text" 
                   value={formAddress.kode_pos}
-                  onChange={e => setFormAddress('kode_pos', e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    if (val.length <= 5) {
+                      setFormAddress('kode_pos', val);
+                    }
+                  }}
+                  maxLength={5}
+                  pattern="[0-9]{5}"
+                  placeholder="Masukkan 5 digit kode pos"
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
                   required
                 />
+                {addressErrors.kode_pos && <p className="mt-1 text-xs text-red-500 font-medium">{addressErrors.kode_pos}</p>}
               </div>
               <div className="flex items-center gap-3 pt-2">
                 <input 
