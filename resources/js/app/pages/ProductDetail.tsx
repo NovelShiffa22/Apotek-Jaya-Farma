@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { router, usePage } from '@inertiajs/react';
-import { Upload, ShoppingCart, ArrowLeft, Shield, Clock, Heart, ShoppingBag, Plus, Minus } from 'lucide-react';
+import { Upload, ShoppingCart, ArrowLeft, Shield, Clock, Heart, ShoppingBag, Plus, Minus, CheckCircle2, Loader2 } from 'lucide-react';
 import Header from '../components/Header';
 
 export default function ProductDetail({ product }: { product: any }) {
@@ -8,26 +8,39 @@ export default function ProductDetail({ product }: { product: any }) {
   const user = auth?.user;
   const navigate = (path: any) => typeof path === 'number' ? window.history.back() : router.visit(path);
   const isRestricted = product.is_prescription_required;
-  const [qty, setQty] = useState(1);
+  const [qty, setQty] = useState<number | string>(1);
 
   const handleQtyChange = (newQty: number) => {
     if (newQty >= 1 && newQty <= product.stok) {
       setQty(newQty);
+    } else if (newQty > product.stok) {
+      setQty(product.stok);
     }
   };
+
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [addedSuccess, setAddedSuccess] = useState(false);
 
   const handleAddToCart = () => {
     if (!user) {
       router.visit(route('login'));
       return;
     }
+    
+    setIsAddingToCart(true);
+    
     router.post('/cart/add', {
       product_id: product.id,
       quantity: qty
     }, {
       preserveScroll: true,
       onSuccess: () => {
-        alert("Obat berhasil dimasukkan ke keranjang!");
+        setIsAddingToCart(false);
+        setAddedSuccess(true);
+        setTimeout(() => setAddedSuccess(false), 2000);
+      },
+      onError: () => {
+        setIsAddingToCart(false);
       }
     });
   };
@@ -204,18 +217,32 @@ export default function ProductDetail({ product }: { product: any }) {
                   <div className="flex items-center justify-between gap-4 mb-8">
                     <div className="flex items-center border border-gray-400 rounded-2xl bg-white h-14 w-[160px]">
                       <button 
-                        onClick={() => handleQtyChange(qty - 1)}
-                        disabled={qty <= 1}
+                        onClick={() => handleQtyChange(Number(qty) - 1)}
+                        disabled={Number(qty) <= 1}
                         className="w-14 h-full flex items-center justify-center hover:bg-red-50 rounded-xl text-red-500 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
                       >
                         <Minus size={20} strokeWidth={2.5} />
                       </button>
-                      <div className="flex-1 h-full flex items-center justify-center font-bold text-[#171d19] text-[18px]">
-                        {qty}
-                      </div>
+                      <input 
+                        type="text"
+                        inputMode="numeric"
+                        value={qty}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '');
+                          if (val === '') {
+                            setQty('');
+                          } else {
+                            handleQtyChange(parseInt(val, 10));
+                          }
+                        }}
+                        onBlur={() => {
+                          if (qty === '' || Number(qty) < 1) setQty(1);
+                        }}
+                        className="flex-1 w-12 text-center bg-transparent border-none focus:outline-none focus:ring-0 font-bold text-[#171d19] text-[18px] p-0"
+                      />
                       <button 
-                        onClick={() => handleQtyChange(qty + 1)}
-                        disabled={qty >= product.stok}
+                        onClick={() => handleQtyChange(Number(qty) + 1)}
+                        disabled={Number(qty) >= product.stok}
                         className="w-14 h-full flex items-center justify-center hover:bg-emerald-50 rounded-xl text-emerald-600 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
                       >
                         <Plus size={20} strokeWidth={2.5} />
@@ -227,10 +254,34 @@ export default function ProductDetail({ product }: { product: any }) {
                   </div>
 
                   <div className="flex gap-4">
-                  <button onClick={handleAddToCart} className="flex-1 bg-white border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-6 py-4 rounded-xl transition-all duration-300 group">
+                  <button 
+                    onClick={handleAddToCart} 
+                    disabled={isAddingToCart || addedSuccess}
+                    className={`flex-1 px-6 py-4 rounded-xl transition-all duration-300 group border-2 ${
+                      addedSuccess 
+                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-[0_8px_20px_rgba(5,150,105,0.3)]' 
+                        : isAddingToCart
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-500 cursor-not-allowed'
+                        : 'bg-white border-emerald-600 text-emerald-600 hover:bg-emerald-50 hover:shadow-sm'
+                    }`}
+                  >
                     <span className="font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] flex items-center justify-center gap-2 font-bold">
-                      <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
-                      Tambah Keranjang
+                      {addedSuccess ? (
+                        <>
+                          <CheckCircle2 size={20} className="animate-bounce" />
+                          Berhasil Ditambahkan
+                        </>
+                      ) : isAddingToCart ? (
+                        <>
+                          <Loader2 size={20} className="animate-spin" />
+                          Memproses...
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
+                          Tambah Keranjang
+                        </>
+                      )}
                     </span>
                   </button>
                   <button onClick={handleBuyNow} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl py-3 px-6 transition duration-200 group">

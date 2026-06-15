@@ -43,6 +43,10 @@ export default function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    setCartCount(initialCartCount);
+  }, [initialCartCount]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
