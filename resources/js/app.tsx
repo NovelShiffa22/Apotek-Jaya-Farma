@@ -61,6 +61,32 @@ axios.interceptors.response.use(
     }
 );
 
+import { useEffect } from 'react';
+
+const GlobalBFCacheHandler = ({ children }: { children: React.ReactNode }) => {
+    useEffect(() => {
+        const handlePageShow = (event: PageTransitionEvent) => {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        };
+        window.addEventListener('pageshow', handlePageShow);
+        return () => window.removeEventListener('pageshow', handlePageShow);
+    }, []);
+
+    return <>{children}</>;
+};
+
+import { router } from '@inertiajs/react';
+
+router.on('invalid', (event) => {
+    event.preventDefault();
+    const status = event.detail?.response?.status;
+    if (status === 419 || status === 401 || status === 409) {
+        window.location.href = '/login';
+    }
+});
+
 createInertiaApp({
     title: (title) => title ? `${title} - ${appName}` : appName,
     resolve: (name) =>
@@ -71,7 +97,11 @@ createInertiaApp({
     setup({ el, App, props }) {
         const root = createRoot(el);
 
-        root.render(<App {...props} />);
+        root.render(
+            <GlobalBFCacheHandler>
+                <App {...props} />
+            </GlobalBFCacheHandler>
+        );
     },
     progress: {
         color: '#4B5563',

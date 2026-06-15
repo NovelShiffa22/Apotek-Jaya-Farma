@@ -46,6 +46,7 @@ export default function AdminPharmacyInfo({ apotekSettings, globalDiscount }: Ad
             confirmText: 'Ya, Keluar',
             onConfirm: () => {
                 closeConfirmModal();
+                window.history.replaceState(null, '', '/login');
                 router.post(route('logout'));
             }
         });

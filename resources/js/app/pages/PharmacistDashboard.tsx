@@ -226,6 +226,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
           confirmText: 'Ya, Keluar',
           onConfirm: () => {
               closeConfirmModal();
+              window.history.replaceState(null, '', '/login');
               router.post(route('logout'));
           }
       });

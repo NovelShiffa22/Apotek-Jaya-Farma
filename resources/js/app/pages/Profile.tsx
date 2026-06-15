@@ -178,6 +178,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
           confirmText: 'Ya, Keluar',
           onConfirm: () => {
               closeConfirmModal();
+              window.history.replaceState(null, '', '/login');
               router.post(route('logout'));
           }
       });

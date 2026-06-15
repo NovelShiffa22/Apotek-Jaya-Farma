@@ -29,10 +29,18 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $isAuthenticated = \Illuminate\Support\Facades\Auth::check();
+
+        // Jika request berasal dari navigasi internal Inertia tapi user sudah tidak terotentikasi pada rute yang dilindungi
+        $protectedPaths = ['dashboard*', 'profile*', 'admin*', 'pharmacist*', 'checkout*', 'prescriptions*', 'cart*'];
+        if (!$isAuthenticated && $request->header('X-Inertia') && $request->is(...$protectedPaths)) {
+            abort(409, 'Session Expired');
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $isAuthenticated ? $request->user() : null,
             ],
             'cartCount' => function () {
                 return count(session()->get('cart', []));

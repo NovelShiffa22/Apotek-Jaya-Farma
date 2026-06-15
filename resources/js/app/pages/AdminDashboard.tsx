@@ -179,6 +179,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
             confirmText: 'Ya, Keluar',
             onConfirm: () => {
                 closeConfirmModal();
+                window.history.replaceState(null, '', '/login');
                 router.post(route('logout'));
             }
         });
