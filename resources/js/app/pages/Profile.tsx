@@ -27,11 +27,12 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
   const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
   const [modalConfig, setModalConfig] = useState<{
       isOpen: boolean;
-      type: 'logout' | 'delete' | 'timeout' | 'warning';
+      type: 'logout' | 'delete' | 'timeout' | 'warning' | 'success';
       title: string;
       message: string;
       onConfirm: () => void;
       confirmText?: string;
+      cancelText?: string;
   }>({
       isOpen: false,
       type: 'warning',
@@ -55,7 +56,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
     ? regions.find(r => r.name.toLowerCase() === formAddress.provinsi.toLowerCase())?.cities || []
     : [];
 
-  const { data: formProfile, setData: setFormProfile, patch: patchProfile, processing: processingProfile } = useForm({
+  const { data: formProfile, setData: setFormProfile, patch: patchProfile, processing: processingProfile, errors: formProfileErrors } = useForm({
     name: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
@@ -69,7 +70,19 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
 
   const submitProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    patchProfile(route('profile.update_info'));
+    patchProfile(route('profile.update_info'), {
+      onSuccess: () => {
+        setModalConfig({
+          isOpen: true,
+          type: 'success',
+          title: 'Berhasil Disimpan!',
+          message: 'Informasi profil Anda telah berhasil diperbarui di sistem.',
+          confirmText: 'Selesai',
+          cancelText: '',
+          onConfirm: () => closeConfirmModal()
+        });
+      }
+    });
   };
 
   const submitPassword = (e: React.FormEvent) => {
@@ -275,9 +288,14 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="text"
                       value={formProfile.name}
                       onChange={e => setFormProfile('name', e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                        formProfileErrors.name ? 'border-[#ef4444]' : 'border-gray-300'
+                      }`}
                       required
                     />
+                    {formProfileErrors.name && (
+                        <p className="text-[#ef4444] text-[12px] mt-2 font-medium">{formProfileErrors.name}</p>
+                    )}
                   </div>
                   <div>
                     <label className="font-['Inter',sans-serif] font-bold text-[12px] text-[#6e7a70] tracking-wider uppercase mb-3 block">
@@ -287,9 +305,14 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="email"
                       value={formProfile.email}
                       onChange={e => setFormProfile('email', e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                        formProfileErrors.email ? 'border-[#ef4444]' : 'border-gray-300'
+                      }`}
                       required
                     />
+                    {formProfileErrors.email && (
+                        <p className="text-[#ef4444] text-[12px] mt-2 font-medium">{formProfileErrors.email}</p>
+                    )}
                   </div>
                   <div>
                     <label className="font-['Inter',sans-serif] font-bold text-[12px] text-[#6e7a70] tracking-wider uppercase mb-3 block">
@@ -298,9 +321,16 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                     <input
                       type="tel"
                       value={formProfile.phone}
-                      onChange={e => setFormProfile('phone', e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      onChange={e => setFormProfile('phone', e.target.value.replace(/\D/g, ''))}
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                        formProfileErrors.phone ? 'border-[#ef4444]' : 'border-gray-300'
+                      }`}
                     />
+                    {formProfileErrors.phone ? (
+                        <p className="text-[#ef4444] text-[12px] mt-2 font-medium">{formProfileErrors.phone}</p>
+                    ) : (
+                        <p className="text-[#6e7a70] text-[12px] mt-2">Hanya berupa angka (10-13 digit) diawali 08/62.</p>
+                    )}
                   </div>
                   <button 
                     type="submit" 
@@ -325,11 +355,13 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="password"
                       value={passwordForm.data.current_password}
                       onChange={e => passwordForm.setData('current_password', e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                        passwordForm.errors.current_password ? 'border-[#ef4444]' : 'border-gray-300'
+                      }`}
                       required
                     />
                     {passwordForm.errors.current_password && (
-                      <p className="mt-2 text-sm text-red-600 font-['Inter',sans-serif]">{passwordForm.errors.current_password}</p>
+                      <p className="mt-2 text-[12px] text-[#ef4444] font-medium font-['Inter',sans-serif]">{passwordForm.errors.current_password}</p>
                     )}
                   </div>
                   <div>
@@ -340,11 +372,15 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="password"
                       value={passwordForm.data.password}
                       onChange={e => passwordForm.setData('password', e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                        passwordForm.errors.password ? 'border-[#ef4444]' : 'border-gray-300'
+                      }`}
                       required
                     />
-                    {passwordForm.errors.password && (
-                      <p className="mt-2 text-sm text-red-600 font-['Inter',sans-serif]">{passwordForm.errors.password}</p>
+                    {passwordForm.errors.password ? (
+                      <p className="mt-2 text-[12px] text-[#ef4444] font-medium font-['Inter',sans-serif]">{passwordForm.errors.password}</p>
+                    ) : (
+                      <p className="text-[#6e7a70] text-[12px] mt-2 font-['Inter',sans-serif]">Minimal 8 karakter, wajib kombinasi huruf besar, kecil, dan angka.</p>
                     )}
                   </div>
                   <div>
@@ -355,11 +391,13 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="password"
                       value={passwordForm.data.password_confirmation}
                       onChange={e => passwordForm.setData('password_confirmation', e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                        passwordForm.errors.password_confirmation ? 'border-[#ef4444]' : 'border-gray-300'
+                      }`}
                       required
                     />
                     {passwordForm.errors.password_confirmation && (
-                      <p className="mt-2 text-sm text-red-600 font-['Inter',sans-serif]">{passwordForm.errors.password_confirmation}</p>
+                      <p className="mt-2 text-[12px] text-[#ef4444] font-medium font-['Inter',sans-serif]">{passwordForm.errors.password_confirmation}</p>
                     )}
                   </div>
                   <button 
