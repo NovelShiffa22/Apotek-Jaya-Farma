@@ -72,6 +72,10 @@ class CheckoutController extends Controller
             }
         }
 
+        if (empty($checkoutItems)) {
+            return redirect()->route('catalog.index')->with('error', 'Keranjang belanja kosong. Silakan pilih produk terlebih dahulu sebelum melakukan checkout.');
+        }
+
         // 3. Format Data Produk untuk UI
         $checkoutItems = array_map(function($item) {
             return [
@@ -154,6 +158,11 @@ class CheckoutController extends Controller
             'shipping_method' => 'required|string',
             'payment_method' => 'required|string',
         ]);
+
+        $shippingAddress = $request->input('shipping_address');
+        if (empty($shippingAddress) || $shippingAddress === 'Alamat belum diatur') {
+            return redirect()->back()->withErrors(['address' => 'Alamat pengiriman wajib diisi dan tidak boleh kosong sebelum memilih kurir!']);
+        }
 
         $shippingMethod = $request->input('shipping_method');
         $paymentMethod = $request->input('payment_method');

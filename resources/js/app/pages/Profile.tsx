@@ -1019,9 +1019,9 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
 
       {/* Modal Tambah Alamat */}
       {isAddressModalOpen && (
-        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all scale-100">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+        <div className="fixed inset-0 bg-black/60 z-[10000] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all scale-100 flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
               <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-[#171d19]">
                 {editingAddressId ? 'Ubah Alamat' : 'Tambah Alamat Baru'}
               </h3>
@@ -1032,7 +1032,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 <X size={22} strokeWidth={2.5} />
               </button>
             </div>
-            <form onSubmit={submitAddress} className="p-6 space-y-4">
+            <form onSubmit={submitAddress} className="p-6 space-y-4 overflow-y-auto scrollbar-thin">
               <div>
                 <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Label Alamat (Misal: Rumah, Kantor)</label>
                 <input 
@@ -1089,10 +1089,22 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 <input 
                   type="text" 
                   value={formAddress.kode_pos}
-                  onChange={e => setFormAddress('kode_pos', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                  onChange={e => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    setFormAddress('kode_pos', val.slice(0, 5));
+                  }}
+                  pattern="\d{5}"
+                  title="Kode pos harus terdiri dari 5 digit angka"
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                    formAddress.kode_pos.length > 0 && formAddress.kode_pos.length < 5 ? 'border-[#ef4444]' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {formAddress.kode_pos.length > 0 && formAddress.kode_pos.length < 5 && (
+                  <p className="mt-2 text-[12px] text-[#ef4444] font-medium font-['Inter',sans-serif]">
+                    Kode pos tidak valid. Harus terdiri dari 5 digit angka.
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-3 pt-2">
                 <input 
@@ -1108,8 +1120,8 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
               <div className="pt-6">
                 <button 
                   type="submit" 
-                  disabled={processingAddress}
-                  className="w-full py-4 bg-[#006a3f] hover:bg-[#005632] text-white rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium tracking-wide transition-colors"
+                  disabled={processingAddress || (formAddress.kode_pos.length > 0 && formAddress.kode_pos.length < 5)}
+                  className="w-full py-4 bg-[#006a3f] hover:bg-[#005632] text-white rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {processingAddress ? 'Menyimpan...' : 'Simpan Alamat'}
                 </button>

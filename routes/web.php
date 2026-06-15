@@ -79,8 +79,8 @@ Route::prefix('prescriptions')->name('prescriptions.')->group(function () {
     Route::post('/', [\App\Http\Controllers\PrescriptionController::class, 'store'])->middleware('auth')->name('store');
 });
 
-Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-Route::post('/checkout/proses', [CheckoutController::class, 'process'])->name('checkout.proses');
+Route::get('/checkout', [CheckoutController::class, 'index'])->middleware('auth')->name('checkout.index');
+Route::post('/checkout/proses', [CheckoutController::class, 'process'])->middleware('auth')->name('checkout.proses');
 
 Route::get('/invoice/{id}', [CheckoutController::class, 'invoice'])->name('order.invoice');
 Route::post('/invoice/{id}/generate-token', [CheckoutController::class, 'generateToken'])->name('order.generate_token');
