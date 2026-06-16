@@ -143,8 +143,8 @@ class CheckoutController extends Controller
                 'price' => 0,
             ],
             [
-                'id' => 'kurir_toko',
-                'title' => 'Kurir Toko',
+                'id' => 'Kirim via Kurir',
+                'title' => 'Kirim via Kurir',
                 'subtitle' => '',
                 'price' => 12000,
             ]
@@ -198,7 +198,7 @@ class CheckoutController extends Controller
                 return redirect()->back()->withErrors(['pesanan' => 'Terdapat transaksi pembayaran yang masih aktif untuk resep ini.']);
             }
 
-            if ($shippingMethod === 'kurir_toko') {
+            if ($shippingMethod === 'kurir_toko' || $shippingMethod === 'Kirim via Kurir') {
                 if (!$isKotaBandung) {
                     return redirect()->back()->withErrors(['shipping_method' => 'Layanan kurir toko untuk pesanan resep saat ini hanya mencakup wilayah Kota Bandung. Alamat luar kota tidak didukung.']);
                 }
@@ -208,7 +208,7 @@ class CheckoutController extends Controller
         $paymentMethod = $request->input('payment_method');
         $isBuyNow = $request->input('is_buy_now', false);
         
-        $shippingCost = $shippingMethod === 'kurir_toko' ? 12000 : 0;
+        $shippingCost = ($shippingMethod === 'kurir_toko' || $shippingMethod === 'Kirim via Kurir') ? 12000 : 0;
         $discount = \Illuminate\Support\Facades\Cache::get('global_discount', 0);
         
         $subtotal = 0;

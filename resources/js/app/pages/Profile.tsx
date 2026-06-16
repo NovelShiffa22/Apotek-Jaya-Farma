@@ -1158,11 +1158,11 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                   const total = Number(selectedOrder.total_amount || 0);
                   const calculatedShipping = Math.max(0, total - subtotal);
                   const displayShipping = selectedOrder.shipping_method ? Number(selectedOrder.shipping_cost || 0) : calculatedShipping;
-                  const displayMethod = selectedOrder.shipping_method === 'kurir_toko' 
-                    ? (selectedOrder.prescription_id ? 'Kurir Toko (Kota Bandung)' : 'Kurir Reguler') 
+                  const displayMethod = (selectedOrder.shipping_method === 'kurir_toko' || selectedOrder.shipping_method === 'Kirim via Kurir') 
+                    ? (selectedOrder.prescription_id ? 'Kirim via Kurir (Kota Bandung)' : 'Kirim via Kurir') 
                     : (selectedOrder.shipping_method === 'ambil_apotek' 
                         ? 'Ambil di Apotek' 
-                        : (displayShipping > 0 ? 'Kurir Reguler' : 'Ambil di Apotek'));
+                        : (displayShipping > 0 ? 'Kirim via Kurir' : 'Ambil di Apotek'));
 
                   return (
                     <>

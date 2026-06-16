@@ -324,11 +324,11 @@ export default function Invoice({ transaction }: Props) {
                 const total = Number(transaction.total_amount || 0);
                 const calculatedShipping = Math.max(0, total - subtotal);
                 const displayShipping = transaction.shipping_method ? Number(transaction.shipping_cost || 0) : calculatedShipping;
-                const displayMethod = transaction.shipping_method === 'kurir_toko' 
-                  ? (transaction.prescription_id ? 'Kurir Toko (Kota Bandung)' : 'Kurir Reguler') 
+                const displayMethod = (transaction.shipping_method === 'kurir_toko' || transaction.shipping_method === 'Kirim via Kurir') 
+                  ? (transaction.prescription_id ? 'Kirim via Kurir (Kota Bandung)' : 'Kirim via Kurir') 
                   : (transaction.shipping_method === 'ambil_apotek' 
                       ? 'Ambil di Apotek' 
-                      : (displayShipping > 0 ? 'Kurir Reguler' : 'Ambil di Apotek'));
+                      : (displayShipping > 0 ? 'Kirim via Kurir' : 'Ambil di Apotek'));
 
                 return (
                   <div className="border-t border-gray-100 pt-6 mt-6">

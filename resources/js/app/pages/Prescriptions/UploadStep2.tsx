@@ -422,7 +422,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                             <div className="flex items-center gap-3">
                                                 <input type="radio" checked={data.shipping_method === 'kurir'} disabled={!isKotaBandungValid} readOnly className="w-4 h-4 shrink-0 text-[#006a3f] border-gray-300 focus:ring-[#006a3f] disabled:opacity-50" />
                                                 <div>
-                                                    <h4 className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">Kurir Toko (Kota Bandung)</h4>
+                                                    <h4 className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">Kirim via Kurir (Kota Bandung)</h4>
                                                     <p className="text-[12px] text-gray-500 font-['Inter',sans-serif] mt-0.5">Pengantaran ke alamat</p>
                                                 </div>
                                             </div>
@@ -509,7 +509,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                             <div className="space-y-3">
                                 <div className="flex justify-between">
                                     <span className="font-['Poppins',sans-serif] text-[13px] text-gray-600">Metode Pengiriman</span>
-                                    <span className="font-['Poppins',sans-serif] text-[13px] font-bold text-[#171d19]">{data.shipping_method === 'kurir' ? 'Kurir Toko (Bandung)' : 'Ambil di Apotek'}</span>
+                                    <span className="font-['Poppins',sans-serif] text-[13px] font-bold text-[#171d19]">{data.shipping_method === 'kurir' ? 'Kirim via Kurir (Kota Bandung)' : 'Ambil di Apotek'}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="font-['Poppins',sans-serif] text-[13px] text-gray-600">Biaya Estimasi</span>
