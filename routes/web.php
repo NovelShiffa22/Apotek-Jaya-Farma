@@ -323,7 +323,7 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
         $orderStatus = request('order_status', 'all');
         $orderDate = request('order_date');
 
-        $ordersQuery = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])
+        $ordersQuery = \App\Models\Order::with(['user', 'products', 'prescription', 'shippingMethod', 'statusHistories.changedByUser'])
             ->where(function($q) {
                 $q->whereNull('prescription_id')
                   ->orWhereHas('prescription', function($pq) {
@@ -414,6 +414,7 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
                         ],
                     ];
                 }),
+                'prescription_id' => $vt->prescription_id,
                 'prescription' => $vt->prescription,
                 'status_histories' => $vt->pharmacist ? [
                     [
@@ -423,6 +424,7 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
                         'created_at' => $vt->updated_at,
                     ]
                 ] : [],
+                'shippingMethod' => ['nama' => $vt->shipping_method, 'biaya' => $vt->shipping_cost],
                 'status' => $mappedStatus,
                 'total_biaya' => $vt->total_amount,
                 'created_at' => $vt->created_at,
@@ -553,14 +555,35 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
                     ];
                 }),
                 'prescription' => $vt->prescription,
-                'status_histories' => $vt->pharmacist ? [
-                    [
-                        'status_sebelum' => 'menunggu_pembayaran',
-                        'status_sesudah' => 'diproses',
-                        'changed_by_user' => ['name' => $vt->pharmacist->name],
-                        'created_at' => $vt->updated_at,
-                    ]
-                ] : [],
+                'status_histories' => (function() use ($vt, $mappedStatus) {
+                    $histories = [];
+                    if ($vt->pharmacist && in_array($mappedStatus, ['diproses', 'dikirim', 'selesai', 'dibatalkan'])) {
+                        $histories[] = [
+                            'status_sebelum' => 'menunggu_pembayaran',
+                            'status_sesudah' => 'diproses',
+                            'changed_by_user' => ['name' => $vt->pharmacist->name],
+                            'created_at' => $vt->updated_at,
+                        ];
+                    }
+                    if ($vt->pharmacist && in_array($mappedStatus, ['dikirim', 'selesai'])) {
+                        $histories[] = [
+                            'status_sebelum' => 'diproses',
+                            'status_sesudah' => 'dikirim',
+                            'changed_by_user' => ['name' => 'Admin Apotek'],
+                            'created_at' => clone $vt->updated_at,
+                        ];
+                    }
+                    if ($vt->pharmacist && in_array($mappedStatus, ['selesai'])) {
+                        $histories[] = [
+                            'status_sebelum' => 'dikirim',
+                            'status_sesudah' => 'selesai',
+                            'changed_by_user' => ['name' => 'Admin Apotek'],
+                            'created_at' => clone $vt->updated_at,
+                        ];
+                    }
+                    return array_reverse($histories);
+                })(),
+                'shippingMethod' => ['nama' => $vt->shipping_method, 'biaya' => $vt->shipping_cost],
                 'status' => $mappedStatus,
                 'total_biaya' => $vt->total_amount,
                 'created_at' => $vt->created_at,
@@ -732,7 +755,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         $orderStatus = request('order_status', 'all');
         $orderDate = request('order_date');
 
-        $ordersQuery = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])->latest();
+        $ordersQuery = \App\Models\Order::with(['user', 'products', 'prescription', 'shippingMethod', 'statusHistories.changedByUser'])->latest();
         $vtsQuery = \App\Models\VirtualTransaction::with(['user', 'prescription', 'pharmacist'])->latest();
 
         if ($orderSearch) {
@@ -805,6 +828,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
                         ],
                     ];
                 }),
+                'prescription_id' => $vt->prescription_id,
                 'prescription' => $vt->prescription,
                 'status_histories' => $vt->pharmacist ? [
                     [
@@ -814,6 +838,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
                         'created_at' => $vt->updated_at,
                     ]
                 ] : [],
+                'shippingMethod' => ['nama' => $vt->shipping_method, 'biaya' => $vt->shipping_cost],
                 'status' => $mappedStatus,
                 'total_biaya' => $vt->total_amount,
                 'created_at' => $vt->created_at,
@@ -968,14 +993,35 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
                     ];
                 }),
                 'prescription' => $vt->prescription,
-                'status_histories' => $vt->pharmacist ? [
-                    [
-                        'status_sebelum' => 'menunggu_pembayaran',
-                        'status_sesudah' => 'diproses',
-                        'changed_by_user' => ['name' => $vt->pharmacist->name],
-                        'created_at' => $vt->updated_at,
-                    ]
-                ] : [],
+                'status_histories' => (function() use ($vt, $mappedStatus) {
+                    $histories = [];
+                    if ($vt->pharmacist && in_array($mappedStatus, ['diproses', 'dikirim', 'selesai', 'dibatalkan'])) {
+                        $histories[] = [
+                            'status_sebelum' => 'menunggu_pembayaran',
+                            'status_sesudah' => 'diproses',
+                            'changed_by_user' => ['name' => $vt->pharmacist->name],
+                            'created_at' => $vt->updated_at,
+                        ];
+                    }
+                    if ($vt->pharmacist && in_array($mappedStatus, ['dikirim', 'selesai'])) {
+                        $histories[] = [
+                            'status_sebelum' => 'diproses',
+                            'status_sesudah' => 'dikirim',
+                            'changed_by_user' => ['name' => 'Admin Apotek'],
+                            'created_at' => clone $vt->updated_at,
+                        ];
+                    }
+                    if ($vt->pharmacist && in_array($mappedStatus, ['selesai'])) {
+                        $histories[] = [
+                            'status_sebelum' => 'dikirim',
+                            'status_sesudah' => 'selesai',
+                            'changed_by_user' => ['name' => 'Admin Apotek'],
+                            'created_at' => clone $vt->updated_at,
+                        ];
+                    }
+                    return array_reverse($histories);
+                })(),
+                'shippingMethod' => ['nama' => $vt->shipping_method, 'biaya' => $vt->shipping_cost],
                 'status' => $mappedStatus,
                 'total_biaya' => $vt->total_amount,
                 'created_at' => $vt->created_at,

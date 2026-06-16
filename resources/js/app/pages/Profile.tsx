@@ -1167,7 +1167,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                   return (
                     <>
                       <div className="flex justify-between items-center text-gray-600">
-                        <span className="font-['Inter',sans-serif] text-[14px]">Tipe Pengiriman</span>
+                        <span className="font-['Inter',sans-serif] text-[14px]">Metode Pengiriman</span>
                         <span className="font-['Inter',sans-serif] text-[14px] font-medium text-gray-800">
                           {displayMethod}
                         </span>

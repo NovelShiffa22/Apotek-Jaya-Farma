@@ -110,7 +110,7 @@ export default function PharmacistOrderDetail({ order, auth }: any) {
                         <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <h1 className="font-['Roboto_Condensed',sans-serif] text-3xl font-bold text-slate-800">
-                                    Pesanan {order.kode_pesanan}
+                                    Pesanan {order.id.toString().startsWith('vt_') ? `VT-${order.id.toString().replace('vt_', '')}` : `#${String(order.id).padStart(6, '0')}`}
                                 </h1>
                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
                                     <StatusIcon size={14} />
@@ -122,11 +122,21 @@ export default function PharmacistOrderDetail({ order, auth }: any) {
                             </p>
                         </div>
                         
-                        <div className="text-left md:text-right">
-                            <p className="font-['Inter',sans-serif] text-sm text-slate-500 mb-1">Total Pembayaran</p>
-                            <p className="font-['Roboto_Condensed',sans-serif] text-3xl font-bold text-[#0D6A36]">
-                                Rp {parseFloat(order.total_biaya || 0).toLocaleString('id-ID')}
-                            </p>
+                        <div className="text-left md:text-right bg-white p-4 rounded-xl border border-slate-200 shadow-sm min-w-[320px]">
+                            <div className="flex flex-wrap justify-between items-center gap-4 mb-1.5">
+                                <span className="font-['Inter',sans-serif] text-xs text-slate-500">Subtotal Produk</span>
+                                <span className="font-['Inter',sans-serif] text-xs font-semibold text-slate-700">Rp {parseFloat(order.total_biaya - (order.shippingMethod?.biaya || 0)).toLocaleString('id-ID')}</span>
+                            </div>
+                            <div className="flex flex-wrap justify-between items-center gap-4 mb-3 pb-3 border-b border-slate-100">
+                                <span className="font-['Inter',sans-serif] text-xs text-slate-500">Biaya Pengiriman</span>
+                                <span className="font-['Inter',sans-serif] text-xs font-semibold text-slate-700">Rp {parseFloat(order.shippingMethod?.biaya || 0).toLocaleString('id-ID')}</span>
+                            </div>
+                            <div className="flex flex-wrap justify-between items-center gap-4 pt-1">
+                                <p className="font-['Inter',sans-serif] text-sm text-slate-500 font-medium">Total Pembayaran</p>
+                                <p className="font-['Roboto_Condensed',sans-serif] text-2xl font-bold text-[#0D6A36] text-right">
+                                    Rp {parseFloat(order.total_biaya || 0).toLocaleString('id-ID')}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -386,6 +396,10 @@ export default function PharmacistOrderDetail({ order, auth }: any) {
                                     <p className="text-sm font-semibold text-slate-800">{order.user?.name || 'Guest'}</p>
                                 </div>
                                 <div>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">No. WhatsApp Aktif Penerima</p>
+                                    <p className="text-sm font-semibold text-slate-800">{order.prescription?.whatsapp || order.user?.phone || '-'}</p>
+                                </div>
+                                <div>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Metode Pembayaran</p>
                                     <p className="text-sm font-medium text-slate-800">
                                         {order.payment_method === 'Midtrans Payment Gateway' ? 'Virtual Account' : (order.payment_method || '-')}
@@ -398,9 +412,24 @@ export default function PharmacistOrderDetail({ order, auth }: any) {
                                     </div>
                                 )}
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Alamat Pengiriman</p>
-                                    <p className="text-sm font-medium text-slate-800">{order.shipping_address || 'Alamat belum diatur'}</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Metode Pengiriman</p>
+                                    <p className="text-sm font-medium text-slate-800">
+                                        {(order.shippingMethod?.nama || order.shipping_method || 'Reguler').replace(/_/g, ' ').toUpperCase()}
+                                    </p>
                                 </div>
+                                {(order.shippingMethod?.nama === 'ambil_apotek' || order.shipping_method === 'ambil_apotek' || order.shippingMethod?.nama === 'Ambil di Apotek') ? (
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Alamat Pengiriman</p>
+                                        <p className="text-sm font-medium text-amber-600 leading-relaxed italic">
+                                            Diambil langsung oleh pasien di Apotek Jaya Farma
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Alamat Pengiriman</p>
+                                        <p className="text-sm font-medium text-slate-800">{order.shipping_address || 'Alamat belum diatur'}</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

@@ -1248,6 +1248,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">User</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">Tanggal Pemesanan</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-center">Jml. Barang</th>
+                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-center">Metode Pengiriman</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-right">Total Harga</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">Penanggung Jawab</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-center">Resep / Non-Resep</th>
@@ -1289,7 +1290,9 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     </td>
                                     <td className="px-5 py-4">
                                       <div className="flex flex-col gap-0.5">
-                                        <span className="font-['Inter',sans-serif] text-[13px] font-bold text-slate-800">{order.kode_pesanan}</span>
+                                        <span className="font-['Inter',sans-serif] text-[13px] font-bold text-slate-800">
+                                            {order.id.toString().startsWith('vt_') ? `VT-${order.id.toString().replace('vt_', '')}` : `#${String(order.id).padStart(6, '0')}`}
+                                        </span>
                                         <span className={`inline-flex items-center self-start px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
                                           {statusLabels[order.status] || order.status}
                                         </span>
@@ -1319,6 +1322,17 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                       <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-slate-100 font-['Inter',sans-serif] text-[14px] font-bold text-slate-700">
                                         {totalQty}
                                       </span>
+                                    </td>
+                                    <td className="px-5 py-4 text-center">
+                                        {(order.shippingMethod?.nama === 'ambil_apotek' || order.shipping_method === 'ambil_apotek' || order.shippingMethod?.nama === 'Ambil di Apotek') ? (
+                                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-amber-50 text-amber-600 font-bold text-[10px] uppercase tracking-widest border border-amber-200">
+                                                Ambil di Apotek
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-600 font-bold text-[10px] uppercase tracking-widest border border-blue-200">
+                                                Kirim via Kurir
+                                            </span>
+                                        )}
                                     </td>
                                     <td className="px-5 py-4 text-right">
                                       <span className="font-['Inter',sans-serif] text-[13px] font-bold text-[#0D6A36]">
@@ -1354,14 +1368,14 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                               )}
                                             </svg>
-                                            {prescriptionFileUrl.toLowerCase().includes('.pdf') ? 'PDF Resep' : 'Foto Resep'}
+                                            {prescriptionFileUrl.toLowerCase().includes('.pdf') ? 'PDF Resep' : 'Foto Resep'} {order.prescription_id ? `#${order.prescription_id}` : ''}
                                           </a>
                                         ) : (
                                           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-['Inter',sans-serif] text-[11px] font-bold tracking-wide">
                                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
-                                            Resep
+                                            Resep {order.prescription_id ? `#${order.prescription_id}` : ''}
                                           </span>
                                         )
                                       ) : (
