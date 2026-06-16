@@ -661,6 +661,15 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
 
         $prescription->update($updateData);
 
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'update_prescription',
+                'description' => 'Apoteker ' . ($request->status_validasi === 'disetujui' ? 'menyetujui' : 'menolak') . ' resep #' . $prescription->kode_resep,
+                'ip_address' => request()->ip(),
+            ]);
+        }
+
         return back()->with('success', 'Validasi resep berhasil disimpan');
     })->name('pharmacist.prescriptions.update');
 
@@ -681,6 +690,16 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
             ];
             $newStatus = $statusMap[$request->status] ?? 'Pending';
             $vt->update(['status' => $newStatus, 'pharmacist_id' => auth()->id()]);
+            
+            if (auth()->check()) {
+                \App\Models\UserActivity::create([
+                    'user_id' => auth()->id(),
+                    'action' => 'update_order_status',
+                    'description' => 'Apoteker mengubah status pesanan virtual #' . $vt->id . ' menjadi ' . $newStatus,
+                    'ip_address' => request()->ip(),
+                ]);
+            }
+
             return back()->with('success', 'Status pesanan virtual berhasil diperbarui');
         }
 
@@ -695,6 +714,15 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
             'status_sesudah' => $request->status,
             'keterangan' => 'Status diubah oleh apoteker: ' . auth()->user()->name
         ]);
+
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'update_order_status',
+                'description' => 'Apoteker mengubah status pesanan #' . $order->kode_pesanan . ' menjadi ' . $request->status,
+                'ip_address' => request()->ip(),
+            ]);
+        }
 
         return back()->with('success', 'Status pesanan berhasil diperbarui');
     })->name('pharmacist.orders.status');
@@ -1225,6 +1253,16 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             ];
             $newStatus = $statusMap[$request->status] ?? 'Pending';
             $vt->update(['status' => $newStatus, 'pharmacist_id' => auth()->id()]);
+            
+            if (auth()->check()) {
+                \App\Models\UserActivity::create([
+                    'user_id' => auth()->id(),
+                    'action' => 'update_order_status',
+                    'description' => 'Admin mengubah status pesanan virtual #' . $vt->id . ' menjadi ' . $newStatus,
+                    'ip_address' => request()->ip(),
+                ]);
+            }
+
             return back()->with('success', 'Status pesanan virtual berhasil diperbarui');
         }
 
@@ -1239,6 +1277,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             'status_sesudah' => $request->status,
             'keterangan' => 'Status diubah oleh admin: ' . auth()->user()->name
         ]);
+
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'update_order_status',
+                'description' => 'Admin mengubah status pesanan #' . $order->kode_pesanan . ' menjadi ' . $request->status,
+                'ip_address' => request()->ip(),
+            ]);
+        }
 
         return back()->with('success', 'Status pesanan berhasil diperbarui');
     })->name('admin.orders.status');
