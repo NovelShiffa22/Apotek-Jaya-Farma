@@ -324,21 +324,9 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
         $orderDate = request('order_date');
 
         $ordersQuery = \App\Models\Order::with(['user', 'products', 'prescription', 'shippingMethod', 'statusHistories.changedByUser'])
-            ->where(function($q) {
-                $q->whereNull('prescription_id')
-                  ->orWhereHas('prescription', function($pq) {
-                      $pq->where('status_validasi', 'disetujui');
-                  });
-            })
             ->latest();
             
         $vtsQuery = \App\Models\VirtualTransaction::with(['user', 'prescription', 'pharmacist'])
-            ->where(function($q) {
-                $q->whereNull('prescription_id')
-                  ->orWhereHas('prescription', function($pq) {
-                      $pq->where('status_validasi', 'disetujui');
-                  });
-            })
             ->latest();
 
         if ($orderSearch) {
@@ -480,19 +468,9 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
             ];
         }
 
-        $baseOrdersQuery = \App\Models\Order::where(function($q) {
-            $q->whereNull('prescription_id')
-              ->orWhereHas('prescription', function($pq) {
-                  $pq->where('status_validasi', 'disetujui');
-              });
-        });
+        $baseOrdersQuery = \App\Models\Order::query();
         
-        $baseVtsQuery = \App\Models\VirtualTransaction::where(function($q) {
-            $q->whereNull('prescription_id')
-              ->orWhereHas('prescription', function($pq) {
-                  $pq->where('status_validasi', 'disetujui');
-              });
-        });
+        $baseVtsQuery = \App\Models\VirtualTransaction::query();
 
         $orderCounts = [
             'all' => (clone $baseOrdersQuery)->whereIn('status', ['diproses', 'dikirim', 'selesai'])->count() + (clone $baseVtsQuery)->whereIn('status', ['Lunas', 'Dikirim', 'Selesai'])->count(),
