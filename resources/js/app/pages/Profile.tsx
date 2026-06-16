@@ -841,7 +841,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                     if (filteredPrescriptions.length === 0) {
                       return (
                         <div className="text-center text-gray-500 py-8 font-medium font-['Inter',sans-serif]">
-                          Tidak ada resep di kategori ini.
+                          {prescriptionTab === 'Telah dipesan' ? 'Belum ada resep yang telah selesai' : 'Tidak ada resep di kategori ini.'}
                         </div>
                       );
                     }

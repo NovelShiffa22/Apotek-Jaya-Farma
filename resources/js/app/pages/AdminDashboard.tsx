@@ -1472,7 +1472,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     { id: 'menunggu' as const, label: 'Menunggu Verifikasi', icon: Clock, count: analytics?.prescriptions_pending || 0 },
                                     { id: 'disetujui' as const, label: 'Disetujui', icon: CheckCircle, count: analytics?.prescriptions_verified || 0 },
                                     { id: 'ditolak' as const, label: 'Ditolak', icon: XCircle, count: analytics?.prescriptions_rejected || 0 },
-                                    { id: 'dipesan' as const, label: 'Telah Dipesan', icon: ShoppingBag, count: 0 }
+                                    { id: 'dipesan' as const, label: 'Telah Dipesan', icon: ShoppingBag, count: analytics?.prescriptions_dipesan || 0 }
                                 ].map((tab) => {
                                     const isActive = prescriptionStatusFilter === tab.id;
                                     const Icon = tab.icon;
@@ -1573,7 +1573,20 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-[#f1f5f9]">
-                                        {(prescriptions?.data || []).map((rx: any, index: number) => {
+                                        {(prescriptions?.data || []).length === 0 ? (
+                                            <tr>
+                                                <td colSpan={8}>
+                                                    <div className="rounded-2xl border border-[#f1f5f9] bg-white p-16 text-center shadow-[0_8px_24px_rgba(0,0,0,0.06)] mt-4 mb-4 mx-4">
+                                                        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#f9fafb]">
+                                                            <FileText size={32} className="text-[#6e7a70]" />
+                                                        </div>
+                                                        <h3 className="mb-2 font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
+                                                            {prescriptionStatusFilter === 'dipesan' ? 'Belum ada resep yang telah selesai' : 'Tidak ada resep ditemukan'}
+                                                        </h3>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : (prescriptions?.data || []).map((rx: any, index: number) => {
                                             const config = (rx.status_validasi === 'pending' || rx.status_validasi === 'menunggu') ? { bg: 'bg-amber-50', color: 'text-amber-700', border: 'border-amber-300', text: 'Menunggu' } :
                                                            rx.status_validasi === 'disetujui' ? { bg: 'bg-emerald-50', color: 'text-emerald-700', border: 'border-emerald-300', text: 'Disetujui' } :
                                                            rx.status_validasi === 'ditolak' ? { bg: 'bg-red-50', color: 'text-red-700', border: 'border-red-300', text: 'Ditolak' } :
@@ -1685,16 +1698,6 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                 {prescriptions?.links && <Pagination links={prescriptions.links} />}
                             </div>
                         </div>
-                        {(prescriptions?.data || []).length === 0 && (
-                            <div className="rounded-2xl border border-[#f1f5f9] bg-white p-16 text-center shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
-                                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#f9fafb]">
-                                    <FileText size={32} className="text-[#6e7a70]" />
-                                </div>
-                                <h3 className="mb-2 font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
-                                    Tidak ada resep ditemukan
-                                </h3>
-                            </div>
-                        )}
                     </div>
                 )}
 

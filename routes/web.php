@@ -279,6 +279,8 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
             $prescriptionsQuery->where('status_validasi', 'disetujui');
         } elseif ($prescriptionStatus === 'ditolak') {
             $prescriptionsQuery->where('status_validasi', 'ditolak');
+        } elseif ($prescriptionStatus === 'telah_dipesan' || $prescriptionStatus === 'pembayaran') {
+            $prescriptionsQuery->where('status_validasi', 'telah_dipesan');
         }
 
         $prescriptionSearch = request('prescription_search');
@@ -446,6 +448,7 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
         $pendingCount = \App\Models\Prescription::where('status_validasi', 'pending')->count();
         $approvedCount = \App\Models\Prescription::where('status_validasi', 'disetujui')->count();
         $rejectedCount = \App\Models\Prescription::where('status_validasi', 'ditolak')->count();
+        $telahDipesanCount = \App\Models\Prescription::where('status_validasi', 'telah_dipesan')->count();
 
         $recentActivities = \App\Models\Prescription::whereIn('status_validasi', ['disetujui', 'ditolak'])
             ->latest('updated_at')
@@ -486,6 +489,7 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
             'pending_count' => $pendingCount,
             'approved_count' => $approvedCount,
             'rejected_count' => $rejectedCount,
+            'telah_dipesan_count' => $telahDipesanCount,
             'recent_activities' => $recentActivities,
             'chart_data' => $chartData,
             'order_counts' => $orderCounts
@@ -854,12 +858,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         }
 
         if ($prescriptionStatus !== 'all') {
-            if ($prescriptionStatus === 'dipesan') {
-                $prescriptionsQuery->where('status_validasi', 'disetujui')
-                    ->where(function($q) {
-                        $q->whereHas('order')
-                          ->orWhereHas('virtualTransaction');
-                    });
+            if ($prescriptionStatus === 'dipesan' || $prescriptionStatus === 'telah_dipesan') {
+                $prescriptionsQuery->where('status_validasi', 'telah_dipesan');
             } elseif ($prescriptionStatus === 'menunggu') {
                 $prescriptionsQuery->where('status_validasi', 'pending');
             } else {
@@ -898,6 +898,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         $totalPrescriptionsPending = \App\Models\Prescription::where('status_validasi', 'pending')->count();
         $totalPrescriptionsVerified = \App\Models\Prescription::where('status_validasi', 'disetujui')->count();
         $totalPrescriptionsRejected = \App\Models\Prescription::where('status_validasi', 'ditolak')->count();
+        $totalPrescriptionsDipesan = \App\Models\Prescription::where('status_validasi', 'telah_dipesan')->count();
 
         // Calculate revenue for chart (e.g. last 7, 30, 90 days)
         $revenueDays = request('revenue_days', 7);
@@ -951,6 +952,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             'prescriptions_pending' => $totalPrescriptionsPending,
             'prescriptions_verified' => $totalPrescriptionsVerified,
             'prescriptions_rejected' => $totalPrescriptionsRejected,
+            'prescriptions_dipesan' => $totalPrescriptionsDipesan,
             'revenue_chart_data' => $revenueChartData,
             'top_products' => $topProducts,
             'order_counts' => $orderCounts

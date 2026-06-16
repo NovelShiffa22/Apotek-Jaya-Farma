@@ -441,38 +441,24 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
         const params: any = {};
         
         if (activeTab === 'prescriptions') {
-            if (activeSubTab !== 'pembayaran') {
-                params.prescription_status = activeSubTab;
-                if (searchQuery) params.prescription_search = searchQuery;
-                if (prescriptionStartDate && prescriptionEndDate) {
-                    const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                    params.prescription_date = `${format(prescriptionStartDate)},${format(prescriptionEndDate)}`;
-                } else if (prescriptionStartDate) {
-                    const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                    params.prescription_date = `${format(prescriptionStartDate)}`;
-                } else if (prescriptionEndDate) {
-                    const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                    params.prescription_date = `${format(prescriptionEndDate)}`;
-                }
-            } else {
-                params.order_status = 'menunggu_pembayaran';
-                if (searchQuery) params.order_search = searchQuery;
-                if (orderStartDate && orderEndDate) {
-                    const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                    params.order_date = `${format(orderStartDate)},${format(orderEndDate)}`;
-                } else if (orderStartDate) {
-                    const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                    params.order_date = `${format(orderStartDate)}`;
-                } else if (orderEndDate) {
-                    const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                    params.order_date = `${format(orderEndDate)}`;
-                }
+            params.prescription_status = activeSubTab;
+            if (searchQuery) params.prescription_search = searchQuery;
+            if (prescriptionStartDate && prescriptionEndDate) {
+                const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                params.prescription_date = `${format(prescriptionStartDate)},${format(prescriptionEndDate)}`;
+            } else if (prescriptionStartDate) {
+                const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                params.prescription_date = `${format(prescriptionStartDate)}`;
+            } else if (prescriptionEndDate) {
+                const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                params.prescription_date = `${format(prescriptionEndDate)}`;
             }
+
             router.get('/pharmacist', params, {
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
-                only: ['prescriptions', 'orders']
+                only: ['prescriptions']
             });
         } else if (activeTab === 'orders') {
             params.order_status = orderStatusFilter;
@@ -510,9 +496,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
     return () => clearTimeout(handler);
   }, [activeTab, activeSubTab, searchQuery, prescriptionStartDate, prescriptionEndDate, orderSearchQuery, orderStartDate, orderEndDate, orderStatusFilter, verifikasiFilterDays]);
 
-  const activeFilteredList = activeSubTab === 'pembayaran' 
-    ? (orders?.data || []) 
-    : (prescriptions?.data || []);
+  const activeFilteredList = prescriptions?.data || [];
 
   // Calculate Grand Total from dynamic items
   const totalHargaVal = prescriptionItems.reduce((acc, item) => acc + Number(item.subtotal || 0), 0);
@@ -1193,7 +1177,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                         { id: 'menunggu' as const, label: 'Menunggu Verifikasi', icon: Clock, count: pendingCount },
                         { id: 'disetujui' as const, label: 'Disetujui', icon: CheckCircle, count: approvedCount },
                         { id: 'ditolak' as const, label: 'Ditolak', icon: XCircle, count: rejectedCount },
-                        { id: 'pembayaran' as const, label: 'Telah Dipesan', icon: ShoppingBag, count: analytics?.order_counts?.menunggu_pembayaran || 0 }
+                        { id: 'pembayaran' as const, label: 'Telah Dipesan', icon: ShoppingBag, count: analytics?.telah_dipesan_count || 0 }
                       ].map((tab) => {
                         const isActive = activeSubTab === tab.id;
                         const Icon = tab.icon;
@@ -1288,13 +1272,6 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                           </div>
                       </div>
 
-                      {activeFilteredList.length === 0 ? (
-                          <div className="rounded-2xl border border-[#f1f5f9] bg-white p-12 text-center shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
-                              <AlertCircle className="mx-auto text-slate-300 mb-3" size={48} />
-                              <p className="font-['Inter',sans-serif] text-base text-slate-500 font-medium">Tidak ada {activeSubTab === 'pembayaran' ? 'pesanan' : 'resep'} dalam kategori ini</p>
-                              <p className="font-['Inter',sans-serif] text-sm text-slate-400 mt-1">Coba ubah filter atau kata kunci pencarian</p>
-                          </div>
-                      ) : (
                           <div className="rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
                               <div className="overflow-x-auto">
                                   <table className="w-full min-w-[960px] border-collapse text-left">
@@ -1311,7 +1288,17 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                           </tr>
                                       </thead>
                                       <tbody className="divide-y divide-[#f1f5f9]">
-                                          {activeFilteredList.map((rx: any, index: number) => {
+                                          {activeFilteredList.length === 0 ? (
+                                              <tr>
+                                                  <td colSpan={8}>
+                                                      <div className="p-12 text-center">
+                                                          <AlertCircle className="mx-auto text-slate-300 mb-3" size={48} />
+                                                          <p className="font-['Inter',sans-serif] text-base text-slate-500 font-medium">{activeSubTab === 'pembayaran' ? 'Belum ada resep yang telah selesai' : 'Tidak ada resep dalam kategori ini'}</p>
+                                                          <p className="font-['Inter',sans-serif] text-sm text-slate-400 mt-1">Coba ubah filter atau kata kunci pencarian</p>
+                                                      </div>
+                                                  </td>
+                                              </tr>
+                                          ) : activeFilteredList.map((rx: any, index: number) => {
                                               const startIndex = ((prescriptions.current_page || 1) - 1) * (prescriptions.per_page || 10);
                                               const config = rx.status_validasi === 'pending' ? { bg: 'bg-amber-50', color: 'text-amber-700', border: 'border-amber-200', text: 'Menunggu' } :
                                                            rx.status_validasi === 'disetujui' ? { bg: 'bg-emerald-50', color: 'text-emerald-700', border: 'border-emerald-200', text: 'Disetujui' } :
@@ -1425,7 +1412,6 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                   </table>
                               </div>
                           </div>
-                      )}
 
                           {activeSubTab !== 'pembayaran' && prescriptions?.links && (
                               <div className="mt-6 rounded-2xl border border-[#f1f5f9] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.04)] px-5 py-4 flex items-center justify-between">
