@@ -206,22 +206,40 @@ Route::get('/profile', function () {
 
     $prescriptionCounts = [
         'Menunggu Verifikasi' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'pending')->count(),
-        'Disetujui' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'disetujui')->count(),
+        'Disetujui' => \App\Models\Prescription::where('user_id', $user->id)
+            ->where('status_validasi', 'disetujui')
+            ->whereDoesntHave('virtualTransactions', function($vq) {
+                $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+            })->count(),
         'Ditolak' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'ditolak')->count(),
-        'Telah dipesan' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'telah_dipesan')->count(),
+        'Telah dipesan' => \App\Models\Prescription::where('user_id', $user->id)
+            ->where(function($q) {
+                $q->where('status_validasi', 'telah_dipesan')
+                  ->orWhereHas('virtualTransactions', function($vq) {
+                      $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+                  });
+            })->count(),
     ];
 
     $currentPrescriptionStatus = request('prescription_status', 'Menunggu Verifikasi');
     
-    $prescriptionsQuery = \App\Models\Prescription::withCount('orders')->where('user_id', $user->id);
+    $prescriptionsQuery = \App\Models\Prescription::with(['virtualTransactions'])->withCount('orders')->where('user_id', $user->id);
     if ($currentPrescriptionStatus === 'Menunggu Verifikasi') {
         $prescriptionsQuery->where('status_validasi', 'pending');
     } elseif ($currentPrescriptionStatus === 'Disetujui') {
-        $prescriptionsQuery->where('status_validasi', 'disetujui');
+        $prescriptionsQuery->where('status_validasi', 'disetujui')
+            ->whereDoesntHave('virtualTransactions', function($vq) {
+                $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+            });
     } elseif ($currentPrescriptionStatus === 'Ditolak') {
         $prescriptionsQuery->where('status_validasi', 'ditolak');
     } elseif ($currentPrescriptionStatus === 'Telah dipesan') {
-        $prescriptionsQuery->where('status_validasi', 'telah_dipesan');
+        $prescriptionsQuery->where(function($q) {
+            $q->where('status_validasi', 'telah_dipesan')
+              ->orWhereHas('virtualTransactions', function($vq) {
+                  $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+              });
+        });
     }
 
     $prescriptions = $prescriptionsQuery->latest()->paginate(5, ['*'], 'prescription_page')->withQueryString();
@@ -276,11 +294,19 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
         if ($prescriptionStatus === 'menunggu') {
             $prescriptionsQuery->where('status_validasi', 'pending');
         } elseif ($prescriptionStatus === 'disetujui') {
-            $prescriptionsQuery->where('status_validasi', 'disetujui');
+            $prescriptionsQuery->where('status_validasi', 'disetujui')
+                ->whereDoesntHave('virtualTransactions', function($vq) {
+                    $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+                });
         } elseif ($prescriptionStatus === 'ditolak') {
             $prescriptionsQuery->where('status_validasi', 'ditolak');
         } elseif ($prescriptionStatus === 'telah_dipesan' || $prescriptionStatus === 'pembayaran') {
-            $prescriptionsQuery->where('status_validasi', 'telah_dipesan');
+            $prescriptionsQuery->where(function($q) {
+                $q->where('status_validasi', 'telah_dipesan')
+                  ->orWhereHas('virtualTransactions', function($vq) {
+                      $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+                  });
+            });
         }
 
         $prescriptionSearch = request('prescription_search');
@@ -446,9 +472,17 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
                           \App\Models\VirtualTransaction::whereDate('created_at', $todayStr)->count();
                           
         $pendingCount = \App\Models\Prescription::where('status_validasi', 'pending')->count();
-        $approvedCount = \App\Models\Prescription::where('status_validasi', 'disetujui')->count();
+        $approvedCount = \App\Models\Prescription::where('status_validasi', 'disetujui')
+            ->whereDoesntHave('virtualTransactions', function($vq) {
+                $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+            })->count();
         $rejectedCount = \App\Models\Prescription::where('status_validasi', 'ditolak')->count();
-        $telahDipesanCount = \App\Models\Prescription::where('status_validasi', 'telah_dipesan')->count();
+        $telahDipesanCount = \App\Models\Prescription::where(function($q) {
+            $q->where('status_validasi', 'telah_dipesan')
+              ->orWhereHas('virtualTransactions', function($vq) {
+                  $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+              });
+        })->count();
 
         $recentActivities = \App\Models\Prescription::whereIn('status_validasi', ['disetujui', 'ditolak'])
             ->latest('updated_at')
@@ -859,9 +893,19 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
         if ($prescriptionStatus !== 'all') {
             if ($prescriptionStatus === 'dipesan' || $prescriptionStatus === 'telah_dipesan') {
-                $prescriptionsQuery->where('status_validasi', 'telah_dipesan');
+                $prescriptionsQuery->where(function($q) {
+                    $q->where('status_validasi', 'telah_dipesan')
+                      ->orWhereHas('virtualTransactions', function($vq) {
+                          $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+                      });
+                });
             } elseif ($prescriptionStatus === 'menunggu') {
                 $prescriptionsQuery->where('status_validasi', 'pending');
+            } elseif ($prescriptionStatus === 'disetujui') {
+                $prescriptionsQuery->where('status_validasi', 'disetujui')
+                    ->whereDoesntHave('virtualTransactions', function($vq) {
+                        $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+                    });
             } else {
                 $prescriptionsQuery->where('status_validasi', $prescriptionStatus);
             }
@@ -896,9 +940,17 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
                          \App\Models\VirtualTransaction::where('status', 'Selesai')->sum('total_amount');
 
         $totalPrescriptionsPending = \App\Models\Prescription::where('status_validasi', 'pending')->count();
-        $totalPrescriptionsVerified = \App\Models\Prescription::where('status_validasi', 'disetujui')->count();
+        $totalPrescriptionsVerified = \App\Models\Prescription::where('status_validasi', 'disetujui')
+            ->whereDoesntHave('virtualTransactions', function($vq) {
+                $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+            })->count();
         $totalPrescriptionsRejected = \App\Models\Prescription::where('status_validasi', 'ditolak')->count();
-        $totalPrescriptionsDipesan = \App\Models\Prescription::where('status_validasi', 'telah_dipesan')->count();
+        $totalPrescriptionsDipesan = \App\Models\Prescription::where(function($q) {
+            $q->where('status_validasi', 'telah_dipesan')
+              ->orWhereHas('virtualTransactions', function($vq) {
+                  $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+              });
+        })->count();
 
         // Calculate revenue for chart (e.g. last 7, 30, 90 days)
         $revenueDays = request('revenue_days', 7);

@@ -28,7 +28,7 @@ declare global {
 export default function Invoice({ transaction }: Props) {
   const { apotekInfo } = usePage<any>().props;
   const jamOp = apotekInfo?.jam_operasional || '08.00 - 18.00 WIB';
-  const [isLunasState, setIsLunasState] = useState(transaction.status === 'Lunas');
+  const [isLunasState, setIsLunasState] = useState(['Lunas', 'Diproses', 'Dikirim', 'Selesai'].includes(transaction.status));
   const [isExpired, setIsExpired] = useState(transaction.status === 'Dibatalkan' || transaction.status === 'Expired');
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [isSnapOpen, setIsSnapOpen] = useState(false);
@@ -106,7 +106,7 @@ export default function Invoice({ transaction }: Props) {
   // Sambungkan perubahan props data ke pemicu state UI React
   useEffect(() => {
     const currentStatus = transaction?.status;
-    if (['Lunas', 'Diproses', 'Selesai'].includes(currentStatus)) {
+    if (['Lunas', 'Diproses', 'Dikirim', 'Selesai'].includes(currentStatus)) {
         if (!isSnapOpen) {
             setIsLunasState(true);
             setIsRedirecting(false);
@@ -287,8 +287,13 @@ export default function Invoice({ transaction }: Props) {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Status Pengiriman</p>
-                  <p className="font-semibold text-gray-900 mb-1">Diproses</p>
-                  <p className="text-sm text-gray-500 mb-2">Apoteker sedang menyiapkan pesanan Anda.</p>
+                  <p className="font-semibold text-gray-900 mb-1">{transaction.status}</p>
+                  <p className="text-sm text-gray-500 mb-2">
+                      {transaction.status === 'Selesai' ? 'Pesanan Anda telah selesai dan diterima.' : 
+                       transaction.status === 'Dikirim' ? 'Pesanan sedang dalam pengiriman ke alamat Anda.' : 
+                       transaction.status === 'Diproses' ? 'Apoteker sedang menyiapkan pesanan Anda.' :
+                       'Menunggu konfirmasi dari apoteker.'}
+                  </p>
                   <p className="text-[13px] font-medium text-gray-800 leading-snug p-3 bg-gray-50 rounded-lg border border-gray-100">
                     <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Alamat Pengiriman:</span>
                     {transaction.shipping_address || 'Alamat belum diatur'}

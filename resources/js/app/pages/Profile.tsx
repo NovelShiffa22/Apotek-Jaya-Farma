@@ -836,7 +836,10 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                     if (prescriptionTab === 'Menunggu Verifikasi') filteredPrescriptions = filteredPrescriptions.filter((p: any) => p.status_validasi === 'pending');
                     if (prescriptionTab === 'Disetujui') filteredPrescriptions = filteredPrescriptions.filter((p: any) => p.status_validasi === 'disetujui');
                     if (prescriptionTab === 'Ditolak') filteredPrescriptions = filteredPrescriptions.filter((p: any) => p.status_validasi === 'ditolak');
-                    if (prescriptionTab === 'Telah dipesan') filteredPrescriptions = filteredPrescriptions.filter((p: any) => p.status_validasi === 'telah_dipesan');
+                    if (prescriptionTab === 'Telah dipesan') filteredPrescriptions = filteredPrescriptions.filter((p: any) => 
+                        p.status_validasi === 'telah_dipesan' || 
+                        (p.virtual_transactions && p.virtual_transactions.some((vt: any) => ['Lunas', 'Diproses', 'Dikirim', 'Selesai'].includes(vt.status)))
+                    );
 
                     if (filteredPrescriptions.length === 0) {
                       return (
@@ -864,7 +867,11 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
 
                     return (
                       <>
-                        {filteredPrescriptions.map((p: any) => (
+                        {filteredPrescriptions.map((p: any) => {
+                          const latestOrder = p.virtual_transactions?.find((vt: any) => ['Lunas', 'Diproses', 'Dikirim', 'Selesai'].includes(vt.status));
+                          const isTelahDipesan = !!latestOrder || p.status_validasi === 'telah_dipesan';
+
+                          return (
                           <div
                             key={p.id}
                             className="flex flex-col justify-between p-4 sm:p-6 border border-gray-200 rounded-xl hover:border-emerald-200 hover:shadow-sm transition-all bg-white gap-4 w-full"
@@ -941,11 +948,13 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                               <div className="shrink-0 pl-2 text-right">
                                 <span className={`px-3 py-1.5 rounded-full text-[12px] font-bold border font-['Inter',sans-serif] whitespace-nowrap ${
                                   p.status_validasi === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                                  (latestOrder && latestOrder.status === 'Selesai') ? 'bg-[#006a3f] text-white border-transparent' :
+                                  isTelahDipesan ? 'bg-blue-50 text-blue-600 border-blue-200' :
                                   p.status_validasi === 'disetujui' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                                  p.status_validasi === 'telah_dipesan' ? 'bg-blue-50 text-blue-600 border-blue-200' :
                                   'bg-red-50 text-red-600 border-red-200'
                                 }`}>
                                   {p.status_validasi === 'pending' ? 'Menunggu Verifikasi' :
+                                   (latestOrder && latestOrder.status) ? latestOrder.status :
                                    p.status_validasi === 'disetujui' ? 'Resep Disetujui' :
                                    p.status_validasi === 'ditolak' ? 'Resep Ditolak' : 
                                    p.status_validasi === 'telah_dipesan' ? 'Telah Dipesan' :
@@ -964,15 +973,23 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                                   Batalkan Resep
                                 </button>
                               )}
-                              <Link 
-                                href={route('prescriptions.detail', { id: p.id })} 
-                                className="text-[13px] font-bold text-center bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-xl hover:bg-gray-50 hover:text-[#006a3f] hover:border-[#006a3f] transition-all font-['Inter',sans-serif] shadow-sm"
+                              <button 
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    if (latestOrder) {
+                                        setSelectedOrder(latestOrder);
+                                        setIsModalOpen(true);
+                                    } else {
+                                        router.get(route('prescriptions.detail', { id: p.id }));
+                                    }
+                                }}
+                                className="text-[13px] font-bold text-center bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-xl hover:bg-gray-50 hover:text-[#006a3f] hover:border-[#006a3f] transition-all font-['Inter',sans-serif] shadow-sm cursor-pointer"
                               >
                                 Detail
-                              </Link>
+                              </button>
                             </div>
                           </div>
-                        ))}
+                        )})}
                         
                         {!Array.isArray(prescriptions) && prescriptions.links && prescriptions.links.length > 3 && (
                           <div className="flex items-center justify-center gap-2 mt-8 mb-4">
@@ -1131,23 +1148,27 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 </div>
               </div>
               <div className="border-t border-gray-100 pt-5 space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">Metode Pembayaran</span>
-                  <span className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19]">{formatPaymentMethod(selectedOrder)}</span>
-                </div>
-                {!['Pending', 'Belum Bayar'].includes(selectedOrder.status) && selectedOrder.va_number && (
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">
-                      {(() => {
-                          const bName = (selectedOrder.bank_name || '').toUpperCase();
-                          if (bName === 'MANDIRI BILL') return 'Biller / Bill Key';
-                          if (bName === 'E-WALLET' || bName === 'GOPAY' || bName === 'SHOPEEPAY' || bName === 'QRIS' || bName === 'DANA') return 'ID Transaksi';
-                          if (bName === 'GERAI RETAIL' || bName === 'ALFAMART' || bName === 'INDOMARET') return 'Kode Pembayaran';
-                          return `Nomor VA ${selectedOrder.bank_name || ''}`.trim();
-                      })()}
-                    </span>
-                    <span className="font-['Inter',sans-serif] text-[14px] font-bold text-indigo-600 tracking-wider">{selectedOrder.va_number}</span>
-                  </div>
+                {selectedOrder.status !== 'Selesai' && (
+                  <>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">Metode Pembayaran</span>
+                      <span className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19]">{formatPaymentMethod(selectedOrder)}</span>
+                    </div>
+                    {!['Pending', 'Belum Bayar'].includes(selectedOrder.status) && selectedOrder.va_number && (
+                      <div className="flex justify-between items-center mt-1 mb-2">
+                        <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">
+                          {(() => {
+                              const bName = (selectedOrder.bank_name || '').toUpperCase();
+                              if (bName === 'MANDIRI BILL') return 'Biller / Bill Key';
+                              if (bName === 'E-WALLET' || bName === 'GOPAY' || bName === 'SHOPEEPAY' || bName === 'QRIS' || bName === 'DANA') return 'ID Transaksi';
+                              if (bName === 'GERAI RETAIL' || bName === 'ALFAMART' || bName === 'INDOMARET') return 'Kode Pembayaran';
+                              return `Nomor VA ${selectedOrder.bank_name || ''}`.trim();
+                          })()}
+                        </span>
+                        <span className="font-['Inter',sans-serif] text-[14px] font-bold text-indigo-600 tracking-wider">{selectedOrder.va_number}</span>
+                      </div>
+                    )}
+                  </>
                 )}
                 <div className="flex justify-between items-start pt-2 border-t border-gray-50">
                   <span className="font-['Inter',sans-serif] text-[14px] text-gray-500 min-w-[120px]">Alamat Pengiriman</span>
