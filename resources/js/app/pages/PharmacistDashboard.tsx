@@ -900,7 +900,8 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                             { id: 'all', label: 'Semua', icon: List },
                             { id: 'diproses', label: 'Diproses', icon: Loader },
                             { id: 'dikirim', label: 'Dikirim', icon: Truck },
-                            { id: 'selesai', label: 'Selesai', icon: CheckCircle }
+                            { id: 'selesai', label: 'Selesai', icon: CheckCircle },
+                            { id: 'dibatalkan', label: 'Dibatalkan', icon: XCircle }
                           ].map((tab) => {
                             const isActive = orderStatusFilter === tab.id;
                             const Icon = tab.icon;
