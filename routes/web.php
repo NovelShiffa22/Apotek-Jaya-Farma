@@ -836,6 +836,47 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             ['path' => request()->url(), 'query' => request()->query(), 'pageName' => 'order_page']
         );
 
+        // Prescriptions Pagination
+        $prescriptionSearch = request('prescription_search');
+        $prescriptionStatus = request('prescription_status', 'all');
+        $prescriptionDate = request('prescription_date');
+
+        $prescriptionsQuery = \App\Models\Prescription::with(['user', 'items.product', 'validator'])->latest();
+
+        if ($prescriptionSearch) {
+            $prescriptionsQuery->where(function($q) use ($prescriptionSearch) {
+                $q->where('nama_pasien', 'like', "%{$prescriptionSearch}%")
+                  ->orWhereHas('user', function($uq) use ($prescriptionSearch) {
+                      $uq->where('name', 'like', "%{$prescriptionSearch}%");
+                  });
+            });
+        }
+
+        if ($prescriptionStatus !== 'all') {
+            if ($prescriptionStatus === 'dipesan') {
+                $prescriptionsQuery->where('status_validasi', 'disetujui')
+                    ->where(function($q) {
+                        $q->whereHas('order')
+                          ->orWhereHas('virtualTransaction');
+                    });
+            } elseif ($prescriptionStatus === 'menunggu') {
+                $prescriptionsQuery->where('status_validasi', 'pending');
+            } else {
+                $prescriptionsQuery->where('status_validasi', $prescriptionStatus);
+            }
+        }
+
+        if ($prescriptionDate) {
+            $dates = explode(',', $prescriptionDate);
+            if (count($dates) == 2) {
+                $prescriptionsQuery->whereBetween('created_at', [$dates[0] . ' 00:00:00', $dates[1] . ' 23:59:59']);
+            } else {
+                $prescriptionsQuery->whereDate('created_at', $dates[0]);
+            }
+        }
+
+        $paginatedPrescriptions = $prescriptionsQuery->paginate(10, ['*'], 'prescription_page')->withQueryString();
+
         $statusChanges = \App\Models\OrderStatusHistory::with(['order.user', 'changedByUser'])
             ->latest()
             ->take(30)
@@ -853,6 +894,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         $incomeAllTime = \App\Models\Order::where('status', 'selesai')->sum('total_biaya') + 
                          \App\Models\VirtualTransaction::where('status', 'Selesai')->sum('total_amount');
 
+        $totalPrescriptionsPending = \App\Models\Prescription::where('status_validasi', 'pending')->count();
         $totalPrescriptionsVerified = \App\Models\Prescription::where('status_validasi', 'disetujui')->count();
         $totalPrescriptionsRejected = \App\Models\Prescription::where('status_validasi', 'ditolak')->count();
 
@@ -905,6 +947,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             'income_today' => $incomeToday,
             'income_this_month' => $incomeThisMonth,
             'income_all_time' => $incomeAllTime,
+            'prescriptions_pending' => $totalPrescriptionsPending,
             'prescriptions_verified' => $totalPrescriptionsVerified,
             'prescriptions_rejected' => $totalPrescriptionsRejected,
             'revenue_chart_data' => $revenueChartData,
@@ -933,9 +976,17 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             'symptoms' => $symptoms,
             'orders' => $paginatedOrders,
             'statusChanges' => $statusChanges,
-            'analytics' => $analytics
+            'analytics' => $analytics,
+            'prescriptions' => $paginatedPrescriptions
         ]);
     })->name('admin.dashboard');
+
+    Route::get('/admin/prescriptions/{id}', function ($id) {
+        $prescription = \App\Models\Prescription::with(['user.addresses', 'items.product', 'validator', 'virtualTransactions'])->findOrFail($id);
+        return Inertia::render('AdminPrescriptionDetail', [
+            'prescription' => $prescription
+        ]);
+    })->name('admin.prescriptions.show');
 
     Route::get('/admin/orders/{id}', function ($id) {
         if (str_starts_with($id, 'vt_')) {
