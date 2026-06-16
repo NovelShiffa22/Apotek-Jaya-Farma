@@ -477,6 +477,7 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
             'diproses' => (clone $baseOrdersQuery)->where('status', 'diproses')->count() + (clone $baseVtsQuery)->where('status', 'Lunas')->count(),
             'dikirim' => (clone $baseOrdersQuery)->where('status', 'dikirim')->count() + (clone $baseVtsQuery)->where('status', 'Dikirim')->count(),
             'selesai' => (clone $baseOrdersQuery)->where('status', 'selesai')->count() + (clone $baseVtsQuery)->where('status', 'Selesai')->count(),
+            'dibatalkan' => (clone $baseOrdersQuery)->where('status', 'dibatalkan')->count() + (clone $baseVtsQuery)->where('status', 'Dibatalkan')->count(),
         ];
 
         $analytics = [
