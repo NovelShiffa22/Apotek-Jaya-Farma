@@ -1,9 +1,43 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { ChevronLeft, Package, User, FileText, CheckCircle, Clock, Truck, XCircle, FileImage } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function AdminOrderDetail({ order, auth }: any) {
     const [isUpdating, setIsUpdating] = useState(false);
+
+    const [modalConfig, setModalConfig] = useState<{
+        isOpen: boolean;
+        type: 'warning' | 'info' | 'success';
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        confirmText?: string;
+        cancelText?: string;
+    }>({
+        isOpen: false,
+        type: 'info',
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
+
+    const closeConfirmModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
+
+    const confirmUpdateStatus = (status: string, title: string, message: string) => {
+        setModalConfig({
+            isOpen: true,
+            type: 'warning',
+            title,
+            message,
+            confirmText: 'Ya, Lanjutkan',
+            cancelText: 'Batal',
+            onConfirm: () => {
+                updateOrderStatus(order.id, status);
+                closeConfirmModal();
+            }
+        });
+    };
 
     const updateOrderStatus = (id: number | string, status: string) => {
         setIsUpdating(true);
@@ -201,7 +235,7 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                         </div>
                                         <button
                                             disabled={isUpdating}
-                                            onClick={() => { if (window.confirm("Yakin ingin mengambil alih pesanan ini?")) updateOrderStatus(order.id, 'diproses'); }}
+                                            onClick={() => confirmUpdateStatus('diproses', 'Ambil Alih Pesanan?', 'Yakin ingin mengambil alih pesanan ini?')}
                                             className="w-full py-3 rounded-xl bg-red-600 text-white font-['Inter',sans-serif] text-sm font-bold shadow-md hover:bg-red-700 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                                         >
                                             {isUpdating ? 'Memproses...' : 'Ambil Alih Pesanan Ini'}
@@ -230,17 +264,17 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                                 <label className="block font-['Inter',sans-serif] text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Pilih Status Baru</label>
                                                 <div className="grid grid-cols-1 gap-2">
                                                     {order.status === 'menunggu_pembayaran' && !isVirtual && (
-                                                        <button onClick={() => { if (window.confirm("Yakin ingin menandai pesanan ini sedang diproses?")) updateOrderStatus(order.id, 'diproses'); }} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-sm transition-colors">
+                                                        <button onClick={() => confirmUpdateStatus('diproses', 'Tandai Diproses?', 'Yakin ingin menandai pesanan ini sedang diproses?')} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-sm transition-colors">
                                                             Tandai Sedang Diproses
                                                         </button>
                                                     )}
                                                     {order.status === 'diproses' && (
-                                                        <button onClick={() => { if (window.confirm("Yakin ingin mengirim pesanan ini?")) updateOrderStatus(order.id, 'dikirim'); }} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-sm transition-colors">
+                                                        <button onClick={() => confirmUpdateStatus('dikirim', 'Kirim Pesanan?', 'Yakin ingin mengirim pesanan ini?')} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-sm transition-colors">
                                                             Kirim Pesanan
                                                         </button>
                                                     )}
                                                     {order.status === 'dikirim' && (
-                                                        <button onClick={() => { if (window.confirm("Yakin ingin menyelesaikan pesanan ini?")) updateOrderStatus(order.id, 'selesai'); }} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-sm transition-colors">
+                                                        <button onClick={() => confirmUpdateStatus('selesai', 'Selesaikan Pesanan?', 'Yakin ingin menyelesaikan pesanan ini?')} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-sm transition-colors">
                                                             Selesaikan Pesanan
                                                         </button>
                                                     )}
@@ -273,8 +307,16 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Metode Pembayaran</p>
-                                    <p className="text-sm font-medium text-slate-800">{order.payment_method || '-'}</p>
+                                    <p className="text-sm font-medium text-slate-800">
+                                        {order.payment_method === 'Midtrans Payment Gateway' ? 'Virtual Account' : (order.payment_method || '-')}
+                                    </p>
                                 </div>
+                                {order.va_number && (
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Nomor Virtual Account</p>
+                                        <p className="text-sm font-medium text-slate-800">{order.va_number}</p>
+                                    </div>
+                                )}
                                 <div>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Alamat Pengiriman</p>
                                     <p className="text-sm font-medium text-slate-800">{order.shipping_address || 'Alamat belum diatur'}</p>
@@ -314,6 +356,8 @@ export default function AdminOrderDetail({ order, auth }: any) {
                     </div>
                 </div>
             </main>
+
+            <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
         </div>
     );
 }

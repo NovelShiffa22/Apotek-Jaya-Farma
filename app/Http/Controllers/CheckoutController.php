@@ -253,14 +253,11 @@ class CheckoutController extends Controller
 
         $totalAmount = $subtotal > 0 ? max(0, $subtotal + $shippingCost - $discount) : 0;
         
-        // Generate VA Number
-        $phone = auth()->check() ? auth()->user()->phone : null;
-        $vaNumber = '8830' . ($phone ? preg_replace('/[^0-9]/', '', $phone) : rand(10000000, 99999999));
-
         $transaction = \App\Models\VirtualTransaction::create([
             'user_id' => auth()->id(),
             'prescription_id' => $prescriptionId,
-            'va_number' => $vaNumber,
+            'va_number' => null,
+            'bank_name' => null,
             'payment_method' => $paymentMethod,
             'total_amount' => $totalAmount,
             'status' => 'Pending',
@@ -361,7 +358,7 @@ class CheckoutController extends Controller
         // DIRECT SINKRONISASI MIDTRANS
         if ($transaction->status === 'Pending' || $transaction->status === 'Belum Bayar') {
             \Midtrans\Config::$serverKey = config('midtrans.server_key');
-            \Midtrans\Config::$isProduction = config('midtrans.is_production');
+            \Midtrans\Config::$isProduction = filter_var(config('midtrans.is_production'), FILTER_VALIDATE_BOOLEAN);
             \Midtrans\Config::$curlOptions = [
                 CURLOPT_SSL_VERIFYHOST => 0,
                 CURLOPT_SSL_VERIFYPEER => 0,
@@ -370,22 +367,46 @@ class CheckoutController extends Controller
 
             try {
                 $status = \Midtrans\Transaction::status($transaction->id);
+                
+                try {
+                    if (isset($status->va_numbers) && count($status->va_numbers) > 0) {
+                        // 1. Tipe Virtual Account Bank biasa
+                        $transaction->bank_name = strtoupper($status->va_numbers[0]->bank);
+                        $transaction->va_number = $status->va_numbers[0]->va_number;
+                    } elseif (isset($status->payment_type) && $status->payment_type == 'cstore') {
+                        // 2. Tipe Gerai Retail (Alfamart / Indomaret)
+                        $transaction->bank_name = strtoupper($status->store ?? 'GERAI RETAIL');
+                        $transaction->va_number = $status->payment_code ?? null;
+                    } elseif (isset($status->payment_type) && ($status->payment_type == 'echannel' || isset($status->bill_key))) {
+                        // 3. Tipe Mandiri Bill
+                        $transaction->bank_name = 'MANDIRI BILL';
+                        $transaction->va_number = ($status->biller_code ?? '') . ' - ' . ($status->bill_key ?? '');
+                    } else {
+                        // 4. Tipe E-Wallet (DANA, Gopay, ShopeePay, QRIS)
+                        $transaction->bank_name = strtoupper($status->payment_type ?? 'E-WALLET');
+                        $transaction->va_number = $status->transaction_id ?? null;
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Midtrans universal parsing error: " . $e->getMessage());
+                }
+
                 if ($status->transaction_status == 'settlement' || $status->transaction_status == 'capture') {
                     $transaction->update(['status' => 'Lunas']);
                 } else if ($status->transaction_status == 'expire') {
                     $transaction->update(['status' => 'Expired']);
                 } else if ($status->transaction_status == 'cancel' || $status->transaction_status == 'deny') {
                     $transaction->update(['status' => 'Dibatalkan']);
+                } else {
+                    $transaction->save();
                 }
+                
+                // Pastikan data terbaru dari database diambil kembali
+                $transaction = $transaction->fresh();
+
             } catch (\Exception $e) {
-                // Abaikan jika order belum ada di Midtrans atau eror jaringan
+                \Illuminate\Support\Facades\Log::error("Midtrans API Check failed in invoice: " . $e->getMessage());
             }
         }
-
-        // TIDAK DILAKUKAN REDIRECT OTOMATIS AGAR HALAMAN SUCCESS (STRUK) BISA DIRENDER DI FRONTEND
-        // if ($transaction->status === 'Lunas' || $transaction->status === 'Diproses') {
-        //     return redirect('/profile?tab=orders')->with('success', 'Pembayaran Berhasil! Pesanan Anda sedang diproses.');
-        // }
         
         return Inertia::render('Invoice', [
             'transaction' => $transaction
@@ -456,5 +477,33 @@ class CheckoutController extends Controller
         }
 
         return redirect()->back()->with('error', 'Pesanan yang sudah lunas tidak dapat dibatalkan.');
+    }
+
+    public function pembayaranSukses(\Illuminate\Http\Request $request)
+    {
+        $transaction = \App\Models\VirtualTransaction::find($request->order_id);
+        
+        if ($transaction) {
+            $transaction->status = 'Lunas';
+            
+            // Universal mapping untuk sinkronisasi fallback frontend
+            if ($request->has('va_numbers') && is_array($request->va_numbers) && count($request->va_numbers) > 0) {
+                $transaction->bank_name = strtoupper($request->va_numbers[0]['bank'] ?? '');
+                $transaction->va_number = $request->va_numbers[0]['va_number'] ?? null;
+            } elseif ($request->payment_type == 'cstore') {
+                $transaction->bank_name = strtoupper($request->store ?? 'GERAI RETAIL');
+                $transaction->va_number = $request->payment_code ?? null;
+            } elseif ($request->payment_type == 'echannel' || $request->has('bill_key')) {
+                $transaction->bank_name = 'MANDIRI BILL';
+                $transaction->va_number = ($request->biller_code ?? '') . ' - ' . ($request->bill_key ?? '');
+            } else {
+                $transaction->bank_name = strtoupper($request->payment_type ?? 'E-WALLET');
+                $transaction->va_number = $request->transaction_id ?? null;
+            }
+            
+            $transaction->save();
+        }
+        
+        return redirect()->back();
     }
 }

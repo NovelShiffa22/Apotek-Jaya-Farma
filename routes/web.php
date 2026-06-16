@@ -81,6 +81,7 @@ Route::prefix('prescriptions')->name('prescriptions.')->group(function () {
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->middleware('auth')->name('checkout.index');
 Route::post('/checkout/proses', [CheckoutController::class, 'process'])->middleware('auth')->name('checkout.proses');
+Route::post('/checkout/pembayaran-sukses', [CheckoutController::class, 'pembayaranSukses'])->middleware('auth')->name('checkout.pembayaran-sukses');
 
 Route::get('/invoice/{id}', [CheckoutController::class, 'invoice'])->name('order.invoice');
 Route::post('/invoice/{id}/generate-token', [CheckoutController::class, 'generateToken'])->name('order.generate_token');
@@ -108,8 +109,38 @@ Route::get('/profile', function () {
     foreach ($pendingOrders as $order) {
         try {
             $status = \Midtrans\Transaction::status($order->id);
-            if ($status->transaction_status === 'expire' || $status->transaction_status === 'cancel') {
-                $order->update(['status' => 'Dibatalkan']);
+            
+            try {
+                if (isset($status->va_numbers) && !empty($status->va_numbers)) {
+                    $order->va_number = $status->va_numbers[0]->va_number;
+                    $order->bank_name = strtoupper($status->va_numbers[0]->bank);
+                } else {
+                    $order->bank_name = strtoupper($status->payment_type ?? 'TRANSFER');
+                    $order->va_number = $status->payment_code ?? null;
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Midtrans va_numbers parse error: " . $e->getMessage());
+            }
+
+            if ($status->transaction_status === 'expire') {
+                $order->status = 'Expired';
+                $order->save();
+                
+                // Kembalikan stok obat
+                if (is_array($order->items)) {
+                    foreach ($order->items as $item) {
+                        $productId = $item['id'] ?? $item['product_id'] ?? null;
+                        if ($productId) {
+                            $product = \App\Models\Product::find($productId);
+                            if ($product) {
+                                $product->increment('stok', $item['quantity'] ?? 1);
+                            }
+                        }
+                    }
+                }
+            } elseif ($status->transaction_status === 'cancel') {
+                $order->status = 'Dibatalkan';
+                $order->save();
                 
                 // Kembalikan stok obat
                 if (is_array($order->items)) {
@@ -124,7 +155,10 @@ Route::get('/profile', function () {
                     }
                 }
             } elseif ($status->transaction_status === 'settlement' || $status->transaction_status === 'capture') {
-                $order->update(['status' => 'Lunas']);
+                $order->status = 'Lunas';
+                $order->save();
+            } else {
+                $order->save();
             }
         } catch (\Exception $e) {
             // Abaikan jika belum ada di Midtrans
@@ -134,7 +168,7 @@ Route::get('/profile', function () {
         if ($order->status === 'Pending') {
             $createdAt = \Carbon\Carbon::parse($order->created_at);
             if (now()->diffInMinutes($createdAt, true) >= 20 && $createdAt->isPast()) {
-                $order->update(['status' => 'Dibatalkan']);
+                $order->update(['status' => 'Expired']);
                 
                 if (is_array($order->items)) {
                     foreach ($order->items as $item) {

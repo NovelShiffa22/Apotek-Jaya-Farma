@@ -146,11 +146,9 @@ export default function AdminDashboard({ products = [], categories = [], users =
 
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>(null);
-    const [productToDelete, setProductToDelete] = useState<any>(null);
 
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<any>(null);
-    const [userToDelete, setUserToDelete] = useState<any>(null);
 
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
@@ -1080,7 +1078,19 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                         />
                                                     </button>
                                                     <button 
-                                                        onClick={() => setProductToDelete(product)}
+                                                        onClick={() => {
+                                                            setModalConfig({
+                                                                isOpen: true,
+                                                                type: 'delete',
+                                                                title: 'Konfirmasi Hapus',
+                                                                message: 'Apakah Anda yakin ingin menghapus produk?',
+                                                                confirmText: 'Hapus',
+                                                                onConfirm: () => {
+                                                                    router.delete(`/admin/products/${product.id}`);
+                                                                    closeConfirmModal();
+                                                                }
+                                                            });
+                                                        }}
                                                         className="group inline-block rounded-lg p-2 transition-colors hover:bg-red-50"
                                                     >
                                                         <Trash2
@@ -1695,7 +1705,19 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                                 />
                                                             </button>
                                                             <button
-                                                                onClick={() => setUserToDelete(user)}
+                                                                onClick={() => {
+                                                                    setModalConfig({
+                                                                        isOpen: true,
+                                                                        type: 'delete',
+                                                                        title: 'Konfirmasi Hapus',
+                                                                        message: 'Apakah Anda yakin ingin menghapus akun user ini?',
+                                                                        confirmText: 'Hapus',
+                                                                        onConfirm: () => {
+                                                                            router.delete(`/admin/users/${user.id}`);
+                                                                            closeConfirmModal();
+                                                                        }
+                                                                    });
+                                                                }}
                                                                 className="group rounded-lg p-2 transition-colors hover:bg-red-50"
                                                                 title="Hapus user"
                                                             >
@@ -1761,37 +1783,10 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 symptoms={symptoms}
             />
 
-            {/* Modal Konfirmasi Hapus Produk Minimalist */}
-            {productToDelete && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-6">
-                    <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg">
-                        <h3 className="mb-2 font-['Poppins',sans-serif] text-[15px] font-semibold text-[#171d19]">
-                            Konfirmasi Hapus
-                        </h3>
-                        <p className="mb-5 font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
-                            Apakah Anda yakin ingin menghapus produk?
-                        </p>
-                        <div className="flex justify-end gap-2">
-                            <button
-                                onClick={() => setProductToDelete(null)}
-                                className="rounded-lg px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-[#6e7a70] transition-colors hover:bg-gray-100"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                onClick={() => {
-                                    router.delete(`/admin/products/${productToDelete.id}`);
-                                    setProductToDelete(null);
-                                }}
-                                className="rounded-lg bg-red-600 px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-white transition-colors hover:bg-red-700"
-                            >
-                                Hapus
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
+            {/* Modal Detail Pesanan */}
+            <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
+            
             {/* Modal Tambah/Edit User */}
             <CreateUser 
                 key={editingUser ? editingUser.id : 'create-user'}
@@ -1803,40 +1798,6 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 isEdit={!!editingUser} 
                 initialData={editingUser} 
             />
-
-            {/* Modal Konfirmasi Hapus User Minimalist */}
-            {userToDelete && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-6">
-                    <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg">
-                        <h3 className="mb-2 font-['Poppins',sans-serif] text-[15px] font-semibold text-[#171d19]">
-                            Konfirmasi Hapus
-                        </h3>
-                        <p className="mb-5 font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
-                            Apakah Anda yakin ingin menghapus akun user ini?
-                        </p>
-                        <div className="flex justify-end gap-2">
-                            <button
-                                onClick={() => setUserToDelete(null)}
-                                className="rounded-lg px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-[#6e7a70] transition-colors hover:bg-gray-100"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                onClick={() => {
-                                    router.delete(`/admin/users/${userToDelete.id}`);
-                                    setUserToDelete(null);
-                                }}
-                                className="rounded-lg bg-red-600 px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-white transition-colors hover:bg-red-700"
-                            >
-                                Hapus
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Modal Detail Pesanan */}
-            <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
         </div>
     );
 }

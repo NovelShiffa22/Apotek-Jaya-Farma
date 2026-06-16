@@ -5,6 +5,17 @@ import { usePage, Link, useForm, router } from '@inertiajs/react';
 import ConfirmModal from '../components/ConfirmModal';
 import { regions } from '../data/regions';
 
+const formatPaymentMethod = (order: any) => {
+  if (['Pending', 'Belum Bayar'].includes(order.status)) return 'Menunggu Pembayaran';
+  if (order.payment_method !== 'Midtrans Payment Gateway') return order.payment_method || 'Pembayaran';
+
+  const bName = (order.bank_name || '').toUpperCase();
+  if (bName === 'MANDIRI BILL') return 'Mandiri Bill Payment';
+  if (bName === 'E-WALLET' || bName === 'GOPAY' || bName === 'SHOPEEPAY' || bName === 'QRIS' || bName === 'DANA') return 'E-Wallet / QRIS';
+  if (bName === 'GERAI RETAIL' || bName === 'ALFAMART' || bName === 'INDOMARET') return `Gerai Retail ${bName !== 'GERAI RETAIL' ? bName : ''}`.trim();
+  return `Virtual Account ${bName}`.trim();
+};
+
 export default function Profile({ user, orders = { data: [], links: [] }, counts = {}, prescriptionCounts = {}, addresses = [], prescriptions = { data: [], links: [] } }: any) {
   const { apotekInfo } = usePage<any>().props;
   const jamOp = apotekInfo?.jam_operasional || '08.00 - 18.00 WIB';
@@ -566,7 +577,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                                 day: 'numeric',
                                 month: 'long', 
                                 year: 'numeric'
-                              })} • Virtual Account {order.va_number && `(VA: ${order.va_number})`}
+                              })} • {formatPaymentMethod(order)} {!['Pending', 'Belum Bayar'].includes(order.status) && order.va_number && `(${order.va_number})`}
                             </p>
                             {['Lunas', 'Diproses'].includes(order.status) && (new Date().getHours() < 8 || new Date().getHours() >= 18) && (
                               <p className="text-amber-600 text-xs mt-1 italic font-medium">
@@ -686,7 +697,8 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                           </div>
                           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-4 sm:mt-0 sm:justify-end">
                             <button 
-                              onClick={() => { setSelectedOrder(order); setIsModalOpen(true); }}
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedOrder(order); setIsModalOpen(true); }}
                               className="w-full sm:w-auto text-center font-['Inter',sans-serif] text-[14px] font-bold text-gray-600 hover:text-gray-900 border border-gray-400 px-5 py-2.5 rounded-xl transition-colors hover:bg-gray-50"
                             >
                               Lihat Detail
@@ -699,9 +711,18 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                             {order.status === 'Dibatalkan' && (
                               <button
                                 onClick={() => {
-                                  if(confirm('Apakah Anda yakin ingin menghapus riwayat pesanan ini?')) {
-                                    router.delete(`/profile/orders/${order.id}`, { preserveScroll: true });
-                                  }
+                                  setModalConfig({
+                                    isOpen: true,
+                                    type: 'delete',
+                                    title: 'Hapus Riwayat Pesanan?',
+                                    message: 'Tindakan ini akan menyembunyikan pesanan ini dari daftar riwayat Anda secara permanen.',
+                                    confirmText: 'Ya, Hapus',
+                                    cancelText: 'Batal',
+                                    onConfirm: () => {
+                                      router.delete(`/profile/orders/${order.id}`, { preserveScroll: true });
+                                      closeConfirmModal();
+                                    }
+                                  });
                                 }}
                                 className="w-full sm:w-auto text-center bg-white border border-red-200 text-red-600 px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-red-50 shadow-sm transition-colors whitespace-nowrap"
                               >
@@ -987,7 +1008,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
           <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all scale-100">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-[#171d19]">
-                Rincian Pesanan #{selectedOrder.va_number || selectedOrder.id}
+                Rincian Pesanan #{selectedOrder.id.toString().padStart(6, '0')}
               </h3>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors p-1">
                 <X size={22} strokeWidth={2.5} />
@@ -1011,12 +1032,22 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
               <div className="border-t border-gray-100 pt-5 space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">Metode Pembayaran</span>
-                  <span className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19]">{selectedOrder.payment_method === 'Midtrans Payment Gateway' ? 'Transfer Virtual Account' : (selectedOrder.payment_method || 'Virtual Account')}</span>
+                  <span className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19]">{formatPaymentMethod(selectedOrder)}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">Virtual Account</span>
-                  <span className="font-['Inter',sans-serif] text-[14px] font-bold text-indigo-600 tracking-wider">{selectedOrder.va_number || selectedOrder.status}</span>
-                </div>
+                {!['Pending', 'Belum Bayar'].includes(selectedOrder.status) && selectedOrder.va_number && (
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">
+                      {(() => {
+                          const bName = (selectedOrder.bank_name || '').toUpperCase();
+                          if (bName === 'MANDIRI BILL') return 'Biller / Bill Key';
+                          if (bName === 'E-WALLET' || bName === 'GOPAY' || bName === 'SHOPEEPAY' || bName === 'QRIS' || bName === 'DANA') return 'ID Transaksi';
+                          if (bName === 'GERAI RETAIL' || bName === 'ALFAMART' || bName === 'INDOMARET') return 'Kode Pembayaran';
+                          return `Nomor VA ${selectedOrder.bank_name || ''}`.trim();
+                      })()}
+                    </span>
+                    <span className="font-['Inter',sans-serif] text-[14px] font-bold text-indigo-600 tracking-wider">{selectedOrder.va_number}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-start pt-2 border-t border-gray-50">
                   <span className="font-['Inter',sans-serif] text-[14px] text-gray-500 min-w-[120px]">Alamat Pengiriman</span>
                   <span className="font-['Inter',sans-serif] text-[13px] font-medium text-gray-800 text-right">{selectedOrder.shipping_address || 'Alamat belum diatur'}</span>
@@ -1027,10 +1058,10 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                   const calculatedShipping = Math.max(0, total - subtotal);
                   const displayShipping = selectedOrder.shipping_method ? Number(selectedOrder.shipping_cost || 0) : calculatedShipping;
                   const displayMethod = selectedOrder.shipping_method === 'kurir_toko' 
-                    ? 'Kurir Toko (Kota Bandung)' 
+                    ? (selectedOrder.prescription_id ? 'Kurir Toko (Kota Bandung)' : 'Kurir Reguler') 
                     : (selectedOrder.shipping_method === 'ambil_apotek' 
                         ? 'Ambil di Apotek' 
-                        : (displayShipping > 0 ? 'Kurir Toko' : 'Ambil di Apotek'));
+                        : (displayShipping > 0 ? 'Kurir Reguler' : 'Ambil di Apotek'));
 
                   return (
                     <>
@@ -1055,8 +1086,14 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 </div>
               </div>
             </div>
-            <div className="p-5 border-t border-gray-100 bg-white flex justify-end">
-              <button onClick={() => setIsModalOpen(false)} className="bg-white border-2 border-gray-200 text-gray-700 px-8 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-gray-50 transition-all">Tutup</button>
+            <div className="p-5 border-t border-gray-100 bg-white flex justify-end gap-3">
+              <Link 
+                href={`/invoice/${selectedOrder.id}`}
+                className="bg-white border-2 border-[#006a3f] text-[#006a3f] px-6 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-emerald-50 transition-all flex items-center gap-2 justify-center"
+              >
+                📄 Lihat Nota
+              </Link>
+              <button type="button" onClick={() => setIsModalOpen(false)} className="bg-white border-2 border-gray-300 text-gray-700 px-8 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-gray-50 transition-all">Tutup</button>
             </div>
           </div>
         </div>

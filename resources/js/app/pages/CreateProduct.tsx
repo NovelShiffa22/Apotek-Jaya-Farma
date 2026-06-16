@@ -12,6 +12,7 @@ import {
     AlertTriangle,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
+import ConfirmModal from '../components/ConfirmModal';
 
 interface Category {
     id: number;
@@ -52,8 +53,25 @@ interface CreateProductProps {
 export default function CreateProduct({ isOpen, onClose, isEdit = false, initialData, categories = [], symptoms = [] }: CreateProductProps) {
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [dragActive, setDragActive] = useState(false);
-    const [showDeletePhotoAlert, setShowDeletePhotoAlert] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const [modalConfig, setModalConfig] = useState<{
+        isOpen: boolean;
+        type: 'danger' | 'warning' | 'delete';
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        confirmText?: string;
+        cancelText?: string;
+    }>({
+        isOpen: false,
+        type: 'danger',
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
+
+    const closeConfirmModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
 
     const { data, setData, post, errors, processing } = useForm<ProductFormData>({
         nama_obat: initialData?.nama_obat || '',
@@ -111,12 +129,28 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
         const maxSize = 2 * 1024 * 1024; // 2MB
 
         if (!validTypes.includes(file.type)) {
-            alert('Format file tidak didukung. Gunakan PNG, JPG, JPEG, atau WEBP.');
+            setModalConfig({
+                isOpen: true,
+                type: 'danger',
+                title: 'Format Tidak Didukung',
+                message: 'Format file tidak didukung. Gunakan PNG, JPG, JPEG, atau WEBP.',
+                confirmText: 'Tutup',
+                cancelText: '',
+                onConfirm: closeConfirmModal
+            });
             return;
         }
 
         if (file.size > maxSize) {
-            alert('Ukuran file terlalu besar. Maksimal 2MB.');
+            setModalConfig({
+                isOpen: true,
+                type: 'danger',
+                title: 'Ukuran Terlalu Besar',
+                message: 'Ukuran file terlalu besar. Maksimal 2MB.',
+                confirmText: 'Tutup',
+                cancelText: '',
+                onConfirm: closeConfirmModal
+            });
             return;
         }
 
@@ -623,7 +657,20 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                             <div className="h-4 w-[1px] bg-gray-300"></div>
                                             <button
                                                 type="button"
-                                                onClick={() => setShowDeletePhotoAlert(true)}
+                                                onClick={() => {
+                                                    setModalConfig({
+                                                        isOpen: true,
+                                                        type: 'delete',
+                                                        title: 'Hapus Foto Produk?',
+                                                        message: 'Tindakan ini akan menghapus foto secara permanen.',
+                                                        confirmText: 'Hapus',
+                                                        cancelText: 'Batal',
+                                                        onConfirm: () => {
+                                                            removeFile();
+                                                            closeConfirmModal();
+                                                        }
+                                                    });
+                                                }}
                                                 className="flex items-center gap-2 rounded-lg px-3 py-1.5 font-['Poppins',sans-serif] text-[13px] font-medium text-red-600 transition-colors hover:bg-red-50"
                                             >
                                                 <Trash2 size={14} />
@@ -727,38 +774,8 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                     </div>
                 </form>
             </div>
-            {/* Delete Photo Confirmation Alert */}
-            {showDeletePhotoAlert && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/20 p-4 transition-all">
-                    <div className="w-full max-w-xs rounded-2xl border border-gray-100 bg-white p-5 shadow-lg">
-                        <h3 className="mb-1 font-['Poppins',sans-serif] text-[15px] font-semibold text-[#171d19]">
-                            Hapus Foto Produk?
-                        </h3>
-                        <p className="mb-5 font-['Poppins',sans-serif] text-[12px] leading-relaxed text-[#6e7a70]">
-                            Tindakan ini akan menghapus foto secara permanen.
-                        </p>
-                        <div className="flex justify-end gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setShowDeletePhotoAlert(false)}
-                                className="rounded-lg px-4 py-2 font-['Poppins',sans-serif] text-[12px] font-medium text-[#6e7a70] transition-colors hover:bg-gray-100"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setShowDeletePhotoAlert(false);
-                                    removeFile();
-                                }}
-                                className="rounded-lg bg-red-50 px-4 py-2 font-['Poppins',sans-serif] text-[12px] font-medium text-red-600 transition-colors hover:bg-red-100"
-                            >
-                                Hapus
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            
+            <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
         </div>
     );
 }
