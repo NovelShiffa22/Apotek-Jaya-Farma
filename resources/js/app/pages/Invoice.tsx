@@ -400,7 +400,10 @@ export default function Invoice({ transaction }: Props) {
               {isExpired && (
                   <div className="bg-red-50/50 rounded-xl p-4 border border-red-100 mb-6 text-center">
                       <p className="text-red-600 text-sm leading-relaxed">
-                          Waktu pembayaran Anda telah habis. Sisa stok obat telah dikembalikan ke sistem. Silakan lakukan pemesanan ulang melalui katalog.
+                          {transaction.prescription_id 
+                              ? 'Waktu pembayaran Anda telah habis. Sisa stok obat telah dikembalikan ke sistem. Silakan lakukan pembayaran ulang melalui halaman Riwayat Resep Anda.' 
+                              : 'Waktu pembayaran Anda telah habis. Sisa stok obat telah dikembalikan ke sistem. Silakan lakukan pemesanan ulang melalui katalog.'
+                          }
                       </p>
                   </div>
               )}
@@ -418,10 +421,10 @@ export default function Invoice({ transaction }: Props) {
               <div className="mt-8 space-y-4">
                 {isExpired ? (
                     <button 
-                      onClick={() => router.get('/catalog')}
+                      onClick={() => router.get(transaction.prescription_id ? '/profile?tab=prescriptions' : '/catalog')}
                       className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 border-2 border-gray-300 text-red-600 font-bold rounded-xl py-4 transition duration-200 text-base shadow-sm mt-6"
                     >
-                      ← Kembali ke Katalog Obat
+                      {transaction.prescription_id ? '← Kembali ke Riwayat Resep' : '← Kembali ke Katalog Obat'}
                     </button>
                 ) : (
                     <>

@@ -38,6 +38,10 @@ class MidtransController extends Controller
 
                 if ($request->transaction_status == 'capture' || $request->transaction_status == 'settlement') {
                     $transaction->status = 'Lunas';
+                    if ($transaction->prescription_id) {
+                        \App\Models\Prescription::where('id', $transaction->prescription_id)
+                            ->update(['status_validasi' => 'telah_dipesan']);
+                    }
                 } else if ($request->transaction_status == 'expire') {
                     $transaction->status = 'Expired';
                 } else if ($request->transaction_status == 'cancel' || $request->transaction_status == 'deny') {

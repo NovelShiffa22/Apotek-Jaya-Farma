@@ -26,6 +26,11 @@ class Prescription extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function virtualTransactions()
+    {
+        return $this->hasMany(VirtualTransaction::class);
+    }
+
     public function validator()
     {
         return $this->belongsTo(User::class, 'validated_by');

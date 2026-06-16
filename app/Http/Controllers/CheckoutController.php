@@ -24,14 +24,25 @@ class CheckoutController extends Controller
                 $isPrescription = true;
                 foreach ($prescription->items as $pItem) {
                     $prod = $pItem->product;
+                    $qty = $pItem->kuantitas_ambil ?? $pItem->kuantitas_resep ?? 1;
+                    
                     if ($prod) {
                         $checkoutItems[] = [
                             'id' => $prod->id,
                             'name' => $prod->nama_obat,
                             'category' => $prod->category ? $prod->category->nama_kategori : 'Satuan',
                             'price' => $prod->harga,
-                            'quantity' => $pItem->kuantitas_ambil ?? $pItem->kuantitas_resep ?? 1,
+                            'quantity' => $qty,
                             'image' => $prod->gambar,
+                        ];
+                    } else {
+                        $checkoutItems[] = [
+                            'id' => 'racikan_' . $pItem->id,
+                            'name' => $pItem->product_name ?? 'Racikan Baru',
+                            'category' => 'Racikan',
+                            'price' => $pItem->harga_satuan ?? 0,
+                            'quantity' => $qty,
+                            'image' => null,
                         ];
                     }
                 }
@@ -172,6 +183,21 @@ class CheckoutController extends Controller
                          stripos($shippingAddress, 'Kab.') === false;
 
         if ($prescriptionId) {
+            // Validasi: Cek apakah sudah ada transaksi aktif untuk resep ini
+            $activeTransaction = \App\Models\VirtualTransaction::where('prescription_id', $prescriptionId)
+                ->whereIn('status', ['Pending', 'Belum Bayar', 'menunggu_pembayaran'])
+                ->first();
+
+            if ($activeTransaction) {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'message' => 'Terdapat transaksi pembayaran yang masih aktif untuk resep ini. Selesaikan atau batalkan pesanan tersebut terlebih dahulu.',
+                        'transaction_id' => $activeTransaction->id
+                    ], 400);
+                }
+                return redirect()->back()->withErrors(['pesanan' => 'Terdapat transaksi pembayaran yang masih aktif untuk resep ini.']);
+            }
+
             if ($shippingMethod === 'kurir_toko') {
                 if (!$isKotaBandung) {
                     return redirect()->back()->withErrors(['shipping_method' => 'Layanan kurir toko untuk pesanan resep saat ini hanya mencakup wilayah Kota Bandung. Alamat luar kota tidak didukung.']);
@@ -188,14 +214,20 @@ class CheckoutController extends Controller
         $subtotal = 0;
         $purchasedItems = [];
 
-
         if ($prescriptionId) {
             $prescription = \App\Models\Prescription::with('items.product.category')->find($prescriptionId);
             if ($prescription) {
+                // SINKRONISASI DATA PENGIRIMAN DARI RESEP
+                $shippingMethod = $prescription->shipping_method ?? 'ambil_apotek';
+                $shippingAddress = $prescription->shipping_address ?? 'Alamat belum diatur';
+                $shippingCost = ($shippingMethod === 'kurir' || $shippingMethod === 'kurir_toko') ? 12000 : 0;
+                $discount = 0; // HAPUS DISKON UNTUK RESEP
+                
                 foreach ($prescription->items as $pItem) {
                     $prod = $pItem->product;
+                    $qty = $pItem->kuantitas_ambil ?? $pItem->kuantitas_resep ?? 1;
+                    
                     if ($prod) {
-                        $qty = $pItem->kuantitas_ambil ?? $pItem->kuantitas_resep ?? 1;
                         $purchasedItems[] = [
                             'id' => $prod->id,
                             'name' => $prod->nama_obat,
@@ -205,6 +237,18 @@ class CheckoutController extends Controller
                             'image' => $prod->gambar,
                         ];
                         $subtotal += $prod->harga * $qty;
+                    } else {
+                        // Racikan / Custom Item
+                        $harga = $pItem->harga_satuan ?? 0;
+                        $purchasedItems[] = [
+                            'id' => 'racikan_' . $pItem->id, // Fake ID for racikan
+                            'name' => $pItem->product_name ?? 'Racikan Baru',
+                            'category' => 'Racikan',
+                            'price' => $harga,
+                            'quantity' => $qty,
+                            'image' => null,
+                        ];
+                        $subtotal += $harga * $qty;
                     }
                 }
             }
@@ -262,7 +306,7 @@ class CheckoutController extends Controller
             'total_amount' => $totalAmount,
             'status' => 'Pending',
             'items' => $purchasedItems,
-            'shipping_address' => $request->input('shipping_address'),
+            'shipping_address' => $shippingAddress,
             'shipping_method' => $shippingMethod,
             'shipping_cost' => $shippingCost,
         ]);
@@ -348,6 +392,13 @@ class CheckoutController extends Controller
             \Illuminate\Support\Facades\Log::error('Gagal mendapatkan token Midtrans: ' . $e->getMessage());
         }
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'snap_token' => $transaction->snap_token ?? null,
+                'transaction_id' => $transaction->id,
+            ]);
+        }
+
         return redirect()->route('order.invoice', ['id' => $transaction->id]);
     }
 
@@ -392,6 +443,10 @@ class CheckoutController extends Controller
 
                 if ($status->transaction_status == 'settlement' || $status->transaction_status == 'capture') {
                     $transaction->update(['status' => 'Lunas']);
+                    if ($transaction->prescription_id) {
+                        \App\Models\Prescription::where('id', $transaction->prescription_id)
+                            ->update(['status_validasi' => 'telah_dipesan']);
+                    }
                 } else if ($status->transaction_status == 'expire') {
                     $transaction->update(['status' => 'Expired']);
                 } else if ($status->transaction_status == 'cancel' || $status->transaction_status == 'deny') {
@@ -464,6 +519,11 @@ class CheckoutController extends Controller
             'status' => 'Lunas'
         ]);
 
+        if ($transaction->prescription_id) {
+            \App\Models\Prescription::where('id', $transaction->prescription_id)
+                ->update(['status_validasi' => 'telah_dipesan']);
+        }
+
         return redirect()->back()->with('success', 'Pembayaran berhasil diverifikasi!');
     }
 
@@ -502,6 +562,11 @@ class CheckoutController extends Controller
             }
             
             $transaction->save();
+
+            if ($transaction->prescription_id) {
+                \App\Models\Prescription::where('id', $transaction->prescription_id)
+                    ->update(['status_validasi' => 'telah_dipesan']);
+            }
         }
         
         return redirect()->back();

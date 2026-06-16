@@ -11,7 +11,9 @@ class PrescriptionController extends Controller
 {
     public function show($id)
     {
-        $prescription = Prescription::with(['items.product.category', 'validator'])->where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $prescription = Prescription::with(['items.product.category', 'validator', 'virtualTransactions' => function($q) {
+            $q->latest();
+        }])->where('id', $id)->where('user_id', Auth::id())->firstOrFail();
 
         return Inertia::render('Prescriptions/Detail', [
             'prescription' => $prescription,

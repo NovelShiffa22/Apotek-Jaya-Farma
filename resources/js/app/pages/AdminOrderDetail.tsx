@@ -190,7 +190,87 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                 </h2>
                             </div>
                             <div className="p-6">
-                                {order.status_histories && order.status_histories.length > 0 ? (
+                                {isVirtual ? (
+                                    <div className="relative">
+                                        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                                        
+                                        {/* Menunggu Pembayaran */}
+                                        <div className="relative flex items-start mb-6">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                                                ['Pending', 'menunggu_pembayaran', 'Belum Bayar'].includes(order.status) 
+                                                ? 'bg-amber-100 border-2 border-amber-500 text-amber-600' 
+                                                : 'bg-[#006a3f] text-white'
+                                            }`}>
+                                                <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                                            </div>
+                                            <div className="ml-4 flex-1">
+                                                <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                                                ['Pending', 'menunggu_pembayaran', 'Belum Bayar'].includes(order.status) ? 'text-amber-700' : 'text-gray-900'
+                                                }`}>Menunggu Pembayaran</h5>
+                                                <p className="text-[12px] text-gray-500 mt-1 font-medium">Pembayaran telah dikonfirmasi dan tervalidasi</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Diproses */}
+                                        <div className="relative flex items-start mb-6">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                                                ['Lunas', 'diproses', 'Diproses'].includes(order.status)
+                                                ? 'bg-blue-100 border-2 border-blue-500 text-blue-600'
+                                                : (['dikirim', 'Dikirim', 'selesai', 'Selesai'].includes(order.status) ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                                            }`}>
+                                                <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                                            </div>
+                                            <div className="ml-4 flex-1">
+                                                <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                                                ['Lunas', 'diproses', 'Diproses'].includes(order.status) ? 'text-blue-700' : 
+                                                (['dikirim', 'Dikirim', 'selesai', 'Selesai'].includes(order.status) ? 'text-gray-900' : 'text-gray-400')
+                                                }`}>Diproses</h5>
+                                                {['Lunas', 'diproses', 'Diproses'].includes(order.status) && (
+                                                <p className="text-[12px] text-gray-500 mt-1 font-medium">Pesanan sedang dikemas oleh apoteker</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Dikirim */}
+                                        <div className="relative flex items-start mb-6">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                                                ['dikirim', 'Dikirim'].includes(order.status)
+                                                ? 'bg-purple-100 border-2 border-purple-500 text-purple-600'
+                                                : (['selesai', 'Selesai'].includes(order.status) ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                                            }`}>
+                                                <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                                            </div>
+                                            <div className="ml-4 flex-1">
+                                                <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                                                ['dikirim', 'Dikirim'].includes(order.status) ? 'text-purple-700' : 
+                                                (['selesai', 'Selesai'].includes(order.status) ? 'text-gray-900' : 'text-gray-400')
+                                                }`}>Dikirim</h5>
+                                                {['dikirim', 'Dikirim'].includes(order.status) && (
+                                                <p className="text-[12px] text-gray-500 mt-1 font-medium">Pesanan dalam perjalanan via kurir</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Selesai */}
+                                        <div className="relative flex items-start">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                                                ['selesai', 'Selesai'].includes(order.status)
+                                                ? 'bg-emerald-100 border-2 border-emerald-500 text-emerald-600'
+                                                : 'bg-gray-100 border-2 border-gray-200 text-gray-300'
+                                            }`}>
+                                                <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                                            </div>
+                                            <div className="ml-4 flex-1">
+                                                <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                                                ['selesai', 'Selesai'].includes(order.status) ? 'text-emerald-700' : 'text-gray-400'
+                                                }`}>Selesai</h5>
+                                                {['selesai', 'Selesai'].includes(order.status) && (
+                                                <p className="text-[12px] text-gray-500 mt-1 font-medium">Pesanan telah diterima</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : order.status_histories && order.status_histories.length > 0 ? (
                                     <div className="relative border-l-2 border-slate-100 ml-3 space-y-8">
                                         {order.status_histories.map((history: any, idx: number) => (
                                             <div key={idx} className="relative pl-6">

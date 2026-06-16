@@ -569,9 +569,16 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                             >
                         <div className="flex items-start justify-between mb-4">
                           <div>
-                            <p className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#171d19] mb-1 font-semibold">
-                              No. Pesanan: {order.id.toString().padStart(6, '0')}
-                            </p>
+                            <div className="flex items-center gap-3 mb-1">
+                              <p className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#171d19] font-semibold">
+                                No. Pesanan: {order.id.toString().padStart(6, '0')}
+                              </p>
+                              {order.prescription_id && (
+                                <span className="bg-teal-50 text-teal-700 border border-teal-200 text-[11px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shadow-sm">
+                                  Tebus Resep
+                                </span>
+                              )}
+                            </div>
                             <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
                               {new Date(order.created_at).toLocaleDateString('id-ID', {
                                 day: 'numeric',
@@ -827,6 +834,9 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                     const prescriptionsData = Array.isArray(prescriptions) ? prescriptions : (prescriptions.data || []);
                     let filteredPrescriptions = prescriptionsData;
                     if (prescriptionTab === 'Menunggu Verifikasi') filteredPrescriptions = filteredPrescriptions.filter((p: any) => p.status_validasi === 'pending');
+                    if (prescriptionTab === 'Disetujui') filteredPrescriptions = filteredPrescriptions.filter((p: any) => p.status_validasi === 'disetujui');
+                    if (prescriptionTab === 'Ditolak') filteredPrescriptions = filteredPrescriptions.filter((p: any) => p.status_validasi === 'ditolak');
+                    if (prescriptionTab === 'Telah dipesan') filteredPrescriptions = filteredPrescriptions.filter((p: any) => p.status_validasi === 'telah_dipesan');
 
                     if (filteredPrescriptions.length === 0) {
                       return (
@@ -932,11 +942,13 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                                 <span className={`px-3 py-1.5 rounded-full text-[12px] font-bold border font-['Inter',sans-serif] whitespace-nowrap ${
                                   p.status_validasi === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-200' :
                                   p.status_validasi === 'disetujui' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                                  p.status_validasi === 'telah_dipesan' ? 'bg-blue-50 text-blue-600 border-blue-200' :
                                   'bg-red-50 text-red-600 border-red-200'
                                 }`}>
                                   {p.status_validasi === 'pending' ? 'Menunggu Verifikasi' :
                                    p.status_validasi === 'disetujui' ? 'Resep Disetujui' :
                                    p.status_validasi === 'ditolak' ? 'Resep Ditolak' : 
+                                   p.status_validasi === 'telah_dipesan' ? 'Telah Dipesan' :
                                    p.status_validasi.toUpperCase()}
                                 </span>
                               </div>
@@ -1015,6 +1027,95 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
               </button>
             </div>
             <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+              
+              {/* Timeline Tracking */}
+              {!['Dibatalkan', 'Expired', 'expired', 'Kedaluwarsa', 'expire', 'cancelled', 'cancel', 'deny'].includes(selectedOrder.status) && (
+                <div className="mb-8 pt-2">
+                  <h4 className="font-['Inter',sans-serif] text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-4">Status Pengiriman</h4>
+                  <div className="relative">
+                    <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                    
+                    {/* Menunggu Pembayaran */}
+                    <div className="relative flex items-start mb-6">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                        ['Pending', 'Belum Bayar'].includes(selectedOrder.status) 
+                          ? 'bg-amber-100 border-2 border-amber-500 text-amber-600' 
+                          : 'bg-[#006a3f] text-white'
+                      }`}>
+                        <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                          ['Pending', 'Belum Bayar'].includes(selectedOrder.status) ? 'text-amber-700' : 'text-gray-900'
+                        }`}>Menunggu Pembayaran</h5>
+                        {['Pending', 'Belum Bayar'].includes(selectedOrder.status) && (
+                          <p className="text-[12px] text-gray-500 mt-1 font-medium">Selesaikan pembayaran Anda</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Diproses */}
+                    <div className="relative flex items-start mb-6">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                        ['Lunas', 'Diproses'].includes(selectedOrder.status)
+                          ? 'bg-blue-100 border-2 border-blue-500 text-blue-600'
+                          : (['Dikirim', 'Selesai'].includes(selectedOrder.status) ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                      }`}>
+                        <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                          ['Lunas', 'Diproses'].includes(selectedOrder.status) ? 'text-blue-700' : 
+                          (['Dikirim', 'Selesai'].includes(selectedOrder.status) ? 'text-gray-900' : 'text-gray-400')
+                        }`}>Diproses</h5>
+                        {['Lunas', 'Diproses'].includes(selectedOrder.status) && (
+                          <p className="text-[12px] text-gray-500 mt-1 font-medium">Pesanan sedang dikemas oleh apoteker</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Dikirim */}
+                    <div className="relative flex items-start mb-6">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                        selectedOrder.status === 'Dikirim'
+                          ? 'bg-purple-100 border-2 border-purple-500 text-purple-600'
+                          : (selectedOrder.status === 'Selesai' ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                      }`}>
+                        <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                          selectedOrder.status === 'Dikirim' ? 'text-purple-700' : 
+                          (selectedOrder.status === 'Selesai' ? 'text-gray-900' : 'text-gray-400')
+                        }`}>Dikirim</h5>
+                        {selectedOrder.status === 'Dikirim' && (
+                          <p className="text-[12px] text-gray-500 mt-1 font-medium">Pesanan dalam perjalanan</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Selesai */}
+                    <div className="relative flex items-start">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                        selectedOrder.status === 'Selesai'
+                          ? 'bg-emerald-100 border-2 border-emerald-500 text-emerald-600'
+                          : 'bg-gray-100 border-2 border-gray-200 text-gray-300'
+                      }`}>
+                        <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                          selectedOrder.status === 'Selesai' ? 'text-emerald-700' : 'text-gray-400'
+                        }`}>Selesai</h5>
+                        {selectedOrder.status === 'Selesai' && (
+                          <p className="text-[12px] text-gray-500 mt-1 font-medium">Pesanan telah diterima</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <h4 className="font-['Inter',sans-serif] text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-3">Daftar Item</h4>
                 <div className="space-y-4">

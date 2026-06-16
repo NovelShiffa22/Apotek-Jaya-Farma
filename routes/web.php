@@ -206,9 +206,9 @@ Route::get('/profile', function () {
 
     $prescriptionCounts = [
         'Menunggu Verifikasi' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'pending')->count(),
-        'Disetujui' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'disetujui')->whereDoesntHave('orders')->count(),
+        'Disetujui' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'disetujui')->count(),
         'Ditolak' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'ditolak')->count(),
-        'Telah dipesan' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'disetujui')->whereHas('orders')->count(),
+        'Telah dipesan' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'telah_dipesan')->count(),
     ];
 
     $currentPrescriptionStatus = request('prescription_status', 'Menunggu Verifikasi');
@@ -217,11 +217,11 @@ Route::get('/profile', function () {
     if ($currentPrescriptionStatus === 'Menunggu Verifikasi') {
         $prescriptionsQuery->where('status_validasi', 'pending');
     } elseif ($currentPrescriptionStatus === 'Disetujui') {
-        $prescriptionsQuery->where('status_validasi', 'disetujui')->whereDoesntHave('orders');
+        $prescriptionsQuery->where('status_validasi', 'disetujui');
     } elseif ($currentPrescriptionStatus === 'Ditolak') {
         $prescriptionsQuery->where('status_validasi', 'ditolak');
     } elseif ($currentPrescriptionStatus === 'Telah dipesan') {
-        $prescriptionsQuery->where('status_validasi', 'disetujui')->whereHas('orders');
+        $prescriptionsQuery->where('status_validasi', 'telah_dipesan');
     }
 
     $prescriptions = $prescriptionsQuery->latest()->paginate(5, ['*'], 'prescription_page')->withQueryString();
@@ -268,7 +268,9 @@ Route::middleware(['auth', 'role:user'])->group(function () {
 Route::middleware(['auth', 'role:pharmacist'])->group(function () {
     Route::get('/pharmacist', function () {
         // Prescriptions Pagination
-        $prescriptionsQuery = \App\Models\Prescription::with(['user.addresses', 'items.product', 'validator'])->latest();
+        $prescriptionsQuery = \App\Models\Prescription::with(['user.addresses', 'items.product', 'validator', 'virtualTransactions' => function($q) {
+            $q->latest();
+        }])->latest();
 
         $prescriptionStatus = request('prescription_status', 'menunggu');
         if ($prescriptionStatus === 'menunggu') {
