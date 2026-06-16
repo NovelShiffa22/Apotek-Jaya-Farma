@@ -366,6 +366,9 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
             } else {
                 $vtsQuery->where('status', 'not_existing_status');
             }
+        } else {
+            $ordersQuery->whereIn('status', ['diproses', 'dikirim', 'selesai']);
+            $vtsQuery->whereIn('status', ['Lunas', 'Dikirim', 'Selesai']);
         }
 
         if ($orderDate) {
@@ -488,12 +491,10 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
         });
 
         $orderCounts = [
-            'all' => $baseOrdersQuery->count() + $baseVtsQuery->count(),
-            'menunggu_pembayaran' => (clone $baseOrdersQuery)->where('status', 'menunggu_pembayaran')->count() + (clone $baseVtsQuery)->whereIn('status', ['Pending', 'Belum Bayar'])->count(),
+            'all' => (clone $baseOrdersQuery)->whereIn('status', ['diproses', 'dikirim', 'selesai'])->count() + (clone $baseVtsQuery)->whereIn('status', ['Lunas', 'Dikirim', 'Selesai'])->count(),
             'diproses' => (clone $baseOrdersQuery)->where('status', 'diproses')->count() + (clone $baseVtsQuery)->where('status', 'Lunas')->count(),
             'dikirim' => (clone $baseOrdersQuery)->where('status', 'dikirim')->count() + (clone $baseVtsQuery)->where('status', 'Dikirim')->count(),
             'selesai' => (clone $baseOrdersQuery)->where('status', 'selesai')->count() + (clone $baseVtsQuery)->where('status', 'Selesai')->count(),
-            'dibatalkan' => (clone $baseOrdersQuery)->where('status', 'dibatalkan')->count() + (clone $baseVtsQuery)->where('status', 'Dibatalkan')->count(),
         ];
 
         $analytics = [

@@ -896,11 +896,9 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                       <div className="flex gap-10 overflow-x-auto scrollbar-hide">
                           {[
                             { id: 'all', label: 'Semua', icon: List },
-                            { id: 'menunggu_pembayaran', label: 'Menunggu Pembayaran', icon: Clock },
                             { id: 'diproses', label: 'Diproses', icon: Loader },
                             { id: 'dikirim', label: 'Dikirim', icon: Truck },
-                            { id: 'selesai', label: 'Selesai', icon: CheckCircle },
-                            { id: 'dibatalkan', label: 'Dibatalkan', icon: XCircle }
+                            { id: 'selesai', label: 'Selesai', icon: CheckCircle }
                           ].map((tab) => {
                             const isActive = orderStatusFilter === tab.id;
                             const Icon = tab.icon;
