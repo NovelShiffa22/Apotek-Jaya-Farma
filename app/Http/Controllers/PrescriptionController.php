@@ -27,6 +27,7 @@ class PrescriptionController extends Controller
             'whatsapp' => ['required', 'numeric', 'digits_between:10,13', 'regex:/^(08|62)/'],
             'catatan' => 'nullable|string|max:1000',
             'shipping_address' => 'required|string',
+            'shipping_method' => 'required|in:ambil_sendiri,kurir',
             'is_legal_agreed' => 'accepted'
         ], [
             'prescription_file.required' => 'Mohon unggah berkas resep dokter Anda terlebih dahulu.',
@@ -39,6 +40,16 @@ class PrescriptionController extends Controller
             'shipping_address.required' => 'Mohon pilih atau tambahkan alamat pengiriman.',
             'is_legal_agreed.accepted' => 'Anda harus menyetujui pernyataan legalitas resep.',
         ]);
+
+        if ($request->shipping_method === 'kurir') {
+            $isKotaBandung = stripos($request->shipping_address, 'Bandung') !== false && 
+                             stripos($request->shipping_address, 'Kabupaten') === false && 
+                             stripos($request->shipping_address, 'Kab.') === false;
+            
+            if (!$isKotaBandung) {
+                return redirect()->back()->withErrors(['shipping_method' => 'Layanan kurir toko saat ini hanya mencakup wilayah Kota Bandung. Alamat Kabupaten tidak didukung.']);
+            }
+        }
 
         $file = $request->file('prescription_file');
         $fileName = 'rx_file_' . time() . '.' . $file->getClientOriginalExtension();
@@ -58,6 +69,7 @@ class PrescriptionController extends Controller
             'whatsapp' => $request->whatsapp,
             'catatan' => $request->catatan,
             'shipping_address' => $request->shipping_address,
+            'shipping_method' => $request->shipping_method,
             'is_legal_agreed' => $request->is_legal_agreed ? true : false,
         ]);
 

@@ -818,9 +818,9 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                     const cancelPrescription = (id: number) => {
                       setModalConfig({
                           isOpen: true,
-                          type: 'warning',
+                          type: 'delete',
                           title: 'Batalkan Resep',
-                          message: 'Apakah Anda yakin ingin membatalkan resep ini? Aksi ini tidak dapat dibatalkan.',
+                          message: 'Apakah Anda yakin ingin membatalkan pengajuan resep ini? Berkas resep yang telah dibatalkan tidak dapat dikembalikan atau diproses lagi.',
                           confirmText: 'Ya, Batalkan',
                           onConfirm: () => {
                               closeConfirmModal();

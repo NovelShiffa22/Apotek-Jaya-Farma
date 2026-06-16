@@ -21,17 +21,12 @@ export default function UploadStep1() {
                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-gray-500 font-semibold">2</div>
                             <span className="font-['Poppins',sans-serif] text-[12px] font-bold text-gray-500">Upload</span>
                         </div>
-                        <div className="h-0.5 w-24 bg-gray-200"></div>
-                        <div className="flex flex-col items-center gap-2">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-gray-500 font-semibold">3</div>
-                            <span className="font-['Poppins',sans-serif] text-[12px] font-bold text-gray-500">Konfirmasi</span>
-                        </div>
                     </div>
                 </div>
 
                 <div className="text-center mb-10">
                     <h1 className="font-['Poppins',sans-serif] text-3xl font-bold text-[#171d19]">
-                        Step 1 of 3: Petunjuk
+                        Step 1 of 2: Petunjuk
                     </h1>
                 </div>
 
@@ -96,6 +91,12 @@ export default function UploadStep1() {
                                     </p>
                                 </div>
                             </div>
+                        </div>
+
+                        <div className="mt-8 bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-r-md shadow-sm">
+                            <p className="font-['Poppins',sans-serif] text-[13px] text-emerald-800 leading-relaxed font-medium">
+                                <span className="font-bold">📌 Ketentuan Wilayah:</span> Layanan kurir pengantaran obat resep saat ini hanya mencakup wilayah Kota Bandung. Untuk pasien di luar Kota Bandung, silakan gunakan metode 'Ambil Sendiri di Apotek'.
+                            </p>
                         </div>
 
                         <div className="mt-10 flex justify-end">

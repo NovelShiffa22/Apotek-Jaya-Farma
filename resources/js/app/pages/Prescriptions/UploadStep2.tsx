@@ -22,6 +22,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
         }
         return false;
     });
+    const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -55,6 +56,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
         whatsapp: string;
         catatan: string;
         shipping_address: string;
+        shipping_method: string;
         is_legal_agreed: boolean;
     }>({
         prescription_file: null,
@@ -63,6 +65,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
         whatsapp: '',
         catatan: '',
         shipping_address: '',
+        shipping_method: 'ambil_sendiri',
         is_legal_agreed: false,
     });
 
@@ -98,6 +101,20 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
             setSelectedAddress(defaultAddress);
         }
     }, [defaultAddress]);
+
+    const isKotaBandungValid = useMemo(() => {
+        if (!selectedAddress) return false;
+        const kotaLower = selectedAddress.kota.toLowerCase();
+        return kotaLower.includes('bandung') && !kotaLower.includes('kabupaten') && !kotaLower.includes('kab.');
+    }, [selectedAddress]);
+
+    useEffect(() => {
+        if (!isKotaBandungValid) {
+            if (data.shipping_method === 'kurir') {
+                setData('shipping_method', 'ambil_sendiri');
+            }
+        }
+    }, [isKotaBandungValid, data.shipping_method]);
 
     // Handle select address
     const handleSelectAddress = (addr: any) => {
@@ -160,9 +177,12 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
         }
     };
 
-    const handleKirim = (e: React.FormEvent) => {
+    const handleKirimClick = (e: React.FormEvent) => {
         e.preventDefault();
-        
+        setIsSubmitModalOpen(true);
+    };
+
+    const confirmSubmit = () => {
         transform((data) => ({
             ...data,
             shipping_address: selectedAddress ? `${selectedAddress.alamat_lengkap}, ${selectedAddress.kota}, ${selectedAddress.provinsi} ${selectedAddress.kode_pos}` : '',
@@ -170,8 +190,14 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
         
         post(route('prescriptions.store'), { 
             forceFormData: true,
-            onSuccess: (page) => console.log('Sukses:', page),
-            onError: (errors) => console.log('Error Validasi Frontend:', errors),
+            onSuccess: (page) => {
+                setIsSubmitModalOpen(false);
+                console.log('Sukses:', page);
+            },
+            onError: (errors) => {
+                setIsSubmitModalOpen(false);
+                console.log('Error Validasi Frontend:', errors);
+            },
             onFinish: () => console.log('Selesai memproses request')
         });
     };
@@ -194,11 +220,6 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#006a3f] text-white font-semibold">2</div>
                             <span className="font-['Poppins',sans-serif] text-[12px] font-bold text-[#006a3f]">Upload</span>
                         </div>
-                        <div className="h-0.5 w-24 bg-[#006a3f]"></div>
-                        <div className="flex flex-col items-center gap-2">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-gray-500 font-semibold">3</div>
-                            <span className="font-['Poppins',sans-serif] text-[12px] font-bold text-gray-500">Konfirmasi</span>
-                        </div>
                     </div>
                 </div>
 
@@ -211,7 +232,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                     </p>
                 </div>
 
-                <form onSubmit={handleKirim} method="POST" encType="multipart/form-data" className="flex flex-col lg:flex-row gap-6 w-full">
+                <form onSubmit={handleKirimClick} method="POST" encType="multipart/form-data" className="flex flex-col lg:flex-row gap-6 w-full">
                     {/* Left Column - Upload Box */}
                     <div className="w-full lg:w-2/3 rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
                         <h2 className="mb-2 font-['Poppins',sans-serif] text-xl font-bold text-[#171d19]">
@@ -371,6 +392,51 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                 {errors.catatan && <p className="mt-1 text-xs text-red-500 font-medium">{errors.catatan}</p>}
                             </div>
 
+                            <div className="mt-6">
+                                <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5">Metode Penyerahan Obat</label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div 
+                                        className={`border rounded-xl p-4 cursor-pointer transition-all ${data.shipping_method === 'ambil_sendiri' ? 'border-[#006a3f] bg-emerald-50' : 'border-gray-200 hover:border-[#006a3f]'}`}
+                                        onClick={() => setData('shipping_method', 'ambil_sendiri')}
+                                    >
+                                        <div className="flex items-center justify-between w-full">
+                                            <div className="flex items-center gap-3">
+                                                <input type="radio" checked={data.shipping_method === 'ambil_sendiri'} readOnly className="w-4 h-4 shrink-0 text-[#006a3f] border-gray-300 focus:ring-[#006a3f]" />
+                                                <div>
+                                                    <h4 className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">Ambil di Apotek</h4>
+                                                    <p className="text-[12px] text-gray-500 font-['Inter',sans-serif] mt-0.5">Siap diambil setelah diverifikasi</p>
+                                                </div>
+                                            </div>
+                                            <span className="font-['Inter',sans-serif] text-[13px] font-bold text-[#006a3f] whitespace-nowrap shrink-0 ml-2">Rp 0</span>
+                                        </div>
+                                    </div>
+                                    <div 
+                                        className={`border rounded-xl p-4 transition-all ${(!isKotaBandungValid) ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' : (data.shipping_method === 'kurir' ? 'border-[#006a3f] bg-emerald-50 cursor-pointer' : 'border-gray-200 hover:border-[#006a3f] cursor-pointer')}`}
+                                        onClick={() => {
+                                            if (isKotaBandungValid) {
+                                                setData('shipping_method', 'kurir');
+                                            }
+                                        }}
+                                    >
+                                        <div className="flex items-center justify-between w-full">
+                                            <div className="flex items-center gap-3">
+                                                <input type="radio" checked={data.shipping_method === 'kurir'} disabled={!isKotaBandungValid} readOnly className="w-4 h-4 shrink-0 text-[#006a3f] border-gray-300 focus:ring-[#006a3f] disabled:opacity-50" />
+                                                <div>
+                                                    <h4 className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">Kurir Toko (Kota Bandung)</h4>
+                                                    <p className="text-[12px] text-gray-500 font-['Inter',sans-serif] mt-0.5">Pengantaran ke alamat</p>
+                                                </div>
+                                            </div>
+                                            <span className="font-['Inter',sans-serif] text-[13px] font-bold text-[#006a3f] whitespace-nowrap shrink-0 ml-2">Rp 12.000</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {(!isKotaBandungValid) && (
+                                    <p className="mt-2 text-xs font-bold text-red-500">Alamat Anda di luar jangkauan kurir kami. Silakan pilih Ambil di Apotek.</p>
+                                )}
+                                <p className="mt-2 text-[11px] text-gray-400 font-['Inter',sans-serif] italic">*) Pengiriman via kurir hanya berlaku jika alamat utama Anda berada di wilayah Kota Bandung.</p>
+                                {errors.shipping_method && <p className="mt-1 text-xs text-red-500 font-medium">{errors.shipping_method}</p>}
+                            </div>
+
                             <div className="mt-6 flex items-start gap-3 bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
                                 <div className="flex items-center h-5 mt-0.5">
                                     <input
@@ -443,7 +509,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                             <div className="space-y-3">
                                 <div className="flex justify-between">
                                     <span className="font-['Poppins',sans-serif] text-[13px] text-gray-600">Metode Pengiriman</span>
-                                    <span className="font-['Poppins',sans-serif] text-[13px] font-bold text-[#171d19]">Reguler (1-2 Hari)</span>
+                                    <span className="font-['Poppins',sans-serif] text-[13px] font-bold text-[#171d19]">{data.shipping_method === 'kurir' ? 'Kurir Toko (Bandung)' : 'Ambil di Apotek'}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="font-['Poppins',sans-serif] text-[13px] text-gray-600">Biaya Estimasi</span>
@@ -702,6 +768,51 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                     router.get('/cart');
                 }}
             />
+
+            {/* Submit Confirmation Modal */}
+            {isSubmitModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-8 pb-6 flex flex-col items-center text-center">
+                            <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mb-5 border-4 border-emerald-100">
+                                <AlertCircle className="w-8 h-8 text-emerald-500" />
+                            </div>
+                            <h3 className="font-['Poppins',sans-serif] text-xl font-bold text-gray-900 mb-2">Kirim Resep Dokter?</h3>
+                            <p className="font-['Poppins',sans-serif] text-[14px] text-gray-500 leading-relaxed">
+                                Pastikan foto resep terlihat jelas dan data pasien sudah sesuai. Apoteker kami akan segera memeriksa keaslian dokumen resep Anda.
+                            </p>
+                        </div>
+                        <div className="px-8 pb-8 flex flex-col sm:flex-row gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setIsSubmitModalOpen(false)}
+                                disabled={processing}
+                                className="flex-1 py-3 px-4 rounded-xl border border-gray-200 text-gray-600 font-bold text-[14px] hover:bg-gray-50 transition-colors"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={confirmSubmit}
+                                disabled={processing}
+                                className="flex-1 py-3 px-4 rounded-xl bg-emerald-600 text-white font-bold text-[14px] hover:bg-emerald-700 shadow-md shadow-emerald-200 transition-all disabled:opacity-70 flex justify-center items-center gap-2"
+                            >
+                                {processing ? (
+                                    <>
+                                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Memproses...
+                                    </>
+                                ) : (
+                                    'Ya, Kirim Resep'
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

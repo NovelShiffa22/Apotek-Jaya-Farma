@@ -165,6 +165,16 @@ class CheckoutController extends Controller
         }
 
         $shippingMethod = $request->input('shipping_method');
+        if ($shippingMethod === 'kurir_toko') {
+            $isKotaBandung = stripos($shippingAddress, 'Bandung') !== false && 
+                             stripos($shippingAddress, 'Kabupaten') === false && 
+                             stripos($shippingAddress, 'Kab.') === false;
+            
+            if (!$isKotaBandung) {
+                return redirect()->back()->withErrors(['shipping_method' => 'Layanan kurir toko saat ini hanya mencakup wilayah Kota Bandung. Alamat Kabupaten tidak didukung.']);
+            }
+        }
+
         $paymentMethod = $request->input('payment_method');
         $isBuyNow = $request->input('is_buy_now', false);
         

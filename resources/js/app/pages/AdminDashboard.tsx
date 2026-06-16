@@ -1131,6 +1131,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                           ].map((tab) => {
                             const isActive = orderStatusFilter === tab.id;
                             const Icon = tab.icon;
+                            const count = analytics?.order_counts?.[tab.id] || 0;
                             return (
                               <button
                                 key={tab.id}
@@ -1142,7 +1143,14 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                 }`}
                               >
                                 <Icon size={16} className={isActive ? "text-[#0D6A36]" : "text-slate-400"} />
-                                {tab.label}
+                                <span>{tab.label}</span>
+                                {count > 0 && (
+                                  <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold leading-none rounded-full ${
+                                    isActive ? 'bg-[#0D6A36] text-white' : 'bg-slate-200 text-slate-700'
+                                  }`}>
+                                    {count}
+                                  </span>
+                                )}
                               </button>
                             );
                           })}

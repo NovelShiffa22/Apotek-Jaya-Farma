@@ -27,7 +27,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
         : MOCK_DRUGS;
 
     const totalHarga = drugs.reduce((acc: number, curr: any) => acc + curr.price, 0);
-    const biayaPengiriman = 15000;
+    const biayaPengiriman = (prescription.shipping_method === 'kurir' || prescription.shipping_method === 'kurir_toko') ? 12000 : 0;
     const biayaLayanan = 2000;
     const totalPembayaran = totalHarga + biayaPengiriman + biayaLayanan;
 
@@ -89,7 +89,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                         <div>
                             <h4 className="font-['Poppins',sans-serif] font-bold text-red-800 text-[16px]">Alasan Penolakan</h4>
                             <p className="font-['Poppins',sans-serif] text-[14px] text-red-700 mt-1 leading-relaxed">
-                                Alasan: {prescription.rejection_reason || 'Foto resep tidak terbaca jelas atau tidak sesuai ketentuan.'}
+                                ❌ Pengajuan Resep Ditolak oleh Apoteker. Alasan: {prescription.rejection_reason || 'Foto resep tidak terbaca jelas atau tidak sesuai ketentuan.'}
                             </p>
                         </div>
                     </div>
@@ -306,7 +306,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                     href={route('checkout.index', { prescription_id: prescription.id })}
                                     className="w-full flex items-center justify-center rounded-xl bg-[#006a3f] py-4 font-['Poppins',sans-serif] text-[15px] font-bold text-white transition-all hover:bg-[#005632] shadow-lg"
                                 >
-                                    Lanjutkan ke Pembayaran
+                                    Bayar Sekarang
                                 </Link>
                             </div>
                         </div>

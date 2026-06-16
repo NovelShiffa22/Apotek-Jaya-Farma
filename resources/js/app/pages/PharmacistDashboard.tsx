@@ -904,6 +904,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                           ].map((tab) => {
                             const isActive = orderStatusFilter === tab.id;
                             const Icon = tab.icon;
+                            const count = analytics?.order_counts?.[tab.id] || 0;
                             return (
                               <button
                                 key={tab.id}
@@ -915,7 +916,14 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                 }`}
                               >
                                 <Icon size={16} className={isActive ? "text-[#0D6A36]" : "text-slate-400"} />
-                                {tab.label}
+                                <span>{tab.label}</span>
+                                {count > 0 && (
+                                  <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold leading-none rounded-full ${
+                                    isActive ? 'bg-[#0D6A36] text-white' : 'bg-slate-200 text-slate-700'
+                                  }`}>
+                                    {count}
+                                  </span>
+                                )}
                               </button>
                             );
                           })}
@@ -1167,10 +1175,10 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
               <div className="mb-6 border-b border-[#E2E8F0]">
                   <div className="flex gap-10 overflow-x-auto scrollbar-hide">
                       {[
-                        { id: 'menunggu' as const, label: 'Menunggu', icon: Clock },
-                        { id: 'disetujui' as const, label: 'Disetujui', icon: CheckCircle },
-                        { id: 'ditolak' as const, label: 'Ditolak', icon: XCircle },
-                        { id: 'pembayaran' as const, label: 'Pembayaran', icon: ShoppingBag }
+                        { id: 'menunggu' as const, label: 'Menunggu Verifikasi', icon: Clock, count: pendingCount },
+                        { id: 'disetujui' as const, label: 'Disetujui', icon: CheckCircle, count: approvedCount },
+                        { id: 'ditolak' as const, label: 'Ditolak', icon: XCircle, count: rejectedCount },
+                        { id: 'pembayaran' as const, label: 'Telah Dipesan', icon: ShoppingBag, count: analytics?.order_counts?.menunggu_pembayaran || 0 }
                       ].map((tab) => {
                         const isActive = activeSubTab === tab.id;
                         const Icon = tab.icon;
@@ -1189,7 +1197,14 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                             }`}
                           >
                             <Icon size={16} className={isActive ? "text-[#0D6A36]" : "text-slate-400"} />
-                            {tab.label}
+                            <span>{tab.label}</span>
+                            {tab.count > 0 && (
+                              <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold leading-none rounded-full ${
+                                isActive ? 'bg-[#0D6A36] text-white' : 'bg-slate-200 text-slate-700'
+                              }`}>
+                                {tab.count}
+                              </span>
+                            )}
                           </button>
                         );
                       })}
@@ -1341,8 +1356,8 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                                           </div>
                                                       </td>
                                                       <td className="px-5 py-4 text-center">
-                                                          <span className="font-['Inter',sans-serif] text-[12px] font-medium text-slate-600">
-                                                              {rx.shipping_address && rx.shipping_address.trim() !== '' ? 'Kurir' : 'Ambil Sendiri'}
+                                                          <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-md font-['Inter',sans-serif] text-[11px] font-bold tracking-wider uppercase border ${rx.shipping_method === 'kurir' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                                                              {rx.shipping_method === 'kurir' ? 'Kurir' : 'Ambil Sendiri'}
                                                           </span>
                                                       </td>
                                                       <td className="px-5 py-4 text-center">
@@ -1415,6 +1430,17 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                         {/* Left wider column with form fields */}
                         <div className="col-span-12 lg:col-span-9 space-y-6">
                           
+                          {/* Alert Banner for Rejected Prescriptions */}
+                          {selectedPrescription.status_validasi === 'ditolak' && (
+                              <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md flex items-start gap-3">
+                                  <span className="text-xl">⚠️</span>
+                                  <div>
+                                      <h4 className="font-bold text-sm">Resep Ini Telah Ditolak</h4>
+                                      <p className="font-medium text-xs mt-1">Alasan Penolakan: {selectedPrescription.rejection_reason || 'Tidak ada keterangan tambahan.'}</p>
+                                  </div>
+                              </div>
+                          )}
+
                           {/* Detail User Card */}
                           <div className="overflow-hidden rounded-xl shadow-sm border border-slate-200">
                             <div className="bg-[#0D6A36] text-white px-6 py-3.5 font-bold text-sm">
@@ -1500,6 +1526,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                             </div>
                           </div>
                           {/* Detail Dokter Card */}
+                          {selectedPrescription.status_validasi !== 'ditolak' && (
                           <div className="rounded-xl shadow-sm border border-slate-200">
                             <div className="bg-[#0D6A36] text-white px-6 py-3.5 font-bold text-sm rounded-t-xl">
                               Detail Dokter
@@ -1594,10 +1621,12 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                               </div>
                             </div>
                           </div>
+                          )}
 
                           {/* Detail Resep Card */}
-                          <div className="overflow-hidden rounded-xl shadow-sm border border-slate-200">
-                            <div className="bg-[#0D6A36] text-white px-6 py-3.5 font-bold text-sm">
+                          {selectedPrescription.status_validasi !== 'ditolak' && (
+                            <div className="overflow-hidden rounded-xl shadow-sm border border-slate-200">
+                              <div className="bg-[#0D6A36] text-white px-6 py-3.5 font-bold text-sm">
                               Detail Resep
                             </div>
                             <div className="bg-white p-6 space-y-6">
@@ -1885,8 +1914,10 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
                             </div>
                           </div>
+                          )}
 
                           {/* Catatan Farmasi */}
+                          {selectedPrescription.status_validasi !== 'ditolak' && (
                           <div>
                             <p className="font-['Inter',sans-serif] font-bold text-[10px] text-slate-400 tracking-wider uppercase mb-2">CATATAN FARMASI</p>
                             <textarea
@@ -1897,6 +1928,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                               className="w-full p-4 bg-white border border-slate-200 rounded-xl font-['Inter',sans-serif] text-xs text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] resize-none shadow-sm transition-all"
                             />
                           </div>
+                          )}
 
                         </div>
 
@@ -1966,7 +1998,8 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                           </div>
 
                           {/* Validation CTA Buttons */}
-                          <div className="space-y-3 pt-2">
+                          {selectedPrescription.status_validasi !== 'ditolak' && (
+                            <div className="space-y-3 pt-2">
                             <button 
                               onClick={() => {
                                 if (!jenisKelamin) {
@@ -2028,6 +2061,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                               </div>
                             )}
                           </div>
+                          )}
 
                         </div>
 
