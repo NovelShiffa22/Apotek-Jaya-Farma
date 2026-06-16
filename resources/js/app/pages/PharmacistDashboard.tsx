@@ -1010,11 +1010,11 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase">ID Pesanan</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase">User</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase">Tanggal Pemesanan</th>
-                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-center">Jml. Barang</th>
+                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-center">Resep / Non-Resep</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-center">Metode Pengiriman</th>
+                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-center">Jml. Barang</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-right">Total Harga</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase">Penanggung Jawab</th>
-                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-center">Resep / Non-Resep</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-center">Action</th>
                               </tr>
                             </thead>
@@ -1082,39 +1082,6 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                       </div>
                                     </td>
                                     <td className="px-5 py-4 text-center">
-                                      <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-slate-100 font-['Inter',sans-serif] text-[14px] font-bold text-slate-700">
-                                        {totalQty}
-                                      </span>
-                                    </td>
-                                    <td className="px-5 py-4 text-center">
-                                        {(order.shippingMethod?.nama === 'ambil_apotek' || order.shipping_method === 'ambil_apotek' || order.shippingMethod?.nama === 'Ambil di Apotek') ? (
-                                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-amber-50 text-amber-600 font-bold text-[10px] uppercase tracking-widest border border-amber-200">
-                                                Ambil di Apotek
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-600 font-bold text-[10px] uppercase tracking-widest border border-blue-200">
-                                                Kirim via Kurir
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-5 py-4 text-right">
-                                      <span className="font-['Inter',sans-serif] text-[13px] font-bold text-[#0D6A36]">
-                                        Rp {parseFloat(order.total_biaya || 0).toLocaleString('id-ID')}
-                                      </span>
-                                    </td>
-                                    <td className="px-5 py-4">
-                                      {penanggungJawab ? (
-                                        <div className="flex items-center gap-2">
-                                          <div className="w-6 h-6 rounded-full bg-[#0D6A36]/10 text-[#0D6A36] flex items-center justify-center font-bold text-[9px] shrink-0">
-                                            {penanggungJawab.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
-                                          </div>
-                                          <span className="font-['Inter',sans-serif] text-[12px] font-semibold text-slate-700 truncate max-w-[120px]">{penanggungJawab}</span>
-                                        </div>
-                                      ) : (
-                                        <span className="font-['Inter',sans-serif] text-[12px] text-slate-400 italic">Belum ditentukan</span>
-                                      )}
-                                    </td>
-                                    <td className="px-5 py-4 text-center">
                                       {hasPrescription ? (
                                         prescriptionFileUrl ? (
                                           <a
@@ -1141,6 +1108,39 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                         <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-50 text-slate-500 border border-slate-200 font-['Inter',sans-serif] text-[11px] font-semibold tracking-wide">
                                           Non-Resep
                                         </span>
+                                      )}
+                                    </td>
+                                    <td className="px-5 py-4 text-center">
+                                        {(order.shippingMethod?.nama === 'ambil_apotek' || order.shipping_method === 'ambil_apotek' || order.shippingMethod?.nama === 'Ambil di Apotek') ? (
+                                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-amber-50 text-amber-600 font-bold text-[10px] uppercase tracking-widest border border-amber-200">
+                                                Ambil di Apotek
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-600 font-bold text-[10px] uppercase tracking-widest border border-blue-200">
+                                                Kirim via Kurir
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td className="px-5 py-4 text-center">
+                                      <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-slate-100 font-['Inter',sans-serif] text-[14px] font-bold text-slate-700">
+                                        {totalQty}
+                                      </span>
+                                    </td>
+                                    <td className="px-5 py-4 text-right">
+                                      <span className="font-['Inter',sans-serif] text-[13px] font-bold text-[#0D6A36]">
+                                        Rp {parseFloat(order.total_biaya || 0).toLocaleString('id-ID')}
+                                      </span>
+                                    </td>
+                                    <td className="px-5 py-4">
+                                      {penanggungJawab ? (
+                                        <div className="flex items-center gap-2">
+                                          <div className="w-6 h-6 rounded-full bg-[#0D6A36]/10 text-[#0D6A36] flex items-center justify-center font-bold text-[9px] shrink-0">
+                                            {penanggungJawab.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                                          </div>
+                                          <span className="font-['Inter',sans-serif] text-[12px] font-semibold text-slate-700 truncate max-w-[120px]">{penanggungJawab}</span>
+                                        </div>
+                                      ) : (
+                                        <span className="font-['Inter',sans-serif] text-[12px] text-slate-400 italic">Belum ditentukan</span>
                                       )}
                                     </td>
                                     <td className="px-5 py-4 text-center">
