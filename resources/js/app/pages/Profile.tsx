@@ -566,7 +566,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                                 day: 'numeric',
                                 month: 'long', 
                                 year: 'numeric'
-                              })} • {order.payment_method || 'Virtual Account'} {order.va_number && `(VA: ${order.va_number})`}
+                              })} • Virtual Account {order.va_number && `(VA: ${order.va_number})`}
                             </p>
                             {['Lunas', 'Diproses'].includes(order.status) && (new Date().getHours() < 8 || new Date().getHours() >= 18) && (
                               <p className="text-amber-600 text-xs mt-1 italic font-medium">
@@ -703,7 +703,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                                     router.delete(`/profile/orders/${order.id}`, { preserveScroll: true });
                                   }
                                 }}
-                                className="w-full sm:w-auto text-center bg-white border border-gray-300 text-gray-500 px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-gray-50 shadow-sm transition-all whitespace-nowrap"
+                                className="w-full sm:w-auto text-center bg-white border border-red-200 text-red-600 px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-red-50 shadow-sm transition-colors whitespace-nowrap"
                               >
                                 Hapus Riwayat
                               </button>
@@ -1011,7 +1011,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
               <div className="border-t border-gray-100 pt-5 space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">Metode Pembayaran</span>
-                  <span className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19]">{selectedOrder.payment_method || 'Virtual Account'}</span>
+                  <span className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19]">{selectedOrder.payment_method === 'Midtrans Payment Gateway' ? 'Transfer Virtual Account' : (selectedOrder.payment_method || 'Virtual Account')}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">Virtual Account</span>
@@ -1021,6 +1021,34 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                   <span className="font-['Inter',sans-serif] text-[14px] text-gray-500 min-w-[120px]">Alamat Pengiriman</span>
                   <span className="font-['Inter',sans-serif] text-[13px] font-medium text-gray-800 text-right">{selectedOrder.shipping_address || 'Alamat belum diatur'}</span>
                 </div>
+                {(() => {
+                  const subtotal = selectedOrder.items?.reduce((sum: number, item: any) => sum + ((item.harga || item.price || 0) * (item.quantity || 1)), 0) || 0;
+                  const total = Number(selectedOrder.total_amount || 0);
+                  const calculatedShipping = Math.max(0, total - subtotal);
+                  const displayShipping = selectedOrder.shipping_method ? Number(selectedOrder.shipping_cost || 0) : calculatedShipping;
+                  const displayMethod = selectedOrder.shipping_method === 'kurir_toko' 
+                    ? 'Kurir Toko (Kota Bandung)' 
+                    : (selectedOrder.shipping_method === 'ambil_apotek' 
+                        ? 'Ambil di Apotek' 
+                        : (displayShipping > 0 ? 'Kurir Toko' : 'Ambil di Apotek'));
+
+                  return (
+                    <>
+                      <div className="flex justify-between items-center text-gray-600">
+                        <span className="font-['Inter',sans-serif] text-[14px]">Tipe Pengiriman</span>
+                        <span className="font-['Inter',sans-serif] text-[14px] font-medium text-gray-800">
+                          {displayMethod}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-gray-600">
+                        <span className="font-['Inter',sans-serif] text-[14px]">Ongkos Kirim</span>
+                        <span className="font-['Inter',sans-serif] text-[14px] font-medium text-gray-800">
+                          Rp {displayShipping.toLocaleString('id-ID')}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
                 <div className="flex justify-between items-center pt-2">
                   <span className="font-['Inter',sans-serif] text-[14px] font-bold text-gray-900">Total Pembayaran</span>
                   <span className="font-['Poppins',sans-serif] text-[18px] font-black text-[#006a3f]">Rp {Number(selectedOrder.total_amount || 0).toLocaleString('id-ID')}</span>

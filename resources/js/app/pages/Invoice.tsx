@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Head, router, Link } from '@inertiajs/react';
+import { Head, router, Link, usePage } from '@inertiajs/react';
 import { CheckCircle, Clock, Copy, ArrowRight, ShieldCheck, ArrowLeft, Receipt, Package, Lock, AlertCircle } from 'lucide-react';
 import Header from '../components/Header';
 import ConfirmModal from '../components/ConfirmModal';
@@ -311,7 +311,7 @@ export default function Invoice({ transaction }: Props) {
                           className="w-full flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl py-4 px-6 transition duration-200 text-base shadow-lg"
                         >
                           <Lock size={20} strokeWidth={2} />
-                          Selesaikan Pembayaran via Midtrans
+                          Bayar Sekarang
                         </button>
                         <button 
                           onClick={handleCancelClick}

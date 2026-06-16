@@ -165,13 +165,17 @@ class CheckoutController extends Controller
         }
 
         $shippingMethod = $request->input('shipping_method');
-        if ($shippingMethod === 'kurir_toko') {
-            $isKotaBandung = stripos($shippingAddress, 'Bandung') !== false && 
-                             stripos($shippingAddress, 'Kabupaten') === false && 
-                             stripos($shippingAddress, 'Kab.') === false;
-            
-            if (!$isKotaBandung) {
-                return redirect()->back()->withErrors(['shipping_method' => 'Layanan kurir toko saat ini hanya mencakup wilayah Kota Bandung. Alamat Kabupaten tidak didukung.']);
+        $prescriptionId = $request->input('prescription_id');
+
+        $isKotaBandung = stripos($shippingAddress, 'Bandung') !== false && 
+                         stripos($shippingAddress, 'Kabupaten') === false && 
+                         stripos($shippingAddress, 'Kab.') === false;
+
+        if ($prescriptionId) {
+            if ($shippingMethod === 'kurir_toko') {
+                if (!$isKotaBandung) {
+                    return redirect()->back()->withErrors(['shipping_method' => 'Layanan kurir toko untuk pesanan resep saat ini hanya mencakup wilayah Kota Bandung. Alamat luar kota tidak didukung.']);
+                }
             }
         }
 
@@ -184,7 +188,6 @@ class CheckoutController extends Controller
         $subtotal = 0;
         $purchasedItems = [];
 
-        $prescriptionId = $request->input('prescription_id');
 
         if ($prescriptionId) {
             $prescription = \App\Models\Prescription::with('items.product.category')->find($prescriptionId);
@@ -263,6 +266,8 @@ class CheckoutController extends Controller
             'status' => 'Pending',
             'items' => $purchasedItems,
             'shipping_address' => $request->input('shipping_address'),
+            'shipping_method' => $shippingMethod,
+            'shipping_cost' => $shippingCost,
         ]);
 
         // Kurangi stok obat

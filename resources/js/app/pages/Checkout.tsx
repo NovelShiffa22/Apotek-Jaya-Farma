@@ -260,6 +260,12 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
                   )
                 })}
               </div>
+              {errors?.shipping_method && (
+                <p className="text-[#ef4444] text-[13px] mt-4 font-medium flex items-center gap-1.5 p-3 bg-red-50 rounded-xl border border-red-100">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#ef4444] inline-block shrink-0"></span>
+                  {errors.shipping_method}
+                </p>
+              )}
             </div>
 
           </div>

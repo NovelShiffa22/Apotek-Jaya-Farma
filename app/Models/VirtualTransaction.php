@@ -20,6 +20,8 @@ class VirtualTransaction extends Model
         'snap_token',
         'items',
         'shipping_address',
+        'shipping_method',
+        'shipping_cost',
     ];
 
     protected $casts = [
