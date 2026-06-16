@@ -115,19 +115,39 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="font-['Poppins',sans-serif] font-bold text-[18px] text-[#171d19]">Pratinjau Resep</h3>
                                     <button 
-                                        onClick={() => window.open(`/${prescription.file_foto}`, '_blank')}
+                                        onClick={() => {
+                                            const fileUrl = prescription.file_foto.startsWith('http') ? prescription.file_foto : (prescription.file_foto.startsWith('storage/') || prescription.file_foto.startsWith('/storage/') ? (prescription.file_foto.startsWith('/') ? prescription.file_foto : `/${prescription.file_foto}`) : `/storage/${prescription.file_foto}`);
+                                            window.open(fileUrl, '_blank');
+                                        }}
                                         className="flex items-center gap-2 text-[#006a3f] font-['Poppins',sans-serif] font-semibold text-[14px] hover:underline"
                                     >
                                         <ZoomIn size={16} /> Perbesar Foto
                                     </button>
                                 </div>
                                 
-                                <div className="bg-gray-100 rounded-xl h-[400px] relative overflow-hidden border border-gray-200">
-                                    <div 
-                                        className="absolute inset-0 bg-contain bg-no-repeat bg-center"
-                                        style={{ backgroundImage: `url(/${prescription.file_foto})` }}
-                                    ></div>
-                                </div>
+                                {(() => {
+                                    const fileUrl = prescription.file_foto.startsWith('http') ? prescription.file_foto : (prescription.file_foto.startsWith('storage/') || prescription.file_foto.startsWith('/storage/') ? (prescription.file_foto.startsWith('/') ? prescription.file_foto : `/${prescription.file_foto}`) : `/storage/${prescription.file_foto}`);
+                                    const isPdf = fileUrl.toLowerCase().includes('.pdf');
+                                    return (
+                                        <div 
+                                            className={`bg-gray-100 rounded-xl h-[400px] relative overflow-hidden border border-gray-200 cursor-pointer flex items-center justify-center ${isPdf ? 'bg-red-50 hover:bg-red-100' : 'hover:opacity-90'} transition-all`}
+                                            onClick={() => window.open(fileUrl, '_blank')}
+                                        >
+                                            {isPdf ? (
+                                                <div className="flex flex-col items-center justify-center text-red-500">
+                                                    <FileText size={64} />
+                                                    <span className="font-bold mt-4 tracking-widest text-lg">DOKUMEN PDF</span>
+                                                    <span className="text-sm font-medium mt-2">Klik untuk membuka di tab baru</span>
+                                                </div>
+                                            ) : (
+                                                <div 
+                                                    className="absolute inset-0 bg-contain bg-no-repeat bg-center"
+                                                    style={{ backgroundImage: `url(${fileUrl})` }}
+                                                ></div>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         </div>
 

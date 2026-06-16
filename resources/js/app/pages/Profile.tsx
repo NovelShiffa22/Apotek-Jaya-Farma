@@ -842,15 +842,32 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                               <div className="flex-1 min-w-0 flex items-start gap-4 w-full">
                                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-xl border border-gray-200 p-2 shrink-0 flex items-center justify-center overflow-hidden">
                                   {p.file_foto ? (
-                                    <img 
-                                      src={`/storage/${p.file_foto.replace('storage/', '')}`} 
-                                      alt="Resep" 
-                                      className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform" 
-                                      onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.src = p.file_foto; // Fallback to raw string
-                                      }}
-                                    />
+                                      (() => {
+                                          const fileUrl = p.file_foto.startsWith('http') ? p.file_foto : (p.file_foto.startsWith('storage/') || p.file_foto.startsWith('/storage/') ? (p.file_foto.startsWith('/') ? p.file_foto : `/${p.file_foto}`) : `/storage/${p.file_foto}`);
+                                          const isPdf = fileUrl.toLowerCase().includes('.pdf');
+                                          return isPdf ? (
+                                              <div 
+                                                  onClick={() => window.open(fileUrl, '_blank')}
+                                                  className="w-full h-full flex flex-col items-center justify-center bg-red-50 text-red-500 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
+                                                  title="Buka Dokumen PDF"
+                                              >
+                                                  <FileText size={24} />
+                                                  <span className="text-[9px] font-bold mt-1">PDF</span>
+                                              </div>
+                                          ) : (
+                                              <img 
+                                                src={fileUrl} 
+                                                alt="Resep" 
+                                                className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform cursor-pointer" 
+                                                onClick={() => window.open(fileUrl, '_blank')}
+                                                title="Lihat Gambar"
+                                                onError={(e) => {
+                                                  const target = e.target as HTMLImageElement;
+                                                  target.style.display = 'none';
+                                                }}
+                                              />
+                                          );
+                                      })()
                                   ) : (
                                     <FileText className="text-gray-400 w-8 h-8 sm:w-10 sm:h-10" />
                                   )}

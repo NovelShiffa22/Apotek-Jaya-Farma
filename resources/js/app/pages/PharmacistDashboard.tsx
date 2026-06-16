@@ -1910,18 +1910,43 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                               <Search size={14} className="cursor-pointer" onClick={() => setShowImageModal(true)} />
                             </div>
                             <div className="bg-white p-4">
-                              <div className="relative group overflow-hidden rounded-lg aspect-[3/4] border border-slate-100 cursor-zoom-in" onClick={() => setShowImageModal(true)}>
-                                <img
-                                  src={selectedPrescription.file_foto || "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&q=80&w=400"}
-                                  alt="Surat Resep Asli"
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                />
-                                <div className="absolute inset-0 bg-slate-900/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                  <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow">
-                                    <ZoomIn size={18} className="text-[#0D6A36]" />
+                              {(() => {
+                                const rawUrl = selectedPrescription.file_foto || "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&q=80&w=400";
+                                const fileUrl = rawUrl.startsWith('http') ? rawUrl : (rawUrl.startsWith('storage/') || rawUrl.startsWith('/storage/') ? (rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`) : `/storage/${rawUrl}`);
+                                const isPdf = fileUrl.toLowerCase().includes('.pdf');
+                                
+                                return isPdf ? (
+                                  <div 
+                                      className="relative group overflow-hidden rounded-lg aspect-[3/4] border border-slate-100 cursor-pointer flex flex-col items-center justify-center bg-red-50 hover:bg-red-100 transition-all"
+                                      onClick={() => window.open(fileUrl, '_blank')}
+                                  >
+                                      <FileText size={48} className="text-red-500" />
+                                      <span className="font-bold mt-3 tracking-widest text-sm text-red-600">DOKUMEN PDF</span>
+                                      <div className="absolute inset-0 bg-slate-900/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                        <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow flex items-center gap-1.5 text-red-600 font-bold text-[10px]">
+                                          <ZoomIn size={14} /> Buka Tab Baru
+                                        </div>
+                                      </div>
                                   </div>
-                                </div>
-                              </div>
+                                ) : (
+                                  <div className="relative group overflow-hidden rounded-lg aspect-[3/4] border border-slate-100 cursor-zoom-in" onClick={() => setShowImageModal(true)}>
+                                    <img
+                                      src={fileUrl}
+                                      alt="Surat Resep Asli"
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                      }}
+                                    />
+                                    <div className="absolute inset-0 bg-slate-900/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                      <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow">
+                                        <ZoomIn size={18} className="text-[#0D6A36]" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                             </div>
                           </div>
 

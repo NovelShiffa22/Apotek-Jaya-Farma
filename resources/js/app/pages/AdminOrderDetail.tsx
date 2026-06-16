@@ -300,10 +300,10 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                             href={prescriptionFileUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-50 text-[#0D6A36] border border-[#0D6A36]/20 font-['Inter',sans-serif] text-sm font-bold tracking-wide hover:bg-[#F4FDF8] hover:border-[#0D6A36] transition-all"
+                                            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border ${prescriptionFileUrl.toLowerCase().includes('.pdf') ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:border-red-300' : 'bg-slate-50 text-[#0D6A36] border-[#0D6A36]/20 hover:bg-[#F4FDF8] hover:border-[#0D6A36]'} font-['Inter',sans-serif] text-sm font-bold tracking-wide transition-all`}
                                         >
-                                            <FileImage size={16} />
-                                            Lihat Foto Resep
+                                            {prescriptionFileUrl.toLowerCase().includes('.pdf') ? <FileText size={16} /> : <FileImage size={16} />}
+                                            {prescriptionFileUrl.toLowerCase().includes('.pdf') ? 'Buka Dokumen PDF' : 'Lihat Foto Resep'}
                                         </a>
                                     ) : (
                                         <p className="text-sm text-slate-400 italic">File resep tidak tersedia.</p>
