@@ -1371,9 +1371,15 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                                           </div>
                                                       </td>
                                                       <td className="px-5 py-4 text-center">
-                                                          <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-md font-['Inter',sans-serif] text-[11px] font-bold tracking-wider uppercase border ${rx.shipping_method === 'kurir' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
-                                                              {rx.shipping_method === 'kurir' ? 'Kurir' : 'Ambil Sendiri'}
-                                                          </span>
+                                                            {rx.shipping_method === 'kurir' ? (
+                                                                <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-600 font-bold text-[10px] uppercase tracking-widest border border-blue-200">
+                                                                    Kirim via Kurir
+                                                                </span>
+                                                            ) : (
+                                                                <span className="inline-flex items-center px-2 py-1 rounded-md bg-amber-50 text-amber-600 font-bold text-[10px] uppercase tracking-widest border border-amber-200">
+                                                                    Ambil di Apotek
+                                                                </span>
+                                                            )}
                                                       </td>
                                                       <td className="px-5 py-4 text-center">
                                                           <span className={`inline-flex items-center justify-center px-3 py-1 rounded-md text-[11px] font-bold tracking-wider uppercase border ${config.bg} ${config.color} ${config.border}`}>
