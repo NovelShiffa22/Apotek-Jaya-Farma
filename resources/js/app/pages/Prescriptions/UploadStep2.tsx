@@ -177,17 +177,21 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
         }
     };
 
+    // Update data.shipping_address when selectedAddress changes
+    useEffect(() => {
+        if (selectedAddress) {
+            setData('shipping_address', `${selectedAddress.alamat_lengkap}, ${selectedAddress.kota}, ${selectedAddress.provinsi} ${selectedAddress.kode_pos}`);
+        } else {
+            setData('shipping_address', '');
+        }
+    }, [selectedAddress]);
+
     const handleKirimClick = (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitModalOpen(true);
     };
 
     const confirmSubmit = () => {
-        transform((data) => ({
-            ...data,
-            shipping_address: selectedAddress ? `${selectedAddress.alamat_lengkap}, ${selectedAddress.kota}, ${selectedAddress.provinsi} ${selectedAddress.kode_pos}` : '',
-        }));
-        
         post(route('prescriptions.store'), { 
             forceFormData: true,
             onSuccess: (page) => {
