@@ -1270,10 +1270,11 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                   <table className="w-full min-w-[960px] border-collapse text-left">
                                       <thead>
                                           <tr className="bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9] border-b border-[#E2E8F0]">
-                                              <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase w-12">No.</th>
                                               <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase">ID Resep</th>
-                                              <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase">User / Pasien</th>
+                                              <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-center">Dokumen Resep</th>
+                                              <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase">Nama Pasien</th>
                                               <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase">Tanggal Masuk</th>
+                                              <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-center">Tipe Pengiriman</th>
                                               <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-center">Status</th>
                                               <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-center">Aksi</th>
                                           </tr>
@@ -1289,9 +1290,6 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                               return (
                                                   <tr key={rx.id} className="group transition-colors hover:bg-[#f8fafc]">
                                                       <td className="px-5 py-4">
-                                                          <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-400">{startIndex + index + 1}</span>
-                                                      </td>
-                                                      <td className="px-5 py-4">
                                                           <div className="flex flex-col gap-0.5">
                                                               <div className="flex items-center gap-2">
                                                                   <span className="font-['Inter',sans-serif] text-[13px] font-bold text-slate-800">#{rx.kode_resep || rx.id}</span>
@@ -1301,13 +1299,34 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                                               </div>
                                                           </div>
                                                       </td>
+                                                      <td className="px-5 py-4 text-center">
+                                                          <div className="w-12 h-16 mx-auto rounded-md border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center shrink-0 shadow-sm relative group/img">
+                                                              {rx.file_foto ? (
+                                                                  rx.file_foto.endsWith('.pdf') ? (
+                                                                      <div className="text-red-500 flex flex-col items-center">
+                                                                          <FileText size={20} />
+                                                                          <span className="text-[8px] font-bold mt-1">PDF</span>
+                                                                      </div>
+                                                                  ) : (
+                                                                      <img 
+                                                                          src={rx.file_foto.startsWith('http') ? rx.file_foto : (rx.file_foto.startsWith('storage/') || rx.file_foto.startsWith('/storage/') ? (rx.file_foto.startsWith('/') ? rx.file_foto : `/${rx.file_foto}`) : `/storage/${rx.file_foto}`)} 
+                                                                          alt="Resep" 
+                                                                          className="w-full h-full object-cover transition-transform group-hover/img:scale-110" 
+                                                                          onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.classList.add('bg-slate-100'); }} 
+                                                                      />
+                                                                  )
+                                                              ) : (
+                                                                  <FileText size={20} className="text-slate-300" />
+                                                              )}
+                                                          </div>
+                                                      </td>
                                                       <td className="px-5 py-4">
                                                           <div className="flex items-center gap-2.5">
                                                               <div className="w-8 h-8 rounded-full bg-[#E7F5EC] text-[#0D6A36] flex items-center justify-center font-bold text-xs shrink-0">
-                                                                  {(rx.user?.name || rx.customer || 'G').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                                                                  {(rx.nama_pasien || rx.user?.name || rx.customer || 'P').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
                                                               </div>
                                                               <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-800 truncate max-w-[150px]">
-                                                                  {rx.user?.name || rx.customer}
+                                                                  {rx.nama_pasien || rx.user?.name || rx.customer || 'Pasien Anonim'}
                                                               </span>
                                                           </div>
                                                       </td>
@@ -1320,6 +1339,11 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                                                   {rx.created_at ? new Date(rx.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : (rx.timeLabel || rx.date?.split(' ')[1])}
                                                               </span>
                                                           </div>
+                                                      </td>
+                                                      <td className="px-5 py-4 text-center">
+                                                          <span className="font-['Inter',sans-serif] text-[12px] font-medium text-slate-600">
+                                                              {rx.shipping_address && rx.shipping_address.trim() !== '' ? 'Kurir' : 'Ambil Sendiri'}
+                                                          </span>
                                                       </td>
                                                       <td className="px-5 py-4 text-center">
                                                           <span className={`inline-flex items-center justify-center px-3 py-1 rounded-md text-[11px] font-bold tracking-wider uppercase border ${config.bg} ${config.color} ${config.border}`}>
