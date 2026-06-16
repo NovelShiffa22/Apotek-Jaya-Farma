@@ -97,6 +97,15 @@ class ProfileController extends Controller
 
         $user->save();
 
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'update_profile',
+                'description' => 'User memperbarui informasi profil',
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Informasi profil berhasil diperbarui.');
     }
 

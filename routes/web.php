@@ -1153,6 +1153,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/users', [AdminUserController::class, 'store'])->name('admin.users.store');
     Route::put('/admin/users/{id}', [AdminUserController::class, 'update'])->name('admin.users.update');
     Route::delete('/admin/users/{id}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::get('/admin/users/{id}/activities', [AdminUserController::class, 'activities'])->name('admin.users.activities');
 
     Route::put('/admin/orders/{id}/status', function(\Illuminate\Http\Request $request, $id) {
         $request->validate(['status' => 'required|string|in:diproses,dikirim,selesai,dibatalkan']);

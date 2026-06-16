@@ -12,10 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('product_stock_histories', function (Blueprint $table) {
-            $table->string('supplier')->nullable()->after('quantity');
-            $table->integer('buy_price')->nullable()->after('supplier');
+            if (!Schema::hasColumn('product_stock_histories', 'supplier')) {
+                $table->string('supplier')->nullable()->after('quantity');
+            }
+            if (!Schema::hasColumn('product_stock_histories', 'buy_price')) {
+                $table->integer('buy_price')->nullable()->after('supplier');
+            }
         });
-        \Illuminate\Support\Facades\DB::statement("ALTER TABLE product_stock_histories MODIFY type VARCHAR(255) NOT NULL");
+        if (\Illuminate\Support\Facades\DB::connection()->getDriverName() !== 'sqlite') {
+            \Illuminate\Support\Facades\DB::statement("ALTER TABLE product_stock_histories MODIFY type VARCHAR(255) NOT NULL");
+        }
     }
 
     /**

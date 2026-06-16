@@ -150,6 +150,26 @@ export default function AdminDashboard({ products = [], categories = [], users =
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<any>(null);
 
+    const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+    const [selectedUserActivities, setSelectedUserActivities] = useState<any[]>([]);
+    const [selectedUserForActivity, setSelectedUserForActivity] = useState<any>(null);
+    const [isFetchingActivities, setIsFetchingActivities] = useState(false);
+
+    const fetchUserActivities = async (user: any) => {
+        setSelectedUserForActivity(user);
+        setIsFetchingActivities(true);
+        setIsActivityModalOpen(true);
+        try {
+            const response = await fetch(`/admin/users/${user.id}/activities`);
+            const data = await response.json();
+            setSelectedUserActivities(data);
+        } catch (error) {
+            console.error('Failed to fetch user activities:', error);
+        } finally {
+            setIsFetchingActivities(false);
+        }
+    };
+
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
         type: 'logout' | 'delete' | 'timeout' | 'warning';
@@ -1969,6 +1989,16 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                     <td className="px-6 py-5">
                                                         <div className="flex justify-end gap-2">
                                                             <button
+                                                                onClick={() => fetchUserActivities(user)}
+                                                                className="group inline-block rounded-lg p-2 transition-colors hover:bg-blue-50"
+                                                                title="Riwayat Aktivitas"
+                                                            >
+                                                                <Clock
+                                                                    size={16}
+                                                                    className="text-blue-600 opacity-60 transition-opacity group-hover:opacity-100"
+                                                                />
+                                                            </button>
+                                                            <button
                                                                 onClick={() => {
                                                                     setEditingUser(user);
                                                                     setIsUserModalOpen(true);
@@ -2075,6 +2105,72 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 isEdit={!!editingUser} 
                 initialData={editingUser} 
             />
+
+            {/* Modal Activity Log */}
+            {isActivityModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+                    <div className="absolute inset-0 bg-slate-900/40" onClick={() => setIsActivityModalOpen(false)} />
+                    <div className="relative flex w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl overflow-hidden">
+                        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50">
+                            <div>
+                                <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-slate-800">
+                                    Riwayat Aktivitas
+                                </h3>
+                                <p className="font-['Inter',sans-serif] text-[13px] text-slate-500 mt-0.5">
+                                    {selectedUserForActivity?.name} ({selectedUserForActivity?.email})
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setIsActivityModalOpen(false)}
+                                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <div className="p-6 max-h-[60vh] overflow-y-auto">
+                            {isFetchingActivities ? (
+                                <div className="flex justify-center items-center py-12">
+                                    <Loader className="animate-spin text-[#0D6A36]" size={32} />
+                                </div>
+                            ) : selectedUserActivities.length > 0 ? (
+                                <div className="relative border-l-2 border-slate-200 ml-3 space-y-6">
+                                    {selectedUserActivities.map((act: any, idx: number) => (
+                                        <div key={idx} className="relative pl-6">
+                                            <div className="absolute -left-[9px] top-1.5 h-4 w-4 rounded-full border-2 border-white bg-[#0D6A36]" />
+                                            <div className="flex flex-col gap-1">
+                                                <span className="font-['Inter',sans-serif] text-[12px] font-bold text-slate-400">
+                                                    {new Date(act.created_at).toLocaleString('id-ID', {day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'})}
+                                                </span>
+                                                <p className="font-['Inter',sans-serif] text-[14px] text-slate-700">
+                                                    {act.description}
+                                                </p>
+                                                {act.ip_address && (
+                                                    <span className="font-['Inter',sans-serif] text-[11px] text-slate-400 mt-0.5">
+                                                        IP: {act.ip_address}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12">
+                                    <Clock className="mx-auto text-slate-300 mb-3" size={32} />
+                                    <p className="font-['Inter',sans-serif] text-[14px] text-slate-500">Belum ada riwayat aktivitas untuk user ini.</p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="border-t border-slate-100 p-4 bg-slate-50 flex justify-end">
+                            <button
+                                onClick={() => setIsActivityModalOpen(false)}
+                                className="rounded-xl bg-slate-800 px-6 py-2.5 font-['Inter',sans-serif] text-[14px] font-bold text-white transition-all hover:bg-slate-700 hover:shadow-lg hover:shadow-slate-200 active:scale-[0.98]"
+                            >
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

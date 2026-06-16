@@ -86,4 +86,16 @@ class AdminUserController extends Controller
 
         return redirect()->back()->with('success', 'User berhasil dihapus');
     }
+
+    /**
+     * Get user activities.
+     */
+    public function activities($id)
+    {
+        $activities = \App\Models\UserActivity::where('user_id', $id)
+            ->latest()
+            ->get();
+            
+        return response()->json($activities);
+    }
 }

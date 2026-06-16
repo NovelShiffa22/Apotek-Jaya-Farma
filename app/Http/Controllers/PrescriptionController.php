@@ -75,6 +75,15 @@ class PrescriptionController extends Controller
             'is_legal_agreed' => $request->is_legal_agreed ? true : false,
         ]);
 
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'upload_prescription',
+                'description' => 'User mengunggah resep #' . $kodeResep,
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
         return redirect('/profile?tab=prescriptions&prescription_status=Menunggu Verifikasi')->with('success', 'Resep berhasil diunggah! Mohon tunggu proses verifikasi dari apoteker.');
     }
 }

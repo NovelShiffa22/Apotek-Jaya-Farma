@@ -311,6 +311,16 @@ class CheckoutController extends Controller
             'shipping_cost' => $shippingCost,
         ]);
 
+        // Log the activity
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'create_virtual_transaction',
+                'description' => 'User membuat pesanan virtual #' . ($transaction->va_number ?? 'VT-' . $transaction->id),
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
         // Kurangi stok obat
         foreach ($purchasedItems as $item) {
             $productId = $item['id'] ?? $item['product_id'] ?? null;
