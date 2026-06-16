@@ -545,6 +545,16 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                         {errors.prescription_file}
                                     </p>
                                 )}
+                                {Object.keys(errors).length > 0 && !errors.prescription_file && (
+                                    <div className="mt-4 font-['Poppins',sans-serif] text-[13px] font-bold text-red-500 bg-red-50 p-4 rounded-xl border border-red-100">
+                                        <p className="mb-2 text-red-600">Terjadi kesalahan validasi:</p>
+                                        <ul className="list-disc pl-5 text-left font-medium space-y-1">
+                                            {Object.entries(errors).map(([field, msg]) => (
+                                                <li key={field}>{msg}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

@@ -30,7 +30,7 @@ class PrescriptionController extends Controller
             'catatan' => 'nullable|string|max:1000',
             'shipping_address' => 'required|string',
             'shipping_method' => 'required|in:ambil_sendiri,kurir',
-            'is_legal_agreed' => 'accepted'
+            'is_legal_agreed' => 'required'
         ], [
             'prescription_file.required' => 'Mohon unggah berkas resep dokter Anda terlebih dahulu.',
             'prescription_file.mimes' => 'Format berkas tidak didukung. Sediakan file dalam format JPG, PNG, atau PDF.',
@@ -40,7 +40,7 @@ class PrescriptionController extends Controller
             'whatsapp.digits_between' => 'Nomor WhatsApp harus terdiri dari 10 hingga 13 digit angka.',
             'whatsapp.regex' => 'Nomor WhatsApp harus diawali dengan 08 atau 62.',
             'shipping_address.required' => 'Mohon pilih atau tambahkan alamat pengiriman.',
-            'is_legal_agreed.accepted' => 'Anda harus menyetujui pernyataan legalitas resep.',
+            'is_legal_agreed.required' => 'Anda harus menyetujui pernyataan legalitas resep.',
         ]);
 
         if ($request->shipping_method === 'kurir') {
