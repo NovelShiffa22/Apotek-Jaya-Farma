@@ -32,6 +32,8 @@ interface ProductFormData {
     indikasi: string;
     aturan_pakai: string;
     efek_samping: string;
+    komposisi: string;
+    kontraindikasi: string;
     harga: string;
     stok: string;
     stok_minimum: string;
@@ -81,6 +83,8 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
         indikasi: initialData?.indikasi || '',
         aturan_pakai: initialData?.aturan_pakai || '',
         efek_samping: initialData?.efek_samping || '',
+        komposisi: initialData?.komposisi || '',
+        kontraindikasi: initialData?.kontraindikasi || '',
         harga: initialData?.harga || '',
         stok: initialData?.stok || '',
         stok_minimum: initialData?.stok_minimum || '10',
@@ -202,6 +206,8 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
             indikasi: '',
             aturan_pakai: '',
             efek_samping: '',
+            komposisi: '',
+            kontraindikasi: '',
             harga: '',
             stok: '',
             stok_minimum: '10',
@@ -511,6 +517,48 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                         {errors.efek_samping && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
                                                 {errors.efek_samping}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Kandungan Utama / Komposisi */}
+                                    <div>
+                                        <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
+                                            Kandungan Utama / Komposisi
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.komposisi}
+                                            onChange={(e) =>
+                                                setData('komposisi', e.target.value)
+                                            }
+                                            placeholder="Contoh: Paracetamol 500 mg"
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                        />
+                                        {errors.komposisi && (
+                                            <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
+                                                {errors.komposisi}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Kontraindikasi */}
+                                    <div>
+                                        <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
+                                            Kontraindikasi
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.kontraindikasi}
+                                            onChange={(e) =>
+                                                setData('kontraindikasi', e.target.value)
+                                            }
+                                            placeholder="Contoh: Hipersensitif terhadap komponen obat"
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                        />
+                                        {errors.kontraindikasi && (
+                                            <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
+                                                {errors.kontraindikasi}
                                             </p>
                                         )}
                                     </div>

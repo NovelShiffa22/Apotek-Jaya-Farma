@@ -146,37 +146,60 @@ export default function ProductDetail({ product }: { product: any }) {
                 {product.deskripsi && (
                   <div>
                     <h3 className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19] uppercase tracking-wider mb-2">Deskripsi</h3>
-                    <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] leading-relaxed">
+                    <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] leading-relaxed whitespace-pre-line">
                       {product.deskripsi}
                     </p>
                   </div>
                 )}
-                {product.indikasi && (
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19] uppercase tracking-wider mb-2">Indikasi Umum</h3>
-                    <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] leading-relaxed">
-                      {product.indikasi}
+                    {product.indikasi && (
+                      <div className="mb-6">
+                        <h3 className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19] uppercase tracking-wider mb-2">Indikasi Umum</h3>
+                        <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] leading-relaxed whitespace-pre-line">
+                          {product.indikasi}
+                        </p>
+                      </div>
+                    )}
+                    {product.komposisi && (
+                      <div>
+                        <h3 className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19] uppercase tracking-wider mb-2">Kandungan Utama / Komposisi</h3>
+                        <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] leading-relaxed whitespace-pre-line">
+                          {product.komposisi}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    {product.aturan_pakai && (
+                      <div className="mb-6">
+                        <h3 className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19] uppercase tracking-wider mb-2">Dosis & Aturan Pakai</h3>
+                        <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] leading-relaxed whitespace-pre-line">
+                          {product.aturan_pakai}
+                        </p>
+                      </div>
+                    )}
+                    {product.efek_samping && (
+                      <div>
+                        <h3 className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19] uppercase tracking-wider mb-2">Efek Samping</h3>
+                        <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] leading-relaxed whitespace-pre-line">
+                          {product.efek_samping}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {product.kontraindikasi && (
+                  <div>
+                    <h3 className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19] uppercase tracking-wider mb-2">Kontraindikasi</h3>
+                    <p className="font-['Inter',sans-serif] text-[15px] text-red-600 leading-relaxed whitespace-pre-line">
+                      {product.kontraindikasi}
                     </p>
                   </div>
                 )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {product.aturan_pakai && (
-                    <div>
-                      <h3 className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19] uppercase tracking-wider mb-2">Aturan Pakai</h3>
-                      <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] leading-relaxed">
-                        {product.aturan_pakai}
-                      </p>
-                    </div>
-                  )}
-                  {product.efek_samping && (
-                    <div>
-                      <h3 className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19] uppercase tracking-wider mb-2">Efek Samping</h3>
-                      <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] leading-relaxed">
-                        {product.efek_samping}
-                      </p>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>            {/* Action Buttons */}
             <div className="space-y-4">

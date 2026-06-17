@@ -2900,6 +2900,14 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                   </p>
                 </div>
 
+                {/* Komposisi */}
+                <div>
+                  <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Kandungan Utama / Komposisi</h5>
+                  <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+                    {viewingProductDetail.komposisi || '-'}
+                  </p>
+                </div>
+
                 {/* Aturan Pakai */}
                 <div>
                   <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Aturan Pakai & Dosis</h5>
@@ -2913,6 +2921,14 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                   <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Efek Samping</h5>
                   <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
                     {viewingProductDetail.efek_samping || '-'}
+                  </p>
+                </div>
+
+                {/* Kontraindikasi */}
+                <div>
+                  <h5 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Kontraindikasi</h5>
+                  <p className="text-sm text-red-600 leading-relaxed whitespace-pre-line">
+                    {viewingProductDetail.kontraindikasi || '-'}
                   </p>
                 </div>
 
