@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'pharmacist@gmail.com'],
             [
-                'name' => 'Apoteker Jaya Farma',
+                'name' => 'Apt. Nida Hijria Almany, S.Farm.',
                 'phone' => '081234567891',
                 'role' => 'pharmacist',
                 'password' => \Illuminate\Support\Facades\Hash::make('11223344'),

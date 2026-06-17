@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Link, router } from '@inertiajs/react';
 import Header from '../../components/Header';
 import { CheckCircle2, AlertTriangle, ShoppingCart, ArrowLeft, Star, AlertCircle, XCircle, Image as ImageIcon, Loader2 } from 'lucide-react';
+import ConfirmModal from '../../components/ConfirmModal';
 
 interface RecommendationResult {
   id: number;
@@ -27,7 +28,7 @@ interface Props {
 }
 
 // Komponen Kartu Recommendation yang memiliki local state (isProcessing) sendiri
-const RecommendationCard = ({ product, isTopRecommendation }: { product: RecommendationResult, isTopRecommendation: boolean }) => {
+const RecommendationCard = ({ product, isTopRecommendation, onShowModal }: { product: RecommendationResult, isTopRecommendation: boolean, onShowModal: (config: any) => void }) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const isNotRecommended = product.kategori_rekomendasi === 'tidak disarankan' || product.status === 'tidak disarankan';
@@ -52,10 +53,26 @@ const RecommendationCard = ({ product, isTopRecommendation }: { product: Recomme
           }
 
           // Gunakan state notifikasi yang lebih estetis jika memungkinkan, tapi sementara pakai alert
-          alert(response.data.message || 'Obat berhasil ditambahkan ke keranjang!');
+          onShowModal({
+            isOpen: true,
+            type: 'success',
+            title: 'Berhasil',
+            message: response.data.message || 'Obat berhasil ditambahkan ke keranjang!',
+            confirmText: 'Tutup',
+            cancelText: '',
+            onConfirm: () => {}
+          });
       } catch (error: any) {
           const errorMessage = error.response?.data?.message || 'Gagal menambahkan ke keranjang.';
-          alert('Gagal: ' + errorMessage);
+          onShowModal({
+            isOpen: true,
+            type: 'danger',
+            title: 'Gagal',
+            message: errorMessage,
+            confirmText: 'Tutup',
+            cancelText: '',
+            onConfirm: () => {}
+          });
       } finally {
           setIsProcessing(false);
       }
@@ -136,6 +153,33 @@ const RecommendationCard = ({ product, isTopRecommendation }: { product: Recomme
 };
 
 export default function Hasil({ direkomendasikan = [], dipertimbangkan = [], tidakDisarankan = [], input_usia }: Props) {
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'danger' | 'warning' | 'info';
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText?: string;
+    cancelText?: string;
+  }>({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
+
+  const closeConfirmModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
+
+  const handleShowModal = (config: any) => {
+    setModalConfig({
+        ...config,
+        onConfirm: () => {
+            config.onConfirm();
+            closeConfirmModal();
+        }
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
@@ -165,7 +209,7 @@ export default function Hasil({ direkomendasikan = [], dipertimbangkan = [], tid
             {direkomendasikan.length > 0 && (
               <div className="flex flex-col p-4 bg-gray-50/30">
                 {direkomendasikan.map((product, idx) => (
-                  <RecommendationCard key={product.id} product={product} isTopRecommendation={idx === 0} />
+                  <RecommendationCard key={product.id} product={product} isTopRecommendation={idx === 0} onShowModal={handleShowModal} />
                 ))}
               </div>
             )}
@@ -182,7 +226,7 @@ export default function Hasil({ direkomendasikan = [], dipertimbangkan = [], tid
             {dipertimbangkan.length > 0 && (
               <div className="flex flex-col p-4 bg-gray-50/30">
                 {dipertimbangkan.map((product, idx) => (
-                  <RecommendationCard key={product.id} product={product} isTopRecommendation={false} />
+                  <RecommendationCard key={product.id} product={product} isTopRecommendation={false} onShowModal={handleShowModal} />
                 ))}
               </div>
             )}
@@ -199,7 +243,7 @@ export default function Hasil({ direkomendasikan = [], dipertimbangkan = [], tid
             {tidakDisarankan.length > 0 && (
               <div className="flex flex-col p-4 bg-gray-50/30">
                 {tidakDisarankan.map((product, idx) => (
-                  <RecommendationCard key={product.id} product={product} isTopRecommendation={false} />
+                  <RecommendationCard key={product.id} product={product} isTopRecommendation={false} onShowModal={handleShowModal} />
                 ))}
               </div>
             )}
@@ -217,6 +261,8 @@ export default function Hasil({ direkomendasikan = [], dipertimbangkan = [], tid
           </Link>
         </div>
       </main>
+
+      <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
     </div>
   );
 }

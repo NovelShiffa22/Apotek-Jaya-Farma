@@ -139,6 +139,15 @@ class ProductController extends Controller
             $product->symptoms()->sync($syncData);
         }
 
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'create_product',
+                'description' => 'Menambahkan produk baru: ' . $product->nama_obat,
+                'ip_address' => request()->ip(),
+            ]);
+        }
+
         return redirect()->route('admin.dashboard')->with('success', 'Produk berhasil ditambahkan');
     }
 
@@ -226,6 +235,15 @@ class ProductController extends Controller
             $product->symptoms()->sync($syncData);
         }
 
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'update_product',
+                'description' => 'Memperbarui data produk: ' . $product->nama_obat,
+                'ip_address' => request()->ip(),
+            ]);
+        }
+
         return redirect()->route('admin.dashboard')->with('success', 'Data produk berhasil diperbarui');
     }
 
@@ -271,6 +289,15 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
         
         $product->delete();
+
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'delete_product',
+                'description' => 'Menghapus produk: ' . $product->nama_obat,
+                'ip_address' => request()->ip(),
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Produk berhasil dihapus');
     }
@@ -322,6 +349,15 @@ class ProductController extends Controller
                 'user_id' => auth()->id(),
             ]);
         });
+
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'update_stock',
+                'description' => 'Menyesuaikan stok produk: ' . $product->nama_obat . ' (' . ($validated['action'] === 'inbound_purchase' ? '+' : '-') . $validated['quantity'] . ')',
+                'ip_address' => request()->ip(),
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Penyesuaian stok berhasil disimpan.');
     }

@@ -26,12 +26,14 @@ return new class extends Migration
             ->where('status_sesudah', 'disiapkan')
             ->update(['status_sesudah' => 'diproses']);
 
-        // 2. Ubah definisi enum pada tabel orders
-        DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('menunggu_pembayaran','diproses','dikirim','selesai','dibatalkan') DEFAULT 'menunggu_pembayaran'");
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            // 2. Ubah definisi enum pada tabel orders
+            DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('menunggu_pembayaran','diproses','dikirim','selesai','dibatalkan') DEFAULT 'menunggu_pembayaran'");
 
-        // 3. Ubah definisi enum pada tabel order_status_histories
-        DB::statement("ALTER TABLE order_status_histories MODIFY COLUMN status_sebelum ENUM('menunggu_pembayaran','diproses','dikirim','selesai','dibatalkan') NULL");
-        DB::statement("ALTER TABLE order_status_histories MODIFY COLUMN status_sesudah ENUM('menunggu_pembayaran','diproses','dikirim','selesai','dibatalkan') NOT NULL");
+            // 3. Ubah definisi enum pada tabel order_status_histories
+            DB::statement("ALTER TABLE order_status_histories MODIFY COLUMN status_sebelum ENUM('menunggu_pembayaran','diproses','dikirim','selesai','dibatalkan') NULL");
+            DB::statement("ALTER TABLE order_status_histories MODIFY COLUMN status_sesudah ENUM('menunggu_pembayaran','diproses','dikirim','selesai','dibatalkan') NOT NULL");
+        }
     }
 
     /**
@@ -39,8 +41,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('menunggu_pembayaran','diproses','disiapkan','dikirim','selesai','dibatalkan') DEFAULT 'menunggu_pembayaran'");
-        DB::statement("ALTER TABLE order_status_histories MODIFY COLUMN status_sebelum ENUM('menunggu_pembayaran','diproses','disiapkan','dikirim','selesai','dibatalkan') NULL");
-        DB::statement("ALTER TABLE order_status_histories MODIFY COLUMN status_sesudah ENUM('menunggu_pembayaran','diproses','disiapkan','dikirim','selesai','dibatalkan') NOT NULL");
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('menunggu_pembayaran','diproses','disiapkan','dikirim','selesai','dibatalkan') DEFAULT 'menunggu_pembayaran'");
+            DB::statement("ALTER TABLE order_status_histories MODIFY COLUMN status_sebelum ENUM('menunggu_pembayaran','diproses','disiapkan','dikirim','selesai','dibatalkan') NULL");
+            DB::statement("ALTER TABLE order_status_histories MODIFY COLUMN status_sesudah ENUM('menunggu_pembayaran','diproses','disiapkan','dikirim','selesai','dibatalkan') NOT NULL");
+        }
     }
 };

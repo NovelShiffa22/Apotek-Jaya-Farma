@@ -1,9 +1,43 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { ChevronLeft, Package, User, FileText, CheckCircle, Clock, Truck, XCircle, FileImage } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function AdminOrderDetail({ order, auth }: any) {
     const [isUpdating, setIsUpdating] = useState(false);
+
+    const [modalConfig, setModalConfig] = useState<{
+        isOpen: boolean;
+        type: 'warning' | 'info' | 'success';
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        confirmText?: string;
+        cancelText?: string;
+    }>({
+        isOpen: false,
+        type: 'info',
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
+
+    const closeConfirmModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
+
+    const confirmUpdateStatus = (status: string, title: string, message: string) => {
+        setModalConfig({
+            isOpen: true,
+            type: 'warning',
+            title,
+            message,
+            confirmText: 'Ya, Lanjutkan',
+            cancelText: 'Batal',
+            onConfirm: () => {
+                updateOrderStatus(order.id, status);
+                closeConfirmModal();
+            }
+        });
+    };
 
     const updateOrderStatus = (id: number | string, status: string) => {
         setIsUpdating(true);
@@ -76,7 +110,7 @@ export default function AdminOrderDetail({ order, auth }: any) {
                         <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <h1 className="font-['Roboto_Condensed',sans-serif] text-3xl font-bold text-slate-800">
-                                    Pesanan {order.kode_pesanan}
+                                    Pesanan {order.id.toString().startsWith('vt_') ? `VT-${order.id.toString().replace('vt_', '')}` : `#${String(order.id).padStart(6, '0')}`}
                                 </h1>
                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
                                     <StatusIcon size={14} />
@@ -88,11 +122,21 @@ export default function AdminOrderDetail({ order, auth }: any) {
                             </p>
                         </div>
                         
-                        <div className="text-left md:text-right">
-                            <p className="font-['Inter',sans-serif] text-sm text-slate-500 mb-1">Total Pembayaran</p>
-                            <p className="font-['Roboto_Condensed',sans-serif] text-3xl font-bold text-[#0D6A36]">
-                                Rp {parseFloat(order.total_biaya || 0).toLocaleString('id-ID')}
-                            </p>
+                        <div className="text-left md:text-right bg-white p-4 rounded-xl border border-slate-200 shadow-sm min-w-[320px]">
+                            <div className="flex flex-wrap justify-between items-center gap-4 mb-1.5">
+                                <span className="font-['Inter',sans-serif] text-xs text-slate-500">Subtotal Produk</span>
+                                <span className="font-['Inter',sans-serif] text-xs font-semibold text-slate-700">Rp {parseFloat(order.total_biaya - (order.shippingMethod?.biaya || 0)).toLocaleString('id-ID')}</span>
+                            </div>
+                            <div className="flex flex-wrap justify-between items-center gap-4 mb-3 pb-3 border-b border-slate-100">
+                                <span className="font-['Inter',sans-serif] text-xs text-slate-500">Biaya Pengiriman</span>
+                                <span className="font-['Inter',sans-serif] text-xs font-semibold text-slate-700">Rp {parseFloat(order.shippingMethod?.biaya || 0).toLocaleString('id-ID')}</span>
+                            </div>
+                            <div className="flex flex-wrap justify-between items-center gap-4 pt-1">
+                                <p className="font-['Inter',sans-serif] text-sm text-slate-500 font-medium">Total Pembayaran</p>
+                                <p className="font-['Roboto_Condensed',sans-serif] text-2xl font-bold text-[#0D6A36] text-right">
+                                    Rp {parseFloat(order.total_biaya || 0).toLocaleString('id-ID')}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -156,7 +200,87 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                 </h2>
                             </div>
                             <div className="p-6">
-                                {order.status_histories && order.status_histories.length > 0 ? (
+                                {isVirtual ? (
+                                    <div className="relative">
+                                        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                                        
+                                        {/* Menunggu Pembayaran */}
+                                        <div className="relative flex items-start mb-6">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                                                ['Pending', 'menunggu_pembayaran', 'Belum Bayar'].includes(order.status) 
+                                                ? 'bg-amber-100 border-2 border-amber-500 text-amber-600' 
+                                                : 'bg-[#006a3f] text-white'
+                                            }`}>
+                                                <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                                            </div>
+                                            <div className="ml-4 flex-1">
+                                                <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                                                ['Pending', 'menunggu_pembayaran', 'Belum Bayar'].includes(order.status) ? 'text-amber-700' : 'text-gray-900'
+                                                }`}>Menunggu Pembayaran</h5>
+                                                <p className="text-[12px] text-gray-500 mt-1 font-medium">Pembayaran telah dikonfirmasi dan tervalidasi</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Diproses */}
+                                        <div className="relative flex items-start mb-6">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                                                ['Lunas', 'diproses', 'Diproses'].includes(order.status)
+                                                ? 'bg-blue-100 border-2 border-blue-500 text-blue-600'
+                                                : (['dikirim', 'Dikirim', 'selesai', 'Selesai'].includes(order.status) ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                                            }`}>
+                                                <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                                            </div>
+                                            <div className="ml-4 flex-1">
+                                                <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                                                ['Lunas', 'diproses', 'Diproses'].includes(order.status) ? 'text-blue-700' : 
+                                                (['dikirim', 'Dikirim', 'selesai', 'Selesai'].includes(order.status) ? 'text-gray-900' : 'text-gray-400')
+                                                }`}>Diproses</h5>
+                                                {['Lunas', 'diproses', 'Diproses'].includes(order.status) && (
+                                                <p className="text-[12px] text-gray-500 mt-1 font-medium">Pesanan sedang dikemas oleh apoteker</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Dikirim */}
+                                        <div className="relative flex items-start mb-6">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                                                ['dikirim', 'Dikirim'].includes(order.status)
+                                                ? 'bg-purple-100 border-2 border-purple-500 text-purple-600'
+                                                : (['selesai', 'Selesai'].includes(order.status) ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                                            }`}>
+                                                <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                                            </div>
+                                            <div className="ml-4 flex-1">
+                                                <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                                                ['dikirim', 'Dikirim'].includes(order.status) ? 'text-purple-700' : 
+                                                (['selesai', 'Selesai'].includes(order.status) ? 'text-gray-900' : 'text-gray-400')
+                                                }`}>Dikirim</h5>
+                                                {['dikirim', 'Dikirim'].includes(order.status) && (
+                                                <p className="text-[12px] text-gray-500 mt-1 font-medium">Pesanan dalam perjalanan via kurir</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Selesai */}
+                                        <div className="relative flex items-start">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                                                ['selesai', 'Selesai'].includes(order.status)
+                                                ? 'bg-emerald-100 border-2 border-emerald-500 text-emerald-600'
+                                                : 'bg-gray-100 border-2 border-gray-200 text-gray-300'
+                                            }`}>
+                                                <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                                            </div>
+                                            <div className="ml-4 flex-1">
+                                                <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                                                ['selesai', 'Selesai'].includes(order.status) ? 'text-emerald-700' : 'text-gray-400'
+                                                }`}>Selesai</h5>
+                                                {['selesai', 'Selesai'].includes(order.status) && (
+                                                <p className="text-[12px] text-gray-500 mt-1 font-medium">Pesanan telah diterima</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : order.status_histories && order.status_histories.length > 0 ? (
                                     <div className="relative border-l-2 border-slate-100 ml-3 space-y-8">
                                         {order.status_histories.map((history: any, idx: number) => (
                                             <div key={idx} className="relative pl-6">
@@ -201,7 +325,7 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                         </div>
                                         <button
                                             disabled={isUpdating}
-                                            onClick={() => { if (window.confirm("Yakin ingin mengambil alih pesanan ini?")) updateOrderStatus(order.id, 'diproses'); }}
+                                            onClick={() => confirmUpdateStatus('diproses', 'Ambil Alih Pesanan?', 'Yakin ingin mengambil alih pesanan ini?')}
                                             className="w-full py-3 rounded-xl bg-red-600 text-white font-['Inter',sans-serif] text-sm font-bold shadow-md hover:bg-red-700 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                                         >
                                             {isUpdating ? 'Memproses...' : 'Ambil Alih Pesanan Ini'}
@@ -230,17 +354,17 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                                 <label className="block font-['Inter',sans-serif] text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Pilih Status Baru</label>
                                                 <div className="grid grid-cols-1 gap-2">
                                                     {order.status === 'menunggu_pembayaran' && !isVirtual && (
-                                                        <button onClick={() => { if (window.confirm("Yakin ingin menandai pesanan ini sedang diproses?")) updateOrderStatus(order.id, 'diproses'); }} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-sm transition-colors">
+                                                        <button onClick={() => confirmUpdateStatus('diproses', 'Tandai Diproses?', 'Yakin ingin menandai pesanan ini sedang diproses?')} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-sm transition-colors">
                                                             Tandai Sedang Diproses
                                                         </button>
                                                     )}
                                                     {order.status === 'diproses' && (
-                                                        <button onClick={() => { if (window.confirm("Yakin ingin mengirim pesanan ini?")) updateOrderStatus(order.id, 'dikirim'); }} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-sm transition-colors">
+                                                        <button onClick={() => confirmUpdateStatus('dikirim', 'Kirim Pesanan?', 'Yakin ingin mengirim pesanan ini?')} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-sm transition-colors">
                                                             Kirim Pesanan
                                                         </button>
                                                     )}
                                                     {order.status === 'dikirim' && (
-                                                        <button onClick={() => { if (window.confirm("Yakin ingin menyelesaikan pesanan ini?")) updateOrderStatus(order.id, 'selesai'); }} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-sm transition-colors">
+                                                        <button onClick={() => confirmUpdateStatus('selesai', 'Selesaikan Pesanan?', 'Yakin ingin menyelesaikan pesanan ini?')} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-sm transition-colors">
                                                             Selesaikan Pesanan
                                                         </button>
                                                     )}
@@ -272,13 +396,40 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                     <p className="text-sm font-semibold text-slate-800">{order.user?.name || 'Guest'}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Metode Pembayaran</p>
-                                    <p className="text-sm font-medium text-slate-800">{order.payment_method || '-'}</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">No. WhatsApp Aktif Penerima</p>
+                                    <p className="text-sm font-semibold text-slate-800">{order.prescription?.whatsapp || order.user?.phone || '-'}</p>
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Alamat Pengiriman</p>
-                                    <p className="text-sm font-medium text-slate-800">{order.shipping_address || 'Alamat belum diatur'}</p>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Metode Pembayaran</p>
+                                    <p className="text-sm font-medium text-slate-800">
+                                        {order.payment_method === 'Midtrans Payment Gateway' ? 'Virtual Account' : (order.payment_method || '-')}
+                                    </p>
                                 </div>
+                                {order.va_number && (
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Nomor Virtual Account</p>
+                                        <p className="text-sm font-medium text-slate-800">{order.va_number}</p>
+                                    </div>
+                                )}
+                                <div>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Metode Pengiriman</p>
+                                    <p className="text-sm font-medium text-slate-800">
+                                        {(order.shippingMethod?.nama || order.shipping_method || 'Reguler').replace(/_/g, ' ').toUpperCase()}
+                                    </p>
+                                </div>
+                                {(order.shippingMethod?.nama === 'ambil_apotek' || order.shipping_method === 'ambil_apotek' || order.shippingMethod?.nama === 'Ambil di Apotek') ? (
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Alamat Pengiriman</p>
+                                        <p className="text-sm font-medium text-amber-600 leading-relaxed italic">
+                                            Diambil langsung oleh pasien di Apotek Jaya Farma
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Alamat Pengiriman</p>
+                                        <p className="text-sm font-medium text-slate-800">{order.shipping_address || 'Alamat belum diatur'}</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -300,10 +451,10 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                             href={prescriptionFileUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-50 text-[#0D6A36] border border-[#0D6A36]/20 font-['Inter',sans-serif] text-sm font-bold tracking-wide hover:bg-[#F4FDF8] hover:border-[#0D6A36] transition-all"
+                                            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border ${prescriptionFileUrl.toLowerCase().includes('.pdf') ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:border-red-300' : 'bg-slate-50 text-[#0D6A36] border-[#0D6A36]/20 hover:bg-[#F4FDF8] hover:border-[#0D6A36]'} font-['Inter',sans-serif] text-sm font-bold tracking-wide transition-all`}
                                         >
-                                            <FileImage size={16} />
-                                            Lihat Foto Resep
+                                            {prescriptionFileUrl.toLowerCase().includes('.pdf') ? <FileText size={16} /> : <FileImage size={16} />}
+                                            {prescriptionFileUrl.toLowerCase().includes('.pdf') ? 'Buka Dokumen PDF' : 'Lihat Foto Resep'}
                                         </a>
                                     ) : (
                                         <p className="text-sm text-slate-400 italic">File resep tidak tersedia.</p>
@@ -314,6 +465,8 @@ export default function AdminOrderDetail({ order, auth }: any) {
                     </div>
                 </div>
             </main>
+
+            <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
         </div>
     );
 }

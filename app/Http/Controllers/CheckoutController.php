@@ -24,14 +24,25 @@ class CheckoutController extends Controller
                 $isPrescription = true;
                 foreach ($prescription->items as $pItem) {
                     $prod = $pItem->product;
+                    $qty = $pItem->kuantitas_ambil ?? $pItem->kuantitas_resep ?? 1;
+                    
                     if ($prod) {
                         $checkoutItems[] = [
                             'id' => $prod->id,
                             'name' => $prod->nama_obat,
                             'category' => $prod->category ? $prod->category->nama_kategori : 'Satuan',
                             'price' => $prod->harga,
-                            'quantity' => $pItem->kuantitas_ambil ?? $pItem->kuantitas_resep ?? 1,
+                            'quantity' => $qty,
                             'image' => $prod->gambar,
+                        ];
+                    } else {
+                        $checkoutItems[] = [
+                            'id' => 'racikan_' . $pItem->id,
+                            'name' => $pItem->product_name ?? 'Racikan Baru',
+                            'category' => 'Racikan',
+                            'price' => $pItem->harga_satuan ?? 0,
+                            'quantity' => $qty,
+                            'image' => null,
                         ];
                     }
                 }
@@ -70,6 +81,10 @@ class CheckoutController extends Controller
                 // Fallback: Jika tidak ada item spesifik, ambil semua
                 $checkoutItems = array_values($cart);
             }
+        }
+
+        if (empty($checkoutItems)) {
+            return redirect()->route('catalog.index')->with('error', 'Keranjang belanja kosong. Silakan pilih produk terlebih dahulu sebelum melakukan checkout.');
         }
 
         // 3. Format Data Produk untuk UI
@@ -128,8 +143,8 @@ class CheckoutController extends Controller
                 'price' => 0,
             ],
             [
-                'id' => 'kurir_toko',
-                'title' => 'Kurir Toko',
+                'id' => 'Kirim via Kurir',
+                'title' => 'Kirim via Kurir',
                 'subtitle' => '',
                 'price' => 12000,
             ]
@@ -155,25 +170,64 @@ class CheckoutController extends Controller
             'payment_method' => 'required|string',
         ]);
 
+        $shippingAddress = $request->input('shipping_address');
+        if (empty($shippingAddress) || $shippingAddress === 'Alamat belum diatur') {
+            return redirect()->back()->withErrors(['address' => 'Alamat pengiriman wajib diisi dan tidak boleh kosong sebelum memilih kurir!']);
+        }
+
         $shippingMethod = $request->input('shipping_method');
+        $prescriptionId = $request->input('prescription_id');
+
+        $isKotaBandung = stripos($shippingAddress, 'Bandung') !== false && 
+                         stripos($shippingAddress, 'Kabupaten') === false && 
+                         stripos($shippingAddress, 'Kab.') === false;
+
+        if ($prescriptionId) {
+            // Validasi: Cek apakah sudah ada transaksi aktif untuk resep ini
+            $activeTransaction = \App\Models\VirtualTransaction::where('prescription_id', $prescriptionId)
+                ->whereIn('status', ['Pending', 'Belum Bayar', 'menunggu_pembayaran'])
+                ->first();
+
+            if ($activeTransaction) {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'message' => 'Terdapat transaksi pembayaran yang masih aktif untuk resep ini. Selesaikan atau batalkan pesanan tersebut terlebih dahulu.',
+                        'transaction_id' => $activeTransaction->id
+                    ], 400);
+                }
+                return redirect()->back()->withErrors(['pesanan' => 'Terdapat transaksi pembayaran yang masih aktif untuk resep ini.']);
+            }
+
+            if ($shippingMethod === 'kurir_toko' || $shippingMethod === 'Kirim via Kurir') {
+                if (!$isKotaBandung) {
+                    return redirect()->back()->withErrors(['shipping_method' => 'Layanan kurir toko untuk pesanan resep saat ini hanya mencakup wilayah Kota Bandung. Alamat luar kota tidak didukung.']);
+                }
+            }
+        }
+
         $paymentMethod = $request->input('payment_method');
         $isBuyNow = $request->input('is_buy_now', false);
         
-        $shippingCost = $shippingMethod === 'kurir_toko' ? 12000 : 0;
+        $shippingCost = ($shippingMethod === 'kurir_toko' || $shippingMethod === 'Kirim via Kurir') ? 12000 : 0;
         $discount = \Illuminate\Support\Facades\Cache::get('global_discount', 0);
         
         $subtotal = 0;
         $purchasedItems = [];
 
-        $prescriptionId = $request->input('prescription_id');
-
         if ($prescriptionId) {
             $prescription = \App\Models\Prescription::with('items.product.category')->find($prescriptionId);
             if ($prescription) {
+                // SINKRONISASI DATA PENGIRIMAN DARI RESEP
+                $shippingMethod = $prescription->shipping_method ?? 'ambil_apotek';
+                $shippingAddress = $prescription->shipping_address ?? 'Alamat belum diatur';
+                $shippingCost = ($shippingMethod === 'kurir' || $shippingMethod === 'kurir_toko') ? 12000 : 0;
+                $discount = 0; // HAPUS DISKON UNTUK RESEP
+                
                 foreach ($prescription->items as $pItem) {
                     $prod = $pItem->product;
+                    $qty = $pItem->kuantitas_ambil ?? $pItem->kuantitas_resep ?? 1;
+                    
                     if ($prod) {
-                        $qty = $pItem->kuantitas_ambil ?? $pItem->kuantitas_resep ?? 1;
                         $purchasedItems[] = [
                             'id' => $prod->id,
                             'name' => $prod->nama_obat,
@@ -183,6 +237,18 @@ class CheckoutController extends Controller
                             'image' => $prod->gambar,
                         ];
                         $subtotal += $prod->harga * $qty;
+                    } else {
+                        // Racikan / Custom Item
+                        $harga = $pItem->harga_satuan ?? 0;
+                        $purchasedItems[] = [
+                            'id' => 'racikan_' . $pItem->id, // Fake ID for racikan
+                            'name' => $pItem->product_name ?? 'Racikan Baru',
+                            'category' => 'Racikan',
+                            'price' => $harga,
+                            'quantity' => $qty,
+                            'image' => null,
+                        ];
+                        $subtotal += $harga * $qty;
                     }
                 }
             }
@@ -231,20 +297,29 @@ class CheckoutController extends Controller
 
         $totalAmount = $subtotal > 0 ? max(0, $subtotal + $shippingCost - $discount) : 0;
         
-        // Generate VA Number
-        $phone = auth()->check() ? auth()->user()->phone : null;
-        $vaNumber = '8830' . ($phone ? preg_replace('/[^0-9]/', '', $phone) : rand(10000000, 99999999));
-
         $transaction = \App\Models\VirtualTransaction::create([
             'user_id' => auth()->id(),
             'prescription_id' => $prescriptionId,
-            'va_number' => $vaNumber,
+            'va_number' => null,
+            'bank_name' => null,
             'payment_method' => $paymentMethod,
             'total_amount' => $totalAmount,
             'status' => 'Pending',
             'items' => $purchasedItems,
-            'shipping_address' => $request->input('shipping_address'),
+            'shipping_address' => $shippingAddress,
+            'shipping_method' => $shippingMethod,
+            'shipping_cost' => $shippingCost,
         ]);
+
+        // Log the activity
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'create_virtual_transaction',
+                'description' => 'User membuat pesanan virtual #' . ($transaction->va_number ?? 'VT-' . $transaction->id),
+                'ip_address' => $request->ip(),
+            ]);
+        }
 
         // Kurangi stok obat
         foreach ($purchasedItems as $item) {
@@ -327,6 +402,13 @@ class CheckoutController extends Controller
             \Illuminate\Support\Facades\Log::error('Gagal mendapatkan token Midtrans: ' . $e->getMessage());
         }
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'snap_token' => $transaction->snap_token ?? null,
+                'transaction_id' => $transaction->id,
+            ]);
+        }
+
         return redirect()->route('order.invoice', ['id' => $transaction->id]);
     }
 
@@ -337,7 +419,7 @@ class CheckoutController extends Controller
         // DIRECT SINKRONISASI MIDTRANS
         if ($transaction->status === 'Pending' || $transaction->status === 'Belum Bayar') {
             \Midtrans\Config::$serverKey = config('midtrans.server_key');
-            \Midtrans\Config::$isProduction = config('midtrans.is_production');
+            \Midtrans\Config::$isProduction = filter_var(config('midtrans.is_production'), FILTER_VALIDATE_BOOLEAN);
             \Midtrans\Config::$curlOptions = [
                 CURLOPT_SSL_VERIFYHOST => 0,
                 CURLOPT_SSL_VERIFYPEER => 0,
@@ -346,22 +428,50 @@ class CheckoutController extends Controller
 
             try {
                 $status = \Midtrans\Transaction::status($transaction->id);
+                
+                try {
+                    if (isset($status->va_numbers) && count($status->va_numbers) > 0) {
+                        // 1. Tipe Virtual Account Bank biasa
+                        $transaction->bank_name = strtoupper($status->va_numbers[0]->bank);
+                        $transaction->va_number = $status->va_numbers[0]->va_number;
+                    } elseif (isset($status->payment_type) && $status->payment_type == 'cstore') {
+                        // 2. Tipe Gerai Retail (Alfamart / Indomaret)
+                        $transaction->bank_name = strtoupper($status->store ?? 'GERAI RETAIL');
+                        $transaction->va_number = $status->payment_code ?? null;
+                    } elseif (isset($status->payment_type) && ($status->payment_type == 'echannel' || isset($status->bill_key))) {
+                        // 3. Tipe Mandiri Bill
+                        $transaction->bank_name = 'MANDIRI BILL';
+                        $transaction->va_number = ($status->biller_code ?? '') . ' - ' . ($status->bill_key ?? '');
+                    } else {
+                        // 4. Tipe E-Wallet (DANA, Gopay, ShopeePay, QRIS)
+                        $transaction->bank_name = strtoupper($status->payment_type ?? 'E-WALLET');
+                        $transaction->va_number = $status->transaction_id ?? null;
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Midtrans universal parsing error: " . $e->getMessage());
+                }
+
                 if ($status->transaction_status == 'settlement' || $status->transaction_status == 'capture') {
                     $transaction->update(['status' => 'Lunas']);
+                    if ($transaction->prescription_id) {
+                        \App\Models\Prescription::where('id', $transaction->prescription_id)
+                            ->update(['status_validasi' => 'telah_dipesan']);
+                    }
                 } else if ($status->transaction_status == 'expire') {
                     $transaction->update(['status' => 'Expired']);
                 } else if ($status->transaction_status == 'cancel' || $status->transaction_status == 'deny') {
                     $transaction->update(['status' => 'Dibatalkan']);
+                } else {
+                    $transaction->save();
                 }
+                
+                // Pastikan data terbaru dari database diambil kembali
+                $transaction = $transaction->fresh();
+
             } catch (\Exception $e) {
-                // Abaikan jika order belum ada di Midtrans atau eror jaringan
+                \Illuminate\Support\Facades\Log::error("Midtrans API Check failed in invoice: " . $e->getMessage());
             }
         }
-
-        // TIDAK DILAKUKAN REDIRECT OTOMATIS AGAR HALAMAN SUCCESS (STRUK) BISA DIRENDER DI FRONTEND
-        // if ($transaction->status === 'Lunas' || $transaction->status === 'Diproses') {
-        //     return redirect('/profile?tab=orders')->with('success', 'Pembayaran Berhasil! Pesanan Anda sedang diproses.');
-        // }
         
         return Inertia::render('Invoice', [
             'transaction' => $transaction
@@ -419,6 +529,11 @@ class CheckoutController extends Controller
             'status' => 'Lunas'
         ]);
 
+        if ($transaction->prescription_id) {
+            \App\Models\Prescription::where('id', $transaction->prescription_id)
+                ->update(['status_validasi' => 'telah_dipesan']);
+        }
+
         return redirect()->back()->with('success', 'Pembayaran berhasil diverifikasi!');
     }
 
@@ -432,5 +547,38 @@ class CheckoutController extends Controller
         }
 
         return redirect()->back()->with('error', 'Pesanan yang sudah lunas tidak dapat dibatalkan.');
+    }
+
+    public function pembayaranSukses(\Illuminate\Http\Request $request)
+    {
+        $transaction = \App\Models\VirtualTransaction::find($request->order_id);
+        
+        if ($transaction) {
+            $transaction->status = 'Lunas';
+            
+            // Universal mapping untuk sinkronisasi fallback frontend
+            if ($request->has('va_numbers') && is_array($request->va_numbers) && count($request->va_numbers) > 0) {
+                $transaction->bank_name = strtoupper($request->va_numbers[0]['bank'] ?? '');
+                $transaction->va_number = $request->va_numbers[0]['va_number'] ?? null;
+            } elseif ($request->payment_type == 'cstore') {
+                $transaction->bank_name = strtoupper($request->store ?? 'GERAI RETAIL');
+                $transaction->va_number = $request->payment_code ?? null;
+            } elseif ($request->payment_type == 'echannel' || $request->has('bill_key')) {
+                $transaction->bank_name = 'MANDIRI BILL';
+                $transaction->va_number = ($request->biller_code ?? '') . ' - ' . ($request->bill_key ?? '');
+            } else {
+                $transaction->bank_name = strtoupper($request->payment_type ?? 'E-WALLET');
+                $transaction->va_number = $request->transaction_id ?? null;
+            }
+            
+            $transaction->save();
+
+            if ($transaction->prescription_id) {
+                \App\Models\Prescription::where('id', $transaction->prescription_id)
+                    ->update(['status_validasi' => 'telah_dipesan']);
+            }
+        }
+        
+        return redirect()->back();
     }
 }

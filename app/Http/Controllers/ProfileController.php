@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
@@ -68,8 +69,23 @@ class ProfileController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', \Illuminate\Validation\Rule::unique('users')->ignore(auth()->id())],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore(auth()->id()),
+            ],
+            'phone' => ['required', 'numeric', 'digits_between:10,13', 'regex:/^(08|62)/'],
+        ], [
+            'email.unique' => 'Email ini sudah terdaftar. Silakan gunakan email lain.',
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'phone.required' => 'Nomor telepon wajib diisi.',
+            'phone.numeric' => 'Nomor telepon harus berupa angka.',
+            'phone.digits_between' => 'Nomor telepon harus memiliki panjang 10 hingga 13 digit.',
+            'phone.regex' => 'Nomor telepon harus diawali dengan 08 atau 62.',
         ]);
 
         $user = $request->user();
@@ -80,6 +96,15 @@ class ProfileController extends Controller
         }
 
         $user->save();
+
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'update_profile',
+                'description' => 'User memperbarui informasi profil',
+                'ip_address' => $request->ip(),
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Informasi profil berhasil diperbarui.');
     }

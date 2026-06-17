@@ -34,6 +34,15 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         $user = auth()->user();
+
+        // Log login activity
+        \App\Models\UserActivity::create([
+            'user_id' => $user->id,
+            'action' => 'login',
+            'description' => 'User login ke sistem',
+            'ip_address' => $request->ip(),
+        ]);
+
         if ($user->role === 'admin') {
             return redirect()->intended('/admin');
         } elseif ($user->role === 'pharmacist') {
@@ -48,6 +57,16 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = auth()->user();
+        if ($user) {
+            \App\Models\UserActivity::create([
+                'user_id' => $user->id,
+                'action' => 'logout',
+                'description' => 'User logout dari sistem',
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

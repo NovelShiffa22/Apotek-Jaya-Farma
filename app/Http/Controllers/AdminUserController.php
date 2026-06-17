@@ -22,13 +22,22 @@ class AdminUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
             'role' => $request->role,
             'password' => Hash::make($request->password),
         ]);
+
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'create_user',
+                'description' => 'Menambahkan user baru: ' . $user->name . ' (' . $user->role . ')',
+                'ip_address' => request()->ip(),
+            ]);
+        }
 
         return redirect()->back()->with('success', 'User berhasil ditambahkan');
     }
@@ -67,6 +76,15 @@ class AdminUserController extends Controller
 
         $user->update($userData);
 
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'update_user',
+                'description' => 'Memperbarui data user: ' . $user->name,
+                'ip_address' => request()->ip(),
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Data user berhasil diperbarui');
     }
 
@@ -82,8 +100,30 @@ class AdminUserController extends Controller
             return redirect()->back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri');
         }
 
+        $userName = $user->name;
         $user->delete();
 
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'delete_user',
+                'description' => 'Menghapus user: ' . $userName,
+                'ip_address' => request()->ip(),
+            ]);
+        }
+
         return redirect()->back()->with('success', 'User berhasil dihapus');
+    }
+
+    /**
+     * Get user activities.
+     */
+    public function activities($id)
+    {
+        $activities = \App\Models\UserActivity::where('user_id', $id)
+            ->latest()
+            ->get();
+            
+        return response()->json($activities);
     }
 }

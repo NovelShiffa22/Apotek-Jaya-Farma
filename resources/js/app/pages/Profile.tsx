@@ -5,6 +5,17 @@ import { usePage, Link, useForm, router } from '@inertiajs/react';
 import ConfirmModal from '../components/ConfirmModal';
 import { regions } from '../data/regions';
 
+const formatPaymentMethod = (order: any) => {
+  if (['Pending', 'Belum Bayar'].includes(order.status)) return 'Menunggu Pembayaran';
+  if (order.payment_method !== 'Midtrans Payment Gateway') return order.payment_method || 'Pembayaran';
+
+  const bName = (order.bank_name || '').toUpperCase();
+  if (bName === 'MANDIRI BILL') return 'Mandiri Bill Payment';
+  if (bName === 'E-WALLET' || bName === 'GOPAY' || bName === 'SHOPEEPAY' || bName === 'QRIS' || bName === 'DANA') return 'E-Wallet / QRIS';
+  if (bName === 'GERAI RETAIL' || bName === 'ALFAMART' || bName === 'INDOMARET') return `Gerai Retail ${bName !== 'GERAI RETAIL' ? bName : ''}`.trim();
+  return `Virtual Account ${bName}`.trim();
+};
+
 export default function Profile({ user, orders = { data: [], links: [] }, counts = {}, prescriptionCounts = {}, addresses = [], prescriptions = { data: [], links: [] } }: any) {
   const { apotekInfo } = usePage<any>().props;
   const jamOp = apotekInfo?.jam_operasional || '08.00 - 18.00 WIB';
@@ -27,11 +38,12 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
   const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
   const [modalConfig, setModalConfig] = useState<{
       isOpen: boolean;
-      type: 'logout' | 'delete' | 'timeout' | 'warning';
+      type: 'logout' | 'delete' | 'timeout' | 'warning' | 'success';
       title: string;
       message: string;
       onConfirm: () => void;
       confirmText?: string;
+      cancelText?: string;
   }>({
       isOpen: false,
       type: 'warning',
@@ -42,7 +54,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
 
   const closeConfirmModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
 
-  const { data: formAddress, setData: setFormAddress, post: postAddress, processing: processingAddress, reset: resetAddress, errors: addressErrors, setError: setAddressError, clearErrors: clearAddressErrors } = useForm({
+  const { data: formAddress, setData: setFormAddress, post: postAddress, processing: processingAddress, reset: resetAddress } = useForm({
     label: '',
     alamat_lengkap: '',
     kota: '',
@@ -55,7 +67,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
     ? regions.find(r => r.name.toLowerCase() === formAddress.provinsi.toLowerCase())?.cities || []
     : [];
 
-  const { data: formProfile, setData: setFormProfile, patch: patchProfile, processing: processingProfile } = useForm({
+  const { data: formProfile, setData: setFormProfile, patch: patchProfile, processing: processingProfile, errors: formProfileErrors } = useForm({
     name: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
@@ -69,7 +81,19 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
 
   const submitProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    patchProfile(route('profile.update_info'));
+    patchProfile(route('profile.update_info'), {
+      onSuccess: () => {
+        setModalConfig({
+          isOpen: true,
+          type: 'success',
+          title: 'Berhasil Disimpan!',
+          message: 'Informasi profil Anda telah berhasil diperbarui di sistem.',
+          confirmText: 'Selesai',
+          cancelText: '',
+          onConfirm: () => closeConfirmModal()
+        });
+      }
+    });
   };
 
   const submitPassword = (e: React.FormEvent) => {
@@ -132,15 +156,6 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
 
   const submitAddress = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validasi kode pos (harus 5 digit angka)
-    if (!/^\d{5}$/.test(formAddress.kode_pos)) {
-      setAddressError('kode_pos', 'Kode pos harus terdiri dari 5 digit angka.');
-      return;
-    }
-    
-    clearAddressErrors('kode_pos');
-
     if (editingAddressId) {
       router.patch(`/profile/address/${editingAddressId}`, formAddress as any, {
         onSuccess: () => {
@@ -187,6 +202,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
           confirmText: 'Ya, Keluar',
           onConfirm: () => {
               closeConfirmModal();
+              window.history.replaceState(null, '', '/login');
               router.post(route('logout'));
           }
       });
@@ -283,9 +299,14 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="text"
                       value={formProfile.name}
                       onChange={e => setFormProfile('name', e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                        formProfileErrors.name ? 'border-[#ef4444]' : 'border-gray-300'
+                      }`}
                       required
                     />
+                    {formProfileErrors.name && (
+                        <p className="text-[#ef4444] text-[12px] mt-2 font-medium">{formProfileErrors.name}</p>
+                    )}
                   </div>
                   <div>
                     <label className="font-['Inter',sans-serif] font-bold text-[12px] text-[#6e7a70] tracking-wider uppercase mb-3 block">
@@ -295,9 +316,14 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="email"
                       value={formProfile.email}
                       onChange={e => setFormProfile('email', e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                        formProfileErrors.email ? 'border-[#ef4444]' : 'border-gray-300'
+                      }`}
                       required
                     />
+                    {formProfileErrors.email && (
+                        <p className="text-[#ef4444] text-[12px] mt-2 font-medium">{formProfileErrors.email}</p>
+                    )}
                   </div>
                   <div>
                     <label className="font-['Inter',sans-serif] font-bold text-[12px] text-[#6e7a70] tracking-wider uppercase mb-3 block">
@@ -306,9 +332,16 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                     <input
                       type="tel"
                       value={formProfile.phone}
-                      onChange={e => setFormProfile('phone', e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      onChange={e => setFormProfile('phone', e.target.value.replace(/\D/g, ''))}
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                        formProfileErrors.phone ? 'border-[#ef4444]' : 'border-gray-300'
+                      }`}
                     />
+                    {formProfileErrors.phone ? (
+                        <p className="text-[#ef4444] text-[12px] mt-2 font-medium">{formProfileErrors.phone}</p>
+                    ) : (
+                        <p className="text-[#6e7a70] text-[12px] mt-2">Hanya berupa angka (10-13 digit) diawali 08/62.</p>
+                    )}
                   </div>
                   <button 
                     type="submit" 
@@ -333,11 +366,13 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="password"
                       value={passwordForm.data.current_password}
                       onChange={e => passwordForm.setData('current_password', e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                        passwordForm.errors.current_password ? 'border-[#ef4444]' : 'border-gray-300'
+                      }`}
                       required
                     />
                     {passwordForm.errors.current_password && (
-                      <p className="mt-2 text-sm text-red-600 font-['Inter',sans-serif]">{passwordForm.errors.current_password}</p>
+                      <p className="mt-2 text-[12px] text-[#ef4444] font-medium font-['Inter',sans-serif]">{passwordForm.errors.current_password}</p>
                     )}
                   </div>
                   <div>
@@ -348,11 +383,15 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="password"
                       value={passwordForm.data.password}
                       onChange={e => passwordForm.setData('password', e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                        passwordForm.errors.password ? 'border-[#ef4444]' : 'border-gray-300'
+                      }`}
                       required
                     />
-                    {passwordForm.errors.password && (
-                      <p className="mt-2 text-sm text-red-600 font-['Inter',sans-serif]">{passwordForm.errors.password}</p>
+                    {passwordForm.errors.password ? (
+                      <p className="mt-2 text-[12px] text-[#ef4444] font-medium font-['Inter',sans-serif]">{passwordForm.errors.password}</p>
+                    ) : (
+                      <p className="text-[#6e7a70] text-[12px] mt-2 font-['Inter',sans-serif]">Minimal 8 karakter, wajib kombinasi huruf besar, kecil, dan angka.</p>
                     )}
                   </div>
                   <div>
@@ -363,11 +402,13 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="password"
                       value={passwordForm.data.password_confirmation}
                       onChange={e => passwordForm.setData('password_confirmation', e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                        passwordForm.errors.password_confirmation ? 'border-[#ef4444]' : 'border-gray-300'
+                      }`}
                       required
                     />
                     {passwordForm.errors.password_confirmation && (
-                      <p className="mt-2 text-sm text-red-600 font-['Inter',sans-serif]">{passwordForm.errors.password_confirmation}</p>
+                      <p className="mt-2 text-[12px] text-[#ef4444] font-medium font-['Inter',sans-serif]">{passwordForm.errors.password_confirmation}</p>
                     )}
                   </div>
                   <button 
@@ -528,15 +569,22 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                             >
                         <div className="flex items-start justify-between mb-4">
                           <div>
-                            <p className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#171d19] mb-1 font-semibold">
-                              No. Pesanan: {order.id.toString().padStart(6, '0')}
-                            </p>
+                            <div className="flex items-center gap-3 mb-1">
+                              <p className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#171d19] font-semibold">
+                                No. Pesanan: {order.id.toString().padStart(6, '0')}
+                              </p>
+                              {order.prescription_id && (
+                                <span className="bg-teal-50 text-teal-700 border border-teal-200 text-[11px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shadow-sm">
+                                  Tebus Resep
+                                </span>
+                              )}
+                            </div>
                             <p className="font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
                               {new Date(order.created_at).toLocaleDateString('id-ID', {
                                 day: 'numeric',
                                 month: 'long', 
                                 year: 'numeric'
-                              })} • {order.payment_method || 'Virtual Account'} {order.va_number && `(VA: ${order.va_number})`}
+                              })} • {formatPaymentMethod(order)} {!['Pending', 'Belum Bayar'].includes(order.status) && order.va_number && `(${order.va_number})`}
                             </p>
                             {['Lunas', 'Diproses'].includes(order.status) && (new Date().getHours() < 8 || new Date().getHours() >= 18) && (
                               <p className="text-amber-600 text-xs mt-1 italic font-medium">
@@ -656,7 +704,8 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                           </div>
                           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-4 sm:mt-0 sm:justify-end">
                             <button 
-                              onClick={() => { setSelectedOrder(order); setIsModalOpen(true); }}
+                              type="button"
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedOrder(order); setIsModalOpen(true); }}
                               className="w-full sm:w-auto text-center font-['Inter',sans-serif] text-[14px] font-bold text-gray-600 hover:text-gray-900 border border-gray-400 px-5 py-2.5 rounded-xl transition-colors hover:bg-gray-50"
                             >
                               Lihat Detail
@@ -669,11 +718,20 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                             {order.status === 'Dibatalkan' && (
                               <button
                                 onClick={() => {
-                                  if(confirm('Apakah Anda yakin ingin menghapus riwayat pesanan ini?')) {
-                                    router.delete(`/profile/orders/${order.id}`, { preserveScroll: true });
-                                  }
+                                  setModalConfig({
+                                    isOpen: true,
+                                    type: 'delete',
+                                    title: 'Hapus Riwayat Pesanan?',
+                                    message: 'Tindakan ini akan menyembunyikan pesanan ini dari daftar riwayat Anda secara permanen.',
+                                    confirmText: 'Ya, Hapus',
+                                    cancelText: 'Batal',
+                                    onConfirm: () => {
+                                      router.delete(`/profile/orders/${order.id}`, { preserveScroll: true });
+                                      closeConfirmModal();
+                                    }
+                                  });
                                 }}
-                                className="w-full sm:w-auto text-center bg-white border border-gray-300 text-gray-500 px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-gray-50 shadow-sm transition-all whitespace-nowrap"
+                                className="w-full sm:w-auto text-center bg-white border border-red-200 text-red-600 px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-red-50 shadow-sm transition-colors whitespace-nowrap"
                               >
                                 Hapus Riwayat
                               </button>
@@ -776,11 +834,17 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                     const prescriptionsData = Array.isArray(prescriptions) ? prescriptions : (prescriptions.data || []);
                     let filteredPrescriptions = prescriptionsData;
                     if (prescriptionTab === 'Menunggu Verifikasi') filteredPrescriptions = filteredPrescriptions.filter((p: any) => p.status_validasi === 'pending');
+                    if (prescriptionTab === 'Disetujui') filteredPrescriptions = filteredPrescriptions.filter((p: any) => p.status_validasi === 'disetujui');
+                    if (prescriptionTab === 'Ditolak') filteredPrescriptions = filteredPrescriptions.filter((p: any) => p.status_validasi === 'ditolak');
+                    if (prescriptionTab === 'Telah dipesan') filteredPrescriptions = filteredPrescriptions.filter((p: any) => 
+                        p.status_validasi === 'telah_dipesan' || 
+                        (p.virtual_transactions && p.virtual_transactions.some((vt: any) => ['Lunas', 'Diproses', 'Dikirim', 'Selesai'].includes(vt.status)))
+                    );
 
                     if (filteredPrescriptions.length === 0) {
                       return (
                         <div className="text-center text-gray-500 py-8 font-medium font-['Inter',sans-serif]">
-                          Tidak ada resep di kategori ini.
+                          {prescriptionTab === 'Telah dipesan' ? 'Belum ada resep yang telah selesai' : 'Tidak ada resep di kategori ini.'}
                         </div>
                       );
                     }
@@ -788,9 +852,9 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                     const cancelPrescription = (id: number) => {
                       setModalConfig({
                           isOpen: true,
-                          type: 'warning',
+                          type: 'delete',
                           title: 'Batalkan Resep',
-                          message: 'Apakah Anda yakin ingin membatalkan resep ini? Aksi ini tidak dapat dibatalkan.',
+                          message: 'Apakah Anda yakin ingin membatalkan pengajuan resep ini? Berkas resep yang telah dibatalkan tidak dapat dikembalikan atau diproses lagi.',
                           confirmText: 'Ya, Batalkan',
                           onConfirm: () => {
                               closeConfirmModal();
@@ -803,7 +867,11 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
 
                     return (
                       <>
-                        {filteredPrescriptions.map((p: any) => (
+                        {filteredPrescriptions.map((p: any) => {
+                          const latestOrder = p.virtual_transactions?.find((vt: any) => ['Lunas', 'Diproses', 'Dikirim', 'Selesai'].includes(vt.status));
+                          const isTelahDipesan = !!latestOrder || p.status_validasi === 'telah_dipesan';
+
+                          return (
                           <div
                             key={p.id}
                             className="flex flex-col justify-between p-4 sm:p-6 border border-gray-200 rounded-xl hover:border-emerald-200 hover:shadow-sm transition-all bg-white gap-4 w-full"
@@ -812,15 +880,32 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                               <div className="flex-1 min-w-0 flex items-start gap-4 w-full">
                                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-xl border border-gray-200 p-2 shrink-0 flex items-center justify-center overflow-hidden">
                                   {p.file_foto ? (
-                                    <img 
-                                      src={`/storage/${p.file_foto.replace('storage/', '')}`} 
-                                      alt="Resep" 
-                                      className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform" 
-                                      onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.src = p.file_foto; // Fallback to raw string
-                                      }}
-                                    />
+                                      (() => {
+                                          const fileUrl = p.file_foto.startsWith('http') ? p.file_foto : (p.file_foto.startsWith('storage/') || p.file_foto.startsWith('/storage/') ? (p.file_foto.startsWith('/') ? p.file_foto : `/${p.file_foto}`) : `/storage/${p.file_foto}`);
+                                          const isPdf = fileUrl.toLowerCase().includes('.pdf');
+                                          return isPdf ? (
+                                              <div 
+                                                  onClick={() => window.open(fileUrl, '_blank')}
+                                                  className="w-full h-full flex flex-col items-center justify-center bg-red-50 text-red-500 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
+                                                  title="Buka Dokumen PDF"
+                                              >
+                                                  <FileText size={24} />
+                                                  <span className="text-[9px] font-bold mt-1">PDF</span>
+                                              </div>
+                                          ) : (
+                                              <img 
+                                                src={fileUrl} 
+                                                alt="Resep" 
+                                                className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform cursor-pointer" 
+                                                onClick={() => window.open(fileUrl, '_blank')}
+                                                title="Lihat Gambar"
+                                                onError={(e) => {
+                                                  const target = e.target as HTMLImageElement;
+                                                  target.style.display = 'none';
+                                                }}
+                                              />
+                                          );
+                                      })()
                                   ) : (
                                     <FileText className="text-gray-400 w-8 h-8 sm:w-10 sm:h-10" />
                                   )}
@@ -863,12 +948,16 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                               <div className="shrink-0 pl-2 text-right">
                                 <span className={`px-3 py-1.5 rounded-full text-[12px] font-bold border font-['Inter',sans-serif] whitespace-nowrap ${
                                   p.status_validasi === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                                  (latestOrder && latestOrder.status === 'Selesai') ? 'bg-[#006a3f] text-white border-transparent' :
+                                  isTelahDipesan ? 'bg-blue-50 text-blue-600 border-blue-200' :
                                   p.status_validasi === 'disetujui' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
                                   'bg-red-50 text-red-600 border-red-200'
                                 }`}>
                                   {p.status_validasi === 'pending' ? 'Menunggu Verifikasi' :
+                                   (latestOrder && latestOrder.status) ? latestOrder.status :
                                    p.status_validasi === 'disetujui' ? 'Resep Disetujui' :
                                    p.status_validasi === 'ditolak' ? 'Resep Ditolak' : 
+                                   p.status_validasi === 'telah_dipesan' ? 'Telah Dipesan' :
                                    p.status_validasi.toUpperCase()}
                                 </span>
                               </div>
@@ -884,15 +973,23 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                                   Batalkan Resep
                                 </button>
                               )}
-                              <Link 
-                                href={route('prescriptions.detail', { id: p.id })} 
-                                className="text-[13px] font-bold text-center bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-xl hover:bg-gray-50 hover:text-[#006a3f] hover:border-[#006a3f] transition-all font-['Inter',sans-serif] shadow-sm"
+                              <button 
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    if (latestOrder) {
+                                        setSelectedOrder(latestOrder);
+                                        setIsModalOpen(true);
+                                    } else {
+                                        router.get(route('prescriptions.detail', { id: p.id }));
+                                    }
+                                }}
+                                className="text-[13px] font-bold text-center bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-xl hover:bg-gray-50 hover:text-[#006a3f] hover:border-[#006a3f] transition-all font-['Inter',sans-serif] shadow-sm cursor-pointer"
                               >
                                 Detail
-                              </Link>
+                              </button>
                             </div>
                           </div>
-                        ))}
+                        )})}
                         
                         {!Array.isArray(prescriptions) && prescriptions.links && prescriptions.links.length > 3 && (
                           <div className="flex items-center justify-center gap-2 mt-8 mb-4">
@@ -936,17 +1033,106 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
 
       {/* Modal Detail */}
       {isModalOpen && selectedOrder && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all scale-100">
+        <div className="fixed inset-0 bg-black/60 z-[10000] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all scale-100 flex flex-col max-h-[90vh]">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-[#171d19]">
-                Rincian Pesanan #{selectedOrder.va_number || selectedOrder.id}
+                Rincian Pesanan #{selectedOrder.id.toString().padStart(6, '0')}
               </h3>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors p-1">
                 <X size={22} strokeWidth={2.5} />
               </button>
             </div>
             <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+              
+              {/* Timeline Tracking */}
+              {!['Dibatalkan', 'Expired', 'expired', 'Kedaluwarsa', 'expire', 'cancelled', 'cancel', 'deny'].includes(selectedOrder.status) && (
+                <div className="mb-8 pt-2">
+                  <h4 className="font-['Inter',sans-serif] text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-4">Status Pengiriman</h4>
+                  <div className="relative">
+                    <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                    
+                    {/* Menunggu Pembayaran */}
+                    <div className="relative flex items-start mb-6">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                        ['Pending', 'Belum Bayar'].includes(selectedOrder.status) 
+                          ? 'bg-amber-100 border-2 border-amber-500 text-amber-600' 
+                          : 'bg-[#006a3f] text-white'
+                      }`}>
+                        <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                          ['Pending', 'Belum Bayar'].includes(selectedOrder.status) ? 'text-amber-700' : 'text-gray-900'
+                        }`}>Menunggu Pembayaran</h5>
+                        {['Pending', 'Belum Bayar'].includes(selectedOrder.status) && (
+                          <p className="text-[12px] text-gray-500 mt-1 font-medium">Selesaikan pembayaran Anda</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Diproses */}
+                    <div className="relative flex items-start mb-6">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                        ['Lunas', 'Diproses'].includes(selectedOrder.status)
+                          ? 'bg-blue-100 border-2 border-blue-500 text-blue-600'
+                          : (['Dikirim', 'Selesai'].includes(selectedOrder.status) ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                      }`}>
+                        <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                          ['Lunas', 'Diproses'].includes(selectedOrder.status) ? 'text-blue-700' : 
+                          (['Dikirim', 'Selesai'].includes(selectedOrder.status) ? 'text-gray-900' : 'text-gray-400')
+                        }`}>Diproses</h5>
+                        {['Lunas', 'Diproses'].includes(selectedOrder.status) && (
+                          <p className="text-[12px] text-gray-500 mt-1 font-medium">Pesanan sedang dikemas oleh apoteker</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Dikirim */}
+                    <div className="relative flex items-start mb-6">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                        selectedOrder.status === 'Dikirim'
+                          ? 'bg-purple-100 border-2 border-purple-500 text-purple-600'
+                          : (selectedOrder.status === 'Selesai' ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                      }`}>
+                        <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                          selectedOrder.status === 'Dikirim' ? 'text-purple-700' : 
+                          (selectedOrder.status === 'Selesai' ? 'text-gray-900' : 'text-gray-400')
+                        }`}>Dikirim</h5>
+                        {selectedOrder.status === 'Dikirim' && (
+                          <p className="text-[12px] text-gray-500 mt-1 font-medium">Pesanan dalam perjalanan</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Selesai */}
+                    <div className="relative flex items-start">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
+                        selectedOrder.status === 'Selesai'
+                          ? 'bg-emerald-100 border-2 border-emerald-500 text-emerald-600'
+                          : 'bg-gray-100 border-2 border-gray-200 text-gray-300'
+                      }`}>
+                        <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <h5 className={`font-['Inter',sans-serif] text-[14px] font-bold ${
+                          selectedOrder.status === 'Selesai' ? 'text-emerald-700' : 'text-gray-400'
+                        }`}>Selesai</h5>
+                        {selectedOrder.status === 'Selesai' && (
+                          <p className="text-[12px] text-gray-500 mt-1 font-medium">Pesanan telah diterima</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <h4 className="font-['Inter',sans-serif] text-[13px] font-bold text-gray-400 uppercase tracking-wider mb-3">Daftar Item</h4>
                 <div className="space-y-4">
@@ -962,26 +1148,74 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 </div>
               </div>
               <div className="border-t border-gray-100 pt-5 space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">Metode Pembayaran</span>
-                  <span className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19]">{selectedOrder.payment_method || 'Virtual Account'}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">Virtual Account</span>
-                  <span className="font-['Inter',sans-serif] text-[14px] font-bold text-indigo-600 tracking-wider">{selectedOrder.va_number || selectedOrder.status}</span>
-                </div>
+                {selectedOrder.status !== 'Selesai' && (
+                  <>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">Metode Pembayaran</span>
+                      <span className="font-['Inter',sans-serif] text-[14px] font-bold text-[#171d19]">{formatPaymentMethod(selectedOrder)}</span>
+                    </div>
+                    {!['Pending', 'Belum Bayar'].includes(selectedOrder.status) && selectedOrder.va_number && (
+                      <div className="flex justify-between items-center mt-1 mb-2">
+                        <span className="font-['Inter',sans-serif] text-[14px] text-gray-500">
+                          {(() => {
+                              const bName = (selectedOrder.bank_name || '').toUpperCase();
+                              if (bName === 'MANDIRI BILL') return 'Biller / Bill Key';
+                              if (bName === 'E-WALLET' || bName === 'GOPAY' || bName === 'SHOPEEPAY' || bName === 'QRIS' || bName === 'DANA') return 'ID Transaksi';
+                              if (bName === 'GERAI RETAIL' || bName === 'ALFAMART' || bName === 'INDOMARET') return 'Kode Pembayaran';
+                              return `Nomor VA ${selectedOrder.bank_name || ''}`.trim();
+                          })()}
+                        </span>
+                        <span className="font-['Inter',sans-serif] text-[14px] font-bold text-indigo-600 tracking-wider">{selectedOrder.va_number}</span>
+                      </div>
+                    )}
+                  </>
+                )}
                 <div className="flex justify-between items-start pt-2 border-t border-gray-50">
                   <span className="font-['Inter',sans-serif] text-[14px] text-gray-500 min-w-[120px]">Alamat Pengiriman</span>
                   <span className="font-['Inter',sans-serif] text-[13px] font-medium text-gray-800 text-right">{selectedOrder.shipping_address || 'Alamat belum diatur'}</span>
                 </div>
+                {(() => {
+                  const subtotal = selectedOrder.items?.reduce((sum: number, item: any) => sum + ((item.harga || item.price || 0) * (item.quantity || 1)), 0) || 0;
+                  const total = Number(selectedOrder.total_amount || 0);
+                  const calculatedShipping = Math.max(0, total - subtotal);
+                  const displayShipping = selectedOrder.shipping_method ? Number(selectedOrder.shipping_cost || 0) : calculatedShipping;
+                  const displayMethod = (selectedOrder.shipping_method === 'kurir_toko' || selectedOrder.shipping_method === 'Kirim via Kurir') 
+                    ? (selectedOrder.prescription_id ? 'Kirim via Kurir (Kota Bandung)' : 'Kirim via Kurir') 
+                    : (selectedOrder.shipping_method === 'ambil_apotek' 
+                        ? 'Ambil di Apotek' 
+                        : (displayShipping > 0 ? 'Kirim via Kurir' : 'Ambil di Apotek'));
+
+                  return (
+                    <>
+                      <div className="flex justify-between items-center text-gray-600">
+                        <span className="font-['Inter',sans-serif] text-[14px]">Metode Pengiriman</span>
+                        <span className="font-['Inter',sans-serif] text-[14px] font-medium text-gray-800">
+                          {displayMethod}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-gray-600">
+                        <span className="font-['Inter',sans-serif] text-[14px]">Ongkos Kirim</span>
+                        <span className="font-['Inter',sans-serif] text-[14px] font-medium text-gray-800">
+                          Rp {displayShipping.toLocaleString('id-ID')}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
                 <div className="flex justify-between items-center pt-2">
                   <span className="font-['Inter',sans-serif] text-[14px] font-bold text-gray-900">Total Pembayaran</span>
                   <span className="font-['Poppins',sans-serif] text-[18px] font-black text-[#006a3f]">Rp {Number(selectedOrder.total_amount || 0).toLocaleString('id-ID')}</span>
                 </div>
               </div>
             </div>
-            <div className="p-5 border-t border-gray-100 bg-white flex justify-end">
-              <button onClick={() => setIsModalOpen(false)} className="bg-white border-2 border-gray-200 text-gray-700 px-8 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-gray-50 transition-all">Tutup</button>
+            <div className="p-5 border-t border-gray-100 bg-white flex justify-end gap-3">
+              <Link 
+                href={`/invoice/${selectedOrder.id}`}
+                className="bg-white border-2 border-[#006a3f] text-[#006a3f] px-6 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-emerald-50 transition-all flex items-center gap-2 justify-center"
+              >
+                📄 Lihat Nota
+              </Link>
+              <button type="button" onClick={() => setIsModalOpen(false)} className="bg-white border-2 border-gray-300 text-gray-700 px-8 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-gray-50 transition-all">Tutup</button>
             </div>
           </div>
         </div>
@@ -989,9 +1223,9 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
 
       {/* Modal Tambah Alamat */}
       {isAddressModalOpen && (
-        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all scale-100">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+        <div className="fixed inset-0 bg-black/60 z-[10000] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all scale-100 flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
               <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-[#171d19]">
                 {editingAddressId ? 'Ubah Alamat' : 'Tambah Alamat Baru'}
               </h3>
@@ -1002,7 +1236,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 <X size={22} strokeWidth={2.5} />
               </button>
             </div>
-            <form onSubmit={submitAddress} className="p-6 space-y-4">
+            <form onSubmit={submitAddress} className="p-6 space-y-4 overflow-y-auto scrollbar-thin">
               <div>
                 <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Label Alamat (Misal: Rumah, Kantor)</label>
                 <input 
@@ -1059,19 +1293,22 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 <input 
                   type="text" 
                   value={formAddress.kode_pos}
-                  onChange={(e) => {
+                  onChange={e => {
                     const val = e.target.value.replace(/\D/g, '');
-                    if (val.length <= 5) {
-                      setFormAddress('kode_pos', val);
-                    }
+                    setFormAddress('kode_pos', val.slice(0, 5));
                   }}
-                  maxLength={5}
-                  pattern="[0-9]{5}"
-                  placeholder="Masukkan 5 digit kode pos"
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                  pattern="\d{5}"
+                  title="Kode pos harus terdiri dari 5 digit angka"
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                    formAddress.kode_pos.length > 0 && formAddress.kode_pos.length < 5 ? 'border-[#ef4444]' : 'border-gray-300'
+                  }`}
                   required
                 />
-                {addressErrors.kode_pos && <p className="mt-1 text-xs text-red-500 font-medium">{addressErrors.kode_pos}</p>}
+                {formAddress.kode_pos.length > 0 && formAddress.kode_pos.length < 5 && (
+                  <p className="mt-2 text-[12px] text-[#ef4444] font-medium font-['Inter',sans-serif]">
+                    Kode pos tidak valid. Harus terdiri dari 5 digit angka.
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-3 pt-2">
                 <input 
@@ -1087,8 +1324,8 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
               <div className="pt-6">
                 <button 
                   type="submit" 
-                  disabled={processingAddress}
-                  className="w-full py-4 bg-[#006a3f] hover:bg-[#005632] text-white rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium tracking-wide transition-colors"
+                  disabled={processingAddress || (formAddress.kode_pos.length > 0 && formAddress.kode_pos.length < 5)}
+                  className="w-full py-4 bg-[#006a3f] hover:bg-[#005632] text-white rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {processingAddress ? 'Menyimpan...' : 'Simpan Alamat'}
                 </button>

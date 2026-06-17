@@ -11,7 +11,9 @@ class PrescriptionController extends Controller
 {
     public function show($id)
     {
-        $prescription = Prescription::with(['items.product.category', 'validator'])->where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $prescription = Prescription::with(['items.product.category', 'validator', 'virtualTransactions' => function($q) {
+            $q->latest();
+        }])->where('id', $id)->where('user_id', Auth::id())->firstOrFail();
 
         return Inertia::render('Prescriptions/Detail', [
             'prescription' => $prescription,
@@ -24,17 +26,32 @@ class PrescriptionController extends Controller
             'prescription_file' => 'required|mimes:jpg,jpeg,png,pdf|max:5120',
             'nama_pasien' => 'nullable|string|max:255',
             'tanggal_lahir_pasien' => 'nullable|date',
-            'whatsapp' => 'nullable|string|max:20',
+            'whatsapp' => ['required', 'numeric', 'digits_between:10,13', 'regex:/^(08|62)/'],
             'catatan' => 'nullable|string|max:1000',
             'shipping_address' => 'required|string',
-            'is_legal_agreed' => 'accepted'
+            'shipping_method' => 'required|in:ambil_sendiri,kurir',
+            'is_legal_agreed' => 'required'
         ], [
             'prescription_file.required' => 'Mohon unggah berkas resep dokter Anda terlebih dahulu.',
             'prescription_file.mimes' => 'Format berkas tidak didukung. Sediakan file dalam format JPG, PNG, atau PDF.',
             'prescription_file.max' => 'Ukuran berkas terlalu besar. Maksimal ukuran file yang diperbolehkan adalah 5MB.',
+            'whatsapp.required' => 'Nomor WhatsApp wajib diisi.',
+            'whatsapp.numeric' => 'Nomor WhatsApp hanya boleh berisi angka.',
+            'whatsapp.digits_between' => 'Nomor WhatsApp harus terdiri dari 10 hingga 13 digit angka.',
+            'whatsapp.regex' => 'Nomor WhatsApp harus diawali dengan 08 atau 62.',
             'shipping_address.required' => 'Mohon pilih atau tambahkan alamat pengiriman.',
-            'is_legal_agreed.accepted' => 'Anda harus menyetujui pernyataan legalitas resep.',
+            'is_legal_agreed.required' => 'Anda harus menyetujui pernyataan legalitas resep.',
         ]);
+
+        if ($request->shipping_method === 'kurir') {
+            $isKotaBandung = stripos($request->shipping_address, 'Bandung') !== false && 
+                             stripos($request->shipping_address, 'Kabupaten') === false && 
+                             stripos($request->shipping_address, 'Kab.') === false;
+            
+            if (!$isKotaBandung) {
+                return redirect()->back()->withErrors(['shipping_method' => 'Layanan kurir toko saat ini hanya mencakup wilayah Kota Bandung. Alamat Kabupaten tidak didukung.']);
+            }
+        }
 
         $file = $request->file('prescription_file');
         $fileName = 'rx_file_' . time() . '.' . $file->getClientOriginalExtension();
@@ -54,8 +71,18 @@ class PrescriptionController extends Controller
             'whatsapp' => $request->whatsapp,
             'catatan' => $request->catatan,
             'shipping_address' => $request->shipping_address,
+            'shipping_method' => $request->shipping_method,
             'is_legal_agreed' => $request->is_legal_agreed ? true : false,
         ]);
+
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'upload_prescription',
+                'description' => 'User mengunggah resep #' . $kodeResep,
+                'ip_address' => $request->ip(),
+            ]);
+        }
 
         return redirect('/profile?tab=prescriptions&prescription_status=Menunggu Verifikasi')->with('success', 'Resep berhasil diunggah! Mohon tunggu proses verifikasi dari apoteker.');
     }

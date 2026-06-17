@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Head, router, Link } from '@inertiajs/react';
+import { Head, router, Link, usePage } from '@inertiajs/react';
 import { CheckCircle, Clock, Copy, ArrowRight, ShieldCheck, ArrowLeft, Receipt, Package, Lock, AlertCircle } from 'lucide-react';
 import Header from '../components/Header';
 import ConfirmModal from '../components/ConfirmModal';
@@ -28,9 +28,10 @@ declare global {
 export default function Invoice({ transaction }: Props) {
   const { apotekInfo } = usePage<any>().props;
   const jamOp = apotekInfo?.jam_operasional || '08.00 - 18.00 WIB';
-  const [isLunasState, setIsLunasState] = useState(transaction.status === 'Lunas');
+  const [isLunasState, setIsLunasState] = useState(['Lunas', 'Diproses', 'Dikirim', 'Selesai'].includes(transaction.status));
   const [isExpired, setIsExpired] = useState(transaction.status === 'Dibatalkan' || transaction.status === 'Expired');
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [isSnapOpen, setIsSnapOpen] = useState(false);
   
   // Timer: 20 minutes from created_at
   const [timeLeft, setTimeLeft] = useState(20 * 60);
@@ -87,6 +88,37 @@ export default function Invoice({ transaction }: Props) {
     return () => clearInterval(interval);
   }, [transaction.created_at, isLunasState]);
 
+  // Automated Status Polling Safety Net
+  useEffect(() => {
+    if (isLunasState || isExpired) return;
+
+    const pollInterval = setInterval(() => {
+        router.reload({ 
+            only: ['transaction'],
+            preserveState: true,
+            preserveScroll: true
+        });
+    }, 4000); // Poll setiap 4 detik
+
+    return () => clearInterval(pollInterval);
+  }, [isLunasState, isExpired]);
+
+  // Sambungkan perubahan props data ke pemicu state UI React
+  useEffect(() => {
+    const currentStatus = transaction?.status;
+    if (['Lunas', 'Diproses', 'Dikirim', 'Selesai'].includes(currentStatus)) {
+        if (!isSnapOpen) {
+            setIsLunasState(true);
+            setIsRedirecting(false);
+        }
+    } else if (['Dibatalkan', 'Expired'].includes(currentStatus)) {
+        if (!isSnapOpen) {
+            setIsExpired(true);
+            setIsRedirecting(false);
+        }
+    }
+  }, [transaction?.status, isSnapOpen]);
+
   const formattedTime = `${Math.floor(timeLeft / 60).toString().padStart(2, '0')}:${(timeLeft % 60).toString().padStart(2, '0')}`;
 
   const copyToClipboard = () => {
@@ -97,9 +129,23 @@ export default function Invoice({ transaction }: Props) {
 
   const handlePayMidtrans = () => {
     if (transaction.snap_token) {
+        setIsSnapOpen(true);
         window.snap.pay(transaction.snap_token, {
           onSuccess: function(result: any){
-            setIsRedirecting(true);
+            // Direct local sync fallback untuk localhost testing (tanpa mengubah state visual duluan)
+            router.post('/checkout/pembayaran-sukses', { 
+                order_id: result.order_id,
+                payment_type: result.payment_type,
+                va_numbers: result.va_numbers,
+                store: result.store,
+                payment_code: result.payment_code,
+                biller_code: result.biller_code,
+                bill_key: result.bill_key,
+                transaction_id: result.transaction_id
+            }, {
+                preserveScroll: true,
+                preserveState: true,
+            });
           },
           onPending: function(result: any){
             // Tetap di halaman
@@ -120,6 +166,7 @@ export default function Invoice({ transaction }: Props) {
             }
           },
           onClose: function(){
+            setIsSnapOpen(false);
             const now = new Date().getTime();
             const createdAt = new Date(transaction.created_at).getTime();
             if (now >= createdAt + (20 * 60 * 1000)) {
@@ -128,7 +175,15 @@ export default function Invoice({ transaction }: Props) {
           }
         });
     } else {
-        alert("Token pembayaran tidak tersedia. Silakan hubungi admin.");
+        setModalConfig({
+            isOpen: true,
+            type: 'warning',
+            title: 'Token Tidak Tersedia',
+            message: 'Token pembayaran tidak tersedia. Silakan hubungi admin.',
+            confirmText: 'Tutup',
+            cancelText: '',
+            onConfirm: closeConfirmModal
+        });
     }
   };
 
@@ -162,7 +217,7 @@ export default function Invoice({ transaction }: Props) {
 
   return (
     <div className="min-h-screen bg-[#fafaf8] font-['Poppins',sans-serif]">
-      <Head title="Invoice Pembayaran - Apotek Jaya Farma" />
+      <Head title="Nota Pembayaran - Apotek Jaya Farma" />
       <Header />
 
       <main className="max-w-[800px] mx-auto px-4 py-12">
@@ -186,7 +241,7 @@ export default function Invoice({ transaction }: Props) {
             <div className="relative z-10">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-8 mb-8 gap-6">
                 <div>
-                  <h1 className="text-3xl font-black text-gray-900 tracking-tight">INVOICE</h1>
+                  <h1 className="text-3xl font-black text-gray-900 tracking-tight">NOTA</h1>
                   <p className="text-gray-500 text-sm mt-1">No. Pesanan: {transaction.id.toString().padStart(6, '0')}</p>
                 </div>
                 <div className="inline-flex items-center gap-2 bg-emerald-50 text-[#006a3f] px-5 py-2.5 rounded-full border border-emerald-100 font-bold shadow-sm self-start sm:self-auto">
@@ -198,15 +253,53 @@ export default function Invoice({ transaction }: Props) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-10">
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Informasi Pembayaran</p>
-                  <p className="font-semibold text-gray-900 mb-1">{transaction.payment_method}</p>
-                  <p className="text-sm text-gray-500">{new Date(transaction.created_at).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })}</p>
+                  <p className="font-semibold text-gray-900 mb-1">
+                    {(() => {
+                        if (transaction.payment_method !== 'Midtrans Payment Gateway') return transaction.payment_method;
+                        const bName = (transaction.bank_name || '').toUpperCase();
+                        if (bName === 'MANDIRI BILL') return 'Mandiri Bill Payment';
+                        if (bName === 'E-WALLET' || bName === 'GOPAY' || bName === 'SHOPEEPAY' || bName === 'QRIS' || bName === 'DANA') return 'E-Wallet / QRIS';
+                        if (bName === 'GERAI RETAIL' || bName === 'ALFAMART' || bName === 'INDOMARET') return 'Pembayaran Gerai Retail';
+                        return 'Transfer Virtual Account';
+                    })()}
+                  </p>
+                  {transaction.va_number && (
+                    <div className="text-sm text-gray-700 mb-1">
+                      {(() => {
+                          const bName = (transaction.bank_name || '').toUpperCase();
+                          let bankLabel = 'Bank';
+                          let numLabel = 'Nomor VA';
+                          
+                          if (bName === 'MANDIRI BILL') { bankLabel = 'Metode'; numLabel = 'Biller & Bill Key'; }
+                          else if (bName === 'E-WALLET' || bName === 'GOPAY' || bName === 'SHOPEEPAY' || bName === 'QRIS' || bName === 'DANA') { bankLabel = 'E-Wallet'; numLabel = 'ID Transaksi'; }
+                          else if (bName === 'GERAI RETAIL' || bName === 'ALFAMART' || bName === 'INDOMARET') { bankLabel = 'Gerai'; numLabel = 'Kode Pembayaran'; }
+
+                          return (
+                              <>
+                                <span className="block font-medium">{bankLabel}: {transaction.bank_name || 'BCA'}</span>
+                                <span className="block font-medium">{numLabel}: {transaction.va_number}</span>
+                              </>
+                          );
+                      })()}
+                    </div>
+                  )}
+                  <p className="text-sm text-gray-500 mt-1">{new Date(transaction.created_at).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })}</p>
                 </div>
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Status Pengiriman</p>
-                  <p className="font-semibold text-gray-900 mb-1">Diproses</p>
-                  <p className="text-sm text-gray-500">Apoteker sedang menyiapkan pesanan Anda.</p>
+                  <p className="font-semibold text-gray-900 mb-1">{transaction.status}</p>
+                  <p className="text-sm text-gray-500 mb-2">
+                      {transaction.status === 'Selesai' ? 'Pesanan Anda telah selesai dan diterima.' : 
+                       transaction.status === 'Dikirim' ? 'Pesanan sedang dalam pengiriman ke alamat Anda.' : 
+                       transaction.status === 'Diproses' ? 'Apoteker sedang menyiapkan pesanan Anda.' :
+                       'Menunggu konfirmasi dari apoteker.'}
+                  </p>
+                  <p className="text-[13px] font-medium text-gray-800 leading-snug p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Alamat Pengiriman:</span>
+                    {transaction.shipping_address || 'Alamat belum diatur'}
+                  </p>
                   {(new Date().getHours() < 8 || new Date().getHours() >= 18) && (
-                    <span className="text-amber-600 text-xs mt-1 block italic font-medium max-w-xs">
+                    <span className="text-amber-600 text-xs mt-3 block italic font-medium max-w-xs">
                       ⚠️ Catatan: Pembayaran di luar jam kerja akan dikemas dan dikirim saat jam operasional esok hari (mulai pukul {jamOp.split(' ')[0]} WIB).
                     </span>
                   )}
@@ -231,10 +324,45 @@ export default function Invoice({ transaction }: Props) {
                 </div>
               </div>
 
-              <div className="flex justify-between items-center bg-[#fafaf8] rounded-xl p-6 border border-gray-200 shadow-sm">
-                <span className="text-gray-500 font-bold uppercase tracking-wider text-sm">Total Dibayar</span>
-                <span className="font-black text-[#006a3f] text-2xl">Rp {Number(transaction.total_amount).toLocaleString('id-ID')}</span>
-              </div>
+              {(() => {
+                const subtotal = transaction.items?.reduce((sum: number, item: any) => sum + ((item.harga || item.price || 0) * (item.quantity || 1)), 0) || 0;
+                const total = Number(transaction.total_amount || 0);
+                const calculatedShipping = Math.max(0, total - subtotal);
+                const displayShipping = transaction.shipping_method ? Number(transaction.shipping_cost || 0) : calculatedShipping;
+                const displayMethod = (transaction.shipping_method === 'kurir_toko' || transaction.shipping_method === 'Kirim via Kurir') 
+                  ? (transaction.prescription_id ? 'Kirim via Kurir (Kota Bandung)' : 'Kirim via Kurir') 
+                  : (transaction.shipping_method === 'ambil_apotek' 
+                      ? 'Ambil di Apotek' 
+                      : (displayShipping > 0 ? 'Kirim via Kurir' : 'Ambil di Apotek'));
+
+                return (
+                  <div className="border-t border-gray-100 pt-6 mt-6">
+                    <div className="space-y-3 mb-6">
+                      <div className="flex justify-between items-center text-sm text-gray-600">
+                        <span>Subtotal Obat</span>
+                        <span className="font-semibold text-gray-900">
+                          Rp {subtotal.toLocaleString('id-ID')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm text-gray-600">
+                        <span>Ongkos Kirim ({displayMethod})</span>
+                        <span className="font-semibold text-gray-900">
+                          Rp {displayShipping.toLocaleString('id-ID')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm text-gray-600">
+                        <span>Diskon Promo</span>
+                        <span className="font-semibold text-gray-900">-Rp 0</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center bg-[#fafaf8] rounded-xl p-6 border border-gray-200 shadow-sm">
+                      <span className="text-gray-500 font-bold uppercase tracking-wider text-sm">Total Dibayar</span>
+                      <span className="font-black text-[#006a3f] text-2xl">Rp {total.toLocaleString('id-ID')}</span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="mt-10">
                 <button 
@@ -277,7 +405,10 @@ export default function Invoice({ transaction }: Props) {
               {isExpired && (
                   <div className="bg-red-50/50 rounded-xl p-4 border border-red-100 mb-6 text-center">
                       <p className="text-red-600 text-sm leading-relaxed">
-                          Waktu pembayaran Anda telah habis. Sisa stok obat telah dikembalikan ke sistem. Silakan lakukan pemesanan ulang melalui katalog.
+                          {transaction.prescription_id 
+                              ? 'Waktu pembayaran Anda telah habis. Sisa stok obat telah dikembalikan ke sistem. Silakan lakukan pembayaran ulang melalui halaman Riwayat Resep Anda.' 
+                              : 'Waktu pembayaran Anda telah habis. Sisa stok obat telah dikembalikan ke sistem. Silakan lakukan pemesanan ulang melalui katalog.'
+                          }
                       </p>
                   </div>
               )}
@@ -295,10 +426,10 @@ export default function Invoice({ transaction }: Props) {
               <div className="mt-8 space-y-4">
                 {isExpired ? (
                     <button 
-                      onClick={() => router.get('/catalog')}
+                      onClick={() => router.get(transaction.prescription_id ? '/profile?tab=prescriptions' : '/catalog')}
                       className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 border-2 border-gray-300 text-red-600 font-bold rounded-xl py-4 transition duration-200 text-base shadow-sm mt-6"
                     >
-                      ← Kembali ke Katalog Obat
+                      {transaction.prescription_id ? '← Kembali ke Riwayat Resep' : '← Kembali ke Katalog Obat'}
                     </button>
                 ) : (
                     <>
@@ -311,7 +442,7 @@ export default function Invoice({ transaction }: Props) {
                           className="w-full flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl py-4 px-6 transition duration-200 text-base shadow-lg"
                         >
                           <Lock size={20} strokeWidth={2} />
-                          Selesaikan Pembayaran via Midtrans
+                          Bayar Sekarang
                         </button>
                         <button 
                           onClick={handleCancelClick}

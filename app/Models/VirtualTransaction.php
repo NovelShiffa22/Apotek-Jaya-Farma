@@ -14,12 +14,15 @@ class VirtualTransaction extends Model
         'prescription_id',
         'pharmacist_id',
         'va_number',
+        'bank_name',
         'payment_method',
         'total_amount',
         'status',
         'snap_token',
         'items',
         'shipping_address',
+        'shipping_method',
+        'shipping_cost',
     ];
 
     protected $casts = [

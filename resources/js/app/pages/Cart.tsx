@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { Trash2, Plus, Minus, ArrowRight, CheckSquare } from 'lucide-react';
 import Header from '../components/Header';
+import ConfirmModal from '../components/ConfirmModal';
 
 interface CartItem {
   id: number;
@@ -30,6 +31,25 @@ interface CartProps {
 export default function Cart({ cartItems, shippingCost, discount, frequentlyBought }: CartProps) {
   // State for checked items (store array of item IDs)
   const [checkedItems, setCheckedItems] = useState<number[]>(cartItems.map(item => item.id));
+
+  // Modal configuration
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    type: 'delete';
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText?: string;
+    cancelText?: string;
+  }>({
+    isOpen: false,
+    type: 'delete',
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
+
+  const closeConfirmModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
 
   // Toggle single item
   const toggleItem = (id: number) => {
@@ -67,15 +87,24 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
 
   // Handle item removal
   const removeItem = (id: number) => {
-    if (confirm('Apakah Anda yakin ingin menghapus produk ini dari keranjang?')) {
-      router.delete(`/cart/${id}`, {
-        preserveScroll: true,
-        preserveState: true,
-        onSuccess: () => {
-          setCheckedItems(prev => prev.filter(itemId => itemId !== id));
-        }
-      });
-    }
+    setModalConfig({
+      isOpen: true,
+      type: 'delete',
+      title: 'Hapus Produk?',
+      message: 'Apakah Anda yakin ingin menghapus produk ini dari keranjang belanja Anda?',
+      confirmText: 'Ya, Hapus',
+      cancelText: 'Batal',
+      onConfirm: () => {
+        router.delete(`/cart/${id}`, {
+          preserveScroll: true,
+          preserveState: true,
+          onSuccess: () => {
+            setCheckedItems(prev => prev.filter(itemId => itemId !== id));
+            closeConfirmModal();
+          }
+        });
+      }
+    });
   };
 
   // Handle Add to cart from frequently bought
@@ -277,6 +306,8 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
 
         </div>
       </main>
+
+      <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
     </div>
   );
 }

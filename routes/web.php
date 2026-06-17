@@ -79,8 +79,9 @@ Route::prefix('prescriptions')->name('prescriptions.')->group(function () {
     Route::post('/', [\App\Http\Controllers\PrescriptionController::class, 'store'])->middleware('auth')->name('store');
 });
 
-Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-Route::post('/checkout/proses', [CheckoutController::class, 'process'])->name('checkout.proses');
+Route::get('/checkout', [CheckoutController::class, 'index'])->middleware('auth')->name('checkout.index');
+Route::post('/checkout/proses', [CheckoutController::class, 'process'])->middleware('auth')->name('checkout.proses');
+Route::post('/checkout/pembayaran-sukses', [CheckoutController::class, 'pembayaranSukses'])->middleware('auth')->name('checkout.pembayaran-sukses');
 
 Route::get('/invoice/{id}', [CheckoutController::class, 'invoice'])->name('order.invoice');
 Route::post('/invoice/{id}/generate-token', [CheckoutController::class, 'generateToken'])->name('order.generate_token');
@@ -108,8 +109,38 @@ Route::get('/profile', function () {
     foreach ($pendingOrders as $order) {
         try {
             $status = \Midtrans\Transaction::status($order->id);
-            if ($status->transaction_status === 'expire' || $status->transaction_status === 'cancel') {
-                $order->update(['status' => 'Dibatalkan']);
+            
+            try {
+                if (isset($status->va_numbers) && !empty($status->va_numbers)) {
+                    $order->va_number = $status->va_numbers[0]->va_number;
+                    $order->bank_name = strtoupper($status->va_numbers[0]->bank);
+                } else {
+                    $order->bank_name = strtoupper($status->payment_type ?? 'TRANSFER');
+                    $order->va_number = $status->payment_code ?? null;
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Midtrans va_numbers parse error: " . $e->getMessage());
+            }
+
+            if ($status->transaction_status === 'expire') {
+                $order->status = 'Expired';
+                $order->save();
+                
+                // Kembalikan stok obat
+                if (is_array($order->items)) {
+                    foreach ($order->items as $item) {
+                        $productId = $item['id'] ?? $item['product_id'] ?? null;
+                        if ($productId) {
+                            $product = \App\Models\Product::find($productId);
+                            if ($product) {
+                                $product->increment('stok', $item['quantity'] ?? 1);
+                            }
+                        }
+                    }
+                }
+            } elseif ($status->transaction_status === 'cancel') {
+                $order->status = 'Dibatalkan';
+                $order->save();
                 
                 // Kembalikan stok obat
                 if (is_array($order->items)) {
@@ -124,7 +155,10 @@ Route::get('/profile', function () {
                     }
                 }
             } elseif ($status->transaction_status === 'settlement' || $status->transaction_status === 'capture') {
-                $order->update(['status' => 'Lunas']);
+                $order->status = 'Lunas';
+                $order->save();
+            } else {
+                $order->save();
             }
         } catch (\Exception $e) {
             // Abaikan jika belum ada di Midtrans
@@ -134,7 +168,7 @@ Route::get('/profile', function () {
         if ($order->status === 'Pending') {
             $createdAt = \Carbon\Carbon::parse($order->created_at);
             if (now()->diffInMinutes($createdAt, true) >= 20 && $createdAt->isPast()) {
-                $order->update(['status' => 'Dibatalkan']);
+                $order->update(['status' => 'Expired']);
                 
                 if (is_array($order->items)) {
                     foreach ($order->items as $item) {
@@ -172,22 +206,40 @@ Route::get('/profile', function () {
 
     $prescriptionCounts = [
         'Menunggu Verifikasi' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'pending')->count(),
-        'Disetujui' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'disetujui')->whereDoesntHave('orders')->count(),
+        'Disetujui' => \App\Models\Prescription::where('user_id', $user->id)
+            ->where('status_validasi', 'disetujui')
+            ->whereDoesntHave('virtualTransactions', function($vq) {
+                $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+            })->count(),
         'Ditolak' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'ditolak')->count(),
-        'Telah dipesan' => \App\Models\Prescription::where('user_id', $user->id)->where('status_validasi', 'disetujui')->whereHas('orders')->count(),
+        'Telah dipesan' => \App\Models\Prescription::where('user_id', $user->id)
+            ->where(function($q) {
+                $q->where('status_validasi', 'telah_dipesan')
+                  ->orWhereHas('virtualTransactions', function($vq) {
+                      $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+                  });
+            })->count(),
     ];
 
     $currentPrescriptionStatus = request('prescription_status', 'Menunggu Verifikasi');
     
-    $prescriptionsQuery = \App\Models\Prescription::withCount('orders')->where('user_id', $user->id);
+    $prescriptionsQuery = \App\Models\Prescription::with(['virtualTransactions'])->withCount('orders')->where('user_id', $user->id);
     if ($currentPrescriptionStatus === 'Menunggu Verifikasi') {
         $prescriptionsQuery->where('status_validasi', 'pending');
     } elseif ($currentPrescriptionStatus === 'Disetujui') {
-        $prescriptionsQuery->where('status_validasi', 'disetujui')->whereDoesntHave('orders');
+        $prescriptionsQuery->where('status_validasi', 'disetujui')
+            ->whereDoesntHave('virtualTransactions', function($vq) {
+                $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+            });
     } elseif ($currentPrescriptionStatus === 'Ditolak') {
         $prescriptionsQuery->where('status_validasi', 'ditolak');
     } elseif ($currentPrescriptionStatus === 'Telah dipesan') {
-        $prescriptionsQuery->where('status_validasi', 'disetujui')->whereHas('orders');
+        $prescriptionsQuery->where(function($q) {
+            $q->where('status_validasi', 'telah_dipesan')
+              ->orWhereHas('virtualTransactions', function($vq) {
+                  $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+              });
+        });
     }
 
     $prescriptions = $prescriptionsQuery->latest()->paginate(5, ['*'], 'prescription_page')->withQueryString();
@@ -234,15 +286,27 @@ Route::middleware(['auth', 'role:user'])->group(function () {
 Route::middleware(['auth', 'role:pharmacist'])->group(function () {
     Route::get('/pharmacist', function () {
         // Prescriptions Pagination
-        $prescriptionsQuery = \App\Models\Prescription::with(['user.addresses', 'items.product', 'validator'])->latest();
+        $prescriptionsQuery = \App\Models\Prescription::with(['user.addresses', 'items.product', 'validator', 'virtualTransactions' => function($q) {
+            $q->latest();
+        }])->latest();
 
         $prescriptionStatus = request('prescription_status', 'menunggu');
         if ($prescriptionStatus === 'menunggu') {
             $prescriptionsQuery->where('status_validasi', 'pending');
         } elseif ($prescriptionStatus === 'disetujui') {
-            $prescriptionsQuery->where('status_validasi', 'disetujui');
+            $prescriptionsQuery->where('status_validasi', 'disetujui')
+                ->whereDoesntHave('virtualTransactions', function($vq) {
+                    $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+                });
         } elseif ($prescriptionStatus === 'ditolak') {
             $prescriptionsQuery->where('status_validasi', 'ditolak');
+        } elseif ($prescriptionStatus === 'telah_dipesan' || $prescriptionStatus === 'pembayaran') {
+            $prescriptionsQuery->where(function($q) {
+                $q->where('status_validasi', 'telah_dipesan')
+                  ->orWhereHas('virtualTransactions', function($vq) {
+                      $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+                  });
+            });
         }
 
         $prescriptionSearch = request('prescription_search');
@@ -287,22 +351,10 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
         $orderStatus = request('order_status', 'all');
         $orderDate = request('order_date');
 
-        $ordersQuery = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])
-            ->where(function($q) {
-                $q->whereNull('prescription_id')
-                  ->orWhereHas('prescription', function($pq) {
-                      $pq->where('status_validasi', 'disetujui');
-                  });
-            })
+        $ordersQuery = \App\Models\Order::with(['user', 'products', 'prescription', 'shippingMethod', 'statusHistories.changedByUser'])
             ->latest();
             
         $vtsQuery = \App\Models\VirtualTransaction::with(['user', 'prescription', 'pharmacist'])
-            ->where(function($q) {
-                $q->whereNull('prescription_id')
-                  ->orWhereHas('prescription', function($pq) {
-                      $pq->where('status_validasi', 'disetujui');
-                  });
-            })
             ->latest();
 
         if ($orderSearch) {
@@ -332,6 +384,9 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
             } else {
                 $vtsQuery->where('status', 'not_existing_status');
             }
+        } else {
+            $ordersQuery->whereIn('status', ['diproses', 'dikirim', 'selesai']);
+            $vtsQuery->whereIn('status', ['Lunas', 'Dikirim', 'Selesai']);
         }
 
         if ($orderDate) {
@@ -375,6 +430,7 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
                         ],
                     ];
                 }),
+                'prescription_id' => $vt->prescription_id,
                 'prescription' => $vt->prescription,
                 'status_histories' => $vt->pharmacist ? [
                     [
@@ -384,6 +440,7 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
                         'created_at' => $vt->updated_at,
                     ]
                 ] : [],
+                'shippingMethod' => ['nama' => $vt->shipping_method, 'biaya' => $vt->shipping_cost],
                 'status' => $mappedStatus,
                 'total_biaya' => $vt->total_amount,
                 'created_at' => $vt->created_at,
@@ -415,8 +472,17 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
                           \App\Models\VirtualTransaction::whereDate('created_at', $todayStr)->count();
                           
         $pendingCount = \App\Models\Prescription::where('status_validasi', 'pending')->count();
-        $approvedCount = \App\Models\Prescription::where('status_validasi', 'disetujui')->count();
+        $approvedCount = \App\Models\Prescription::where('status_validasi', 'disetujui')
+            ->whereDoesntHave('virtualTransactions', function($vq) {
+                $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+            })->count();
         $rejectedCount = \App\Models\Prescription::where('status_validasi', 'ditolak')->count();
+        $telahDipesanCount = \App\Models\Prescription::where(function($q) {
+            $q->where('status_validasi', 'telah_dipesan')
+              ->orWhereHas('virtualTransactions', function($vq) {
+                  $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+              });
+        })->count();
 
         $recentActivities = \App\Models\Prescription::whereIn('status_validasi', ['disetujui', 'ditolak'])
             ->latest('updated_at')
@@ -439,14 +505,28 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
             ];
         }
 
+        $baseOrdersQuery = \App\Models\Order::query();
+        
+        $baseVtsQuery = \App\Models\VirtualTransaction::query();
+
+        $orderCounts = [
+            'all' => (clone $baseOrdersQuery)->whereIn('status', ['diproses', 'dikirim', 'selesai'])->count() + (clone $baseVtsQuery)->whereIn('status', ['Lunas', 'Dikirim', 'Selesai'])->count(),
+            'diproses' => (clone $baseOrdersQuery)->where('status', 'diproses')->count() + (clone $baseVtsQuery)->where('status', 'Lunas')->count(),
+            'dikirim' => (clone $baseOrdersQuery)->where('status', 'dikirim')->count() + (clone $baseVtsQuery)->where('status', 'Dikirim')->count(),
+            'selesai' => (clone $baseOrdersQuery)->where('status', 'selesai')->count() + (clone $baseVtsQuery)->where('status', 'Selesai')->count(),
+            'dibatalkan' => (clone $baseOrdersQuery)->where('status', 'dibatalkan')->count() + (clone $baseVtsQuery)->where('status', 'Dibatalkan')->count(),
+        ];
+
         $analytics = [
             'total_resep_hari_ini' => $totalResepHariIni,
             'pesanan_hari_ini' => $pesananHariIni,
             'pending_count' => $pendingCount,
             'approved_count' => $approvedCount,
             'rejected_count' => $rejectedCount,
+            'telah_dipesan_count' => $telahDipesanCount,
             'recent_activities' => $recentActivities,
-            'chart_data' => $chartData
+            'chart_data' => $chartData,
+            'order_counts' => $orderCounts
         ];
 
         return Inertia::render('PharmacistDashboard', [
@@ -492,14 +572,35 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
                     ];
                 }),
                 'prescription' => $vt->prescription,
-                'status_histories' => $vt->pharmacist ? [
-                    [
-                        'status_sebelum' => 'menunggu_pembayaran',
-                        'status_sesudah' => 'diproses',
-                        'changed_by_user' => ['name' => $vt->pharmacist->name],
-                        'created_at' => $vt->updated_at,
-                    ]
-                ] : [],
+                'status_histories' => (function() use ($vt, $mappedStatus) {
+                    $histories = [];
+                    if ($vt->pharmacist && in_array($mappedStatus, ['diproses', 'dikirim', 'selesai', 'dibatalkan'])) {
+                        $histories[] = [
+                            'status_sebelum' => 'menunggu_pembayaran',
+                            'status_sesudah' => 'diproses',
+                            'changed_by_user' => ['name' => $vt->pharmacist->name],
+                            'created_at' => $vt->updated_at,
+                        ];
+                    }
+                    if ($vt->pharmacist && in_array($mappedStatus, ['dikirim', 'selesai'])) {
+                        $histories[] = [
+                            'status_sebelum' => 'diproses',
+                            'status_sesudah' => 'dikirim',
+                            'changed_by_user' => ['name' => 'Admin Apotek'],
+                            'created_at' => clone $vt->updated_at,
+                        ];
+                    }
+                    if ($vt->pharmacist && in_array($mappedStatus, ['selesai'])) {
+                        $histories[] = [
+                            'status_sebelum' => 'dikirim',
+                            'status_sesudah' => 'selesai',
+                            'changed_by_user' => ['name' => 'Admin Apotek'],
+                            'created_at' => clone $vt->updated_at,
+                        ];
+                    }
+                    return array_reverse($histories);
+                })(),
+                'shippingMethod' => ['nama' => $vt->shipping_method, 'biaya' => $vt->shipping_cost],
                 'status' => $mappedStatus,
                 'total_biaya' => $vt->total_amount,
                 'created_at' => $vt->created_at,
@@ -521,38 +622,52 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
             'status_validasi' => 'required|in:pending,disetujui,ditolak',
         ]);
 
-        $prescription->update([
+        $updateData = [
             'status_validasi' => $request->status_validasi,
-            'doctor_name' => $request->doctor_name,
-            'nama_dokter' => $request->doctor_name,
-            'doctor_poli' => $request->doctor_poli,
-            'doctor_ppk' => $request->doctor_ppk,
-            'doctor_alamat' => $request->doctor_alamat,
-            'tanggal_resep' => $request->tanggal_resep,
-            'sip_dokter' => $request->sip_dokter,
-            'total_biaya' => $request->total_biaya,
             'catatan_apoteker' => $request->catatan_apoteker,
             'rejection_reason' => $request->rejection_reason,
             'verifier_name' => auth()->user()->name,
             'validated_by' => auth()->id(),
             'validated_at' => now(),
-        ]);
+        ];
 
-        if ($request->has('items') && is_array($request->items)) {
-            $prescription->items()->delete();
-            foreach ($request->items as $item) {
-                $prescription->items()->create([
-                    'product_id' => $item['product_id'] ?? null,
-                    'product_name' => $item['product_name'] ?? null,
-                    'is_racikan' => $item['is_racikan'] ?? false,
-                    'kuantitas_resep' => $item['kuantitas_resep'] ?? 0,
-                    'kuantitas_ambil' => $item['kuantitas_ambil'] ?? 0,
-                    'satuan' => $item['satuan'] ?? null,
-                    'signa' => $item['signa'] ?? null,
-                    'harga_satuan' => $item['harga_satuan'] ?? 0,
-                    'subtotal' => $item['subtotal'] ?? 0,
-                ]);
+        if ($request->status_validasi === 'disetujui') {
+            $updateData['doctor_name'] = $request->doctor_name;
+            $updateData['nama_dokter'] = $request->doctor_name;
+            $updateData['doctor_poli'] = $request->doctor_poli;
+            $updateData['doctor_ppk'] = $request->doctor_ppk;
+            $updateData['doctor_alamat'] = $request->doctor_alamat;
+            $updateData['tanggal_resep'] = $request->tanggal_resep;
+            $updateData['sip_dokter'] = $request->sip_dokter;
+            $updateData['total_biaya'] = $request->total_biaya;
+            
+            if ($request->has('items') && is_array($request->items)) {
+                $prescription->items()->delete();
+                foreach ($request->items as $item) {
+                    $prescription->items()->create([
+                        'product_id' => $item['product_id'] ?? null,
+                        'product_name' => $item['product_name'] ?? null,
+                        'is_racikan' => $item['is_racikan'] ?? false,
+                        'kuantitas_resep' => $item['kuantitas_resep'] ?? 0,
+                        'kuantitas_ambil' => $item['kuantitas_ambil'] ?? 0,
+                        'satuan' => $item['satuan'] ?? null,
+                        'signa' => $item['signa'] ?? null,
+                        'harga_satuan' => $item['harga_satuan'] ?? 0,
+                        'subtotal' => $item['subtotal'] ?? 0,
+                    ]);
+                }
             }
+        }
+
+        $prescription->update($updateData);
+
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'update_prescription',
+                'description' => 'Apoteker ' . ($request->status_validasi === 'disetujui' ? 'menyetujui' : 'menolak') . ' resep #' . $prescription->kode_resep,
+                'ip_address' => request()->ip(),
+            ]);
         }
 
         return back()->with('success', 'Validasi resep berhasil disimpan');
@@ -575,6 +690,16 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
             ];
             $newStatus = $statusMap[$request->status] ?? 'Pending';
             $vt->update(['status' => $newStatus, 'pharmacist_id' => auth()->id()]);
+            
+            if (auth()->check()) {
+                \App\Models\UserActivity::create([
+                    'user_id' => auth()->id(),
+                    'action' => 'update_order_status',
+                    'description' => 'Apoteker mengubah status pesanan virtual #' . $vt->id . ' menjadi ' . $newStatus,
+                    'ip_address' => request()->ip(),
+                ]);
+            }
+
             return back()->with('success', 'Status pesanan virtual berhasil diperbarui');
         }
 
@@ -589,6 +714,15 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
             'status_sesudah' => $request->status,
             'keterangan' => 'Status diubah oleh apoteker: ' . auth()->user()->name
         ]);
+
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'update_order_status',
+                'description' => 'Apoteker mengubah status pesanan #' . $order->kode_pesanan . ' menjadi ' . $request->status,
+                'ip_address' => request()->ip(),
+            ]);
+        }
 
         return back()->with('success', 'Status pesanan berhasil diperbarui');
     })->name('pharmacist.orders.status');
@@ -666,7 +800,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         $orderStatus = request('order_status', 'all');
         $orderDate = request('order_date');
 
-        $ordersQuery = \App\Models\Order::with(['user', 'products', 'prescription', 'statusHistories.changedByUser'])->latest();
+        $ordersQuery = \App\Models\Order::with(['user', 'products', 'prescription', 'shippingMethod', 'statusHistories.changedByUser'])->latest();
         $vtsQuery = \App\Models\VirtualTransaction::with(['user', 'prescription', 'pharmacist'])->latest();
 
         if ($orderSearch) {
@@ -739,6 +873,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
                         ],
                     ];
                 }),
+                'prescription_id' => $vt->prescription_id,
                 'prescription' => $vt->prescription,
                 'status_histories' => $vt->pharmacist ? [
                     [
@@ -748,6 +883,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
                         'created_at' => $vt->updated_at,
                     ]
                 ] : [],
+                'shippingMethod' => ['nama' => $vt->shipping_method, 'biaya' => $vt->shipping_cost],
                 'status' => $mappedStatus,
                 'total_biaya' => $vt->total_amount,
                 'created_at' => $vt->created_at,
@@ -767,6 +903,53 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             ['path' => request()->url(), 'query' => request()->query(), 'pageName' => 'order_page']
         );
 
+        // Prescriptions Pagination
+        $prescriptionSearch = request('prescription_search');
+        $prescriptionStatus = request('prescription_status', 'all');
+        $prescriptionDate = request('prescription_date');
+
+        $prescriptionsQuery = \App\Models\Prescription::with(['user', 'items.product', 'validator'])->latest();
+
+        if ($prescriptionSearch) {
+            $prescriptionsQuery->where(function($q) use ($prescriptionSearch) {
+                $q->where('nama_pasien', 'like', "%{$prescriptionSearch}%")
+                  ->orWhereHas('user', function($uq) use ($prescriptionSearch) {
+                      $uq->where('name', 'like', "%{$prescriptionSearch}%");
+                  });
+            });
+        }
+
+        if ($prescriptionStatus !== 'all') {
+            if ($prescriptionStatus === 'dipesan' || $prescriptionStatus === 'telah_dipesan') {
+                $prescriptionsQuery->where(function($q) {
+                    $q->where('status_validasi', 'telah_dipesan')
+                      ->orWhereHas('virtualTransactions', function($vq) {
+                          $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+                      });
+                });
+            } elseif ($prescriptionStatus === 'menunggu') {
+                $prescriptionsQuery->where('status_validasi', 'pending');
+            } elseif ($prescriptionStatus === 'disetujui') {
+                $prescriptionsQuery->where('status_validasi', 'disetujui')
+                    ->whereDoesntHave('virtualTransactions', function($vq) {
+                        $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+                    });
+            } else {
+                $prescriptionsQuery->where('status_validasi', $prescriptionStatus);
+            }
+        }
+
+        if ($prescriptionDate) {
+            $dates = explode(',', $prescriptionDate);
+            if (count($dates) == 2) {
+                $prescriptionsQuery->whereBetween('created_at', [$dates[0] . ' 00:00:00', $dates[1] . ' 23:59:59']);
+            } else {
+                $prescriptionsQuery->whereDate('created_at', $dates[0]);
+            }
+        }
+
+        $paginatedPrescriptions = $prescriptionsQuery->paginate(10, ['*'], 'prescription_page')->withQueryString();
+
         $statusChanges = \App\Models\OrderStatusHistory::with(['order.user', 'changedByUser'])
             ->latest()
             ->take(30)
@@ -784,8 +967,18 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         $incomeAllTime = \App\Models\Order::where('status', 'selesai')->sum('total_biaya') + 
                          \App\Models\VirtualTransaction::where('status', 'Selesai')->sum('total_amount');
 
-        $totalPrescriptionsVerified = \App\Models\Prescription::where('status_validasi', 'disetujui')->count();
+        $totalPrescriptionsPending = \App\Models\Prescription::where('status_validasi', 'pending')->count();
+        $totalPrescriptionsVerified = \App\Models\Prescription::where('status_validasi', 'disetujui')
+            ->whereDoesntHave('virtualTransactions', function($vq) {
+                $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+            })->count();
         $totalPrescriptionsRejected = \App\Models\Prescription::where('status_validasi', 'ditolak')->count();
+        $totalPrescriptionsDipesan = \App\Models\Prescription::where(function($q) {
+            $q->where('status_validasi', 'telah_dipesan')
+              ->orWhereHas('virtualTransactions', function($vq) {
+                  $vq->whereIn('status', ['Lunas', 'Diproses', 'Dikirim', 'Selesai']);
+              });
+        })->count();
 
         // Calculate revenue for chart (e.g. last 7, 30, 90 days)
         $revenueDays = request('revenue_days', 7);
@@ -820,14 +1013,29 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             ->take(5)
             ->get();
 
+        $baseAdminOrdersQuery = \App\Models\Order::query();
+        $baseAdminVtsQuery = \App\Models\VirtualTransaction::query();
+
+        $orderCounts = [
+            'all' => $baseAdminOrdersQuery->count() + $baseAdminVtsQuery->count(),
+            'menunggu_pembayaran' => (clone $baseAdminOrdersQuery)->where('status', 'menunggu_pembayaran')->count() + (clone $baseAdminVtsQuery)->whereIn('status', ['Pending', 'Belum Bayar'])->count(),
+            'diproses' => (clone $baseAdminOrdersQuery)->where('status', 'diproses')->count() + (clone $baseAdminVtsQuery)->where('status', 'Lunas')->count(),
+            'dikirim' => (clone $baseAdminOrdersQuery)->where('status', 'dikirim')->count() + (clone $baseAdminVtsQuery)->where('status', 'Dikirim')->count(),
+            'selesai' => (clone $baseAdminOrdersQuery)->where('status', 'selesai')->count() + (clone $baseAdminVtsQuery)->where('status', 'Selesai')->count(),
+            'dibatalkan' => (clone $baseAdminOrdersQuery)->where('status', 'dibatalkan')->count() + (clone $baseAdminVtsQuery)->where('status', 'Dibatalkan')->count(),
+        ];
+
         $analytics = [
             'income_today' => $incomeToday,
             'income_this_month' => $incomeThisMonth,
             'income_all_time' => $incomeAllTime,
+            'prescriptions_pending' => $totalPrescriptionsPending,
             'prescriptions_verified' => $totalPrescriptionsVerified,
             'prescriptions_rejected' => $totalPrescriptionsRejected,
+            'prescriptions_dipesan' => $totalPrescriptionsDipesan,
             'revenue_chart_data' => $revenueChartData,
-            'top_products' => $topProducts
+            'top_products' => $topProducts,
+            'order_counts' => $orderCounts
         ];
         
         $userCount = \App\Models\User::count();
@@ -851,9 +1059,17 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             'symptoms' => $symptoms,
             'orders' => $paginatedOrders,
             'statusChanges' => $statusChanges,
-            'analytics' => $analytics
+            'analytics' => $analytics,
+            'prescriptions' => $paginatedPrescriptions
         ]);
     })->name('admin.dashboard');
+
+    Route::get('/admin/prescriptions/{id}', function ($id) {
+        $prescription = \App\Models\Prescription::with(['user.addresses', 'items.product', 'validator', 'virtualTransactions'])->findOrFail($id);
+        return Inertia::render('AdminPrescriptionDetail', [
+            'prescription' => $prescription
+        ]);
+    })->name('admin.prescriptions.show');
 
     Route::get('/admin/orders/{id}', function ($id) {
         if (str_starts_with($id, 'vt_')) {
@@ -889,14 +1105,35 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
                     ];
                 }),
                 'prescription' => $vt->prescription,
-                'status_histories' => $vt->pharmacist ? [
-                    [
-                        'status_sebelum' => 'menunggu_pembayaran',
-                        'status_sesudah' => 'diproses',
-                        'changed_by_user' => ['name' => $vt->pharmacist->name],
-                        'created_at' => $vt->updated_at,
-                    ]
-                ] : [],
+                'status_histories' => (function() use ($vt, $mappedStatus) {
+                    $histories = [];
+                    if ($vt->pharmacist && in_array($mappedStatus, ['diproses', 'dikirim', 'selesai', 'dibatalkan'])) {
+                        $histories[] = [
+                            'status_sebelum' => 'menunggu_pembayaran',
+                            'status_sesudah' => 'diproses',
+                            'changed_by_user' => ['name' => $vt->pharmacist->name],
+                            'created_at' => $vt->updated_at,
+                        ];
+                    }
+                    if ($vt->pharmacist && in_array($mappedStatus, ['dikirim', 'selesai'])) {
+                        $histories[] = [
+                            'status_sebelum' => 'diproses',
+                            'status_sesudah' => 'dikirim',
+                            'changed_by_user' => ['name' => 'Admin Apotek'],
+                            'created_at' => clone $vt->updated_at,
+                        ];
+                    }
+                    if ($vt->pharmacist && in_array($mappedStatus, ['selesai'])) {
+                        $histories[] = [
+                            'status_sebelum' => 'dikirim',
+                            'status_sesudah' => 'selesai',
+                            'changed_by_user' => ['name' => 'Admin Apotek'],
+                            'created_at' => clone $vt->updated_at,
+                        ];
+                    }
+                    return array_reverse($histories);
+                })(),
+                'shippingMethod' => ['nama' => $vt->shipping_method, 'biaya' => $vt->shipping_cost],
                 'status' => $mappedStatus,
                 'total_biaya' => $vt->total_amount,
                 'created_at' => $vt->created_at,
@@ -999,6 +1236,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/users', [AdminUserController::class, 'store'])->name('admin.users.store');
     Route::put('/admin/users/{id}', [AdminUserController::class, 'update'])->name('admin.users.update');
     Route::delete('/admin/users/{id}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::get('/admin/users/{id}/activities', [AdminUserController::class, 'activities'])->name('admin.users.activities');
 
     Route::put('/admin/orders/{id}/status', function(\Illuminate\Http\Request $request, $id) {
         $request->validate(['status' => 'required|string|in:diproses,dikirim,selesai,dibatalkan']);
@@ -1015,6 +1253,16 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             ];
             $newStatus = $statusMap[$request->status] ?? 'Pending';
             $vt->update(['status' => $newStatus, 'pharmacist_id' => auth()->id()]);
+            
+            if (auth()->check()) {
+                \App\Models\UserActivity::create([
+                    'user_id' => auth()->id(),
+                    'action' => 'update_order_status',
+                    'description' => 'Admin mengubah status pesanan virtual #' . $vt->id . ' menjadi ' . $newStatus,
+                    'ip_address' => request()->ip(),
+                ]);
+            }
+
             return back()->with('success', 'Status pesanan virtual berhasil diperbarui');
         }
 
@@ -1029,6 +1277,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             'status_sesudah' => $request->status,
             'keterangan' => 'Status diubah oleh admin: ' . auth()->user()->name
         ]);
+
+        if (auth()->check()) {
+            \App\Models\UserActivity::create([
+                'user_id' => auth()->id(),
+                'action' => 'update_order_status',
+                'description' => 'Admin mengubah status pesanan #' . $order->kode_pesanan . ' menjadi ' . $request->status,
+                'ip_address' => request()->ip(),
+            ]);
+        }
 
         return back()->with('success', 'Status pesanan berhasil diperbarui');
     })->name('admin.orders.status');

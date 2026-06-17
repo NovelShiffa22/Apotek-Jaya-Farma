@@ -13,6 +13,7 @@ import {
     Plus,
     X
 } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 
 interface Category {
     id: number;
@@ -51,10 +52,26 @@ interface EditProductProps {
 export default function EditProduct({ initialData, categories = [], symptoms = [], stockHistories = [] }: EditProductProps) {
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [dragActive, setDragActive] = useState(false);
-    const [showDeletePhotoAlert, setShowDeletePhotoAlert] = useState(false);
-    const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showAdjustStockModal, setShowAdjustStockModal] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const [modalConfig, setModalConfig] = useState<{
+        isOpen: boolean;
+        type: 'danger' | 'warning' | 'delete' | 'success';
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        confirmText?: string;
+        cancelText?: string;
+    }>({
+        isOpen: false,
+        type: 'danger',
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
+
+    const closeConfirmModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
 
     const { data, setData, post, errors, processing } = useForm<ProductFormData>({
         nama_obat: initialData?.nama_obat || '',
@@ -106,12 +123,28 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
         const maxSize = 2 * 1024 * 1024; // 2MB
 
         if (!validTypes.includes(file.type)) {
-            alert('Format file tidak didukung. Gunakan PNG, JPG, JPEG, atau WEBP.');
+            setModalConfig({
+                isOpen: true,
+                type: 'danger',
+                title: 'Format Tidak Didukung',
+                message: 'Format file tidak didukung. Gunakan PNG, JPG, JPEG, atau WEBP.',
+                confirmText: 'Tutup',
+                cancelText: '',
+                onConfirm: closeConfirmModal
+            });
             return;
         }
 
         if (file.size > maxSize) {
-            alert('Ukuran file terlalu besar. Maksimal 2MB.');
+            setModalConfig({
+                isOpen: true,
+                type: 'danger',
+                title: 'Ukuran Terlalu Besar',
+                message: 'Ukuran file terlalu besar. Maksimal 2MB.',
+                confirmText: 'Tutup',
+                cancelText: '',
+                onConfirm: closeConfirmModal
+            });
             return;
         }
 
@@ -136,11 +169,21 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setShowConfirmModal(true);
+        setModalConfig({
+            isOpen: true,
+            type: 'warning',
+            title: 'Konfirmasi Perubahan',
+            message: `Apakah Anda yakin ingin menyimpan perubahan pada produk ${data.nama_obat}? Tindakan ini akan memperbarui data secara langsung di database.`,
+            confirmText: 'Ya, Simpan',
+            cancelText: 'Batal',
+            onConfirm: () => {
+                closeConfirmModal();
+                executeSubmit();
+            }
+        });
     };
 
     const executeSubmit = () => {
-        setShowConfirmModal(false);
         post(`/admin/products/${initialData.id}?_method=PUT`, {
             forceFormData: true,
         });
@@ -538,7 +581,20 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                         <div className="h-4 w-[1px] bg-gray-300"></div>
                                         <button
                                             type="button"
-                                            onClick={() => setShowDeletePhotoAlert(true)}
+                                            onClick={() => {
+                                                setModalConfig({
+                                                    isOpen: true,
+                                                    type: 'delete',
+                                                    title: 'Hapus Foto Produk?',
+                                                    message: 'Tindakan ini akan menghapus foto secara permanen.',
+                                                    confirmText: 'Hapus',
+                                                    cancelText: 'Batal',
+                                                    onConfirm: () => {
+                                                        removeFile();
+                                                        closeConfirmModal();
+                                                    }
+                                                });
+                                            }}
                                             className="flex items-center gap-2 rounded-lg px-3 py-1.5 font-['Poppins',sans-serif] text-[13px] font-medium text-red-600 transition-colors hover:bg-red-50"
                                         >
                                             <Trash2 size={14} /> Hapus Foto
@@ -657,40 +713,6 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                 </div>
             </main>
 
-            {/* Confirm Submit Modal */}
-            {showConfirmModal && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm transition-all">
-                    <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-6 shadow-2xl">
-                        <div className="mb-4 flex items-center gap-3 text-amber-600">
-                            <div className="rounded-full bg-amber-50 p-2">
-                                <AlertTriangle size={24} />
-                            </div>
-                            <h3 className="font-['Poppins',sans-serif] text-[18px] font-semibold text-[#171d19]">
-                                Konfirmasi Perubahan
-                            </h3>
-                        </div>
-                        <p className="mb-6 font-['Poppins',sans-serif] text-[14px] leading-relaxed text-[#6e7a70]">
-                            Apakah Anda yakin ingin menyimpan perubahan pada produk <span className="font-semibold text-gray-900">{data.nama_obat}</span>? Tindakan ini akan memperbarui data secara langsung di database.
-                        </p>
-                        <div className="flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setShowConfirmModal(false)}
-                                className="rounded-xl px-5 py-2.5 font-['Poppins',sans-serif] text-[14px] font-medium text-[#6e7a70] transition-colors hover:bg-gray-100"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                type="button"
-                                onClick={executeSubmit}
-                                className="rounded-xl bg-amber-500 px-5 py-2.5 font-['Poppins',sans-serif] text-[14px] font-medium text-white shadow-lg shadow-amber-500/20 transition-colors hover:bg-amber-600"
-                            >
-                                Ya, Simpan Perubahan
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Adjust Stock Modal */}
             {showAdjustStockModal && (
@@ -795,39 +817,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                     </div>
                 </div>
             )}
-
-            {/* Delete Photo Confirmation Alert */}
-            {showDeletePhotoAlert && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/20 p-4 transition-all">
-                    <div className="w-full max-w-xs rounded-2xl border border-gray-100 bg-white p-5 shadow-lg">
-                        <h3 className="mb-1 font-['Poppins',sans-serif] text-[15px] font-semibold text-[#171d19]">
-                            Hapus Foto Produk?
-                        </h3>
-                        <p className="mb-5 font-['Poppins',sans-serif] text-[12px] leading-relaxed text-[#6e7a70]">
-                            Tindakan ini akan menghapus foto secara permanen.
-                        </p>
-                        <div className="flex justify-end gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setShowDeletePhotoAlert(false)}
-                                className="rounded-lg px-4 py-2 font-['Poppins',sans-serif] text-[12px] font-medium text-[#6e7a70] transition-colors hover:bg-gray-100"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setShowDeletePhotoAlert(false);
-                                    removeFile();
-                                }}
-                                className="rounded-lg bg-red-50 px-4 py-2 font-['Poppins',sans-serif] text-[12px] font-medium text-red-600 transition-colors hover:bg-red-100"
-                            >
-                                Hapus
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
         </div>
     );
 }

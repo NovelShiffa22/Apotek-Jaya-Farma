@@ -34,8 +34,8 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'phone' => 'required|string|max:20',
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'phone' => 'required|numeric|digits_between:10,13|regex:/^(08|62)/',
+            'password' => ['required', 'confirmed', 'min:8'],
         ]);
 
         $user = User::create([
@@ -48,8 +48,8 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        Auth::login($user);
+        // Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan login.');
     }
 }

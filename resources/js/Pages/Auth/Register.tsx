@@ -143,11 +143,15 @@ export default function Register() {
                                             ? 'border-[#ef4444] focus:ring-[#ef4444]/20 focus:border-[#ef4444]' 
                                             : 'border-transparent focus:border-[#006a3f] focus:ring-[#006a3f]/20'
                                     } rounded-xl text-[14px] text-[#171d19] focus:bg-white focus:ring-2 transition-all placeholder:text-gray-400 outline-none`}
-                                    onChange={(e) => setData('phone', e.target.value)}
+                                    onChange={(e) => setData('phone', e.target.value.replace(/\D/g, ''))}
                                     required
                                 />
                             </div>
-                            {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                            {errors.phone ? (
+                                <p className="text-[#ef4444] text-[11px] mt-1.5 font-medium leading-snug">{errors.phone}</p>
+                            ) : (
+                                <p className="text-[#6e7a70] text-[11px] mt-1.5 leading-snug">Hanya berupa angka (10-13 digit) diawali 08/62.</p>
+                            )}
                         </div>
 
                         {/* Password & Konfirmasi Password */}
@@ -175,7 +179,11 @@ export default function Register() {
                                         required
                                     />
                                 </div>
-                                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+                                {errors.password ? (
+                                    <p className="text-[#ef4444] text-[11px] mt-1.5 font-medium leading-snug">{errors.password}</p>
+                                ) : (
+                                    <p className="text-[#6e7a70] text-[11px] mt-1.5 leading-snug">Minimal 8 karakter, wajib kombinasi huruf besar, kecil, dan angka.</p>
+                                )}
                             </div>
 
                             <div>
@@ -201,7 +209,7 @@ export default function Register() {
                                         required
                                     />
                                 </div>
-                                {errors.password_confirmation && <p className="text-red-500 text-xs mt-1">{errors.password_confirmation}</p>}
+                                {errors.password_confirmation && <p className="text-[#ef4444] text-[11px] mt-1.5 font-medium leading-snug">{errors.password_confirmation}</p>}
                             </div>
                         </div>
 

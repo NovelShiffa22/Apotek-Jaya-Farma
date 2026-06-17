@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { id as localeID } from 'date-fns/locale';
@@ -40,7 +40,6 @@ import React, { useState, useEffect } from 'react';
 import CreateProduct from './CreateProduct';
 import CreateUser from './CreateUser';
 import Pagination from '../components/Pagination';
-import { router, usePage } from '@inertiajs/react';
 import ConfirmModal from '../components/ConfirmModal';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
@@ -76,9 +75,10 @@ interface AdminDashboardProps {
     statusChanges?: any[];
     stockHistories?: any[];
     analytics?: any;
+    prescriptions?: any;
 }
 
-export default function AdminDashboard({ products = [], categories = [], users = [], symptoms = [], orders = [], statusChanges = [], stockHistories = [], analytics = {} }: AdminDashboardProps) {
+export default function AdminDashboard({ products = [], categories = [], users = [], symptoms = [], orders = [], statusChanges = [], stockHistories = [], analytics = {}, prescriptions = [] }: AdminDashboardProps) {
     const { auth } = usePage<any>().props;
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
@@ -146,11 +146,29 @@ export default function AdminDashboard({ products = [], categories = [], users =
 
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>(null);
-    const [productToDelete, setProductToDelete] = useState<any>(null);
 
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<any>(null);
-    const [userToDelete, setUserToDelete] = useState<any>(null);
+
+    const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+    const [selectedUserActivities, setSelectedUserActivities] = useState<any[]>([]);
+    const [selectedUserForActivity, setSelectedUserForActivity] = useState<any>(null);
+    const [isFetchingActivities, setIsFetchingActivities] = useState(false);
+
+    const fetchUserActivities = async (user: any) => {
+        setSelectedUserForActivity(user);
+        setIsFetchingActivities(true);
+        setIsActivityModalOpen(true);
+        try {
+            const response = await fetch(`/admin/users/${user.id}/activities`);
+            const data = await response.json();
+            setSelectedUserActivities(data);
+        } catch (error) {
+            console.error('Failed to fetch user activities:', error);
+        } finally {
+            setIsFetchingActivities(false);
+        }
+    };
 
     const [modalConfig, setModalConfig] = useState<{
         isOpen: boolean;
@@ -179,13 +197,14 @@ export default function AdminDashboard({ products = [], categories = [], users =
             confirmText: 'Ya, Keluar',
             onConfirm: () => {
                 closeConfirmModal();
+                window.history.replaceState(null, '', '/login');
                 router.post(route('logout'));
             }
         });
     };
 
     const [activeTab, setActiveTab] = useState<
-        'analytics' | 'products' | 'orders' | 'users'
+        'analytics' | 'products' | 'orders' | 'users' | 'prescriptions'
     >(() => {
         return (localStorage.getItem('adminDashboardTab') as any) || 'analytics';
     });
@@ -204,6 +223,10 @@ export default function AdminDashboard({ products = [], categories = [], users =
     const [orderStartDate, setOrderStartDate] = useState<Date | null>(null);
     const [orderEndDate, setOrderEndDate] = useState<Date | null>(null);
     const [revenueFilterDays, setRevenueFilterDays] = useState(7);
+    const [prescriptionSearchQuery, setPrescriptionSearchQuery] = useState('');
+    const [prescriptionStatusFilter, setPrescriptionStatusFilter] = useState('menunggu');
+    const [prescriptionStartDate, setPrescriptionStartDate] = useState<Date | null>(null);
+    const [prescriptionEndDate, setPrescriptionEndDate] = useState<Date | null>(null);
 
     const updateOrderStatus = (orderId: number | string, status: string) => {
         router.put(`/admin/orders/${orderId}/status`, { status }, {
@@ -241,17 +264,30 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 params.order_date = `${format(orderEndDate)}`;
             }
 
+            if (prescriptionSearchQuery) params.prescription_search = prescriptionSearchQuery;
+            if (prescriptionStatusFilter !== 'all') params.prescription_status = prescriptionStatusFilter;
+            if (prescriptionStartDate && prescriptionEndDate) {
+                const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                params.prescription_date = `${format(prescriptionStartDate)},${format(prescriptionEndDate)}`;
+            } else if (prescriptionStartDate) {
+                const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                params.prescription_date = `${format(prescriptionStartDate)}`;
+            } else if (prescriptionEndDate) {
+                const format = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                params.prescription_date = `${format(prescriptionEndDate)}`;
+            }
+
             // Use Inertia to reload the current page with new query params
             router.get('/admin', params, {
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
-                only: ['users', 'orders', 'products']
+                only: ['users', 'orders', 'products', 'prescriptions']
             });
         }, 300);
 
         return () => clearTimeout(handler);
-    }, [searchQuery, roleFilter, productSearchQuery, productCategoryFilter, orderSearchQuery, orderStatusFilter, orderStartDate, orderEndDate]);
+    }, [searchQuery, roleFilter, productSearchQuery, productCategoryFilter, orderSearchQuery, orderStatusFilter, orderStartDate, orderEndDate, prescriptionSearchQuery, prescriptionStatusFilter, prescriptionStartDate, prescriptionEndDate]);
 
     // Fetch analytics data when revenue filter changes
     useEffect(() => {
@@ -333,6 +369,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                     <nav className="px-3 py-6 space-y-1.5">
                         {[
                             { id: 'analytics' as const, label: 'Analitik', icon: TrendingUp },
+                            { id: 'prescriptions' as const, label: 'Manajemen Resep', icon: FileText },
                             { id: 'orders' as const, label: 'Manajemen Pesanan', icon: ShoppingBag },
                             { id: 'products' as const, label: 'Produk & Stok', icon: Package },
                             { id: 'users' as const, label: 'Manajemen User', icon: UserCog },
@@ -428,6 +465,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1.5">
                                 {[
                                     { id: 'analytics' as const, label: 'Analitik', icon: TrendingUp },
+                                    { id: 'prescriptions' as const, label: 'Manajemen Resep', icon: FileText },
                                     { id: 'orders' as const, label: 'Manajemen Pesanan', icon: ShoppingBag },
                                     { id: 'products' as const, label: 'Produk & Stok', icon: Package },
                                     { id: 'users' as const, label: 'Manajemen User', icon: UserCog },
@@ -1079,7 +1117,19 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                         />
                                                     </button>
                                                     <button 
-                                                        onClick={() => setProductToDelete(product)}
+                                                        onClick={() => {
+                                                            setModalConfig({
+                                                                isOpen: true,
+                                                                type: 'delete',
+                                                                title: 'Konfirmasi Hapus',
+                                                                message: 'Apakah Anda yakin ingin menghapus produk?',
+                                                                confirmText: 'Hapus',
+                                                                onConfirm: () => {
+                                                                    router.delete(`/admin/products/${product.id}`);
+                                                                    closeConfirmModal();
+                                                                }
+                                                            });
+                                                        }}
                                                         className="group inline-block rounded-lg p-2 transition-colors hover:bg-red-50"
                                                     >
                                                         <Trash2
@@ -1130,6 +1180,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                           ].map((tab) => {
                             const isActive = orderStatusFilter === tab.id;
                             const Icon = tab.icon;
+                            const count = analytics?.order_counts?.[tab.id] || 0;
                             return (
                               <button
                                 key={tab.id}
@@ -1141,7 +1192,14 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                 }`}
                               >
                                 <Icon size={16} className={isActive ? "text-[#0D6A36]" : "text-slate-400"} />
-                                {tab.label}
+                                <span>{tab.label}</span>
+                                {count > 0 && (
+                                  <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold leading-none rounded-full ${
+                                    isActive ? 'bg-[#0D6A36] text-white' : 'bg-slate-200 text-slate-700'
+                                  }`}>
+                                    {count}
+                                  </span>
+                                )}
                               </button>
                             );
                           })}
@@ -1228,10 +1286,11 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">ID Pesanan</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">User</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">Tanggal Pemesanan</th>
+                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-center">Resep / Non-Resep</th>
+                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-center">Metode Pengiriman</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-center">Jml. Barang</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-right">Total Harga</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">Penanggung Jawab</th>
-                                <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-center">Resep / Non-Resep</th>
                                 <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase text-center">Action</th>
                               </tr>
                             </thead>
@@ -1270,7 +1329,9 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     </td>
                                     <td className="px-5 py-4">
                                       <div className="flex flex-col gap-0.5">
-                                        <span className="font-['Inter',sans-serif] text-[13px] font-bold text-slate-800">{order.kode_pesanan}</span>
+                                        <span className="font-['Inter',sans-serif] text-[13px] font-bold text-slate-800">
+                                            {order.id.toString().startsWith('vt_') ? `VT-${order.id.toString().replace('vt_', '')}` : `#${String(order.id).padStart(6, '0')}`}
+                                        </span>
                                         <span className={`inline-flex items-center self-start px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
                                           {statusLabels[order.status] || order.status}
                                         </span>
@@ -1297,6 +1358,50 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                       </div>
                                     </td>
                                     <td className="px-5 py-4 text-center">
+                                      {hasPrescription ? (
+                                        prescriptionFileUrl ? (
+                                          <a
+                                            href={prescriptionFileUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-['Inter',sans-serif] text-[11px] font-bold tracking-wide transition-colors ${prescriptionFileUrl.toLowerCase().includes('.pdf') ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100' : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'}`}
+                                            title="Klik untuk melihat file resep"
+                                          >
+                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                              {prescriptionFileUrl.toLowerCase().includes('.pdf') ? (
+                                                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                              ) : (
+                                                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                              )}
+                                            </svg>
+                                            {prescriptionFileUrl.toLowerCase().includes('.pdf') ? 'PDF Resep' : 'Foto Resep'} {order.prescription_id ? `#${order.prescription_id}` : ''}
+                                          </a>
+                                        ) : (
+                                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-['Inter',sans-serif] text-[11px] font-bold tracking-wide">
+                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            Resep {order.prescription_id ? `#${order.prescription_id}` : ''}
+                                          </span>
+                                        )
+                                      ) : (
+                                        <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-50 text-slate-500 border border-slate-200 font-['Inter',sans-serif] text-[11px] font-semibold tracking-wide">
+                                          Non-Resep
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td className="px-5 py-4 text-center">
+                                        {(order.shippingMethod?.nama === 'ambil_apotek' || order.shipping_method === 'ambil_apotek' || order.shippingMethod?.nama === 'Ambil di Apotek') ? (
+                                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-amber-50 text-amber-600 font-bold text-[10px] uppercase tracking-widest border border-amber-200">
+                                                Ambil di Apotek
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-600 font-bold text-[10px] uppercase tracking-widest border border-blue-200">
+                                                Kirim via Kurir
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td className="px-5 py-4 text-center">
                                       <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-slate-100 font-['Inter',sans-serif] text-[14px] font-bold text-slate-700">
                                         {totalQty}
                                       </span>
@@ -1316,35 +1421,6 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                         </div>
                                       ) : (
                                         <span className="font-['Inter',sans-serif] text-[12px] text-slate-400 italic">Belum ditentukan</span>
-                                      )}
-                                    </td>
-                                    <td className="px-5 py-4 text-center">
-                                      {hasPrescription ? (
-                                        prescriptionFileUrl ? (
-                                          <a
-                                            href={prescriptionFileUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-['Inter',sans-serif] text-[11px] font-bold tracking-wide hover:bg-blue-100 transition-colors"
-                                            title="Klik untuk melihat file resep"
-                                          >
-                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                            Resep
-                                          </a>
-                                        ) : (
-                                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-['Inter',sans-serif] text-[11px] font-bold tracking-wide">
-                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                            Resep
-                                          </span>
-                                        )
-                                      ) : (
-                                        <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-50 text-slate-500 border border-slate-200 font-['Inter',sans-serif] text-[11px] font-semibold tracking-wide">
-                                          Non-Resep
-                                        </span>
                                       )}
                                     </td>
                                     <td className="px-5 py-4 text-center">
@@ -1377,6 +1453,253 @@ export default function AdminDashboard({ products = [], categories = [], users =
                   })()}
               </div>
           )}
+
+                {activeTab === 'prescriptions' && (
+                    <div className="space-y-6">
+                        <div>
+                            <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold text-[#006a3f]">
+                                Manajemen Resep
+                            </h2>
+                            <p className="font-['Inter',sans-serif] text-[14px] text-slate-500 mt-1">
+                                Pantau seluruh resep yang telah diunggah dan diverifikasi oleh Apoteker.
+                            </p>
+                        </div>
+
+                        {/* Sub Navigation Tabs */}
+                        <div className="mb-6 border-b border-[#E2E8F0]">
+                            <div className="flex gap-10 overflow-x-auto scrollbar-hide">
+                                {[
+                                    { id: 'menunggu' as const, label: 'Menunggu Verifikasi', icon: Clock, count: analytics?.prescriptions_pending || 0 },
+                                    { id: 'disetujui' as const, label: 'Disetujui', icon: CheckCircle, count: analytics?.prescriptions_verified || 0 },
+                                    { id: 'ditolak' as const, label: 'Ditolak', icon: XCircle, count: analytics?.prescriptions_rejected || 0 },
+                                    { id: 'dipesan' as const, label: 'Telah Dipesan', icon: ShoppingBag, count: analytics?.prescriptions_dipesan || 0 }
+                                ].map((tab) => {
+                                    const isActive = prescriptionStatusFilter === tab.id;
+                                    const Icon = tab.icon;
+                                    return (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setPrescriptionStatusFilter(tab.id)}
+                                            className={`font-['Inter',sans-serif] text-sm font-medium pb-4 relative transition-all whitespace-nowrap flex items-center gap-2.5 ${
+                                                isActive
+                                                    ? 'text-[#0D6A36] border-b-2 border-[#0D6A36]'
+                                                    : 'text-slate-400 hover:text-slate-600 border-b-2 border-transparent'
+                                            }`}
+                                        >
+                                            <Icon size={16} className={isActive ? "text-[#0D6A36]" : "text-slate-400"} />
+                                            <span>{tab.label}</span>
+                                            {tab.count > 0 && (
+                                                <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold leading-none rounded-full ${
+                                                    isActive ? 'bg-[#0D6A36] text-white' : 'bg-slate-200 text-slate-700'
+                                                }`}>
+                                                    {tab.count}
+                                                </span>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Search & Filter Bar */}
+                        <div className="mb-6 rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="relative flex-1">
+                                    <Search className="absolute top-1/2 left-4 -translate-y-1/2 text-[#6e7a70]" size={18} />
+                                    <input
+                                    type="text"
+                                    value={prescriptionSearchQuery}
+                                    onChange={(e) => setPrescriptionSearchQuery(e.target.value)}
+                                    placeholder="Cari berdasarkan nama pasien..."
+                                    className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-4 pl-11 font-['Inter',sans-serif] text-[13px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#0D6A36] focus:bg-white focus:ring-2 focus:ring-[#0D6A36]/20 focus:outline-none"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <div className="relative">
+                                    <Calendar className="absolute top-1/2 left-3 -translate-y-1/2 text-[#6e7a70] z-10 pointer-events-none" size={18} />
+                                    <DatePicker
+                                        selected={prescriptionStartDate}
+                                        onChange={(date: Date | null) => setPrescriptionStartDate(date)}
+                                        selectsStart
+                                        startDate={prescriptionStartDate}
+                                        endDate={prescriptionEndDate}
+                                        dateFormat="dd/MM/yyyy"
+                                        locale={localeID}
+                                        showYearDropdown
+                                        showMonthDropdown
+                                        dropdownMode="select"
+                                        isClearable
+                                        customInput={<DynamicPlaceholderInput defaultPlaceholder="Mulai" formatPlaceholder="dd/mm/yyyy" />}
+                                        className="w-full sm:w-[160px] rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-8 pl-10 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all focus:border-[#0D6A36] focus:ring-2 focus:ring-[#0D6A36]/20 focus:outline-none"
+                                    />
+                                </div>
+                                <span className="text-slate-400 font-medium">-</span>
+                                <div className="relative">
+                                    <Calendar className="absolute top-1/2 left-3 -translate-y-1/2 text-[#6e7a70] z-10 pointer-events-none" size={18} />
+                                    <DatePicker
+                                        selected={prescriptionEndDate}
+                                        onChange={(date: Date | null) => setPrescriptionEndDate(date)}
+                                        selectsEnd
+                                        startDate={prescriptionStartDate}
+                                        endDate={prescriptionEndDate}
+                                        minDate={prescriptionStartDate}
+                                        dateFormat="dd/MM/yyyy"
+                                        locale={localeID}
+                                        showYearDropdown
+                                        showMonthDropdown
+                                        dropdownMode="select"
+                                        isClearable
+                                        customInput={<DynamicPlaceholderInput defaultPlaceholder="Akhir" formatPlaceholder="dd/mm/yyyy" />}
+                                        className="w-full sm:w-[160px] rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-8 pl-10 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all focus:border-[#0D6A36] focus:ring-2 focus:ring-[#0D6A36]/20 focus:outline-none"
+                                    />
+                                </div>
+                                </div>
+                        </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_4px_16px_rgba(0,0,0,0.06)] overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full min-w-[960px] border-collapse text-left">
+                                    <thead>
+                                        <tr className="bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9] border-b border-[#E2E8F0]">
+                                            <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase">ID Resep</th>
+                                            <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-center">Dokumen Resep</th>
+                                            <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase">Nama Pasien</th>
+                                            <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase">Tanggal Masuk</th>
+                                            <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-center">Metode Pengiriman</th>
+                                            <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-center">Status</th>
+                                            <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-center">Penanggung Jawab</th>
+                                            <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-wider text-slate-500 uppercase text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-[#f1f5f9]">
+                                        {(prescriptions?.data || []).length === 0 ? (
+                                            <tr>
+                                                <td colSpan={8}>
+                                                    <div className="rounded-2xl border border-[#f1f5f9] bg-white p-16 text-center shadow-[0_8px_24px_rgba(0,0,0,0.06)] mt-4 mb-4 mx-4">
+                                                        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-[#f9fafb]">
+                                                            <FileText size={32} className="text-[#6e7a70]" />
+                                                        </div>
+                                                        <h3 className="mb-2 font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
+                                                            {prescriptionStatusFilter === 'dipesan' ? 'Belum ada resep yang telah selesai' : 'Tidak ada resep ditemukan'}
+                                                        </h3>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : (prescriptions?.data || []).map((rx: any, index: number) => {
+                                            const config = (rx.status_validasi === 'pending' || rx.status_validasi === 'menunggu') ? { bg: 'bg-amber-50', color: 'text-amber-700', border: 'border-amber-300', text: 'Menunggu' } :
+                                                           rx.status_validasi === 'disetujui' ? { bg: 'bg-emerald-50', color: 'text-emerald-700', border: 'border-emerald-300', text: 'Disetujui' } :
+                                                           rx.status_validasi === 'ditolak' ? { bg: 'bg-red-50', color: 'text-red-700', border: 'border-red-300', text: 'Ditolak' } :
+                                                           rx.status_validasi === 'telah_dipesan' ? { bg: 'bg-blue-50', color: 'text-blue-700', border: 'border-blue-300', text: 'Telah Dipesan' } :
+                                                           { bg: 'bg-amber-50', color: 'text-amber-700', border: 'border-amber-300', text: 'Menunggu' };
+                                                           
+                                            return (
+                                                <tr key={rx.id} className="group transition-colors hover:bg-[#f8fafc]">
+                                                    <td className="px-5 py-4">
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-['Inter',sans-serif] text-[13px] font-bold text-slate-800">#{rx.kode_resep || rx.id}</span>
+                                                                {rx.is_urgent && (
+                                                                    <span className="inline-flex items-center self-start px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border border-red-200 bg-red-50 text-red-700">Urgent</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-5 py-4 text-center">
+                                                        <div className="w-12 h-16 mx-auto rounded-md border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center shrink-0 shadow-sm relative group/img">
+                                                            {rx.file_foto ? (
+                                                                rx.file_foto.endsWith('.pdf') ? (
+                                                                    <div className="text-red-500 flex flex-col items-center">
+                                                                        <FileText size={20} />
+                                                                        <span className="text-[8px] font-bold mt-1">PDF</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <img 
+                                                                        src={rx.file_foto.startsWith('http') ? rx.file_foto : (rx.file_foto.startsWith('storage/') || rx.file_foto.startsWith('/storage/') ? (rx.file_foto.startsWith('/') ? rx.file_foto : `/${rx.file_foto}`) : `/storage/${rx.file_foto}`)} 
+                                                                        alt="Resep" 
+                                                                        className="w-full h-full object-cover transition-transform group-hover/img:scale-110" 
+                                                                        onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.classList.add('bg-slate-100'); }} 
+                                                                    />
+                                                                )
+                                                            ) : (
+                                                                <FileText size={20} className="text-slate-300" />
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-5 py-4">
+                                                        <div className="flex items-center gap-2.5">
+                                                            <div className="w-8 h-8 rounded-full bg-[#E7F5EC] text-[#0D6A36] flex items-center justify-center font-bold text-xs shrink-0">
+                                                                {(rx.nama_pasien || rx.user?.name || rx.customer || 'P').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                                                            </div>
+                                                            <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-800 truncate max-w-[150px]">
+                                                                {rx.nama_pasien || rx.user?.name || rx.customer || 'Pasien Anonim'}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-5 py-4">
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-700">
+                                                                {rx.created_at ? new Date(rx.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
+                                                            </span>
+                                                            <span className="font-['Inter',sans-serif] text-[11px] text-slate-400">
+                                                                {rx.created_at ? new Date(rx.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : (rx.timeLabel || rx.date?.split(' ')[1])}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-5 py-4 text-center">
+                                                        {rx.shipping_method === 'kurir' ? (
+                                                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-600 font-bold text-[10px] uppercase tracking-widest border border-blue-200">
+                                                                Kirim via Kurir
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-amber-50 text-amber-600 font-bold text-[10px] uppercase tracking-widest border border-amber-200">
+                                                                Ambil di Apotek
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-5 py-4 text-center">
+                                                        <span className={`inline-flex items-center justify-center px-3 py-1 rounded-md text-[11px] font-bold tracking-wider uppercase border ${config.bg} ${config.color} ${config.border}`}>
+                                                            {config.text}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-5 py-4 text-center">
+                                                        <div className="flex justify-center">
+                                                            {rx.validator?.name ? (
+                                                                <span className="font-['Inter',sans-serif] text-[13px] font-medium text-slate-700">
+                                                                    {rx.validator.name}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="font-['Inter',sans-serif] text-[13px] italic text-slate-400">
+                                                                    Belum ditentukan
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-5 py-4 text-center">
+                                                        <div className="flex justify-center">
+                                                            <Link
+                                                                href={`/admin/prescriptions/${rx.id}`}
+                                                                className="group inline-flex items-center gap-1.5 rounded-lg border border-[#0D6A36]/30 px-3 py-1.5 font-['Inter',sans-serif] text-xs font-semibold text-[#0D6A36] bg-[#0D6A36]/5 hover:bg-[#0D6A36] hover:text-white transition-all duration-200"
+                                                            >
+                                                                <Eye size={14} /> Detail
+                                                            </Link>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="px-5 py-3 border-t border-[#f1f5f9] bg-[#f8fafc] flex items-center justify-between">
+                                <p className="font-['Inter',sans-serif] text-[12px] text-slate-400">
+                                    Menampilkan <span className="font-bold text-slate-600">{prescriptions?.total || 0}</span> resep
+                                </p>
+                                {prescriptions?.links && <Pagination links={prescriptions.links} />}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {activeTab === 'users' && (
                     <div className="space-y-6">
@@ -1669,6 +1992,16 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                     <td className="px-6 py-5">
                                                         <div className="flex justify-end gap-2">
                                                             <button
+                                                                onClick={() => fetchUserActivities(user)}
+                                                                className="group inline-block rounded-lg p-2 transition-colors hover:bg-blue-50"
+                                                                title="Riwayat Aktivitas"
+                                                            >
+                                                                <Clock
+                                                                    size={16}
+                                                                    className="text-blue-600 opacity-60 transition-opacity group-hover:opacity-100"
+                                                                />
+                                                            </button>
+                                                            <button
                                                                 onClick={() => {
                                                                     setEditingUser(user);
                                                                     setIsUserModalOpen(true);
@@ -1682,7 +2015,19 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                                 />
                                                             </button>
                                                             <button
-                                                                onClick={() => setUserToDelete(user)}
+                                                                onClick={() => {
+                                                                    setModalConfig({
+                                                                        isOpen: true,
+                                                                        type: 'delete',
+                                                                        title: 'Konfirmasi Hapus',
+                                                                        message: 'Apakah Anda yakin ingin menghapus akun user ini?',
+                                                                        confirmText: 'Hapus',
+                                                                        onConfirm: () => {
+                                                                            router.delete(`/admin/users/${user.id}`);
+                                                                            closeConfirmModal();
+                                                                        }
+                                                                    });
+                                                                }}
                                                                 className="group rounded-lg p-2 transition-colors hover:bg-red-50"
                                                                 title="Hapus user"
                                                             >
@@ -1748,37 +2093,10 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 symptoms={symptoms}
             />
 
-            {/* Modal Konfirmasi Hapus Produk Minimalist */}
-            {productToDelete && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-6">
-                    <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg">
-                        <h3 className="mb-2 font-['Poppins',sans-serif] text-[15px] font-semibold text-[#171d19]">
-                            Konfirmasi Hapus
-                        </h3>
-                        <p className="mb-5 font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
-                            Apakah Anda yakin ingin menghapus produk?
-                        </p>
-                        <div className="flex justify-end gap-2">
-                            <button
-                                onClick={() => setProductToDelete(null)}
-                                className="rounded-lg px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-[#6e7a70] transition-colors hover:bg-gray-100"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                onClick={() => {
-                                    router.delete(`/admin/products/${productToDelete.id}`);
-                                    setProductToDelete(null);
-                                }}
-                                className="rounded-lg bg-red-600 px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-white transition-colors hover:bg-red-700"
-                            >
-                                Hapus
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
+            {/* Modal Detail Pesanan */}
+            <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
+            
             {/* Modal Tambah/Edit User */}
             <CreateUser 
                 key={editingUser ? editingUser.id : 'create-user'}
@@ -1791,39 +2109,71 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 initialData={editingUser} 
             />
 
-            {/* Modal Konfirmasi Hapus User Minimalist */}
-            {userToDelete && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-6">
-                    <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg">
-                        <h3 className="mb-2 font-['Poppins',sans-serif] text-[15px] font-semibold text-[#171d19]">
-                            Konfirmasi Hapus
-                        </h3>
-                        <p className="mb-5 font-['Inter',sans-serif] text-[13px] text-[#6e7a70]">
-                            Apakah Anda yakin ingin menghapus akun user ini?
-                        </p>
-                        <div className="flex justify-end gap-2">
+            {/* Modal Activity Log */}
+            {isActivityModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+                    <div className="absolute inset-0 bg-slate-900/40" onClick={() => setIsActivityModalOpen(false)} />
+                    <div className="relative flex w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl overflow-hidden">
+                        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50">
+                            <div>
+                                <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-slate-800">
+                                    Riwayat Aktivitas
+                                </h3>
+                                <p className="font-['Inter',sans-serif] text-[13px] text-slate-500 mt-0.5">
+                                    {selectedUserForActivity?.name} ({selectedUserForActivity?.email})
+                                </p>
+                            </div>
                             <button
-                                onClick={() => setUserToDelete(null)}
-                                className="rounded-lg px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-[#6e7a70] transition-colors hover:bg-gray-100"
+                                onClick={() => setIsActivityModalOpen(false)}
+                                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
                             >
-                                Batal
+                                <X size={20} />
                             </button>
+                        </div>
+                        <div className="p-6 max-h-[60vh] overflow-y-auto">
+                            {isFetchingActivities ? (
+                                <div className="flex justify-center items-center py-12">
+                                    <Loader className="animate-spin text-[#0D6A36]" size={32} />
+                                </div>
+                            ) : selectedUserActivities.length > 0 ? (
+                                <div className="relative border-l-2 border-slate-200 ml-3 space-y-6">
+                                    {selectedUserActivities.map((act: any, idx: number) => (
+                                        <div key={idx} className="relative pl-6">
+                                            <div className="absolute -left-[9px] top-1.5 h-4 w-4 rounded-full border-2 border-white bg-[#0D6A36]" />
+                                            <div className="flex flex-col gap-1">
+                                                <span className="font-['Inter',sans-serif] text-[12px] font-bold text-slate-400">
+                                                    {new Date(act.created_at).toLocaleString('id-ID', {day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'})}
+                                                </span>
+                                                <p className="font-['Inter',sans-serif] text-[14px] text-slate-700">
+                                                    {act.description}
+                                                </p>
+                                                {act.ip_address && (
+                                                    <span className="font-['Inter',sans-serif] text-[11px] text-slate-400 mt-0.5">
+                                                        IP: {act.ip_address}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12">
+                                    <Clock className="mx-auto text-slate-300 mb-3" size={32} />
+                                    <p className="font-['Inter',sans-serif] text-[14px] text-slate-500">Belum ada riwayat aktivitas untuk user ini.</p>
+                                </div>
+                            )}
+                        </div>
+                        <div className="border-t border-slate-100 p-4 bg-slate-50 flex justify-end">
                             <button
-                                onClick={() => {
-                                    router.delete(`/admin/users/${userToDelete.id}`);
-                                    setUserToDelete(null);
-                                }}
-                                className="rounded-lg bg-red-600 px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-white transition-colors hover:bg-red-700"
+                                onClick={() => setIsActivityModalOpen(false)}
+                                className="rounded-xl bg-slate-800 px-6 py-2.5 font-['Inter',sans-serif] text-[14px] font-bold text-white transition-all hover:bg-slate-700 hover:shadow-lg hover:shadow-slate-200 active:scale-[0.98]"
                             >
-                                Hapus
+                                Tutup
                             </button>
                         </div>
                     </div>
                 </div>
             )}
-
-            {/* Modal Detail Pesanan */}
-            <ConfirmModal {...modalConfig} onClose={closeConfirmModal} />
         </div>
     );
 }
