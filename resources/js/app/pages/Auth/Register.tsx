@@ -1,5 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { User, Mail, Phone, Lock } from 'lucide-react';
+import { User, Mail, Phone, Lock, Eye, EyeOff } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 
 export default function Register() {
@@ -151,6 +151,13 @@ export default function Register() {
                                 onChange={(e) => setData('password', e.target.value)}
                                 required
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 transition-colors"
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
                         </div>
                         {errors.password && <p className="text-red-500 text-xs mt-1.5">{errors.password}</p>}
                     </div>
@@ -177,6 +184,13 @@ export default function Register() {
                                 onChange={(e) => setData('password_confirmation', e.target.value)}
                                 required
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-600 transition-colors"
+                            >
+                                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
                         </div>
                         {errors.password_confirmation && <p className="text-red-500 text-xs mt-1.5">{errors.password_confirmation}</p>}
                     </div>

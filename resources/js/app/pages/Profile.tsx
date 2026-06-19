@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
-import { User, MapPin, Package, LogOut, X, CheckCircle2, Pencil, Trash2, FileText, Plus } from 'lucide-react';
+import { User, MapPin, Package, LogOut, X, CheckCircle2, Pencil, Trash2, FileText, Plus, Clock, Truck, CheckCircle, XCircle } from 'lucide-react';
 import { usePage, Link, useForm, router } from '@inertiajs/react';
 import ConfirmModal from '../components/ConfirmModal';
 import { regions } from '../data/regions';
@@ -226,11 +226,11 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Pending': return { label: 'Belum Bayar', bg: 'bg-red-50 border border-red-600', text: 'text-red-600' };
-      case 'Lunas': return { label: 'Diproses', bg: 'bg-blue-50', text: 'text-blue-700' };
-      case 'Dikirim': return { label: 'Dikirim', bg: 'bg-purple-50', text: 'text-purple-700' };
-      case 'Selesai': return { label: 'Selesai', bg: 'bg-emerald-50', text: 'text-emerald-700' };
-      default: return { label: status, bg: 'bg-gray-50', text: 'text-gray-700' };
+      case 'Pending': return { label: 'Belum Bayar', bg: 'bg-red-50 border border-red-600', text: 'text-red-600', icon: Clock };
+      case 'Lunas': return { label: 'Diproses', bg: 'bg-blue-50', text: 'text-blue-700', icon: Package };
+      case 'Dikirim': return { label: 'Dikirim', bg: 'bg-purple-50', text: 'text-purple-700', icon: Truck };
+      case 'Selesai': return { label: 'Selesai', bg: 'bg-emerald-50', text: 'text-emerald-700', icon: CheckCircle };
+      default: return { label: status, bg: 'bg-gray-50', text: 'text-gray-700', icon: null };
     }
   };
 
@@ -605,7 +605,8 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                               </p>
                             </div>
                           ) : (
-                            <div className={`${getStatusBadge(order.status).bg} px-4 py-2 rounded-full`}>
+                            <div className={`${getStatusBadge(order.status).bg} px-4 py-2 rounded-full flex items-center gap-1.5`}>
+                              {getStatusBadge(order.status).icon && (() => { const Icon = getStatusBadge(order.status).icon; return <Icon size={14} className={getStatusBadge(order.status).text} />; })()}
                               <p className={`font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase ${getStatusBadge(order.status).text}`}>
                                 {getStatusBadge(order.status).label}
                               </p>
