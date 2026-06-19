@@ -26,7 +26,8 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
   const { data, setData, post, processing, errors } = useForm({
     symptoms: [] as (number | string)[],
     usia: '',
-    jenis_kelamin: ''
+    jenis_kelamin: '',
+    keluhan: ''
   });
 
   const toggleSymptom = (symptomId: number | string) => {
@@ -38,7 +39,7 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
   };
 
   const handleNext = () => {
-    if (currentStep === 1 && data.symptoms.length > 0) {
+    if (currentStep === 1 && (data.symptoms.length > 0 || data.keluhan.trim() !== '')) {
       setCurrentStep(2);
     }
   };
@@ -129,7 +130,7 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
                     Apa yang Anda rasakan?
                   </h2>
                   <p className="font-['Inter',sans-serif] text-[14px] text-[#3e4a41]">
-                    Pilih satu atau lebih gejala yang sedang dialami (Pilih minimal 1).
+                    Pilih satu atau lebih gejala yang sedang dialami, atau isi detail keluhan penyakit di bawah.
                   </p>
                 </div>
               </div>
@@ -172,12 +173,26 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
                   </p>
                 )}
               </div>
+              
+              {/* Keluhan Penyakit Textarea */}
+              <div className="mt-8 mb-6">
+                <label className="font-['Inter',sans-serif] text-[12px] font-bold text-[#6e7a70] tracking-wider uppercase block mb-2">
+                  Detail Keluhan Penyakit (Opsional)
+                </label>
+                <textarea
+                  placeholder="Contoh: Saya merasakan demam naik turun sejak 2 hari yang lalu, kepala terasa pusing, dan tenggorokan gatal saat menelan makanan."
+                  value={data.keluhan}
+                  onChange={(e) => setData('keluhan', e.target.value)}
+                  rows={4}
+                  className="w-full px-5 py-4 bg-[#f9fafb] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] border border-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/30 focus:border-[#006a3f] transition-all resize-none placeholder:text-[#9ca3af]"
+                />
+              </div>
 
               <button
                 onClick={handleNext}
-                disabled={data.symptoms.length === 0}
+                disabled={data.symptoms.length === 0 && data.keluhan.trim() === ''}
                 className={`w-full py-4 rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium transition-all ${
-                  data.symptoms.length > 0
+                  (data.symptoms.length > 0 || data.keluhan.trim() !== '')
                     ? 'bg-[#006a3f] text-white hover:bg-[#005632] hover:shadow-lg'
                     : 'bg-[#e5e7eb] text-[#9ca3af] cursor-not-allowed'
                 }`}

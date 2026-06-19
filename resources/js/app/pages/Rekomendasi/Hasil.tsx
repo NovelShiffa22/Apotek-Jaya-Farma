@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Link, router } from '@inertiajs/react';
 import Header from '../../components/Header';
-import { CheckCircle2, AlertTriangle, ShoppingCart, ArrowLeft, Star, AlertCircle, XCircle, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, ShoppingCart, ArrowLeft, Star, AlertCircle, XCircle, Image as ImageIcon, Loader2, Sparkles } from 'lucide-react';
 import ConfirmModal from '../../components/ConfirmModal';
 
 interface RecommendationResult {
@@ -25,6 +25,8 @@ interface Props {
   tidakDisarankan: RecommendationResult[];
   input_usia?: number;
   total_found?: number;
+  gemini_analysis?: string;
+  input_keluhan?: string;
 }
 
 // Komponen Kartu Recommendation yang memiliki local state (isProcessing) sendiri
@@ -152,7 +154,14 @@ const RecommendationCard = ({ product, isTopRecommendation, onShowModal }: { pro
   );
 };
 
-export default function Hasil({ direkomendasikan = [], dipertimbangkan = [], tidakDisarankan = [], input_usia }: Props) {
+export default function Hasil({ 
+  direkomendasikan = [], 
+  dipertimbangkan = [], 
+  tidakDisarankan = [], 
+  input_usia, 
+  gemini_analysis, 
+  input_keluhan 
+}: Props) {
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
     type: 'success' | 'danger' | 'warning' | 'info';
@@ -198,6 +207,36 @@ export default function Hasil({ direkomendasikan = [], dipertimbangkan = [], tid
         {/* Struktur 3 Box Selalu Muncul */}
         <div className="space-y-8">
 
+          {/* Box Analisis AI Gemini */}
+          {gemini_analysis && (
+            <div className="bg-white rounded-xl border border-blue-200 shadow-sm overflow-hidden bg-gradient-to-br from-blue-50/30 to-indigo-50/10">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="text-blue-600 animate-pulse" size={20} />
+                  <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-blue-900">
+                    Analisis AI Gemini
+                  </h3>
+                </div>
+                <span className="text-[11px] font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  Didukung oleh AI
+                </span>
+              </div>
+              <div className="p-6 space-y-4">
+                {input_keluhan && (
+                  <div className="bg-slate-50 border border-slate-100 rounded-lg p-4">
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Keluhan Anda:</p>
+                    <p className="font-['Inter',sans-serif] text-[14px] text-slate-700 italic">
+                      "{input_keluhan}"
+                    </p>
+                  </div>
+                )}
+                <div className="font-['Inter',sans-serif] text-[15px] text-slate-800 leading-relaxed whitespace-pre-line">
+                  {gemini_analysis}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Box 1: Direkomendasikan */}
           <div className="bg-white rounded-xl border border-emerald-200 shadow-sm overflow-hidden">
             <div className="bg-emerald-50 border-b border-emerald-100 px-6 py-4 flex items-center gap-3">
@@ -206,11 +245,15 @@ export default function Hasil({ direkomendasikan = [], dipertimbangkan = [], tid
                 Direkomendasikan
               </h3>
             </div>
-            {direkomendasikan.length > 0 && (
+            {direkomendasikan.length > 0 ? (
               <div className="flex flex-col p-4 bg-gray-50/30">
                 {direkomendasikan.map((product, idx) => (
                   <RecommendationCard key={product.id} product={product} isTopRecommendation={idx === 0} onShowModal={handleShowModal} />
                 ))}
+              </div>
+            ) : (
+              <div className="p-6 text-center text-gray-500 font-['Inter',sans-serif] text-[14px] bg-gray-50/10">
+                Tidak ada obat dalam kategori ini.
               </div>
             )}
           </div>
@@ -223,11 +266,15 @@ export default function Hasil({ direkomendasikan = [], dipertimbangkan = [], tid
                 Dipertimbangkan
               </h3>
             </div>
-            {dipertimbangkan.length > 0 && (
+            {dipertimbangkan.length > 0 ? (
               <div className="flex flex-col p-4 bg-gray-50/30">
                 {dipertimbangkan.map((product, idx) => (
                   <RecommendationCard key={product.id} product={product} isTopRecommendation={false} onShowModal={handleShowModal} />
                 ))}
+              </div>
+            ) : (
+              <div className="p-6 text-center text-gray-500 font-['Inter',sans-serif] text-[14px] bg-gray-50/10">
+                Tidak ada obat dalam kategori ini.
               </div>
             )}
           </div>
@@ -240,11 +287,15 @@ export default function Hasil({ direkomendasikan = [], dipertimbangkan = [], tid
                 Tidak Disarankan
               </h3>
             </div>
-            {tidakDisarankan.length > 0 && (
+            {tidakDisarankan.length > 0 ? (
               <div className="flex flex-col p-4 bg-gray-50/30">
                 {tidakDisarankan.map((product, idx) => (
                   <RecommendationCard key={product.id} product={product} isTopRecommendation={false} onShowModal={handleShowModal} />
                 ))}
+              </div>
+            ) : (
+              <div className="p-6 text-center text-gray-500 font-['Inter',sans-serif] text-[14px] bg-gray-50/10">
+                Tidak ada obat dalam kategori ini.
               </div>
             )}
           </div>
