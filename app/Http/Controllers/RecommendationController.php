@@ -53,24 +53,81 @@ class RecommendationController extends Controller
         try {
             $selectedSymptoms = \App\Models\Symptom::whereIn('id', $symptomIds)->pluck('nama_gejala')->toArray();
             
-            // Ambil semua produk yang aktif dan terisi stoknya
-            $products = Product::where('is_active', true)
-                ->where('stok', '>', 0)
-                ->with(['category'])
-                ->get();
+            // Ambil produk yang relevan dengan gejala terpilih ATAU keluhan pasien (untuk optimasi token & mencegah timeout)
+            $matchingProductsQuery = Product::where('is_active', true)
+                ->where('stok', '>', 0);
+            
+            $hasFilter = false;
+            
+            if (!empty($symptomIds)) {
+                $matchingProductsQuery->where(function($q) use ($symptomIds) {
+                    $q->whereHas('symptoms', function ($query) use ($symptomIds) {
+                        $query->whereIn('symptoms.id', $symptomIds);
+                    });
+                });
+                $hasFilter = true;
+            }
+            
+            if (!empty(trim($keluhan ?? ''))) {
+                $words = preg_split('/[\s,?.!]+/', strtolower($keluhan));
+                $stopWords = ['saya', 'dan', 'yang', 'untuk', 'pada', 'dengan', 'atau', 'ini', 'itu', 'di', 'ke', 'dari', 'sejak', 'sudah', 'telah', 'ada', 'tidak', 'bisa', 'karena', 'jika', 'lalu', 'sebagai', 'saat', 'rasa', 'terasa'];
+                $keywords = array_filter($words, function($word) use ($stopWords) {
+                    return strlen($word) > 2 && !in_array($word, $stopWords);
+                });
+                
+                if (!empty($keywords)) {
+                    if ($hasFilter) {
+                        // Jika sudah ada filter gejala, tambahkan pencarian kata kunci dengan OR
+                        $matchingProductsQuery->orWhere(function($q) use ($keywords) {
+                            $q->where('is_active', true)
+                              ->where('stok', '>', 0)
+                              ->where(function($sub) use ($keywords) {
+                                  foreach ($keywords as $kw) {
+                                      $sub->orWhere('nama_obat', 'like', "%{$kw}%")
+                                          ->orWhere('deskripsi', 'like', "%{$kw}%")
+                                          ->orWhere('indikasi', 'like', "%{$kw}%")
+                                          ->orWhereHas('symptoms', function($sQuery) use ($kw) {
+                                              $sQuery->where('nama_gejala', 'like', "%{$kw}%");
+                                          });
+                                  }
+                              });
+                        });
+                    } else {
+                        // Jika tidak ada gejala terpilih, filter hanya berdasarkan kata kunci keluhan
+                        $matchingProductsQuery->where(function($sub) use ($keywords) {
+                            foreach ($keywords as $kw) {
+                                $sub->orWhere('nama_obat', 'like', "%{$kw}%")
+                                    ->orWhere('deskripsi', 'like', "%{$kw}%")
+                                    ->orWhere('indikasi', 'like', "%{$kw}%")
+                                    ->orWhereHas('symptoms', function($sQuery) use ($kw) {
+                                        $sQuery->where('nama_gejala', 'like', "%{$kw}%");
+                                    });
+                            }
+                        });
+                    }
+                    $hasFilter = true;
+                }
+            }
+            
+            $products = $matchingProductsQuery->with(['category'])->get();
+            
+            // Jika hasil filter kosong, ambil 15 produk terpopuler agar Gemini tetap memberikan rekomendasi dasar
+            if ($products->isEmpty()) {
+                $products = Product::where('is_active', true)
+                    ->where('stok', '>', 0)
+                    ->with(['category'])
+                    ->limit(15)
+                    ->get();
+            }
 
+            // Kirim data ringkas (hanya field kunci) untuk menghemat token
             $productData = $products->map(function ($product) {
                 return [
                     'id' => $product->id,
                     'nama_obat' => $product->nama_obat,
                     'kategori' => $product->category->nama_kategori ?? 'Umum',
                     'jenis_obat' => $product->jenis_obat,
-                    'deskripsi' => $product->deskripsi,
                     'indikasi' => $product->indikasi,
-                    'aturan_pakai' => $product->aturan_pakai,
-                    'efek_samping' => $product->efek_samping,
-                    'komposisi' => $product->komposisi,
-                    'kontraindikasi' => $product->kontraindikasi,
                 ];
             })->toArray();
 
@@ -85,19 +142,19 @@ class RecommendationController extends Controller
                 . "PENTING - SINKRONISASI GEJALA & DETAIL KELUHAN:\n"
                 . "Anda harus menyinkronkan dan mempertimbangkan 'Gejala yang dipilih' DAN 'Detail Keluhan Tambahan' secara bersamaan sebagai satu kesatuan kondisi klinis pasien. Jangan hanya fokus pada salah satu input saja. Evaluasi semua produk obat dan klasifikasikan masing-masing obat ke kategori:\n"
                 . "1. 'direkomendasikan': Obat yang sangat relevan untuk mengatasi kombinasi/sinkronisasi dari seluruh gejala yang dipilih dan keluhan tambahan, serta aman bagi usia pasien.\n"
-                . "2. 'dipertimbangkan': Obat pendukung atau alternatif yang relevan dengan sebagian gejala/keluhan, namun bukan merupakan pilihan utama, atau memerlukan perhatian khusus.\n"
-                . "3. 'tidak_disarankan': Obat yang tidak cocok/tidak relevan sama sekali dengan kombinasi gejala/keluhan pasien, atau berbahaya/kontraindikasi (misal obat keras untuk anak di bawah 12 tahun tanpa resep, atau bertentangan dengan kontraindikasi).\n\n"
+                . "2. 'dipertimbangkan': Obat pendukung atau alternatif yang relevan dengan sebagian gejala/keluhan, namun bukan merupakan pilihan utama, atau memerlukan perhatian khusus.\n\n"
                 . "Tugas Anda:\n"
                 . "1. Analisis keluhan pasien secara klinis dan berikan penjelasan ringkas tentang diagnosis/kondisi yang mungkin dialami pasien berdasarkan kombinasi gejala dan keluhan ini, saran non-farmakologi (misal istirahat, minum air), serta disclaimer medis (disclaimer wajib ada).\n"
-                . "2. Evaluasi daftar obat di atas dan klasifikasikan masing-masing obat ke salah satu kategori: 'direkomendasikan', 'dipertimbangkan', atau 'tidak_disarankan'.\n"
+                . "2. Evaluasi daftar obat di atas dan klasifikasikan masing-masing obat ke salah satu kategori: 'direkomendasikan' atau 'dipertimbangkan'.\n"
                 . "3. Berikan skor kecocokan (0-100) dan alasan rasional singkat dalam bahasa Indonesia untuk masing-masing obat.\n\n"
-                . "Penting: Respon harus berupa JSON valid yang tepat dengan format berikut:\n"
+                . "PENTING: Hanya masukkan produk obat ke dalam array 'products' jika obat tersebut masuk dalam kategori 'direkomendasikan' atau 'dipertimbangkan'. Obat yang tidak relevan/tidak disarankan TIDAK PERLU dimasukkan ke dalam array 'products' untuk menghemat token dan mempercepat respon.\n\n"
+                . "Respon harus berupa JSON valid yang tepat dengan format berikut:\n"
                 . "{\n"
                 . "  \"analisis_ai\": \"[Tulis analisis medis, saran non-obat, dan disclaimer di sini]\",\n"
                 . "  \"products\": [\n"
                 . "    {\n"
                 . "      \"id\": [id obat],\n"
-                . "      \"kategori_rekomendasi\": \"direkomendasikan\" | \"dipertimbangkan\" | \"tidak_disarankan\",\n"
+                . "      \"kategori_rekomendasi\": \"direkomendasikan\" | \"dipertimbangkan\",\n"
                 . "      \"skor_kecocokan\": [angka 0 sampai 100],\n"
                 . "      \"alasan\": \"[Alasan klinis/farmakologis singkat dalam bahasa Indonesia]\"\n"
                 . "    }\n"
