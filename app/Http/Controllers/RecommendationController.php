@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Gemini\Laravel\Facades\Gemini;
 
 class RecommendationController extends Controller
 {
@@ -25,61 +26,173 @@ class RecommendationController extends Controller
     {
         // 1. Validasi Input Dasar
         $request->validate([
-            'symptoms' => 'required|array',
+            'symptoms' => 'nullable|array',
             'symptoms.*' => 'exists:symptoms,id', // Memastikan ID gejala valid
-            'usia' => 'required|integer|min:0'
+            'usia' => 'required|integer|min:0',
+            'keluhan' => 'nullable|string',
+            'jenis_kelamin' => 'nullable|string'
         ]);
 
-        $symptomIds = $request->symptoms;
-        $usia = $request->usia;
+        // Custom validation to ensure either symptoms or keluhan is filled
+        if (empty($request->symptoms) && empty(trim($request->keluhan ?? ''))) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'symptoms' => 'Pilih setidaknya satu gejala atau isi detail keluhan.',
+                'keluhan' => 'Pilih setidaknya satu gejala atau isi detail keluhan.',
+            ]);
+        }
 
-        // 2. Fetch Data Produk
-        // Kita hanya mengambil produk yang aktif dan terhubung dengan SETIDAKNYA SATU gejala yang dipilih
-        $products = Product::whereHas('symptoms', function ($query) use ($symptomIds) {
-                $query->whereIn('symptoms.id', $symptomIds);
-            })
-            ->where('is_active', true)
-            ->where('stok', '>', 0) // Pastikan obat tersedia di apotek
-            // Eager loading relasi symptoms yang HANYA memuat gejala yang dipilih oleh user
-            // Ini membuat perhitungan pivot bobot relevansi menjadi sangat presisi di tahap kalkulasi
-            ->with(['symptoms' => function ($query) use ($symptomIds) {
-                $query->whereIn('symptoms.id', $symptomIds);
-            }, 'category'])
-            ->get();
+        $symptomIds = $request->symptoms ?? [];
+        $usia = (int) $request->usia;
+        $keluhan = $request->keluhan;
+        $jenisKelamin = $request->jenis_kelamin;
 
-        // 3. Kalkulasi Skor dan Konversi ke Persentase
-        $recommendations = $products->map(function ($product) use ($usia) {
-            $totalScore = $product->symptoms->sum(function ($symptom) {
-                return (float) $symptom->pivot->bobot_relevansi;
-            });
+        $geminiAnalysis = null;
+        $geminiProducts = [];
 
-            // Konversi skor ke format persentase (mirip logika frontend)
-            $percentageScore = $totalScore > 0 ? min((int) round($totalScore * 45 + 50), 99) : 0;
+        // 2. Hubungi Gemini API untuk melakukan sinkronisasi keluhan medis dan gejala
+        try {
+            $selectedSymptoms = \App\Models\Symptom::whereIn('id', $symptomIds)->pluck('nama_gejala')->toArray();
+            
+            // Ambil semua produk yang aktif dan terisi stoknya
+            $products = Product::where('is_active', true)
+                ->where('stok', '>', 0)
+                ->with(['category'])
+                ->get();
 
-            $alasan = null;
-            $kategori_rekomendasi = '';
+            $productData = $products->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'nama_obat' => $product->nama_obat,
+                    'kategori' => $product->category->nama_kategori ?? 'Umum',
+                    'jenis_obat' => $product->jenis_obat,
+                    'deskripsi' => $product->deskripsi,
+                    'indikasi' => $product->indikasi,
+                    'aturan_pakai' => $product->aturan_pakai,
+                    'efek_samping' => $product->efek_samping,
+                    'komposisi' => $product->komposisi,
+                    'kontraindikasi' => $product->kontraindikasi,
+                ];
+            })->toArray();
 
-            // Logika medis dasar: obat keras dilarang untuk anak < 12 tahun
-            if ($usia < 12 && $product->jenis_obat === 'keras') {
-                $percentageScore = 0;
-                $kategori_rekomendasi = 'tidak disarankan';
-                $alasan = 'Obat golongan keras berisiko untuk anak di bawah 12 tahun. Harap konsultasi dengan dokter.';
+            $prompt = "Anda adalah apoteker AI profesional di Apotek Jaya Farma.\n"
+                . "Analisis profil pasien berikut:\n"
+                . "- Usia: {$usia} tahun\n"
+                . "- Jenis Kelamin: " . ($jenisKelamin ?? 'Tidak disebutkan') . "\n"
+                . "- Gejala yang dipilih (dari checklist): " . (empty($selectedSymptoms) ? 'Tidak ada' : implode(', ', $selectedSymptoms)) . "\n"
+                . "- Detail Keluhan Tambahan (tulis tangan): \"" . ($keluhan ?? 'Tidak ada') . "\"\n\n"
+                . "Daftar obat yang tersedia di apotek:\n"
+                . json_encode($productData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n\n"
+                . "PENTING - SINKRONISASI GEJALA & DETAIL KELUHAN:\n"
+                . "Anda harus menyinkronkan dan mempertimbangkan 'Gejala yang dipilih' DAN 'Detail Keluhan Tambahan' secara bersamaan sebagai satu kesatuan kondisi klinis pasien. Jangan hanya fokus pada salah satu input saja. Evaluasi semua produk obat dan klasifikasikan masing-masing obat ke kategori:\n"
+                . "1. 'direkomendasikan': Obat yang sangat relevan untuk mengatasi kombinasi/sinkronisasi dari seluruh gejala yang dipilih dan keluhan tambahan, serta aman bagi usia pasien.\n"
+                . "2. 'dipertimbangkan': Obat pendukung atau alternatif yang relevan dengan sebagian gejala/keluhan, namun bukan merupakan pilihan utama, atau memerlukan perhatian khusus.\n"
+                . "3. 'tidak_disarankan': Obat yang tidak cocok/tidak relevan sama sekali dengan kombinasi gejala/keluhan pasien, atau berbahaya/kontraindikasi (misal obat keras untuk anak di bawah 12 tahun tanpa resep, atau bertentangan dengan kontraindikasi).\n\n"
+                . "Tugas Anda:\n"
+                . "1. Analisis keluhan pasien secara klinis dan berikan penjelasan ringkas tentang diagnosis/kondisi yang mungkin dialami pasien berdasarkan kombinasi gejala dan keluhan ini, saran non-farmakologi (misal istirahat, minum air), serta disclaimer medis (disclaimer wajib ada).\n"
+                . "2. Evaluasi daftar obat di atas dan klasifikasikan masing-masing obat ke salah satu kategori: 'direkomendasikan', 'dipertimbangkan', atau 'tidak_disarankan'.\n"
+                . "3. Berikan skor kecocokan (0-100) dan alasan rasional singkat dalam bahasa Indonesia untuk masing-masing obat.\n\n"
+                . "Penting: Respon harus berupa JSON valid yang tepat dengan format berikut:\n"
+                . "{\n"
+                . "  \"analisis_ai\": \"[Tulis analisis medis, saran non-obat, dan disclaimer di sini]\",\n"
+                . "  \"products\": [\n"
+                . "    {\n"
+                . "      \"id\": [id obat],\n"
+                . "      \"kategori_rekomendasi\": \"direkomendasikan\" | \"dipertimbangkan\" | \"tidak_disarankan\",\n"
+                . "      \"skor_kecocokan\": [angka 0 sampai 100],\n"
+                . "      \"alasan\": \"[Alasan klinis/farmakologis singkat dalam bahasa Indonesia]\"\n"
+                . "    }\n"
+                . "  ]\n"
+                . "}\n"
+                . "Jangan sertakan teks lain di luar format JSON ini.";
+
+            // Menggunakan model gemini-2.5-flash
+            $geminiResult = Gemini::generativeModel(model: 'gemini-2.5-flash')
+                ->generateContent($prompt);
+            
+            $responseContent = trim($geminiResult->text());
+            
+            if (str_starts_with($responseContent, '```')) {
+                $responseContent = preg_replace('/^```(?:json)?\s*/i', '', $responseContent);
+                $responseContent = preg_replace('/\s*```$/', '', $responseContent);
+                $responseContent = trim($responseContent);
+            }
+
+            $decoded = json_decode($responseContent, true);
+            if (json_last_error() === JSON_ERROR_NONE && isset($decoded['products'])) {
+                $geminiAnalysis = $decoded['analisis_ai'] ?? null;
+                $geminiProducts = collect($decoded['products'])->keyBy('id')->toArray();
             } else {
-                if ($percentageScore >= 85) {
-                    $kategori_rekomendasi = 'direkomendasikan';
-                } elseif ($percentageScore >= 50) {
-                    $kategori_rekomendasi = 'dipertimbangkan';
-                    $alasan = 'Obat ini meringankan sebagian keluhan Anda.';
+                \Illuminate\Support\Facades\Log::error("Gemini invalid JSON response: " . $responseContent);
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Gemini API call failed: " . $e->getMessage());
+        }
+
+        // 3. Ambil data produk berdasarkan model evaluasi (Gemini atau Legacy)
+        if (empty($geminiProducts)) {
+            // Kita hanya mengambil produk yang aktif dan terhubung dengan SETIDAKNYA SATU gejala yang dipilih
+            $products = Product::whereHas('symptoms', function ($query) use ($symptomIds) {
+                    $query->whereIn('symptoms.id', $symptomIds);
+                })
+                ->where('is_active', true)
+                ->where('stok', '>', 0) // Pastikan obat tersedia di apotek
+                ->with(['symptoms' => function ($query) use ($symptomIds) {
+                    $query->whereIn('symptoms.id', $symptomIds);
+                }, 'category'])
+                ->get();
+        }
+
+        // 4. Kalkulasi Skor dan Konversi ke Persentase
+        $recommendations = $products->map(function ($product) use ($usia, $geminiProducts) {
+            
+            if (!empty($geminiProducts)) {
+                if (isset($geminiProducts[$product->id])) {
+                    $geminiData = $geminiProducts[$product->id];
+                    $percentageScore = (int) $geminiData['skor_kecocokan'];
+                    $alasan = $geminiData['alasan'] ?? '';
+                    
+                    $kategori_rekomendasi = $geminiData['kategori_rekomendasi'];
+                    if ($kategori_rekomendasi === 'tidak_disarankan') {
+                        $kategori_rekomendasi = 'tidak disarankan';
+                    }
                 } else {
+                    $percentageScore = 0;
                     $kategori_rekomendasi = 'tidak disarankan';
-                    $alasan = 'Tingkat kecocokan sangat rendah dengan keluhan Anda.';
+                    $alasan = 'Tidak relevan dengan keluhan Anda.';
+                }
+            } else {
+                $totalScore = $product->symptoms->sum(function ($symptom) {
+                    return (float) $symptom->pivot->bobot_relevansi;
+                });
+
+                // Konversi skor ke format persentase (mirip logika frontend)
+                $percentageScore = $totalScore > 0 ? min((int) round($totalScore * 45 + 50), 99) : 0;
+
+                $alasan = null;
+                $kategori_rekomendasi = '';
+
+                // Logika medis dasar: obat keras dilarang untuk anak < 12 tahun
+                if ($usia < 12 && $product->jenis_obat === 'keras') {
+                    $percentageScore = 0;
+                    $kategori_rekomendasi = 'tidak disarankan';
+                    $alasan = 'Obat golongan keras berisiko untuk anak di bawah 12 tahun. Harap konsultasi dengan dokter.';
+                } else {
+                    if ($percentageScore >= 85) {
+                        $kategori_rekomendasi = 'direkomendasikan';
+                    } elseif ($percentageScore >= 50) {
+                        $kategori_rekomendasi = 'dipertimbangkan';
+                        $alasan = 'Obat ini meringankan sebagian keluhan Anda.';
+                    } else {
+                        $kategori_rekomendasi = 'tidak disarankan';
+                        $alasan = 'Tingkat kecocokan sangat rendah dengan keluhan Anda.';
+                    }
                 }
             }
 
             return [
                 'id' => $product->id,
                 'nama_obat' => $product->nama_obat,
-                'kategori' => $product->category->nama_kategori,
+                'kategori' => $product->category->nama_kategori ?? 'Umum',
                 'jenis_obat' => $product->jenis_obat,
                 'harga' => $product->harga,
                 'gambar' => $product->gambar,
@@ -90,7 +203,7 @@ class RecommendationController extends Controller
             ];
         });
 
-        // 4. Kelompokkan ke Tiga Array Terpisah
+        // 5. Kelompokkan ke Tiga Array Terpisah
         $direkomendasikan = [];
         $dipertimbangkan = [];
         $tidakDisarankan = [];
@@ -110,13 +223,15 @@ class RecommendationController extends Controller
         usort($dipertimbangkan, fn($a, $b) => $b['skor_kecocokan'] <=> $a['skor_kecocokan']);
         usort($tidakDisarankan, fn($a, $b) => $b['skor_kecocokan'] <=> $a['skor_kecocokan']);
 
-        // 5. Kirimkan Data ke View React Frontend (Inertia)
+        // 6. Kirimkan Data ke View React Frontend (Inertia)
         return Inertia::render('Rekomendasi/Hasil', [
             'direkomendasikan' => $direkomendasikan,
             'dipertimbangkan' => $dipertimbangkan,
             'tidakDisarankan' => $tidakDisarankan,
             'input_usia' => $usia,
-            'total_found' => count($recommendations) 
+            'total_found' => count($recommendations),
+            'gemini_analysis' => $geminiAnalysis,
+            'input_keluhan' => $keluhan
         ]);
     }
 }
