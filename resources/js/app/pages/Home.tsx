@@ -5,21 +5,21 @@ import { Pill, Thermometer, Heart, Stethoscope, Baby, Activity, ShieldCheck, Clo
 
 const categories = [
   {
-    id: 'flu-batuk',
+    id: 'obat-batuk-pilek',
     name: 'Flu & Batuk',
     icon: Pill,
     color: 'bg-[#ecfdf5]',
     iconColor: 'text-[#006a3f]'
   },
   {
-    id: 'demam',
+    id: 'analgesik-antipiretik',
     name: 'Demam',
     icon: Thermometer,
     color: 'bg-[#eff6ff]',
     iconColor: 'text-[#2d5f9f]'
   },
   {
-    id: 'vitamin',
+    id: 'vitamin-suplement',
     name: 'Vitamin',
     icon: Heart,
     color: 'bg-[#fef2f2]',
@@ -40,7 +40,7 @@ const categories = [
     iconColor: 'text-[#d97706]'
   },
   {
-    id: 'suplemen',
+    id: 'suplemen-vitamin',
     name: 'Suplemen',
     icon: Activity,
     color: 'bg-[#f5f3ff]',

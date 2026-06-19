@@ -312,9 +312,11 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
         $prescriptionSearch = request('prescription_search');
         if ($prescriptionSearch) {
             $prescriptionsQuery->where(function($q) use ($prescriptionSearch) {
-                $q->whereHas('user', function($uq) use ($prescriptionSearch) {
-                    $uq->where('name', 'like', "%{$prescriptionSearch}%");
-                })->orWhere('kode_resep', 'like', "%{$prescriptionSearch}%")
+                $q->where('nama_pasien', 'like', "%{$prescriptionSearch}%")
+                  ->orWhereHas('user', function($uq) use ($prescriptionSearch) {
+                      $uq->where('name', 'like', "%{$prescriptionSearch}%");
+                  })
+                  ->orWhere('kode_resep', 'like', "%{$prescriptionSearch}%")
                   ->orWhere('id', 'like', "%{$prescriptionSearch}%");
             });
         }
@@ -915,7 +917,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
                 $q->where('nama_pasien', 'like', "%{$prescriptionSearch}%")
                   ->orWhereHas('user', function($uq) use ($prescriptionSearch) {
                       $uq->where('name', 'like', "%{$prescriptionSearch}%");
-                  });
+                  })
+                  ->orWhere('kode_resep', 'like', "%{$prescriptionSearch}%")
+                  ->orWhere('id', 'like', "%{$prescriptionSearch}%");
             });
         }
 

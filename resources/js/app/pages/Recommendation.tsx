@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm, Link } from '@inertiajs/react';
 import Header from '../components/Header';
-import { CheckCircle2, AlertCircle, XCircle, Thermometer, Wind, Droplet, Brain, FileText, Baby, Frown, Activity, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, AlertCircle, XCircle, Thermometer, Wind, Droplet, Brain, FileText, Baby, Frown, Activity, ArrowLeft, Search } from 'lucide-react';
 
 const iconMap: Record<string, any> = {
   'demam': Thermometer,
@@ -18,7 +18,11 @@ const iconMap: Record<string, any> = {
 
 export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms?: any[] }) {
   const [currentStep, setCurrentStep] = useState(1);
-  const displaySymptoms = masterSymptoms;
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const displaySymptoms = masterSymptoms.filter((symptom: any) =>
+    symptom.nama_gejala.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   
   // Debug log untuk memastikan props masuk dari backend
   console.log("Gejala dari Backend:", masterSymptoms);
@@ -138,6 +142,20 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
               {errors.symptoms && (
                 <div className="mb-4 text-red-500 text-sm">{errors.symptoms}</div>
               )}
+
+              {/* Search Bar */}
+              <div className="mb-6 relative">
+                <input
+                  type="text"
+                  placeholder="Cari gejala (contoh: demam, batuk, pusing)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 bg-[#f9fafb] border border-[#e5e7eb] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#006a3f]/30 focus:border-[#006a3f] transition-all font-['Inter',sans-serif] text-[14px]"
+                />
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                  <Search size={20} />
+                </div>
+              </div>
 
               {/* Icon Grid */}
               <div className="grid grid-cols-4 gap-4 mb-8">
