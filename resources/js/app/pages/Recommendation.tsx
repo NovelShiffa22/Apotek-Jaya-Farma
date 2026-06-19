@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm, Link } from '@inertiajs/react';
 import Header from '../components/Header';
-import { CheckCircle2, AlertCircle, XCircle, Thermometer, Wind, Droplet, Brain, FileText, Baby, Frown, Activity, ArrowLeft, Search } from 'lucide-react';
+import { CheckCircle2, AlertCircle, XCircle, Thermometer, Wind, Droplet, Brain, FileText, Baby, Frown, Activity, ArrowLeft, Search, Loader2, Sparkles } from 'lucide-react';
 
 const iconMap: Record<string, any> = {
   'demam': Thermometer,
@@ -60,8 +60,35 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#fafaf8] to-white relative">
       <Header />
+
+      {/* Loading Overlay */}
+      {processing && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[99999] flex flex-col items-center justify-center p-6 animate-fade-in">
+          <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl border border-slate-100 flex flex-col items-center animate-[scaleIn_0.3s_ease-out]">
+            <div className="relative mb-6 flex items-center justify-center">
+              {/* Outer pulsing ring */}
+              <div className="absolute w-20 h-20 rounded-full bg-emerald-100 animate-ping opacity-75"></div>
+              {/* Inner animated spinning loader */}
+              <div className="relative w-16 h-16 bg-[#ecfdf5] rounded-full flex items-center justify-center shadow-inner">
+                <Sparkles className="w-8 h-8 text-[#006a3f] animate-pulse" />
+              </div>
+            </div>
+            <h3 className="font-['Roboto_Condensed',sans-serif] text-[22px] font-bold text-slate-900 mb-2">
+              Menganalisis Gejala
+            </h3>
+            <p className="font-['Inter',sans-serif] text-[14px] text-slate-500 leading-relaxed">
+              AI Apoteker kami sedang menganalisis gejala Anda dan menyinkronkan dengan data klinis obat...
+            </p>
+            {/* Spinning Indicator */}
+            <div className="mt-6 flex items-center gap-2 text-[#006a3f] font-semibold text-xs font-['Inter',sans-serif]">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Memproses dengan Gemini AI...</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-[1440px] mx-auto px-8 py-12 relative">
         {/* Back Button */}
