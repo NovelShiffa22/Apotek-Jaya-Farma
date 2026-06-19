@@ -308,37 +308,42 @@ export default function AdminDashboard({ products = [], categories = [], users =
 
     const statusConfig: Record<
         string,
-        { label: string; color: string; bg: string; border: string }
+        { label: string; color: string; bg: string; border: string; icon?: any }
     > = {
         menunggu_pembayaran: {
             label: 'Menunggu Pembayaran',
             color: 'text-amber-700',
             bg: 'bg-amber-50',
             border: 'border-amber-200',
+            icon: Clock,
         },
         diproses: {
             label: 'Diproses',
             color: 'text-blue-700',
             bg: 'bg-blue-50',
             border: 'border-blue-200',
+            icon: Package,
         },
         dikirim: {
             label: 'Dikirim',
             color: 'text-indigo-700',
             bg: 'bg-indigo-50',
             border: 'border-indigo-200',
+            icon: Truck,
         },
         selesai: {
             label: 'Selesai',
             color: 'text-emerald-700',
             bg: 'bg-emerald-50',
             border: 'border-emerald-200',
+            icon: CheckCircle,
         },
         dibatalkan: {
             label: 'Dibatalkan',
             color: 'text-red-700',
             bg: 'bg-red-50',
             border: 'border-red-200',
+            icon: XCircle,
         },
     };
 
@@ -1332,8 +1337,9 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                         <span className="font-['Inter',sans-serif] text-[13px] font-bold text-slate-800">
                                             {order.id.toString().startsWith('vt_') ? `VT-${order.id.toString().replace('vt_', '')}` : `#${String(order.id).padStart(6, '0')}`}
                                         </span>
-                                        <span className={`inline-flex items-center self-start px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
-                                          {statusLabels[order.status] || order.status}
+                                        <span className={`inline-flex items-center gap-1.5 self-start px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
+                                            {cfg.icon && <cfg.icon size={12} />}
+                                            {statusLabels[order.status] || order.status}
                                         </span>
                                       </div>
                                     </td>

@@ -237,26 +237,31 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
           bg: 'bg-amber-50',
           color: 'text-amber-700',
           border: 'border-amber-200',
+          icon: Clock,
       },
       diproses: {
           bg: 'bg-blue-50',
           color: 'text-blue-700',
           border: 'border-blue-200',
+          icon: Package,
       },
       dikirim: {
           bg: 'bg-indigo-50',
           color: 'text-indigo-700',
           border: 'border-indigo-200',
+          icon: Truck,
       },
       selesai: {
           bg: 'bg-emerald-50',
           color: 'text-emerald-700',
           border: 'border-emerald-200',
+          icon: CheckCircle,
       },
       dibatalkan: {
           bg: 'bg-red-50',
           color: 'text-red-700',
           border: 'border-red-200',
+          icon: XCircle,
       },
   };
 
@@ -1041,7 +1046,8 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                         <span className="font-['Inter',sans-serif] text-[13px] font-bold text-slate-800">
                                             {order.id.toString().startsWith('vt_') ? `VT-${order.id.toString().replace('vt_', '')}` : `#${String(order.id).padStart(6, '0')}`}
                                         </span>
-                                        <span className={`inline-flex items-center self-start px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
+                                        <span className={`inline-flex items-center gap-1.5 self-start px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
+                                          {cfg.icon && <cfg.icon size={12} />}
                                           {statusLabels[order.status] || order.status}
                                         </span>
                                       </div>
