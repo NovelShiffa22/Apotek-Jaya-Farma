@@ -259,7 +259,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                     onClick={() => setActiveTab(item.id)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                       activeTab === item.id
-                        ? 'bg-[rgba(0,106,63,0.08)] border border-[#006a3f] text-[#006a3f]'
+                        ? 'bg-[rgba(0,106,63,0.08)] border border-[#1e5b53] text-[#1e5b53]'
                         : 'bg-transparent hover:bg-[#f9fafb] text-[#171d19]'
                     }`}
                   >
@@ -299,7 +299,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="text"
                       value={formProfile.name}
                       onChange={e => setFormProfile('name', e.target.value)}
-                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all ${
                         formProfileErrors.name ? 'border-[#ef4444]' : 'border-gray-300'
                       }`}
                       required
@@ -316,7 +316,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="email"
                       value={formProfile.email}
                       onChange={e => setFormProfile('email', e.target.value)}
-                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all ${
                         formProfileErrors.email ? 'border-[#ef4444]' : 'border-gray-300'
                       }`}
                       required
@@ -333,7 +333,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="tel"
                       value={formProfile.phone}
                       onChange={e => setFormProfile('phone', e.target.value.replace(/\D/g, ''))}
-                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all ${
                         formProfileErrors.phone ? 'border-[#ef4444]' : 'border-gray-300'
                       }`}
                     />
@@ -346,7 +346,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                   <button 
                     type="submit" 
                     disabled={processingProfile}
-                    className="bg-[#006a3f] hover:bg-[#005632] px-8 py-4 rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] text-white hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)] transition-all duration-300 hover:-translate-y-0.5 font-medium disabled:opacity-50"
+                    className="bg-[#1e5b53] hover:bg-[#005632] px-8 py-4 rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] text-white hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)] transition-all duration-300 hover:-translate-y-0.5 font-medium disabled:opacity-50"
                   >
                     {processingProfile ? 'Menyimpan...' : 'Simpan Perubahan'}
                   </button>
@@ -366,7 +366,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="password"
                       value={passwordForm.data.current_password}
                       onChange={e => passwordForm.setData('current_password', e.target.value)}
-                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all ${
                         passwordForm.errors.current_password ? 'border-[#ef4444]' : 'border-gray-300'
                       }`}
                       required
@@ -383,7 +383,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="password"
                       value={passwordForm.data.password}
                       onChange={e => passwordForm.setData('password', e.target.value)}
-                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all ${
                         passwordForm.errors.password ? 'border-[#ef4444]' : 'border-gray-300'
                       }`}
                       required
@@ -402,7 +402,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       type="password"
                       value={passwordForm.data.password_confirmation}
                       onChange={e => passwordForm.setData('password_confirmation', e.target.value)}
-                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                      className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all ${
                         passwordForm.errors.password_confirmation ? 'border-[#ef4444]' : 'border-gray-300'
                       }`}
                       required
@@ -432,7 +432,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                   {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('redirect') && (
                     <Link 
                       href={new URLSearchParams(window.location.search).get('redirect') as string}
-                      className="flex items-center gap-2 text-[14px] font-bold text-[#006a3f] bg-emerald-50 px-4 py-2.5 rounded-xl hover:bg-emerald-100 transition-colors"
+                      className="flex items-center gap-2 text-[14px] font-bold text-[#1e5b53] bg-emerald-50 px-4 py-2.5 rounded-xl hover:bg-emerald-100 transition-colors"
                     >
                       <CheckCircle2 size={18} />
                       Selesai & Kembali
@@ -448,7 +448,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 ) : (
                   <div className="space-y-4 mb-6">
                     {addresses.map((address: any) => (
-                      <div key={address.id} className={`relative bg-gray-50 rounded-xl p-6 border flex flex-col justify-between ${address.is_default ? 'border-[#006a3f]' : 'border-gray-300'}`}>
+                      <div key={address.id} className={`relative bg-gray-50 rounded-xl p-6 border flex flex-col justify-between ${address.is_default ? 'border-[#1e5b53]' : 'border-gray-300'}`}>
                         <div className="absolute top-4 right-4 flex items-center">
                           {!address.is_default && (
                             <button 
@@ -479,7 +479,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                             <p className="font-['Roboto_Condensed',sans-serif] text-[18px] text-[#171d19] font-semibold flex items-center flex-wrap gap-2">
                               {address.label}
                               {address.is_default && (
-                                <span className="bg-[#006a3f] text-white text-[11px] sm:text-xs px-3 py-1.5 rounded-lg font-bold ml-2 inline-flex items-center justify-center leading-none shadow-sm">
+                                <span className="bg-[#1e5b53] text-white text-[11px] sm:text-xs px-3 py-1.5 rounded-lg font-bold ml-2 inline-flex items-center justify-center leading-none shadow-sm">
                                   Alamat Utama
                                 </span>
                               )}
@@ -498,7 +498,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 
                 <button 
                   onClick={() => setIsAddressModalOpen(true)}
-                  className="font-['Inter',sans-serif] text-[14px] font-bold text-[#006a3f] hover:text-[#005632] transition-colors"
+                  className="font-['Inter',sans-serif] text-[14px] font-bold text-[#1e5b53] hover:text-[#005632] transition-colors"
                 >
                   + Tambah Alamat Baru
                 </button>
@@ -536,7 +536,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       <span>{tab.label}</span>
                       {count > 0 && (
                         <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold leading-none rounded-full ${
-                          orderTab === tab.id ? 'bg-[#006a3f] text-white' : 'bg-gray-200 text-gray-700'
+                          orderTab === tab.id ? 'bg-[#1e5b53] text-white' : 'bg-gray-200 text-gray-700'
                         }`}>
                           {count}
                         </span>
@@ -630,7 +630,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                                   )}
                                 </div>
                                 <div className="flex-1">
-                                  <h3 className="font-['Poppins',sans-serif] text-[15px] font-bold text-[#171d19] group-hover:text-[#006a3f] transition-colors line-clamp-2">
+                                  <h3 className="font-['Poppins',sans-serif] text-[15px] font-bold text-[#171d19] group-hover:text-[#1e5b53] transition-colors line-clamp-2">
                                     {order.items[0].nama || order.items[0].name || 'Produk Farmasi'}
                                   </h3>
                                   <span className="font-['Inter',sans-serif] text-[13px] text-gray-500 block mt-1">
@@ -649,7 +649,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                               <div className="mt-3 pl-[96px]">
                                 <button 
                                   onClick={() => toggleExpandOrder(order.id)}
-                                  className="font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 hover:text-[#006a3f] transition-colors"
+                                  className="font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 hover:text-[#1e5b53] transition-colors"
                                 >
                                   {expandedOrders.includes(order.id) 
                                     ? 'Sembunyikan produk' 
@@ -676,7 +676,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                                         )}
                                       </div>
                                       <div className="flex-1">
-                                        <h3 className="font-['Poppins',sans-serif] text-[15px] font-bold text-[#171d19] group-hover:text-[#006a3f] transition-colors line-clamp-2">
+                                        <h3 className="font-['Poppins',sans-serif] text-[15px] font-bold text-[#171d19] group-hover:text-[#1e5b53] transition-colors line-clamp-2">
                                           {item.nama || item.name || 'Produk Farmasi'}
                                         </h3>
                                         <span className="font-['Inter',sans-serif] text-[13px] text-gray-500 block mt-1">
@@ -699,7 +699,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-4 border-t border-[#f1f5f9] gap-4 mt-2">
                           <div className="text-right sm:text-left">
                             <span className="font-['Inter',sans-serif] text-[13px] text-gray-500 mr-2">Total Pesanan:</span>
-                            <span className="font-['Poppins',sans-serif] text-[18px] text-[#006a3f] font-bold">
+                            <span className="font-['Poppins',sans-serif] text-[18px] text-[#1e5b53] font-bold">
                               Rp {Number(order.total_amount || 0).toLocaleString('id-ID')}
                             </span>
                           </div>
@@ -712,7 +712,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                               Lihat Detail
                             </button>
                             {isPending && (
-                              <Link href={`/invoice/${order.id}`} className="w-full sm:w-auto text-center bg-[#006a3f] text-white px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-[#005632] shadow-sm hover:shadow-md transition-all whitespace-nowrap">
+                              <Link href={`/invoice/${order.id}`} className="w-full sm:w-auto text-center bg-[#1e5b53] text-white px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-[#005632] shadow-sm hover:shadow-md transition-all whitespace-nowrap">
                                 Bayar Sekarang
                               </Link>
                             )}
@@ -764,7 +764,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                             disabled={!finalUrl}
                             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${
                               link.active
-                                ? 'bg-[#006a3f] text-white border-[#006a3f]'
+                                ? 'bg-[#1e5b53] text-white border-[#1e5b53]'
                                 : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                             } ${!finalUrl ? 'opacity-50 cursor-not-allowed text-gray-400' : ''}`}
                             dangerouslySetInnerHTML={{ __html: link.label }}
@@ -788,7 +788,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                   </h2>
                   <Link 
                     href="/prescriptions/upload/step-1"
-                    className="inline-flex items-center justify-center gap-2 bg-[#006a3f] text-white px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-[#005632] shadow-sm hover:shadow-md transition-all"
+                    className="inline-flex items-center justify-center gap-2 bg-[#1e5b53] text-white px-5 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-[#005632] shadow-sm hover:shadow-md transition-all"
                   >
                     <Plus size={18} />
                     Unggah Resep Baru
@@ -820,7 +820,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                         <span>{tab.label}</span>
                         {count > 0 && (
                           <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold leading-none rounded-full ${
-                            prescriptionTab === tab.id ? 'bg-[#006a3f] text-white' : 'bg-gray-200 text-gray-700'
+                            prescriptionTab === tab.id ? 'bg-[#1e5b53] text-white' : 'bg-gray-200 text-gray-700'
                           }`}>
                             {count}
                           </span>
@@ -949,7 +949,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                               <div className="shrink-0 pl-2 text-right">
                                 <span className={`px-3 py-1.5 rounded-full text-[12px] font-bold border font-['Inter',sans-serif] whitespace-nowrap ${
                                   p.status_validasi === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                                  (latestOrder && latestOrder.status === 'Selesai') ? 'bg-[#006a3f] text-white border-transparent' :
+                                  (latestOrder && latestOrder.status === 'Selesai') ? 'bg-[#1e5b53] text-white border-transparent' :
                                   isTelahDipesan ? 'bg-blue-50 text-blue-600 border-blue-200' :
                                   p.status_validasi === 'disetujui' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
                                   'bg-red-50 text-red-600 border-red-200'
@@ -984,7 +984,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                                         router.get(route('prescriptions.detail', { id: p.id }));
                                     }
                                 }}
-                                className="text-[13px] font-bold text-center bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-xl hover:bg-gray-50 hover:text-[#006a3f] hover:border-[#006a3f] transition-all font-['Inter',sans-serif] shadow-sm cursor-pointer"
+                                className="text-[13px] font-bold text-center bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-xl hover:bg-gray-50 hover:text-[#1e5b53] hover:border-[#1e5b53] transition-all font-['Inter',sans-serif] shadow-sm cursor-pointer"
                               >
                                 Detail
                               </button>
@@ -1013,7 +1013,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                                   disabled={!finalUrl}
                                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${
                                     link.active
-                                      ? 'bg-[#006a3f] text-white border-[#006a3f]'
+                                      ? 'bg-[#1e5b53] text-white border-[#1e5b53]'
                                       : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                                   } ${!finalUrl ? 'opacity-50 cursor-not-allowed text-gray-400' : ''}`}
                                   dangerouslySetInnerHTML={{ __html: link.label }}
@@ -1058,7 +1058,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
                         ['Pending', 'Belum Bayar'].includes(selectedOrder.status) 
                           ? 'bg-amber-100 border-2 border-amber-500 text-amber-600' 
-                          : 'bg-[#006a3f] text-white'
+                          : 'bg-[#1e5b53] text-white'
                       }`}>
                         <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
                       </div>
@@ -1077,7 +1077,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
                         ['Lunas', 'Diproses'].includes(selectedOrder.status)
                           ? 'bg-blue-100 border-2 border-blue-500 text-blue-600'
-                          : (['Dikirim', 'Selesai'].includes(selectedOrder.status) ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                          : (['Dikirim', 'Selesai'].includes(selectedOrder.status) ? 'bg-[#1e5b53] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
                       }`}>
                         <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
                       </div>
@@ -1097,7 +1097,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
                         selectedOrder.status === 'Dikirim'
                           ? 'bg-purple-100 border-2 border-purple-500 text-purple-600'
-                          : (selectedOrder.status === 'Selesai' ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                          : (selectedOrder.status === 'Selesai' ? 'bg-[#1e5b53] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
                       }`}>
                         <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
                       </div>
@@ -1205,14 +1205,14 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 })()}
                 <div className="flex justify-between items-center pt-2">
                   <span className="font-['Inter',sans-serif] text-[14px] font-bold text-gray-900">Total Pembayaran</span>
-                  <span className="font-['Poppins',sans-serif] text-[18px] font-black text-[#006a3f]">Rp {Number(selectedOrder.total_amount || 0).toLocaleString('id-ID')}</span>
+                  <span className="font-['Poppins',sans-serif] text-[18px] font-black text-[#1e5b53]">Rp {Number(selectedOrder.total_amount || 0).toLocaleString('id-ID')}</span>
                 </div>
               </div>
             </div>
             <div className="p-5 border-t border-gray-100 bg-white flex justify-end gap-3">
               <Link 
                 href={`/invoice/${selectedOrder.id}`}
-                className="bg-white border-2 border-[#006a3f] text-[#006a3f] px-6 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-emerald-50 transition-all flex items-center gap-2 justify-center"
+                className="bg-white border-2 border-[#1e5b53] text-[#1e5b53] px-6 py-2.5 rounded-xl font-['Inter',sans-serif] text-[14px] font-bold hover:bg-emerald-50 transition-all flex items-center gap-2 justify-center"
               >
                 📄 Lihat Nota
               </Link>
@@ -1244,7 +1244,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                   type="text" 
                   value={formAddress.label}
                   onChange={e => setFormAddress('label', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                   required
                 />
               </div>
@@ -1253,7 +1253,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 <textarea 
                   value={formAddress.alamat_lengkap}
                   onChange={e => setFormAddress('alamat_lengkap', e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                   rows={3}
                   required
                 />
@@ -1264,7 +1264,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                   <select 
                     value={formAddress.provinsi}
                     onChange={handleProvinceChange}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                     required
                   >
                     <option value="">Pilih Provinsi</option>
@@ -1278,7 +1278,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                   <select 
                     value={formAddress.kota}
                     onChange={e => setFormAddress('kota', e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     required
                     disabled={!formAddress.provinsi}
                   >
@@ -1300,7 +1300,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                   }}
                   pattern="\d{5}"
                   title="Kode pos harus terdiri dari 5 digit angka"
-                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all ${
                     formAddress.kode_pos.length > 0 && formAddress.kode_pos.length < 5 ? 'border-[#ef4444]' : 'border-gray-300'
                   }`}
                   required
@@ -1317,7 +1317,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                   id="is_default"
                   checked={formAddress.is_default}
                   onChange={e => setFormAddress('is_default', e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 text-[#006a3f] focus:ring-[#006a3f]"
+                  className="w-5 h-5 rounded border-gray-300 text-[#1e5b53] focus:ring-[#1e5b53]"
                 />
                 <label htmlFor="is_default" className="font-['Inter',sans-serif] text-[14px] text-gray-700">Jadikan alamat utama</label>
               </div>
@@ -1326,7 +1326,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 <button 
                   type="submit" 
                   disabled={processingAddress || (formAddress.kode_pos.length > 0 && formAddress.kode_pos.length < 5)}
-                  className="w-full py-4 bg-[#006a3f] hover:bg-[#005632] text-white rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 bg-[#1e5b53] hover:bg-[#005632] text-white rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium tracking-wide transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {processingAddress ? 'Menyimpan...' : 'Simpan Alamat'}
                 </button>

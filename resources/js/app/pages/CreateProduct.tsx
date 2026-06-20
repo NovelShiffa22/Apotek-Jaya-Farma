@@ -256,7 +256,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                 <div className="mb-6 flex items-center gap-3">
                                     <FileText
                                         size={20}
-                                        className="text-[#006a3f]"
+                                        className="text-[#1e5b53]"
                                     />
                                     <h2 className="font-['Poppins',sans-serif] text-lg font-semibold text-[#171d19]">
                                         Informasi Dasar
@@ -276,7 +276,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                                 setData('nama_obat', e.target.value)
                                             }
                                             placeholder="Masukkan nama obat"
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                         />
                                         {errors.nama_obat && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
@@ -296,7 +296,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                             onChange={(e) =>
                                                 setData('jenis_obat', e.target.value)
                                             }
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                         >
                                             <option value="">
                                                 Pilih golongan
@@ -328,7 +328,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                             onChange={(e) =>
                                                 setData('category_id', e.target.value)
                                             }
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                         >
                                             <option value="">
                                                 Pilih Kategori Induk
@@ -353,7 +353,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                             type="checkbox"
                                             checked={data.is_active}
                                             onChange={(e) => setData('is_active', e.target.checked)}
-                                            className="h-4 w-4 rounded border-gray-300 text-[#006a3f] focus:ring-[#006a3f]"
+                                            className="h-4 w-4 rounded border-gray-300 text-[#1e5b53] focus:ring-[#1e5b53]"
                                         />
                                         <label htmlFor="is_active" className="ml-2 block font-['Poppins',sans-serif] text-[14px] text-[#171d19]">
                                             Aktif / Tersedia di Katalog
@@ -367,7 +367,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                 <div className="mb-6 flex items-center gap-3">
                                     <DollarSign
                                         size={20}
-                                        className="text-[#006a3f]"
+                                        className="text-[#1e5b53]"
                                     />
                                     <h2 className="font-['Poppins',sans-serif] text-lg font-semibold text-[#171d19]">
                                         Detail Harga & Stok
@@ -391,7 +391,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                                     setData('harga', e.target.value)
                                                 }
                                                 placeholder="0"
-                                                className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                                className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                             />
                                         </div>
                                         {errors.harga && (
@@ -413,7 +413,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                                 setData('stok', e.target.value)
                                             }
                                             placeholder="0"
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                         />
                                         {errors.stok && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
@@ -434,7 +434,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                                 setData('stok_minimum', e.target.value)
                                             }
                                             placeholder="10"
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                         />
                                         {errors.stok_minimum && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
@@ -450,7 +450,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                 <div className="mb-6 flex items-center gap-3">
                                     <Calendar
                                         size={20}
-                                        className="text-[#006a3f]"
+                                        className="text-[#1e5b53]"
                                     />
                                     <h2 className="font-['Poppins',sans-serif] text-lg font-semibold text-[#171d19]">
                                         Informasi Medis & Pemakaian
@@ -470,7 +470,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                                 setData('indikasi', e.target.value)
                                             }
                                             placeholder="Contoh: Meredakan demam dan nyeri"
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                         />
                                         {errors.indikasi && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
@@ -491,7 +491,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                                 setData('aturan_pakai', e.target.value)
                                             }
                                             placeholder="Contoh: 3 kali sehari 1 tablet sesudah makan"
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                         />
                                         {errors.aturan_pakai && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
@@ -512,7 +512,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                                 setData('efek_samping', e.target.value)
                                             }
                                             placeholder="Efek samping yang mungkin terjadi"
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                         />
                                         {errors.efek_samping && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
@@ -533,7 +533,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                                 setData('komposisi', e.target.value)
                                             }
                                             placeholder="Contoh: Paracetamol 500 mg"
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                         />
                                         {errors.komposisi && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
@@ -554,7 +554,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                                 setData('kontraindikasi', e.target.value)
                                             }
                                             placeholder="Contoh: Hipersensitif terhadap komponen obat"
-                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                         />
                                         {errors.kontraindikasi && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
@@ -584,8 +584,8 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                                         }}
                                                         className={`rounded-full px-4 py-1.5 text-[14px] transition-all ${
                                                             isSelected
-                                                                ? 'bg-[#eef5f0] text-[#006a3f] border border-[#006a3f] font-medium'
-                                                                : 'bg-white text-[#171d19] border border-gray-200 hover:border-[#006a3f] hover:text-[#006a3f]'
+                                                                ? 'bg-[#eef5f0] text-[#1e5b53] border border-[#1e5b53] font-medium'
+                                                                : 'bg-white text-[#171d19] border border-gray-200 hover:border-[#1e5b53] hover:text-[#1e5b53]'
                                                         }`}
                                                     >
                                                         {symptom.nama_gejala}
@@ -612,7 +612,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                             }
                                             placeholder="Deskripsi lengkap tentang obat..."
                                             rows={3}
-                                            className="w-full resize-none rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                            className="w-full resize-none rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                         />
                                         {errors.deskripsi && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
@@ -631,7 +631,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                 <div className="mb-6 flex items-center gap-3">
                                     <UploadCloud
                                         size={20}
-                                        className="text-[#006a3f]"
+                                        className="text-[#1e5b53]"
                                     />
                                     <h2 className="font-['Poppins',sans-serif] text-lg font-semibold text-[#171d19]">
                                         Foto Produk
@@ -657,7 +657,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                             onDrop={handleDrop}
                                             className={`mb-4 cursor-pointer rounded-xl border-2 border-dashed px-6 py-10 text-center transition-all ${
                                                 dragActive
-                                                    ? 'border-[#006a3f] bg-[#006a3f]/5'
+                                                    ? 'border-[#1e5b53] bg-[#1e5b53]/5'
                                                     : 'border-gray-300 bg-gray-50'
                                             }`}
                                         >
@@ -671,7 +671,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                                 <div className="flex justify-center mb-3">
                                                     <UploadCloud
                                                         size={32}
-                                                        className="text-[#006a3f]"
+                                                        className="text-[#1e5b53]"
                                                     />
                                                 </div>
                                                 <p className="font-['Poppins',sans-serif] text-[14px] font-medium text-[#171d19]">
@@ -697,7 +697,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                             <button
                                                 type="button"
                                                 onClick={() => fileInputRef.current?.click()}
-                                                className="flex items-center gap-2 rounded-lg px-3 py-1.5 font-['Poppins',sans-serif] text-[13px] font-medium text-[#006a3f] transition-colors hover:bg-[#006a3f]/10"
+                                                className="flex items-center gap-2 rounded-lg px-3 py-1.5 font-['Poppins',sans-serif] text-[13px] font-medium text-[#1e5b53] transition-colors hover:bg-[#1e5b53]/10"
                                             >
                                                 <Edit2 size={14} />
                                                 Ganti Foto
@@ -811,7 +811,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="flex items-center gap-2 rounded-xl bg-[#006a3f] px-6 py-2.5 font-['Poppins',sans-serif] text-[13px] font-medium text-white shadow-[0_4px_12px_rgba(0,106,63,0.2)] transition-all hover:bg-[#005632] disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center gap-2 rounded-xl bg-[#1e5b53] px-6 py-2.5 font-['Poppins',sans-serif] text-[13px] font-medium text-white shadow-[0_4px_12px_rgba(0,106,63,0.2)] transition-all hover:bg-[#005632] disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <ShoppingBag size={16} />
                                 {processing

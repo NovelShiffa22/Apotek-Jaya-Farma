@@ -17,16 +17,16 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
     const date = new Date(prescription.created_at).toLocaleDateString('id-ID', { month: 'short', day: 'numeric', year: 'numeric' });
 
     const MOCK_DRUGS = [
-        { name: 'Paracetamol 500mg', qty: '10 tabs', icon: <Pill size={20} className="text-[#006a3f]" />, instruction: 'Diminum 3x sehari setelah makan', price: 15000 },
-        { name: 'Amoxicillin 500mg', qty: '15 tabs', icon: <BriefcaseMedical size={20} className="text-[#006a3f]" />, instruction: 'Diminum 3x sehari, harus dihabiskan', price: 45000 },
-        { name: 'Cetirizine 10mg', qty: '10 tabs', icon: <Syringe size={20} className="text-[#006a3f]" />, instruction: 'Diminum 1x sehari sebelum tidur', price: 25000 },
+        { name: 'Paracetamol 500mg', qty: '10 tabs', icon: <Pill size={20} className="text-[#1e5b53]" />, instruction: 'Diminum 3x sehari setelah makan', price: 15000 },
+        { name: 'Amoxicillin 500mg', qty: '15 tabs', icon: <BriefcaseMedical size={20} className="text-[#1e5b53]" />, instruction: 'Diminum 3x sehari, harus dihabiskan', price: 45000 },
+        { name: 'Cetirizine 10mg', qty: '10 tabs', icon: <Syringe size={20} className="text-[#1e5b53]" />, instruction: 'Diminum 1x sehari sebelum tidur', price: 25000 },
     ];
 
     const drugs = (prescription.items && prescription.items.length > 0)
         ? prescription.items.map((item: any) => ({
             name: item.product_name || (item.product ? item.product.nama_obat : 'Obat'),
             qty: `${item.kuantitas_ambil ?? item.kuantitas_resep ?? 1} ${item.satuan || 'Pcs'}`,
-            icon: <Pill size={20} className="text-[#006a3f]" />,
+            icon: <Pill size={20} className="text-[#1e5b53]" />,
             instruction: item.signa || 'Diminum sesuai petunjuk dokter',
             price: Number(item.harga_satuan ?? (item.product ? item.product.harga : 0)) * (item.kuantitas_ambil ?? item.kuantitas_resep ?? 1)
         }))
@@ -75,7 +75,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
 
             <main className="mx-auto max-w-6xl px-8 py-10">
                 <div className="mb-6">
-                    <Link href="/profile?tab=prescriptions" className="text-[#006a3f] hover:underline font-['Poppins',sans-serif] text-[13px] font-medium">
+                    <Link href="/profile?tab=prescriptions" className="text-[#1e5b53] hover:underline font-['Poppins',sans-serif] text-[13px] font-medium">
                         &larr; Kembali ke Riwayat Resep
                     </Link>
                 </div>
@@ -98,7 +98,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                         )}
                         {status === 'Disetujui' && (
                             <>
-                                <div className="inline-flex items-center gap-2 bg-[#f0f9f4] text-[#006a3f] px-6 py-2 rounded-full font-['Poppins',sans-serif] font-bold text-[15px]">
+                                <div className="inline-flex items-center gap-2 bg-[#f0f9f4] text-[#1e5b53] px-6 py-2 rounded-full font-['Poppins',sans-serif] font-bold text-[15px]">
                                     <CheckCircle2 size={20} /> Disetujui
                                 </div>
                                 {prescription.verifier_name && (
@@ -152,7 +152,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                         const fileUrl = prescription.file_foto.startsWith('http') ? prescription.file_foto : (prescription.file_foto.startsWith('storage/') || prescription.file_foto.startsWith('/storage/') ? (prescription.file_foto.startsWith('/') ? prescription.file_foto : `/${prescription.file_foto}`) : `/storage/${prescription.file_foto}`);
                                         window.open(fileUrl, '_blank');
                                     }}
-                                    className="flex items-center gap-2 text-[#006a3f] font-['Poppins',sans-serif] font-semibold text-[14px] hover:underline"
+                                    className="flex items-center gap-2 text-[#1e5b53] font-['Poppins',sans-serif] font-semibold text-[14px] hover:underline"
                                 >
                                     <ZoomIn size={16} /> Perbesar Foto
                                 </button>
@@ -232,7 +232,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
 
                                 <div className="border-t border-gray-100 pt-6 flex justify-between items-center mb-8">
                                     <span className="font-['Poppins',sans-serif] font-bold text-[#171d19] text-[16px]">Total Pembayaran</span>
-                                    <span className="font-['Poppins',sans-serif] font-bold text-[#006a3f] text-[20px]">
+                                    <span className="font-['Poppins',sans-serif] font-bold text-[#1e5b53] text-[20px]">
                                         Rp {totalPembayaran.toLocaleString('id-ID')}
                                     </span>
                                 </div>
@@ -253,7 +253,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                     <button 
                                         onClick={() => setIsConfirmModalOpen(true)}
                                         disabled={isProcessing || status === 'Telah Dipesan'}
-                                        className="w-full flex items-center justify-center rounded-xl bg-[#006a3f] py-4 font-['Poppins',sans-serif] text-[15px] font-bold text-white transition-all hover:bg-[#005632] shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+                                        className="w-full flex items-center justify-center rounded-xl bg-[#1e5b53] py-4 font-['Poppins',sans-serif] text-[15px] font-bold text-white transition-all hover:bg-[#005632] shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
                                     >
                                         {status === 'Telah Dipesan' ? 'Sudah Dibayar' : (isProcessing ? 'Memproses...' : 'Bayar Sekarang')}
                                     </button>
@@ -263,8 +263,8 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
 
                         {/* Timeline Tracking Log (Only if Telah Dipesan) */}
                         {status === 'Telah Dipesan' && prescription.virtual_transactions && prescription.virtual_transactions.length > 0 && (
-                            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-[#006a3f]">
-                                <h3 className="font-['Poppins',sans-serif] font-bold text-[18px] text-[#006a3f] mb-6 flex items-center gap-2">
+                            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-[#1e5b53]">
+                                <h3 className="font-['Poppins',sans-serif] font-bold text-[18px] text-[#1e5b53] mb-6 flex items-center gap-2">
                                     <Clock size={20} />
                                     Tabel Log Status Pesanan
                                 </h3>
@@ -282,7 +282,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
                                                     ['Pending', 'Belum Bayar'].includes(vtStatus) 
                                                     ? 'bg-amber-100 border-2 border-amber-500 text-amber-600' 
-                                                    : 'bg-[#006a3f] text-white'
+                                                    : 'bg-[#1e5b53] text-white'
                                                 }`}>
                                                     <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
                                                 </div>
@@ -299,7 +299,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
                                                     ['Lunas', 'diproses', 'Diproses'].includes(vtStatus)
                                                     ? 'bg-blue-100 border-2 border-blue-500 text-blue-600'
-                                                    : (['dikirim', 'Dikirim', 'selesai', 'Selesai'].includes(vtStatus) ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                                                    : (['dikirim', 'Dikirim', 'selesai', 'Selesai'].includes(vtStatus) ? 'bg-[#1e5b53] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
                                                 }`}>
                                                     <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
                                                 </div>
@@ -319,7 +319,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
                                                     ['dikirim', 'Dikirim'].includes(vtStatus)
                                                     ? 'bg-purple-100 border-2 border-purple-500 text-purple-600'
-                                                    : (['selesai', 'Selesai'].includes(vtStatus) ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                                                    : (['selesai', 'Selesai'].includes(vtStatus) ? 'bg-[#1e5b53] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
                                                 }`}>
                                                     <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
                                                 </div>
@@ -413,7 +413,7 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                         {/* Catatan Pasien */}
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                             <div className="flex items-center gap-4 mb-6 border-b border-gray-100 pb-4">
-                                <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-[#006a3f]">
+                                <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-[#1e5b53]">
                                     <FileText size={24} />
                                 </div>
                                 <div>
@@ -434,12 +434,12 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                             <div className="space-y-4 pt-4">
                                 <Link 
                                     href={route('prescriptions.upload.step1')}
-                                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#006a3f] py-4 font-['Poppins',sans-serif] text-[15px] font-bold text-white transition-all hover:bg-[#005632] shadow-lg"
+                                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#1e5b53] py-4 font-['Poppins',sans-serif] text-[15px] font-bold text-white transition-all hover:bg-[#005632] shadow-lg"
                                 >
                                     <UploadCloud size={20} />
                                     Unggah Ulang Resep
                                 </Link>
-                                <button className="w-full flex items-center justify-center gap-2 rounded-xl border border-[#006a3f] py-4 font-['Poppins',sans-serif] text-[15px] font-bold text-[#006a3f] transition-all hover:bg-emerald-50 bg-white">
+                                <button className="w-full flex items-center justify-center gap-2 rounded-xl border border-[#1e5b53] py-4 font-['Poppins',sans-serif] text-[15px] font-bold text-[#1e5b53] transition-all hover:bg-emerald-50 bg-white">
                                     Hubungi Layanan Bantuan
                                 </button>
                             </div>

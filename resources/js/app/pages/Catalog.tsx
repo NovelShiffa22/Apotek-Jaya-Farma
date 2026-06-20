@@ -106,7 +106,7 @@ export default function Catalog({
             {searchQuery && (
               <div className="mt-2">
                 <p className="font-['Inter',sans-serif] text-[16px] text-[#3e4a41] inline-block mr-3">
-                  Hasil pencarian untuk "<span className="text-[#006a3f] font-bold">{searchQuery}</span>"
+                  Hasil pencarian untuk "<span className="text-[#1e5b53] font-bold">{searchQuery}</span>"
                 </p>
                 <button
                   onClick={() => updateFilters(selectedCategories, selectedSymptoms, true)}
@@ -165,8 +165,8 @@ export default function Catalog({
                         />
                         <div className={`w-4 h-4 rounded border transition-all ${
                           selectedCategories.includes(category.id)
-                            ? 'bg-[#006a3f] border-[#006a3f]'
-                            : 'bg-white border-[#6e7a70] group-hover:border-[#006a3f]'
+                            ? 'bg-[#1e5b53] border-[#1e5b53]'
+                            : 'bg-white border-[#6e7a70] group-hover:border-[#1e5b53]'
                         }`}>
                           {selectedCategories.includes(category.id) && (
                             <svg className="w-full h-full text-white p-0.5" viewBox="0 0 16 16" fill="none">
@@ -199,8 +199,8 @@ export default function Catalog({
                       onClick={() => toggleSymptom(symptom)}
                       className={`px-3 py-1.5 rounded-full font-['Inter',sans-serif] text-[14px] transition-all ${
                         selectedSymptoms.includes(masterSymptoms.find(s => s.nama_gejala === symptom)?.slug || symptom)
-                          ? 'bg-[rgba(0,106,63,0.1)] text-[#006a3f] border border-[#006a3f]'
-                          : 'bg-[#f9fafb] text-[#171d19] border border-[#e5e7eb] hover:border-[#006a3f]'
+                          ? 'bg-[rgba(0,106,63,0.1)] text-[#1e5b53] border border-[#1e5b53]'
+                          : 'bg-[#f9fafb] text-[#171d19] border border-[#e5e7eb] hover:border-[#1e5b53]'
                       }`}
                     >
                       {symptom}
@@ -222,19 +222,19 @@ export default function Catalog({
                     placeholder="Harga Min"
                     value={priceMin}
                     onChange={(e) => setPriceMin(e.target.value)}
-                    className="w-1/2 px-3 py-2 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[13px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                    className="w-1/2 px-3 py-2 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[13px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                   />
                   <input
                     type="number"
                     placeholder="Harga Max"
                     value={priceMax}
                     onChange={(e) => setPriceMax(e.target.value)}
-                    className="w-1/2 px-3 py-2 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[13px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                    className="w-1/2 px-3 py-2 bg-[#f9fafb] border border-[#f1f5f9] rounded-xl font-['Inter',sans-serif] text-[13px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                   />
                 </div>
                 <button
                   onClick={() => updateFilters(selectedCategories, selectedSymptoms, false, priceMin, priceMax)}
-                  className="bg-[#006a3f] hover:bg-[#005632] text-white rounded-lg py-1.5 px-3 w-full text-xs font-bold mt-2 transition-colors"
+                  className="bg-[#1e5b53] hover:bg-[#005632] text-white rounded-lg py-1.5 px-3 w-full text-xs font-bold mt-2 transition-colors"
                 >
                   Terapkan
                 </button>
@@ -281,7 +281,7 @@ export default function Catalog({
                           disabled={!finalUrl}
                           className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors border ${
                             link.active
-                              ? 'bg-[#006a3f] text-white border-[#006a3f]'
+                              ? 'bg-[#1e5b53] text-white border-[#1e5b53]'
                               : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                           } ${!finalUrl ? 'opacity-50 cursor-not-allowed text-gray-400' : ''}`}
                           dangerouslySetInnerHTML={{ __html: link.label }}

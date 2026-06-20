@@ -513,7 +513,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
         <div>
           {/* Logo Brand */}
           <div className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-center gap-3 px-4'} h-16 border-b border-slate-100`}>
-            <div className="w-9 h-9 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
+            <div className="w-9 h-9 bg-gradient-to-br from-[#1e5b53] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -1700,8 +1700,8 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
                           {/* Timeline Tracking Log (Only if Telah Dipesan) */}
                           {selectedPrescription.status_validasi === 'telah_dipesan' && selectedPrescription.virtual_transactions && selectedPrescription.virtual_transactions.length > 0 && (
-                            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-[#006a3f]">
-                                <h3 className="font-['Poppins',sans-serif] font-bold text-[18px] text-[#006a3f] mb-6 flex items-center gap-2">
+                            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-[#1e5b53]">
+                                <h3 className="font-['Poppins',sans-serif] font-bold text-[18px] text-[#1e5b53] mb-6 flex items-center gap-2">
                                     <Clock size={20} />
                                     Tabel Log Status Pesanan
                                 </h3>
@@ -1719,7 +1719,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
                                                     ['Pending', 'Belum Bayar'].includes(vtStatus) 
                                                     ? 'bg-amber-100 border-2 border-amber-500 text-amber-600' 
-                                                    : 'bg-[#006a3f] text-white'
+                                                    : 'bg-[#1e5b53] text-white'
                                                 }`}>
                                                     <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
                                                 </div>
@@ -1736,7 +1736,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
                                                     ['Lunas', 'diproses', 'Diproses'].includes(vtStatus)
                                                     ? 'bg-blue-100 border-2 border-blue-500 text-blue-600'
-                                                    : (['dikirim', 'Dikirim', 'selesai', 'Selesai'].includes(vtStatus) ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                                                    : (['dikirim', 'Dikirim', 'selesai', 'Selesai'].includes(vtStatus) ? 'bg-[#1e5b53] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
                                                 }`}>
                                                     <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
                                                 </div>
@@ -1756,7 +1756,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
                                                     ['dikirim', 'Dikirim'].includes(vtStatus)
                                                     ? 'bg-purple-100 border-2 border-purple-500 text-purple-600'
-                                                    : (['selesai', 'Selesai'].includes(vtStatus) ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                                                    : (['selesai', 'Selesai'].includes(vtStatus) ? 'bg-[#1e5b53] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
                                                 }`}>
                                                     <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
                                                 </div>
@@ -2591,7 +2591,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                 {/* Logo Brand */}
                 <div className="flex items-center justify-between px-6 h-16 border-b border-slate-100">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
+                    <div className="w-9 h-9 bg-gradient-to-br from-[#1e5b53] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
                         <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

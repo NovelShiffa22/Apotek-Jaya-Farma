@@ -253,13 +253,13 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                 <div className="mb-12 flex items-center justify-center">
                     <div className="flex items-center gap-4">
                         <div className="flex flex-col items-center gap-2">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#006a3f] text-white font-semibold">1</div>
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1e5b53] text-white font-semibold">1</div>
                             <span className="font-['Poppins',sans-serif] text-[12px] font-bold text-[#171d19]">Petunjuk</span>
                         </div>
-                        <div className="h-0.5 w-24 bg-[#006a3f]"></div>
+                        <div className="h-0.5 w-24 bg-[#1e5b53]"></div>
                         <div className="flex flex-col items-center gap-2">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#006a3f] text-white font-semibold">2</div>
-                            <span className="font-['Poppins',sans-serif] text-[12px] font-bold text-[#006a3f]">Upload</span>
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1e5b53] text-white font-semibold">2</div>
+                            <span className="font-['Poppins',sans-serif] text-[12px] font-bold text-[#1e5b53]">Upload</span>
                         </div>
                     </div>
                 </div>
@@ -284,7 +284,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                         </p>
 
                         <div 
-                            className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed min-h-[240px] p-8 overflow-hidden transition-colors ${dragActive ? 'border-[#006a3f] bg-emerald-50' : 'border-gray-200 bg-gray-50/50'}`}
+                            className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed min-h-[240px] p-8 overflow-hidden transition-colors ${dragActive ? 'border-[#1e5b53] bg-emerald-50' : 'border-gray-200 bg-gray-50/50'}`}
                             onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                             onDragLeave={() => setDragActive(false)}
                             onDrop={(e) => {
@@ -331,7 +331,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                         onChange={handleFileChange}
                                     />
                                     <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50">
-                                        <FilePlus size={32} className="text-[#006a3f]" />
+                                        <FilePlus size={32} className="text-[#1e5b53]" />
                                     </div>
                                     <h3 className="mb-2 font-['Poppins',sans-serif] text-lg font-bold text-[#171d19]">
                                         Unggah Resep
@@ -341,7 +341,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                     </p>
                                     <button 
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="flex items-center gap-2 rounded-lg bg-[#006a3f] px-6 py-3 font-['Poppins',sans-serif] text-[14px] font-semibold text-white transition-all hover:bg-[#005632]"
+                                        className="flex items-center gap-2 rounded-lg bg-[#1e5b53] px-6 py-3 font-['Poppins',sans-serif] text-[14px] font-semibold text-white transition-all hover:bg-[#005632]"
                                     >
                                         <FilePlus size={18} />
                                         Pilih Gambar
@@ -376,7 +376,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                         value={data.nama_pasien}
                                         onChange={(e) => setData('nama_pasien', e.target.value)}
                                         placeholder="Masukkan nama pasien yang tertera di resep" 
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                                     />
                                     {errors.nama_pasien && <p className="mt-1 text-xs text-red-500 font-medium">{errors.nama_pasien}</p>}
                                 </div>
@@ -403,7 +403,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                             dropdownMode="select"
                                             isClearable
                                             placeholderText="dd/mm/yyyy"
-                                            className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                                            className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                                             wrapperClassName="w-full"
                                         />
                                     </div>
@@ -416,7 +416,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                         value={data.whatsapp}
                                         onChange={(e) => setData('whatsapp', e.target.value.replace(/\D/g, ''))}
                                         placeholder="Contoh: 08123456789" 
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                                     />
                                     {errors.whatsapp && <p className="mt-1 text-xs text-red-500 font-medium">{errors.whatsapp}</p>}
                                 </div>
@@ -428,7 +428,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                     onChange={(e) => setData('catatan', e.target.value)}
                                     placeholder="Contoh: Minta obat generik / Obat diganti sirup" 
                                     rows={3}
-                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                                 />
                                 {errors.catatan && <p className="mt-1 text-xs text-red-500 font-medium">{errors.catatan}</p>}
                             </div>
@@ -437,22 +437,22 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                 <label className="block font-['Inter',sans-serif] text-[13px] font-medium text-gray-500 mb-1.5">Metode Penyerahan Obat</label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div 
-                                        className={`border rounded-xl p-4 cursor-pointer transition-all ${data.shipping_method === 'ambil_sendiri' ? 'border-[#006a3f] bg-emerald-50' : 'border-gray-200 hover:border-[#006a3f]'}`}
+                                        className={`border rounded-xl p-4 cursor-pointer transition-all ${data.shipping_method === 'ambil_sendiri' ? 'border-[#1e5b53] bg-emerald-50' : 'border-gray-200 hover:border-[#1e5b53]'}`}
                                         onClick={() => setData('shipping_method', 'ambil_sendiri')}
                                     >
                                         <div className="flex items-center justify-between w-full">
                                             <div className="flex items-center gap-3">
-                                                <input type="radio" checked={data.shipping_method === 'ambil_sendiri'} readOnly className="w-4 h-4 shrink-0 text-[#006a3f] border-gray-300 focus:ring-[#006a3f]" />
+                                                <input type="radio" checked={data.shipping_method === 'ambil_sendiri'} readOnly className="w-4 h-4 shrink-0 text-[#1e5b53] border-gray-300 focus:ring-[#1e5b53]" />
                                                 <div>
                                                     <h4 className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">Ambil di Apotek</h4>
                                                     <p className="text-[12px] text-gray-500 font-['Inter',sans-serif] mt-0.5">Siap diambil setelah diverifikasi</p>
                                                 </div>
                                             </div>
-                                            <span className="font-['Inter',sans-serif] text-[13px] font-bold text-[#006a3f] whitespace-nowrap shrink-0 ml-2">Rp 0</span>
+                                            <span className="font-['Inter',sans-serif] text-[13px] font-bold text-[#1e5b53] whitespace-nowrap shrink-0 ml-2">Rp 0</span>
                                         </div>
                                     </div>
                                     <div 
-                                        className={`border rounded-xl p-4 transition-all ${(!isKotaBandungValid) ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' : (data.shipping_method === 'kurir' ? 'border-[#006a3f] bg-emerald-50 cursor-pointer' : 'border-gray-200 hover:border-[#006a3f] cursor-pointer')}`}
+                                        className={`border rounded-xl p-4 transition-all ${(!isKotaBandungValid) ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed' : (data.shipping_method === 'kurir' ? 'border-[#1e5b53] bg-emerald-50 cursor-pointer' : 'border-gray-200 hover:border-[#1e5b53] cursor-pointer')}`}
                                         onClick={() => {
                                             if (isKotaBandungValid) {
                                                 setData('shipping_method', 'kurir');
@@ -461,13 +461,13 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                     >
                                         <div className="flex items-center justify-between w-full">
                                             <div className="flex items-center gap-3">
-                                                <input type="radio" checked={data.shipping_method === 'kurir'} disabled={!isKotaBandungValid} readOnly className="w-4 h-4 shrink-0 text-[#006a3f] border-gray-300 focus:ring-[#006a3f] disabled:opacity-50" />
+                                                <input type="radio" checked={data.shipping_method === 'kurir'} disabled={!isKotaBandungValid} readOnly className="w-4 h-4 shrink-0 text-[#1e5b53] border-gray-300 focus:ring-[#1e5b53] disabled:opacity-50" />
                                                 <div>
                                                     <h4 className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">Kirim via Kurir (Kota Bandung)</h4>
                                                     <p className="text-[12px] text-gray-500 font-['Inter',sans-serif] mt-0.5">Pengantaran ke alamat</p>
                                                 </div>
                                             </div>
-                                            <span className="font-['Inter',sans-serif] text-[13px] font-bold text-[#006a3f] whitespace-nowrap shrink-0 ml-2">Rp 12.000</span>
+                                            <span className="font-['Inter',sans-serif] text-[13px] font-bold text-[#1e5b53] whitespace-nowrap shrink-0 ml-2">Rp 12.000</span>
                                         </div>
                                     </div>
                                 </div>
@@ -486,7 +486,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                         required
                                         checked={data.is_legal_agreed}
                                         onChange={(e) => setData('is_legal_agreed', e.target.checked)}
-                                        className="w-5 h-5 rounded border-gray-300 text-[#006a3f] focus:ring-[#006a3f] transition-colors cursor-pointer"
+                                        className="w-5 h-5 rounded border-gray-300 text-[#1e5b53] focus:ring-[#1e5b53] transition-colors cursor-pointer"
                                     />
                                 </div>
                                 <label htmlFor="is_legal_agreed" className="font-['Inter',sans-serif] text-[13px] text-[#171d19] leading-relaxed cursor-pointer select-none">
@@ -509,7 +509,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                 <button 
                                     type="button"
                                     onClick={() => setIsAddressModalOpen(true)}
-                                    className="font-['Poppins',sans-serif] text-[13px] font-semibold text-[#006a3f] hover:underline focus:outline-none"
+                                    className="font-['Poppins',sans-serif] text-[13px] font-semibold text-[#1e5b53] hover:underline focus:outline-none"
                                 >
                                     Ubah
                                 </button>
@@ -517,8 +517,8 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
 
                             <div className="rounded-xl border-2 border-emerald-100 bg-emerald-50/30 p-4">
                                 <div className="mb-2 flex items-center gap-2">
-                                    <MapPin size={16} className="text-[#006a3f]" />
-                                    <span className="font-['Poppins',sans-serif] text-[11px] font-bold uppercase tracking-wider text-[#006a3f]">
+                                    <MapPin size={16} className="text-[#1e5b53]" />
+                                    <span className="font-['Poppins',sans-serif] text-[11px] font-bold uppercase tracking-wider text-[#1e5b53]">
                                         {selectedAddress ? selectedAddress.label : 'Info'}
                                     </span>
                                 </div>
@@ -543,7 +543,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
 
                         {/* Order Detail Card */}
                         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                            <h3 className="mb-4 font-['Poppins',sans-serif] text-[11px] font-bold uppercase tracking-wider text-[#006a3f]">
+                            <h3 className="mb-4 font-['Poppins',sans-serif] text-[11px] font-bold uppercase tracking-wider text-[#1e5b53]">
                                 Detail Pesanan
                             </h3>
 
@@ -575,7 +575,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                         !selectedAddress ||
                                         !isKotaBandung(selectedAddress)
                                     }
-                                    className="block w-full rounded-xl bg-[#006a3f] py-3.5 text-center font-['Poppins',sans-serif] text-[14px] font-bold text-white transition-all hover:bg-[#005632] hover:shadow-lg disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed disabled:hover:shadow-none"
+                                    className="block w-full rounded-xl bg-[#1e5b53] py-3.5 text-center font-['Poppins',sans-serif] text-[14px] font-bold text-white transition-all hover:bg-[#005632] hover:shadow-lg disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed disabled:hover:shadow-none"
                                 >
                                     {processing ? 'Memproses...' : 'Kirim Resep'}
                                 </button>
@@ -655,8 +655,8 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                                             !isValid
                                                                 ? 'opacity-60 bg-gray-50 border-gray-200 cursor-not-allowed select-none'
                                                                 : isSelected 
-                                                                    ? 'border-[#006a3f] bg-[#006a3f]/[0.02] shadow-sm cursor-pointer' 
-                                                                    : 'border-gray-200 hover:border-[#006a3f]/50 hover:bg-gray-50/30'
+                                                                    ? 'border-[#1e5b53] bg-[#1e5b53]/[0.02] shadow-sm cursor-pointer' 
+                                                                    : 'border-gray-200 hover:border-[#1e5b53]/50 hover:bg-gray-50/30'
                                                         }`}
                                                     >
                                                         <div className="space-y-2 text-left flex-1">
@@ -679,7 +679,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                                         </div>
                                                         
                                                         {isSelected && isValid && (
-                                                            <div className="text-[#006a3f] shrink-0 pr-1">
+                                                            <div className="text-[#1e5b53] shrink-0 pr-1">
                                                                 <CheckCircle2 size={22} strokeWidth={2.5} />
                                                             </div>
                                                         )}
@@ -695,7 +695,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                     <button
                                         type="button"
                                         onClick={() => setIsAddingNewAddress(true)}
-                                        className="w-full py-3.5 border-2 border-dashed border-gray-200 hover:border-[#006a3f] text-gray-500 hover:text-[#006a3f] rounded-xl flex items-center justify-center gap-2 text-[14px] font-bold transition-all focus:outline-none"
+                                        className="w-full py-3.5 border-2 border-dashed border-gray-200 hover:border-[#1e5b53] text-gray-500 hover:text-[#1e5b53] rounded-xl flex items-center justify-center gap-2 text-[14px] font-bold transition-all focus:outline-none"
                                     >
                                         <Plus size={18} />
                                         Tambah Alamat Baru
@@ -711,7 +711,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                             value={newLabel}
                                             onChange={(e) => setNewLabel(e.target.value)}
                                             placeholder="Rumah / Kantor / Kos" 
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                                             required
                                         />
                                         {addressFormErrors.label && <p className="mt-1 text-xs text-red-500 font-medium">{addressFormErrors.label}</p>}
@@ -724,7 +724,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                             onChange={(e) => setNewAlamatLengkap(e.target.value)}
                                             placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan, kecamatan" 
                                             rows={3}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                                             required
                                         />
                                         {addressFormErrors.alamat_lengkap && <p className="mt-1 text-xs text-red-500 font-medium">{addressFormErrors.alamat_lengkap}</p>}
@@ -736,7 +736,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                             <select 
                                                 value={newProvinsi}
                                                 onChange={handleProvinceChange}
-                                                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                                                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                                                 required
                                                 disabled={true}
                                             >
@@ -750,7 +750,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                             <select 
                                                 value={newKota}
                                                 onChange={e => setNewKota(e.target.value)}
-                                                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                                                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                                                 required
                                                 disabled={true}
                                             >
@@ -774,7 +774,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                             maxLength={5}
                                             pattern="[0-9]{5}"
                                             placeholder="Masukkan 5 digit kode pos"
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                                             required
                                         />
                                         {addressFormErrors.kode_pos && <p className="mt-1 text-xs text-red-500 font-medium">{addressFormErrors.kode_pos}</p>}
@@ -786,7 +786,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                             id="newIsDefaultUploadStep2"
                                             checked={newIsDefault}
                                             onChange={(e) => setNewIsDefault(e.target.checked)}
-                                            className="w-5 h-5 rounded border-gray-300 text-[#006a3f] focus:ring-[#006a3f]"
+                                            className="w-5 h-5 rounded border-gray-300 text-[#1e5b53] focus:ring-[#1e5b53]"
                                         />
                                         <label htmlFor="newIsDefaultUploadStep2" className="font-['Inter',sans-serif] text-[14px] text-gray-700">Jadikan alamat utama</label>
                                     </div>
@@ -805,7 +805,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                         <button
                                             type="submit"
                                             disabled={isSubmittingAddress}
-                                            className="px-8 py-3 bg-[#006a3f] hover:bg-[#005632] text-white rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium tracking-wide transition-colors disabled:opacity-50"
+                                            className="px-8 py-3 bg-[#1e5b53] hover:bg-[#005632] text-white rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium tracking-wide transition-colors disabled:opacity-50"
                                         >
                                             {isSubmittingAddress ? 'Menyimpan...' : 'Simpan Alamat'}
                                         </button>

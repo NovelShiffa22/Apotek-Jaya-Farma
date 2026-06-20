@@ -209,7 +209,7 @@ export default function PharmacistOrderDetail({ order, auth }: any) {
                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
                                                 ['Pending', 'menunggu_pembayaran', 'Belum Bayar'].includes(order.status) 
                                                 ? 'bg-amber-100 border-2 border-amber-500 text-amber-600' 
-                                                : 'bg-[#006a3f] text-white'
+                                                : 'bg-[#1e5b53] text-white'
                                             }`}>
                                                 <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
                                             </div>
@@ -226,7 +226,7 @@ export default function PharmacistOrderDetail({ order, auth }: any) {
                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
                                                 ['Lunas', 'diproses', 'Diproses'].includes(order.status)
                                                 ? 'bg-blue-100 border-2 border-blue-500 text-blue-600'
-                                                : (['dikirim', 'Dikirim', 'selesai', 'Selesai'].includes(order.status) ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                                                : (['dikirim', 'Dikirim', 'selesai', 'Selesai'].includes(order.status) ? 'bg-[#1e5b53] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
                                             }`}>
                                                 <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
                                             </div>
@@ -246,7 +246,7 @@ export default function PharmacistOrderDetail({ order, auth }: any) {
                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
                                                 ['dikirim', 'Dikirim'].includes(order.status)
                                                 ? 'bg-purple-100 border-2 border-purple-500 text-purple-600'
-                                                : (['selesai', 'Selesai'].includes(order.status) ? 'bg-[#006a3f] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
+                                                : (['selesai', 'Selesai'].includes(order.status) ? 'bg-[#1e5b53] text-white' : 'bg-gray-100 border-2 border-gray-200 text-gray-300')
                                             }`}>
                                                 <div className="w-2.5 h-2.5 rounded-full bg-current"></div>
                                             </div>

@@ -240,7 +240,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                 type="button"
                                 onClick={handleSubmit}
                                 disabled={processing}
-                                className="flex items-center gap-2 rounded-xl bg-[#006a3f] px-6 py-2.5 font-['Poppins',sans-serif] text-[13px] font-medium text-white shadow-[0_4px_12px_rgba(0,106,63,0.2)] transition-all hover:bg-[#005632] disabled:opacity-50"
+                                className="flex items-center gap-2 rounded-xl bg-[#1e5b53] px-6 py-2.5 font-['Poppins',sans-serif] text-[13px] font-medium text-white shadow-[0_4px_12px_rgba(0,106,63,0.2)] transition-all hover:bg-[#005632] disabled:opacity-50"
                             >
                                 <Save size={16} />
                                 {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
@@ -258,7 +258,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                         {/* Card 1: Informasi Dasar */}
                         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                             <div className="mb-6 flex items-center gap-3">
-                                <FileText size={20} className="text-[#006a3f]" />
+                                <FileText size={20} className="text-[#1e5b53]" />
                                 <h2 className="font-['Poppins',sans-serif] text-lg font-semibold text-[#171d19]">
                                     Informasi Dasar
                                 </h2>
@@ -275,7 +275,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                         value={data.nama_obat}
                                         onChange={(e) => setData('nama_obat', e.target.value)}
                                         placeholder="Masukkan nama obat"
-                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                     />
                                     {errors.nama_obat && (
                                         <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
@@ -292,7 +292,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                     <select
                                         value={data.jenis_obat}
                                         onChange={(e) => setData('jenis_obat', e.target.value)}
-                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                     >
                                         <option value="">Pilih golongan</option>
                                         <option value="bebas">Obat Bebas</option>
@@ -314,7 +314,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                     <select
                                         value={data.category_id}
                                         onChange={(e) => setData('category_id', e.target.value)}
-                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                     >
                                         <option value="">Pilih Kategori Induk</option>
                                         {categories.map((cat) => (
@@ -337,7 +337,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                         type="checkbox"
                                         checked={data.is_active}
                                         onChange={(e) => setData('is_active', e.target.checked)}
-                                        className="h-4 w-4 rounded border-gray-300 text-[#006a3f] focus:ring-[#006a3f]"
+                                        className="h-4 w-4 rounded border-gray-300 text-[#1e5b53] focus:ring-[#1e5b53]"
                                     />
                                     <label htmlFor="is_active" className="ml-2 block font-['Poppins',sans-serif] text-[14px] text-[#171d19]">
                                         Aktif / Tersedia di Katalog
@@ -349,7 +349,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                         {/* Card 2: Detail Harga & Stok */}
                         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                             <div className="mb-6 flex items-center gap-3">
-                                <DollarSign size={20} className="text-[#006a3f]" />
+                                <DollarSign size={20} className="text-[#1e5b53]" />
                                 <h2 className="font-['Poppins',sans-serif] text-lg font-semibold text-[#171d19]">
                                     Detail Harga & Stok
                                 </h2>
@@ -370,7 +370,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                             value={data.harga}
                                             onChange={(e) => setData('harga', e.target.value)}
                                             placeholder="0"
-                                            className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                            className="w-full rounded-xl border border-gray-200 py-2.5 pl-10 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                         />
                                     </div>
                                     {errors.harga && (
@@ -390,7 +390,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                         value={data.stok_minimum}
                                         onChange={(e) => setData('stok_minimum', e.target.value)}
                                         placeholder="10"
-                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                     />
                                     {errors.stok_minimum && (
                                         <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
@@ -425,7 +425,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                         {/* Card 3: Informasi Medis & Pemakaian */}
                         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                             <div className="mb-6 flex items-center gap-3">
-                                <Calendar size={20} className="text-[#006a3f]" />
+                                <Calendar size={20} className="text-[#1e5b53]" />
                                 <h2 className="font-['Poppins',sans-serif] text-lg font-semibold text-[#171d19]">
                                     Informasi Medis & Pemakaian
                                 </h2>
@@ -442,7 +442,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                         value={data.indikasi}
                                         onChange={(e) => setData('indikasi', e.target.value)}
                                         placeholder="Contoh: Meredakan demam dan nyeri"
-                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                     />
                                 </div>
 
@@ -456,7 +456,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                         value={data.aturan_pakai}
                                         onChange={(e) => setData('aturan_pakai', e.target.value)}
                                         placeholder="Contoh: 3 kali sehari 1 tablet sesudah makan"
-                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                     />
                                 </div>
 
@@ -470,7 +470,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                         value={data.efek_samping}
                                         onChange={(e) => setData('efek_samping', e.target.value)}
                                         placeholder="Efek samping yang mungkin terjadi"
-                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                     />
                                 </div>
 
@@ -484,7 +484,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                         value={data.komposisi}
                                         onChange={(e) => setData('komposisi', e.target.value)}
                                         placeholder="Contoh: Paracetamol 500 mg"
-                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                     />
                                     {errors.komposisi && (
                                         <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
@@ -503,7 +503,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                         value={data.kontraindikasi}
                                         onChange={(e) => setData('kontraindikasi', e.target.value)}
                                         placeholder="Contoh: Hipersensitif terhadap komponen obat"
-                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                     />
                                     {errors.kontraindikasi && (
                                         <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
@@ -533,8 +533,8 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                                     }}
                                                     className={`rounded-full px-4 py-1.5 text-[14px] transition-all ${
                                                         isSelected
-                                                            ? 'bg-[#eef5f0] text-[#006a3f] border border-[#006a3f] font-medium'
-                                                            : 'bg-white text-[#171d19] border border-gray-200 hover:border-[#006a3f] hover:text-[#006a3f]'
+                                                            ? 'bg-[#eef5f0] text-[#1e5b53] border border-[#1e5b53] font-medium'
+                                                            : 'bg-white text-[#171d19] border border-gray-200 hover:border-[#1e5b53] hover:text-[#1e5b53]'
                                                     }`}
                                                 >
                                                     {symptom.nama_gejala}
@@ -554,7 +554,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                         onChange={(e) => setData('deskripsi', e.target.value)}
                                         placeholder="Deskripsi lengkap tentang obat..."
                                         rows={4}
-                                        className="w-full resize-none rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                        className="w-full resize-none rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                     />
                                 </div>
                             </div>
@@ -566,7 +566,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                         {/* Card 4: Foto Produk */}
                         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                             <div className="mb-6 flex items-center gap-3">
-                                <UploadCloud size={20} className="text-[#006a3f]" />
+                                <UploadCloud size={20} className="text-[#1e5b53]" />
                                 <h2 className="font-['Poppins',sans-serif] text-lg font-semibold text-[#171d19]">
                                     Foto Produk
                                 </h2>
@@ -588,12 +588,12 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                     onDragOver={handleDrag}
                                     onDrop={handleDrop}
                                     className={`mb-4 cursor-pointer rounded-xl border-2 border-dashed px-6 py-10 text-center transition-all ${
-                                        dragActive ? 'border-[#006a3f] bg-[#006a3f]/5' : 'border-gray-300 bg-gray-50'
+                                        dragActive ? 'border-[#1e5b53] bg-[#1e5b53]/5' : 'border-gray-300 bg-gray-50'
                                     }`}
                                 >
                                     <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full">
                                         <div className="flex justify-center mb-3">
-                                            <UploadCloud size={32} className="text-[#006a3f]" />
+                                            <UploadCloud size={32} className="text-[#1e5b53]" />
                                         </div>
                                         <p className="font-['Poppins',sans-serif] text-[14px] font-medium text-[#171d19]">
                                             Klik atau seret file ke sini
@@ -616,7 +616,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                         <button
                                             type="button"
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="flex items-center gap-2 rounded-lg px-3 py-1.5 font-['Poppins',sans-serif] text-[13px] font-medium text-[#006a3f] transition-colors hover:bg-[#006a3f]/10"
+                                            className="flex items-center gap-2 rounded-lg px-3 py-1.5 font-['Poppins',sans-serif] text-[13px] font-medium text-[#1e5b53] transition-colors hover:bg-[#1e5b53]/10"
                                         >
                                             <Edit2 size={14} /> Ganti Foto
                                         </button>

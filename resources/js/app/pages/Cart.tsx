@@ -141,7 +141,7 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                   checked={isAllChecked}
                   onChange={toggleAll}
                 />
-                <div className={`w-[22px] h-[22px] rounded border flex items-center justify-center transition-colors ${isAllChecked ? 'bg-[#006a3f] border-[#006a3f]' : 'border-gray-300 group-hover:border-[#006a3f]'}`}>
+                <div className={`w-[22px] h-[22px] rounded border flex items-center justify-center transition-colors ${isAllChecked ? 'bg-[#1e5b53] border-[#1e5b53]' : 'border-gray-300 group-hover:border-[#1e5b53]'}`}>
                   {isAllChecked && <CheckSquare size={16} className="text-white" strokeWidth={3} />}
                 </div>
                 <span className="font-bold text-gray-900 text-lg">Pilih Semua</span>
@@ -175,7 +175,7 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                           checked={isChecked}
                           onChange={() => toggleItem(item.id)}
                         />
-                        <div className={`w-[22px] h-[22px] rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#006a3f] border-[#006a3f]' : 'border-gray-300 group-hover:border-[#006a3f]'}`}>
+                        <div className={`w-[22px] h-[22px] rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-[#1e5b53] border-[#1e5b53]' : 'border-gray-300 group-hover:border-[#1e5b53]'}`}>
                           {isChecked && <CheckSquare size={16} className="text-white" strokeWidth={3} />}
                         </div>
                       </label>
@@ -204,7 +204,7 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                           <p className="text-sm text-gray-500 mt-1">{item.jenis_kemasan}</p>
                         </div>
                         <div className="flex items-end justify-between mt-4">
-                          <p className="font-bold text-[#006a3f] text-xl">Rp {item.harga.toLocaleString('id-ID')}</p>
+                          <p className="font-bold text-[#1e5b53] text-xl">Rp {item.harga.toLocaleString('id-ID')}</p>
                           <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden h-10 w-[110px]">
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -247,11 +247,11 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-gray-900 text-sm truncate">{product.nama}</h4>
-                        <p className="font-semibold text-[#006a3f] text-[15px] mt-1">Rp {product.harga.toLocaleString('id-ID')}</p>
+                        <p className="font-semibold text-[#1e5b53] text-[15px] mt-1">Rp {product.harga.toLocaleString('id-ID')}</p>
                       </div>
                       <button
                         onClick={() => addToCart(product.id)}
-                        className="w-8 h-8 rounded-full bg-[#006a3f] text-white flex items-center justify-center hover:bg-[#005632] transition-colors shadow-sm flex-shrink-0"
+                        className="w-8 h-8 rounded-full bg-[#1e5b53] text-white flex items-center justify-center hover:bg-[#005632] transition-colors shadow-sm flex-shrink-0"
                       >
                         <Plus size={18} strokeWidth={3} />
                       </button>
@@ -278,8 +278,8 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                 {subtotal > 0 && (
                   <>
                     <div className="flex justify-between items-center text-[15px]">
-                      <span className="text-[#006a3f]">Potongan Harga</span>
-                      <span className="font-medium text-[#006a3f]">-Rp {Number(discount).toLocaleString('id-ID')}</span>
+                      <span className="text-[#1e5b53]">Potongan Harga</span>
+                      <span className="font-medium text-[#1e5b53]">-Rp {Number(discount).toLocaleString('id-ID')}</span>
                     </div>
                   </>
                 )}
@@ -287,7 +287,7 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
 
               <div className="border-t-2 border-gray-100 pt-5 mb-8 flex justify-between items-end">
                 <span className="text-xl font-bold text-gray-900">Total</span>
-                <span className="text-3xl font-black text-[#006a3f] tracking-tight">
+                <span className="text-3xl font-black text-[#1e5b53] tracking-tight">
                   Rp {total.toLocaleString('id-ID')}
                 </span>
               </div>
@@ -295,7 +295,7 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
               <button
                 onClick={handleCheckout}
                 disabled={checkedItems.length === 0}
-                className="w-full bg-[#006a3f] text-white rounded-xl py-[18px] flex items-center justify-center gap-2 font-bold text-[16px] hover:bg-[#005632] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                className="w-full bg-[#1e5b53] text-white rounded-xl py-[18px] flex items-center justify-center gap-2 font-bold text-[16px] hover:bg-[#005632] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
               >
                 Lanjutkan ke Pembayaran
                 <ArrowRight size={20} strokeWidth={2.5} />

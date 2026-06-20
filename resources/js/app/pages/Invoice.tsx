@@ -208,7 +208,7 @@ export default function Invoice({ transaction }: Props) {
   if (isRedirecting) {
     return (
       <div className="min-h-screen bg-[#fafaf8] font-['Poppins',sans-serif] flex flex-col items-center justify-center">
-        <div className="w-16 h-16 border-4 border-[#006a3f] border-t-transparent rounded-full animate-spin mb-6"></div>
+        <div className="w-16 h-16 border-4 border-[#1e5b53] border-t-transparent rounded-full animate-spin mb-6"></div>
         <h2 className="text-xl font-bold text-[#171d19] mb-2 font-['Roboto_Condensed',sans-serif]">Memverifikasi Pembayaran...</h2>
         <p className="text-gray-500 text-sm">Mohon tunggu sebentar, sistem sedang menyinkronkan data.</p>
       </div>
@@ -233,7 +233,7 @@ export default function Invoice({ transaction }: Props) {
           // SUKSES UI - NOTA RESMI
           <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-xl border border-gray-100 max-w-3xl mx-auto transform transition-all animate-fade-in-up relative overflow-hidden">
             {/* Dekorasi Nota */}
-            <div className="absolute top-0 left-0 w-full h-3 bg-[#006a3f]"></div>
+            <div className="absolute top-0 left-0 w-full h-3 bg-[#1e5b53]"></div>
             <div className="absolute top-8 right-8 text-emerald-100 opacity-50">
               <Receipt size={120} strokeWidth={1} />
             </div>
@@ -244,7 +244,7 @@ export default function Invoice({ transaction }: Props) {
                   <h1 className="text-3xl font-black text-gray-900 tracking-tight">NOTA</h1>
                   <p className="text-gray-500 text-sm mt-1">No. Pesanan: {transaction.id.toString().padStart(6, '0')}</p>
                 </div>
-                <div className="inline-flex items-center gap-2 bg-emerald-50 text-[#006a3f] px-5 py-2.5 rounded-full border border-emerald-100 font-bold shadow-sm self-start sm:self-auto">
+                <div className="inline-flex items-center gap-2 bg-emerald-50 text-[#1e5b53] px-5 py-2.5 rounded-full border border-emerald-100 font-bold shadow-sm self-start sm:self-auto">
                   <CheckCircle size={20} />
                   PEMBAYARAN LUNAS
                 </div>
@@ -358,7 +358,7 @@ export default function Invoice({ transaction }: Props) {
                     
                     <div className="flex justify-between items-center bg-[#fafaf8] rounded-xl p-6 border border-gray-200 shadow-sm">
                       <span className="text-gray-500 font-bold uppercase tracking-wider text-sm">Total Dibayar</span>
-                      <span className="font-black text-[#006a3f] text-2xl">Rp {total.toLocaleString('id-ID')}</span>
+                      <span className="font-black text-[#1e5b53] text-2xl">Rp {total.toLocaleString('id-ID')}</span>
                     </div>
                   </div>
                 );
@@ -416,7 +416,7 @@ export default function Invoice({ transaction }: Props) {
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <p className="text-sm text-gray-500 font-medium uppercase tracking-wider mb-1">Total Pembayaran</p>
-                  <p className={`text-3xl font-black ${isExpired ? 'text-gray-400 line-through' : 'text-[#006a3f]'}`}>
+                  <p className={`text-3xl font-black ${isExpired ? 'text-gray-400 line-through' : 'text-[#1e5b53]'}`}>
                       Rp {Number(transaction.total_amount).toLocaleString('id-ID')}
                   </p>
                 </div>

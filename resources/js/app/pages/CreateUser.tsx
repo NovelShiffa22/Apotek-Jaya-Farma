@@ -88,7 +88,7 @@ export default function CreateUser({ isOpen, onClose, isEdit = false, initialDat
                         {/* Informasi Dasar */}
                         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                             <div className="mb-6 flex items-center gap-3">
-                                <User size={20} className="text-[#006a3f]" />
+                                <User size={20} className="text-[#1e5b53]" />
                                 <h2 className="font-['Poppins',sans-serif] text-lg font-semibold text-[#171d19]">
                                     Informasi Dasar
                                 </h2>
@@ -105,7 +105,7 @@ export default function CreateUser({ isOpen, onClose, isEdit = false, initialDat
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
                                         placeholder="Masukkan nama lengkap..."
-                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                     />
                                     {errors.name && (
                                         <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
@@ -127,7 +127,7 @@ export default function CreateUser({ isOpen, onClose, isEdit = false, initialDat
                                                 value={data.email}
                                                 onChange={(e) => setData('email', e.target.value)}
                                                 placeholder="user@example.com"
-                                                className="w-full rounded-xl border border-gray-200 py-2.5 pl-11 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                                className="w-full rounded-xl border border-gray-200 py-2.5 pl-11 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                             />
                                         </div>
                                         {errors.email && (
@@ -147,7 +147,7 @@ export default function CreateUser({ isOpen, onClose, isEdit = false, initialDat
                                                 value={data.phone}
                                                 onChange={(e) => setData('phone', e.target.value)}
                                                 placeholder="081234567890"
-                                                className="w-full rounded-xl border border-gray-200 py-2.5 pl-11 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                                className="w-full rounded-xl border border-gray-200 py-2.5 pl-11 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                             />
                                         </div>
                                         {errors.phone && (
@@ -163,7 +163,7 @@ export default function CreateUser({ isOpen, onClose, isEdit = false, initialDat
                         {/* Keamanan & Peran */}
                         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                             <div className="mb-6 flex items-center gap-3">
-                                <Shield size={20} className="text-[#006a3f]" />
+                                <Shield size={20} className="text-[#1e5b53]" />
                                 <h2 className="font-['Poppins',sans-serif] text-lg font-semibold text-[#171d19]">
                                     Keamanan & Peran
                                 </h2>
@@ -178,7 +178,7 @@ export default function CreateUser({ isOpen, onClose, isEdit = false, initialDat
                                     <select
                                         value={data.role}
                                         onChange={(e) => setData('role', e.target.value)}
-                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all bg-white"
+                                        className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all bg-white"
                                     >
                                         <option value="user">Pelanggan</option>
                                         <option value="pharmacist">Apoteker</option>
@@ -205,7 +205,7 @@ export default function CreateUser({ isOpen, onClose, isEdit = false, initialDat
                                                 value={data.password}
                                                 onChange={(e) => setData('password', e.target.value)}
                                                 placeholder={isEdit ? "Biarkan kosong jika tidak diubah" : "Masukkan password..."}
-                                                className="w-full rounded-xl border border-gray-200 py-2.5 pl-11 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                                className="w-full rounded-xl border border-gray-200 py-2.5 pl-11 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                             />
                                         </div>
                                         {errors.password && (
@@ -225,7 +225,7 @@ export default function CreateUser({ isOpen, onClose, isEdit = false, initialDat
                                                 value={data.password_confirmation}
                                                 onChange={(e) => setData('password_confirmation', e.target.value)}
                                                 placeholder="Ulangi password..."
-                                                className="w-full rounded-xl border border-gray-200 py-2.5 pl-11 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#006a3f] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/10 transition-all"
+                                                className="w-full rounded-xl border border-gray-200 py-2.5 pl-11 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                             />
                                         </div>
                                         {errors.password_confirmation && (
@@ -254,7 +254,7 @@ export default function CreateUser({ isOpen, onClose, isEdit = false, initialDat
                             type="submit"
                             form="userForm"
                             disabled={processing}
-                            className="flex items-center gap-2 rounded-xl bg-[#006a3f] px-8 py-2.5 font-['Poppins',sans-serif] text-[14px] font-medium text-white transition-all hover:bg-[#005632] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70"
+                            className="flex items-center gap-2 rounded-xl bg-[#1e5b53] px-8 py-2.5 font-['Poppins',sans-serif] text-[14px] font-medium text-white transition-all hover:bg-[#005632] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {processing ? 'Menyimpan...' : (isEdit ? 'Perbarui User' : 'Simpan User')}
                         </button>

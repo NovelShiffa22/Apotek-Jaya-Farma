@@ -101,7 +101,7 @@ export default function AdminPharmacyInfo({ apotekSettings, globalDiscount }: Ad
                 <div>
                     {/* Logo Brand */}
                     <div className="flex items-center justify-center gap-3 px-4 h-20 border-b border-[#E2E8F0]">
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#1e5b53] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
                                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -174,7 +174,7 @@ export default function AdminPharmacyInfo({ apotekSettings, globalDiscount }: Ad
                 {/* Mobile Header */}
                 <div className="md:hidden flex items-center justify-between px-6 h-20 bg-white border-b border-[#E2E8F0] sticky top-0 z-40">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-lg flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#1e5b53] to-[#005632] rounded-lg flex items-center justify-center shrink-0">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-white">
                                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -244,7 +244,7 @@ export default function AdminPharmacyInfo({ apotekSettings, globalDiscount }: Ad
                             </h1>
                         </div>
                         <div className="relative">
-                            <button onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)} className="flex items-center gap-3 rounded-xl border border-[#f1f5f9] bg-white p-2 pr-4 transition-all hover:border-[#006a3f] hover:shadow-sm">
+                            <button onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)} className="flex items-center gap-3 rounded-xl border border-[#f1f5f9] bg-white p-2 pr-4 transition-all hover:border-[#1e5b53] hover:shadow-sm">
                                 <div className="text-right hidden md:block">
                                     <p className="font-['Roboto_Condensed',sans-serif] text-[15px] font-semibold text-[#171d19]">{auth?.user?.name || 'Admin'}</p>
                                     <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70]">Administrator</p>
@@ -275,7 +275,7 @@ export default function AdminPharmacyInfo({ apotekSettings, globalDiscount }: Ad
                     {/* Section 1: Pharmacy Info */}
                     <form onSubmit={submitInfo} className="mx-auto max-w-[1000px] rounded-2xl border border-[#f1f5f9] bg-white p-8 shadow-sm">
                         <div className="flex items-center gap-4 mb-6">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#006a3f] to-[#005632] shadow-lg">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#1e5b53] to-[#005632] shadow-lg">
                                 <Building2 size={22} className="text-white" />
                             </div>
                             <div>
@@ -307,7 +307,7 @@ export default function AdminPharmacyInfo({ apotekSettings, globalDiscount }: Ad
                                             onChange={e => setData(field.key, e.target.value)}
                                             rows={3}
                                             placeholder={field.placeholder}
-                                            className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#006a3f] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 resize-none"
+                                            className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#1e5b53] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 resize-none"
                                         />
                                     ) : (
                                         <input
@@ -315,7 +315,7 @@ export default function AdminPharmacyInfo({ apotekSettings, globalDiscount }: Ad
                                             value={data[field.key]}
                                             onChange={e => setData(field.key, e.target.value)}
                                             placeholder={field.placeholder}
-                                            className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#006a3f] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20"
+                                            className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#1e5b53] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20"
                                         />
                                     )}
                                 </div>
@@ -323,7 +323,7 @@ export default function AdminPharmacyInfo({ apotekSettings, globalDiscount }: Ad
                         </div>
 
                         <div className="flex justify-end gap-3 border-t border-[#f1f5f9] pt-6 mt-6">
-                            <button type="submit" disabled={processing} className="rounded-xl bg-[#006a3f] px-6 py-3 font-['Inter',sans-serif] text-[14px] font-semibold text-white transition-colors hover:bg-[#005632] disabled:opacity-70">
+                            <button type="submit" disabled={processing} className="rounded-xl bg-[#1e5b53] px-6 py-3 font-['Inter',sans-serif] text-[14px] font-semibold text-white transition-colors hover:bg-[#005632] disabled:opacity-70">
                                 {processing ? 'Menyimpan...' : 'Simpan Informasi Apotek'}
                             </button>
                         </div>
@@ -362,7 +362,7 @@ export default function AdminPharmacyInfo({ apotekSettings, globalDiscount }: Ad
                                         type="number"
                                         value={discountData.discount}
                                         onChange={e => setDiscountData('discount', Number(e.target.value))}
-                                        className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] pl-12 pr-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#006a3f] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20"
+                                        className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] pl-12 pr-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#1e5b53] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20"
                                         min="0"
                                     />
                                 </div>
@@ -373,7 +373,7 @@ export default function AdminPharmacyInfo({ apotekSettings, globalDiscount }: Ad
                         </div>
 
                         <div className="flex justify-end gap-3 border-t border-[#f1f5f9] pt-6 mt-6">
-                            <button type="submit" disabled={processingDiscount} className="rounded-xl bg-[#006a3f] px-6 py-3 font-['Inter',sans-serif] text-[14px] font-semibold text-white transition-colors hover:bg-[#005632] disabled:opacity-70">
+                            <button type="submit" disabled={processingDiscount} className="rounded-xl bg-[#1e5b53] px-6 py-3 font-['Inter',sans-serif] text-[14px] font-semibold text-white transition-colors hover:bg-[#005632] disabled:opacity-70">
                                 {processingDiscount ? 'Menyimpan...' : 'Simpan Pengaturan Diskon'}
                             </button>
                         </div>

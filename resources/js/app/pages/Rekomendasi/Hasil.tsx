@@ -99,7 +99,7 @@ const RecommendationCard = ({ product, isTopRecommendation, onShowModal }: { pro
                 <div className="flex items-center gap-2">
                   <h4 className="font-bold text-gray-900 text-base truncate">{product.nama_obat}</h4>
                   {isTopRecommendation && (
-                    <span className="bg-[#006a3f] text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">
+                    <span className="bg-[#1e5b53] text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">
                       Terbaik
                     </span>
                   )}
@@ -125,7 +125,7 @@ const RecommendationCard = ({ product, isTopRecommendation, onShowModal }: { pro
             <div className="text-left md:text-right">
                 <p className="text-lg font-bold text-gray-900">Rp {(product.harga || 0).toLocaleString('id-ID')}</p>
                 {!isNotRecommended ? (
-                  <p className="text-xs text-gray-500 mt-0.5">Kecocokan: <span className="font-bold text-[#006a3f]">{percentageScore}%</span></p>
+                  <p className="text-xs text-gray-500 mt-0.5">Kecocokan: <span className="font-bold text-[#1e5b53]">{percentageScore}%</span></p>
                 ) : (
                   <p className="text-[10px] font-bold text-red-600 uppercase mt-0.5">DILARANG KLINIS</p>
                 )}
@@ -138,7 +138,7 @@ const RecommendationCard = ({ product, isTopRecommendation, onShowModal }: { pro
                 className={`px-4 py-2 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${
                     isNotRecommended || isProcessing
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200' 
-                    : 'bg-[#006a3f] text-white hover:bg-emerald-800'
+                    : 'bg-[#1e5b53] text-white hover:bg-emerald-800'
                 }`}
             >
                 {isProcessing ? (
@@ -200,7 +200,7 @@ export default function Hasil({
             Hasil Analisis Rekomendasi
           </h1>
           <p className="font-['Inter',sans-serif] text-[15px] text-[#3e4a41] max-w-[500px] mx-auto leading-relaxed">
-            Daftar obat yang disarankan berdasarkan keluhan medis dan profil usia {input_usia ? <span className="font-bold text-[#006a3f]">{input_usia} Tahun</span> : ''} Anda.
+            Daftar obat yang disarankan berdasarkan keluhan medis dan profil usia {input_usia ? <span className="font-bold text-[#1e5b53]">{input_usia} Tahun</span> : ''} Anda.
           </p>
         </div>
 
@@ -305,7 +305,7 @@ export default function Hasil({
         <div className="mt-10 flex justify-center">
           <Link 
             href="/recommendation"
-            className="flex items-center gap-2 px-6 py-3 rounded-full font-['Inter',sans-serif] text-[14px] font-bold text-[#6e7a70] bg-white border border-[#e5e7eb] hover:border-[#006a3f] hover:text-[#006a3f] transition-all"
+            className="flex items-center gap-2 px-6 py-3 rounded-full font-['Inter',sans-serif] text-[14px] font-bold text-[#6e7a70] bg-white border border-[#e5e7eb] hover:border-[#1e5b53] hover:text-[#1e5b53] transition-all"
           >
             <ArrowLeft size={16} />
             Kembali ke Form Gejala

@@ -10,7 +10,7 @@ const initialNotifications = [
         title: 'Resep Obat Sudah Diverifikasi',
         desc: 'Resep dokter nomor #AP-9921 telah diverifikasi oleh apoteker kami. Silakan lanjutkan ke pembayaran atau pengambilan.',
         time: '2 jam yang lalu',
-        icon: <FileText size={24} className="text-[#006a3f]" />,
+        icon: <FileText size={24} className="text-[#1e5b53]" />,
         unread: true,
         bgColor: 'bg-emerald-50'
     },
@@ -74,7 +74,7 @@ export default function Notifications() {
                     </h1>
                     <button 
                         onClick={() => setNotifications(prev => prev.map(n => ({ ...n, unread: false })))}
-                        className="text-[#006a3f] font-['Poppins',sans-serif] text-[14px] font-bold hover:underline"
+                        className="text-[#1e5b53] font-['Poppins',sans-serif] text-[14px] font-bold hover:underline"
                     >
                         Tandai semua telah dibaca
                     </button>
@@ -88,7 +88,7 @@ export default function Notifications() {
                         >
                             {/* Unread indicator bar */}
                             {notif.unread && (
-                                <div className="absolute left-0 top-6 bottom-6 w-1 bg-[#006a3f] rounded-r-md"></div>
+                                <div className="absolute left-0 top-6 bottom-6 w-1 bg-[#1e5b53] rounded-r-md"></div>
                             )}
 
                             <div className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 ${notif.bgColor}`}>
@@ -109,7 +109,7 @@ export default function Notifications() {
 
                             {/* Unread dot */}
                             {notif.unread && (
-                                <div className="w-2.5 h-2.5 rounded-full bg-[#006a3f] mt-2"></div>
+                                <div className="w-2.5 h-2.5 rounded-full bg-[#1e5b53] mt-2"></div>
                             )}
                         </div>
                     ))}
@@ -132,7 +132,7 @@ export default function Notifications() {
                                 onClick={() => setCurrentPage(page)}
                                 className={`w-10 h-10 flex items-center justify-center rounded-lg ${
                                     currentPage === page
-                                        ? "bg-[#006a3f] text-white font-bold"
+                                        ? "bg-[#1e5b53] text-white font-bold"
                                         : "border border-gray-200 text-gray-700 hover:bg-gray-50"
                                 } font-['Poppins',sans-serif]`}
                             >

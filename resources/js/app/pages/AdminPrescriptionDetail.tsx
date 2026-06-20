@@ -55,10 +55,10 @@ export default function AdminPrescriptionDetail({ prescription }: { prescription
                         <ArrowLeft size={20} />
                     </Link>
                     <h1 className="font-['Poppins',sans-serif] text-[20px] font-bold text-[#171d19]">
-                        Detail Resep: <span className="text-[#006a3f]">#{prescription.kode_resep || prescription.id}</span>
+                        Detail Resep: <span className="text-[#1e5b53]">#{prescription.kode_resep || prescription.id}</span>
                     </h1>
                 </div>
-                <button onClick={handlePrint} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#006a3f] text-white font-['Inter',sans-serif] text-[14px] font-semibold transition-all hover:bg-[#005632] hover:shadow-lg print:hidden">
+                <button onClick={handlePrint} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#1e5b53] text-white font-['Inter',sans-serif] text-[14px] font-semibold transition-all hover:bg-[#005632] hover:shadow-lg print:hidden">
                     <Printer size={18} /> Cetak Dokumen
                 </button>
             </div>

@@ -95,7 +95,7 @@ export default function AdminSettings() {
                 <div>
                     {/* Logo Brand */}
                     <div className="flex items-center justify-center gap-3 px-4 h-20 border-b border-[#E2E8F0]">
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#1e5b53] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
                                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -168,7 +168,7 @@ export default function AdminSettings() {
                 {/* Mobile Header */}
                 <div className="md:hidden flex items-center justify-between px-6 h-20 bg-white border-b border-[#E2E8F0] sticky top-0 z-40">
                     <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-lg flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 bg-gradient-to-br from-[#1e5b53] to-[#005632] rounded-lg flex items-center justify-center shrink-0">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-white">
                                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -258,7 +258,7 @@ export default function AdminSettings() {
                         <div className="relative">
                             <button
                                 onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                                className="flex items-center gap-3 rounded-xl border border-[#f1f5f9] bg-white p-2 pr-4 transition-all hover:border-[#006a3f] hover:shadow-sm"
+                                className="flex items-center gap-3 rounded-xl border border-[#f1f5f9] bg-white p-2 pr-4 transition-all hover:border-[#1e5b53] hover:shadow-sm"
                             >
                                 <div className="text-right hidden md:block">
                                     <p className="font-['Roboto_Condensed',sans-serif] text-[15px] font-semibold text-[#171d19]">
@@ -325,7 +325,7 @@ export default function AdminSettings() {
                                 <button
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#006a3f] text-white transition-colors hover:bg-[#005632]"
+                                    className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#1e5b53] text-white transition-colors hover:bg-[#005632]"
                                 >
                                     <Camera size={14} />
                                 </button>
@@ -344,7 +344,7 @@ export default function AdminSettings() {
                                 <p className="font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">
                                     Administrator
                                 </p>
-                                <button type="button" onClick={() => fileInputRef.current?.click()} className="mt-1 font-['Inter',sans-serif] text-[12px] font-bold text-[#006a3f] hover:underline">
+                                <button type="button" onClick={() => fileInputRef.current?.click()} className="mt-1 font-['Inter',sans-serif] text-[12px] font-bold text-[#1e5b53] hover:underline">
                                     Ganti Foto Profil
                                 </button>
                                 {errors.avatar && <p className="mt-1 text-xs text-red-600">{errors.avatar}</p>}
@@ -360,7 +360,7 @@ export default function AdminSettings() {
                                     type="text"
                                     value={data.name}
                                     onChange={e => setData('name', e.target.value)}
-                                    className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#006a3f] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20"
+                                    className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#1e5b53] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20"
                                     required
                                 />
                                 {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
@@ -373,7 +373,7 @@ export default function AdminSettings() {
                                     type="email"
                                     value={data.email}
                                     onChange={e => setData('email', e.target.value)}
-                                    className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#006a3f] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20"
+                                    className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#1e5b53] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20"
                                     required
                                 />
                                 {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
@@ -386,7 +386,7 @@ export default function AdminSettings() {
                                     type="text"
                                     value={data.phone}
                                     onChange={e => setData('phone', e.target.value)}
-                                    className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#006a3f] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20"
+                                    className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#1e5b53] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20"
                                 />
                                 {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
                             </div>
@@ -401,7 +401,7 @@ export default function AdminSettings() {
                                     type="password"
                                     value={data.password}
                                     onChange={e => setData('password', e.target.value)}
-                                    className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#006a3f] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20"
+                                    className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#1e5b53] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20"
                                 />
                                 {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
                             </div>
@@ -413,13 +413,13 @@ export default function AdminSettings() {
                                     type="password"
                                     value={data.password_confirmation}
                                     onChange={e => setData('password_confirmation', e.target.value)}
-                                    className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#006a3f] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20"
+                                    className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-3 font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:border-[#1e5b53] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20"
                                 />
                             </div>
                         </div>
 
                         <div className="flex justify-end gap-3 border-t border-[#f1f5f9] pt-6">
-                            <button type="submit" disabled={processing} className="rounded-xl bg-[#006a3f] px-6 py-3 font-['Inter',sans-serif] text-[14px] font-semibold text-white transition-colors hover:bg-[#005632] disabled:opacity-70">
+                            <button type="submit" disabled={processing} className="rounded-xl bg-[#1e5b53] px-6 py-3 font-['Inter',sans-serif] text-[14px] font-semibold text-white transition-colors hover:bg-[#005632] disabled:opacity-70">
                                 {processing ? 'Menyimpan...' : 'Simpan Profil'}
                             </button>
                         </div>

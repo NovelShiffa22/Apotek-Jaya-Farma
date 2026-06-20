@@ -72,7 +72,7 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
               <div className="absolute w-20 h-20 rounded-full bg-emerald-100 animate-ping opacity-75"></div>
               {/* Inner animated spinning loader */}
               <div className="relative w-16 h-16 bg-[#ecfdf5] rounded-full flex items-center justify-center shadow-inner">
-                <Sparkles className="w-8 h-8 text-[#006a3f] animate-pulse" />
+                <Sparkles className="w-8 h-8 text-[#1e5b53] animate-pulse" />
               </div>
             </div>
             <h3 className="font-['Roboto_Condensed',sans-serif] text-[22px] font-bold text-slate-900 mb-2">
@@ -82,7 +82,7 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
               AI Apoteker kami sedang menganalisis gejala Anda dan menyinkronkan dengan data klinis obat...
             </p>
             {/* Spinning Indicator */}
-            <div className="mt-6 flex items-center gap-2 text-[#006a3f] font-semibold text-xs font-['Inter',sans-serif]">
+            <div className="mt-6 flex items-center gap-2 text-[#1e5b53] font-semibold text-xs font-['Inter',sans-serif]">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span>Memproses dengan Gemini AI...</span>
             </div>
@@ -95,7 +95,7 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
         <div className="absolute top-12 left-8">
           <Link 
             href="/" 
-            className="inline-flex items-center gap-2 font-['Inter',sans-serif] text-[15px] font-medium text-gray-500 hover:text-[#006a3f] transition-colors"
+            className="inline-flex items-center gap-2 font-['Inter',sans-serif] text-[15px] font-medium text-gray-500 hover:text-[#1e5b53] transition-colors"
           >
             <ArrowLeft size={18} />
             Kembali
@@ -120,26 +120,26 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
               <div className={`flex items-center gap-3 ${currentStep >= 1 ? 'opacity-100' : 'opacity-40'}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-['Inter',sans-serif] text-[14px] font-bold ${
                   currentStep >= 1
-                    ? 'bg-[#006a3f] text-white'
+                    ? 'bg-[#1e5b53] text-white'
                     : 'border-2 border-[#6e7a70] text-[#171d19]'
                 }`}>
                   1
                 </div>
-                <span className="font-['Inter',sans-serif] text-[12px] font-bold tracking-wider text-[#006a3f] uppercase">
+                <span className="font-['Inter',sans-serif] text-[12px] font-bold tracking-wider text-[#1e5b53] uppercase">
                   GEJALA
                 </span>
               </div>
             </div>
 
             {/* Divider */}
-            <div className={`w-12 h-px mx-4 ${currentStep >= 2 ? 'bg-[#006a3f]' : 'bg-[#bdcabe]'}`} />
+            <div className={`w-12 h-px mx-4 ${currentStep >= 2 ? 'bg-[#1e5b53]' : 'bg-[#bdcabe]'}`} />
 
             {/* Step 2 */}
             <div className="flex items-center">
               <div className={`flex items-center gap-3 ${currentStep >= 2 ? 'opacity-100' : 'opacity-40'}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-['Inter',sans-serif] text-[14px] font-bold ${
                   currentStep >= 2
-                    ? 'bg-[#006a3f] text-white'
+                    ? 'bg-[#1e5b53] text-white'
                     : 'border-2 border-[#6e7a70] text-[#171d19]'
                 }`}>
                   2
@@ -178,7 +178,7 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
                   placeholder="Cari gejala (contoh: demam, batuk, pusing)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-[#f9fafb] border border-[#e5e7eb] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#006a3f]/30 focus:border-[#006a3f] transition-all font-['Inter',sans-serif] text-[14px]"
+                  className="w-full pl-12 pr-4 py-3 bg-[#f9fafb] border border-[#e5e7eb] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/30 focus:border-[#1e5b53] transition-all font-['Inter',sans-serif] text-[14px]"
                 />
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                   <Search size={20} />
@@ -200,12 +200,12 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
                       onClick={() => toggleSymptom(symptomId)}
                       className={`p-6 rounded-xl border-2 transition-all duration-200 ${
                         isSelected
-                          ? 'border-[#006a3f] bg-[rgba(0,106,63,0.05)]'
-                          : 'border-[#bdcabe] hover:border-[#006a3f] bg-white'
+                          ? 'border-[#1e5b53] bg-[rgba(0,106,63,0.05)]'
+                          : 'border-[#bdcabe] hover:border-[#1e5b53] bg-white'
                       }`}
                     >
                       <Icon className={`w-8 h-8 mx-auto mb-3 ${
-                        isSelected ? 'text-[#006a3f]' : 'text-[#3e4a41]'
+                        isSelected ? 'text-[#1e5b53]' : 'text-[#3e4a41]'
                       }`} />
                       <p className="font-['Inter',sans-serif] text-[14px] text-[#171d19] text-center">
                         {label}
@@ -229,7 +229,7 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
                   value={data.keluhan}
                   onChange={(e) => setData('keluhan', e.target.value)}
                   rows={4}
-                  className="w-full px-5 py-4 bg-[#f9fafb] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] border border-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/30 focus:border-[#006a3f] transition-all resize-none placeholder:text-[#9ca3af]"
+                  className="w-full px-5 py-4 bg-[#f9fafb] rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] border border-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/30 focus:border-[#1e5b53] transition-all resize-none placeholder:text-[#9ca3af]"
                 />
               </div>
 
@@ -238,7 +238,7 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
                 disabled={data.symptoms.length === 0 && data.keluhan.trim() === ''}
                 className={`w-full py-4 rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium transition-all ${
                   (data.symptoms.length > 0 || data.keluhan.trim() !== '')
-                    ? 'bg-[#006a3f] text-white hover:bg-[#005632] hover:shadow-lg'
+                    ? 'bg-[#1e5b53] text-white hover:bg-[#005632] hover:shadow-lg'
                     : 'bg-[#e5e7eb] text-[#9ca3af] cursor-not-allowed'
                 }`}
               >
@@ -281,7 +281,7 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
                       placeholder="Contoh: 25"
                       value={data.usia}
                       onChange={(e) => setData('usia', e.target.value)}
-                      className="col-span-1 px-5 py-4 bg-[#f9fafb] rounded-xl font-['Inter',sans-serif] text-[16px] border border-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/30 focus:border-[#006a3f]"
+                      className="col-span-1 px-5 py-4 bg-[#f9fafb] rounded-xl font-['Inter',sans-serif] text-[16px] border border-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/30 focus:border-[#1e5b53]"
                       required
                     />
                     <button
@@ -289,8 +289,8 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
                       onClick={() => setData('jenis_kelamin', 'pria')}
                       className={`px-6 py-4 rounded-xl font-['Inter',sans-serif] text-[16px] font-medium border-2 transition-all ${
                         data.jenis_kelamin === 'pria'
-                          ? 'border-[#006a3f] bg-[rgba(0,106,63,0.05)] text-[#006a3f]'
-                          : 'border-[#e5e7eb] bg-white text-[#171d19] hover:border-[#006a3f]'
+                          ? 'border-[#1e5b53] bg-[rgba(0,106,63,0.05)] text-[#1e5b53]'
+                          : 'border-[#e5e7eb] bg-white text-[#171d19] hover:border-[#1e5b53]'
                       }`}
                     >
                       Pria
@@ -300,8 +300,8 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
                       onClick={() => setData('jenis_kelamin', 'wanita')}
                       className={`px-6 py-4 rounded-xl font-['Inter',sans-serif] text-[16px] font-medium border-2 transition-all ${
                         data.jenis_kelamin === 'wanita'
-                          ? 'border-[#006a3f] bg-[rgba(0,106,63,0.05)] text-[#006a3f]'
-                          : 'border-[#e5e7eb] bg-white text-[#171d19] hover:border-[#006a3f]'
+                          ? 'border-[#1e5b53] bg-[rgba(0,106,63,0.05)] text-[#1e5b53]'
+                          : 'border-[#e5e7eb] bg-white text-[#171d19] hover:border-[#1e5b53]'
                       }`}
                     >
                       Wanita
@@ -332,7 +332,7 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
                   <button
                     type="submit"
                     disabled={processing || !data.usia || !data.jenis_kelamin}
-                    className="flex-1 bg-[#006a3f] text-white px-10 py-4 rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium hover:bg-[#005632] hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 bg-[#1e5b53] text-white px-10 py-4 rounded-xl font-['Roboto_Condensed',sans-serif] text-[16px] font-medium hover:bg-[#005632] hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {processing ? 'Memproses...' : 'Lihat Rekomendasi →'}
                   </button>

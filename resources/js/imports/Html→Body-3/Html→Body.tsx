@@ -204,7 +204,7 @@ function Background() {
       <svg className="absolute block inset-0 size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 40 40">
         <g id="Background">
           <rect fill="var(--fill-0, #8CF8B7)" height="40" rx="12" width="40" />
-          <path d={svgPaths.p2b6f9500} fill="var(--fill-0, #006A3F)" id="Icon" />
+          <path d={svgPaths.p2b6f9500} fill="var(--fill-0, #1E5B53)" id="Icon" />
         </g>
       </svg>
     </div>
@@ -270,7 +270,7 @@ function Background1() {
       <svg className="absolute block inset-0 size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 42 41">
         <g id="Background">
           <rect fill="var(--fill-0, #8CF8B7)" height="41" rx="12" width="42" />
-          <path d={svgPaths.p28682e00} fill="var(--fill-0, #006A3F)" id="Icon" />
+          <path d={svgPaths.p28682e00} fill="var(--fill-0, #1E5B53)" id="Icon" />
         </g>
       </svg>
     </div>
@@ -400,8 +400,8 @@ function Overlay1() {
     <div className="h-[49px] relative shrink-0 w-[44px]" data-name="Overlay">
       <svg className="absolute block inset-0 size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 44 49">
         <g id="Overlay">
-          <rect fill="var(--fill-0, #006A3F)" fillOpacity="0.1" height="49" rx="22" width="44" />
-          <path d={svgPaths.p27dfad80} fill="var(--fill-0, #006A3F)" id="Icon" />
+          <rect fill="var(--fill-0, #1E5B53)" fillOpacity="0.1" height="49" rx="22" width="44" />
+          <path d={svgPaths.p27dfad80} fill="var(--fill-0, #1E5B53)" id="Icon" />
         </g>
       </svg>
     </div>
@@ -448,7 +448,7 @@ function Container13() {
 
 function Button1() {
   return (
-    <div className="bg-[#006a3f] content-stretch flex flex-col items-center justify-center opacity-50 px-[48px] py-[16px] relative rounded-[12px] shrink-0" data-name="Button">
+    <div className="bg-[#1e5b53] content-stretch flex flex-col items-center justify-center opacity-50 px-[48px] py-[16px] relative rounded-[12px] shrink-0" data-name="Button">
       <div className="absolute bg-[rgba(255,255,255,0)] inset-0 rounded-[12px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)]" data-name="Button:shadow" />
       <div className="flex flex-col font-['Inter:Bold',sans-serif] font-bold h-[28px] justify-center leading-[0] not-italic relative shrink-0 text-[18px] text-center text-white w-[193.19px]">
         <p className="leading-[28px]">Kirim Resep Sekarang</p>

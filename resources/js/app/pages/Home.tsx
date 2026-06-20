@@ -9,7 +9,7 @@ const categories = [
     name: 'Flu & Batuk',
     icon: Pill,
     color: 'bg-[#ecfdf5]',
-    iconColor: 'text-[#006a3f]'
+    iconColor: 'text-[#1e5b53]'
   },
   {
     id: 'analgesik-antipiretik',
@@ -116,7 +116,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
             </div>
             <Link
               href="/catalog"
-              className="font-['Inter',sans-serif] text-[16px] font-bold text-[#006a3f] hover:text-[#005632] transition-colors"
+              className="font-['Inter',sans-serif] text-[16px] font-bold text-[#1e5b53] hover:text-[#005632] transition-colors"
             >
               Lihat Semua
             </Link>
@@ -153,7 +153,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
             </div>
             <Link
               href="/catalog"
-              className="font-['Inter',sans-serif] text-[16px] font-bold text-[#006a3f] hover:text-[#005632] transition-colors"
+              className="font-['Inter',sans-serif] text-[16px] font-bold text-[#1e5b53] hover:text-[#005632] transition-colors"
             >
               Lihat Semua
             </Link>
@@ -188,7 +188,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
                 title: 'Aman & Terpercaya',
                 desc: 'Obat asli berlisensi Kemenkes RI',
                 color: 'bg-[#ecfdf5]',
-                iconColor: 'text-[#006a3f]'
+                iconColor: 'text-[#1e5b53]'
               },
               {
                 icon: HeartHandshake,
@@ -224,8 +224,8 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
         <section>
           <div className="bg-gradient-to-r from-[#e8f2ea] to-[#d4e4d6] rounded-2xl p-12 text-center border border-[#6b8e6f]/10 relative overflow-hidden">
             <div className="absolute inset-0 opacity-5">
-              <div className="absolute top-0 left-0 w-64 h-64 bg-[#006a3f] rounded-full -ml-32 -mt-32" />
-              <div className="absolute bottom-0 right-0 w-64 h-64 bg-[#006a3f] rounded-full -mr-32 -mb-32" />
+              <div className="absolute top-0 left-0 w-64 h-64 bg-[#1e5b53] rounded-full -ml-32 -mt-32" />
+              <div className="absolute bottom-0 right-0 w-64 h-64 bg-[#1e5b53] rounded-full -mr-32 -mb-32" />
             </div>
 
             <div className="relative z-10">
@@ -237,7 +237,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
               </p>
               <Link
                 href={!user ? route('login') : "/recommendation"}
-                className="inline-block bg-[#006a3f] px-10 py-4 rounded-lg font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] text-white hover:shadow-[0_12px_32px_rgba(0,106,63,0.25)] transition-all duration-300 hover:-translate-y-0.5 font-medium"
+                className="inline-block bg-[#1e5b53] px-10 py-4 rounded-lg font-['Roboto_Condensed',sans-serif] text-[16px] tracking-[0.5px] text-white hover:shadow-[0_12px_32px_rgba(0,106,63,0.25)] transition-all duration-300 hover:-translate-y-0.5 font-medium"
               >
                 Mulai Konsultasi
               </Link>

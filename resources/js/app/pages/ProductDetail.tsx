@@ -86,7 +86,7 @@ export default function ProductDetail({ product }: { product: any }) {
             {/* Trust Badges */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
               {[
-                { icon: Shield, text: '100% Original', color: 'bg-[#ecfdf5]', iconColor: 'text-[#006a3f]' },
+                { icon: Shield, text: '100% Original', color: 'bg-[#ecfdf5]', iconColor: 'text-[#1e5b53]' },
                 { icon: Clock, text: 'Pengiriman Cepat', color: 'bg-[#eff6ff]', iconColor: 'text-[#2d5f9f]' },
                 { icon: Heart, text: 'Kualitas Terjamin', color: 'bg-[#fef2f2]', iconColor: 'text-[#ba1a1a]' }
               ].map((badge, idx) => (
@@ -132,7 +132,7 @@ export default function ProductDetail({ product }: { product: any }) {
               </h1>
 
               <div className="flex items-baseline gap-3 mb-2">
-                <p className="font-['Roboto_Condensed',sans-serif] text-[40px] text-[#006a3f] font-semibold tracking-[-1px]">
+                <p className="font-['Roboto_Condensed',sans-serif] text-[40px] text-[#1e5b53] font-semibold tracking-[-1px]">
                   Rp {Number(product.harga).toLocaleString('id-ID')}
                 </p>
                 <p className="font-['Inter',sans-serif] text-[14px] text-[#6e7a70]">/ {product.unit || 'kemasan'}</p>

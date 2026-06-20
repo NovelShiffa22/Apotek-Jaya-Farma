@@ -74,7 +74,7 @@ function BackgroundBorder() {
 function Button() {
   return (
     <div className="col-1 relative rounded-[8px] row-1 shrink-0 size-[105.16px]" data-name="Button">
-      <div aria-hidden="true" className="absolute border-2 border-[#006a3f] border-solid inset-0 pointer-events-none rounded-[8px]" />
+      <div aria-hidden="true" className="absolute border-2 border-[#1e5b53] border-solid inset-0 pointer-events-none rounded-[8px]" />
     </div>
   );
 }
@@ -139,7 +139,7 @@ function Container() {
 function Container8() {
   return (
     <div className="content-stretch flex flex-[1_0_0] flex-col items-start min-w-px relative" data-name="Container">
-      <div className="flex flex-col font-['Inter:Regular',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#006a3f] text-[16px] tracking-[1.6px] uppercase w-full">
+      <div className="flex flex-col font-['Inter:Regular',sans-serif] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#1e5b53] text-[16px] tracking-[1.6px] uppercase w-full">
         <p className="leading-[24px]">ANTIBIOTIK PENICILLIN</p>
       </div>
     </div>
@@ -167,7 +167,7 @@ function Heading() {
 function Paragraph() {
   return (
     <div className="h-[32px] leading-[0] relative shrink-0 tracking-[-0.24px] w-[219.86px]" data-name="Paragraph">
-      <div className="-translate-y-1/2 absolute flex flex-col font-['Manrope:SemiBold',sans-serif] font-semibold h-[32px] justify-center left-0 text-[#006a3f] text-[24px] top-[15.5px] w-[113.33px]">
+      <div className="-translate-y-1/2 absolute flex flex-col font-['Manrope:SemiBold',sans-serif] font-semibold h-[32px] justify-center left-0 text-[#1e5b53] text-[24px] top-[15.5px] w-[113.33px]">
         <p className="leading-[32px]">{`Rp 12.500 `}</p>
       </div>
       <div className="-translate-y-1/2 absolute flex flex-col font-['Manrope:Regular',sans-serif] font-normal h-[20px] justify-center left-[113.32px] text-[#6e7a70] text-[14px] top-[19.5px] w-[106.53px]">
@@ -406,7 +406,7 @@ function Container19() {
     <div className="content-stretch flex gap-[11.99px] items-start relative shrink-0 w-full" data-name="Container">
       <div className="relative shrink-0 size-[20px]" data-name="Icon">
         <svg className="absolute block inset-0 size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 20 20">
-          <path d={svgPaths.p256e1340} fill="var(--fill-0, #006A3F)" id="Icon" />
+          <path d={svgPaths.p256e1340} fill="var(--fill-0, #1E5B53)" id="Icon" />
         </svg>
       </div>
       <Container20 />
@@ -452,7 +452,7 @@ function HorizontalBorder() {
       <div aria-hidden="true" className="absolute border-[#bdcabe] border-solid border-t inset-0 pointer-events-none" />
       <div className="h-[20px] relative shrink-0 w-[15px]" data-name="Icon">
         <svg className="absolute block inset-0 size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 15 20">
-          <path d={svgPaths.p23cfd7c0} fill="var(--fill-0, #006A3F)" id="Icon" />
+          <path d={svgPaths.p23cfd7c0} fill="var(--fill-0, #1E5B53)" id="Icon" />
         </svg>
       </div>
       <Container23 />

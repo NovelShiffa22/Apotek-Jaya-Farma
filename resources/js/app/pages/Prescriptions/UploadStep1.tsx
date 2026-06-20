@@ -13,8 +13,8 @@ export default function UploadStep1() {
                 <div className="mb-12 flex items-center justify-center">
                     <div className="flex items-center gap-4">
                         <div className="flex flex-col items-center gap-2">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#006a3f] text-white font-semibold">1</div>
-                            <span className="font-['Poppins',sans-serif] text-[12px] font-bold text-[#006a3f]">Petunjuk</span>
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1e5b53] text-white font-semibold">1</div>
+                            <span className="font-['Poppins',sans-serif] text-[12px] font-bold text-[#1e5b53]">Petunjuk</span>
                         </div>
                         <div className="h-0.5 w-24 bg-gray-200"></div>
                         <div className="flex flex-col items-center gap-2">
@@ -41,7 +41,7 @@ export default function UploadStep1() {
                              </div>
                              <div className="absolute top-4 left-4 text-gray-800 font-serif font-bold text-xl">Rx</div>
                              <div className="absolute bg-white border-2 border-gray-800 rounded-2xl w-32 h-48 right-[-20px] bottom-[-20px] shadow-xl flex items-center justify-center">
-                                 <Camera size={32} className="text-[#006a3f]" />
+                                 <Camera size={32} className="text-[#1e5b53]" />
                              </div>
                         </div>
                     </div>
@@ -57,7 +57,7 @@ export default function UploadStep1() {
 
                         <div className="space-y-6">
                             <div className="flex gap-4">
-                                <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[#006a3f]">
+                                <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[#1e5b53]">
                                     <Camera size={16} />
                                 </div>
                                 <div>
@@ -69,7 +69,7 @@ export default function UploadStep1() {
                             </div>
 
                             <div className="flex gap-4">
-                                <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[#006a3f]">
+                                <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[#1e5b53]">
                                     <FileText size={16} />
                                 </div>
                                 <div>
@@ -81,7 +81,7 @@ export default function UploadStep1() {
                             </div>
 
                             <div className="flex gap-4">
-                                <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[#006a3f]">
+                                <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[#1e5b53]">
                                     <CalendarCheck size={16} />
                                 </div>
                                 <div>
@@ -102,7 +102,7 @@ export default function UploadStep1() {
                         <div className="mt-10 flex justify-end">
                             <Link 
                                 href={route('prescriptions.upload.step2')}
-                                className="flex items-center gap-2 rounded-full bg-[#006a3f] px-8 py-3.5 font-['Poppins',sans-serif] text-[15px] font-bold text-white transition-all hover:bg-[#005632] hover:shadow-lg"
+                                className="flex items-center gap-2 rounded-full bg-[#1e5b53] px-8 py-3.5 font-['Poppins',sans-serif] text-[15px] font-bold text-white transition-all hover:bg-[#005632] hover:shadow-lg"
                             >
                                 Lanjutkan <ArrowRight size={18} />
                             </Link>

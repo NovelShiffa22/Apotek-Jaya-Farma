@@ -71,13 +71,13 @@ export default function ProductCard(props: ProductCardProps) {
       <div className="p-3 flex flex-col flex-1">
         {/* Kategori Label Text (Opsional) */}
         {kategoriNama && (
-           <p className="font-['Inter',sans-serif] text-[11px] font-semibold text-[#006a3f] uppercase tracking-wider mb-1.5">
+           <p className="font-['Inter',sans-serif] text-[11px] font-semibold text-[#1e5b53] uppercase tracking-wider mb-1.5">
              {kategoriNama}
            </p>
         )}
         
         <Link href={`/products/${id}`}>
-          <h3 className="font-['Roboto_Condensed',sans-serif] font-normal text-[18px] text-[#171d19] tracking-[-0.3px] mb-1 min-h-[50px] leading-tight hover:text-[#006a3f] transition-colors">
+          <h3 className="font-['Roboto_Condensed',sans-serif] font-normal text-[18px] text-[#171d19] tracking-[-0.3px] mb-1 min-h-[50px] leading-tight hover:text-[#1e5b53] transition-colors">
             {productName}
           </h3>
         </Link>
@@ -105,7 +105,7 @@ export default function ProductCard(props: ProductCardProps) {
             <p className="font-['Inter',sans-serif] text-[12px] text-[#6e7a70] uppercase tracking-wider mb-1">
               Harga
             </p>
-            <p className="font-['Roboto_Condensed',sans-serif] font-semibold text-[17px] text-[#006a3f]">
+            <p className="font-['Roboto_Condensed',sans-serif] font-semibold text-[17px] text-[#1e5b53]">
               Rp {productPrice.toLocaleString('id-ID')}
               {unit && <span className="text-[12px] font-normal text-[#6e7a70]"> / {unit}</span>}
             </p>
@@ -113,7 +113,7 @@ export default function ProductCard(props: ProductCardProps) {
 
           <Link 
             href={isPrescriptionRequired ? (!user ? route('login') : '/prescriptions/upload/step-1') : `/products/${id}`}
-            className={`w-10 h-10 shrink-0 ${isPrescriptionRequired ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#006a3f] hover:bg-[#005632]'} text-white rounded-xl opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 flex items-center justify-center`}
+            className={`w-10 h-10 shrink-0 ${isPrescriptionRequired ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#1e5b53] hover:bg-[#005632]'} text-white rounded-xl opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 flex items-center justify-center`}
             title={isPrescriptionRequired ? 'Upload Resep' : 'Lihat Produk'}
           >
             {isPrescriptionRequired ? <UploadCloud className="w-5 h-5 text-white" /> : <ShoppingCart className="w-5 h-5 text-white" />}

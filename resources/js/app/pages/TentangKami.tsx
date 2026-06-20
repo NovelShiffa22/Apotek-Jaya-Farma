@@ -81,7 +81,7 @@ export default function TentangKami({ apotekSettings }: Props) {
             <Header />
 
             {/* Hero Section */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-[#004d2e] via-[#006a3f] to-[#00854f]">
+            <section className="relative overflow-hidden bg-gradient-to-br from-[#004d2e] via-[#1e5b53] to-[#00854f]">
                 {/* Decorative circles */}
                 <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/5 rounded-full" />
                 <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-white/5 rounded-full" />
@@ -150,7 +150,7 @@ export default function TentangKami({ apotekSettings }: Props) {
                         <div className="mt-8 flex flex-col sm:flex-row gap-3">
                             <Link
                                 href="/catalog"
-                                className="inline-flex items-center justify-center gap-2 bg-[#006a3f] hover:bg-[#005632] text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                                className="inline-flex items-center justify-center gap-2 bg-[#1e5b53] hover:bg-[#005632] text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
                             >
                                 Lihat Katalog Produk
                                 <ChevronRight size={18} />
@@ -159,7 +159,7 @@ export default function TentangKami({ apotekSettings }: Props) {
                                 href={`https://wa.me/${kontak.replace(/[^0-9]/g, '').replace(/^0/, '62')}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center justify-center gap-2 border-2 border-[#006a3f] text-[#006a3f] hover:bg-emerald-50 font-bold px-6 py-3 rounded-xl transition-all"
+                                className="inline-flex items-center justify-center gap-2 border-2 border-[#1e5b53] text-[#1e5b53] hover:bg-emerald-50 font-bold px-6 py-3 rounded-xl transition-all"
                             >
                                 Hubungi Kami
                             </a>
@@ -167,7 +167,7 @@ export default function TentangKami({ apotekSettings }: Props) {
                     </div>                    {/* Foto Apotek Jaya Farma */}
                     <div className="relative group">
                         {/* Decorative background gradients */}
-                        <div className="absolute -inset-1 bg-gradient-to-r from-[#006a3f] to-emerald-500 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
+                        <div className="absolute -inset-1 bg-gradient-to-r from-[#1e5b53] to-emerald-500 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
                         
                         <div className="relative bg-white rounded-3xl border border-[#f1f5f9] shadow-[0_8px_40px_rgba(0,0,0,0.08)] overflow-hidden p-3">
                             <div className="relative h-[480px] w-full rounded-2xl overflow-hidden">
@@ -181,7 +181,7 @@ export default function TentangKami({ apotekSettings }: Props) {
                                 
                                 {/* Image badge/caption */}
                                 <div className="absolute bottom-6 left-6 right-6 text-white">
-                                    <span className="inline-block bg-[#006a3f] text-white font-bold text-xs uppercase tracking-wider px-3 py-1 rounded-full mb-2 shadow-md border border-white/10">
+                                    <span className="inline-block bg-[#1e5b53] text-white font-bold text-xs uppercase tracking-wider px-3 py-1 rounded-full mb-2 shadow-md border border-white/10">
                                         Gedung Apotek
                                     </span>
                                     <h4 className="font-['Roboto_Condensed',sans-serif] text-2xl font-black tracking-tight">
@@ -249,14 +249,14 @@ export default function TentangKami({ apotekSettings }: Props) {
                         </div>
                         <div className="bg-emerald-50 px-6 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-t border-emerald-100">
                             <div>
-                                <p className="font-['Roboto_Condensed',sans-serif] font-bold text-[#006a3f] text-[15px]">Apotek Jaya Farma</p>
+                                <p className="font-['Roboto_Condensed',sans-serif] font-bold text-[#1e5b53] text-[15px]">Apotek Jaya Farma</p>
                                 <p className="text-[#6e7a70] text-[13px] mt-0.5">{alamat}</p>
                             </div>
                             <a
                                 href="https://share.google/Pz1qGhGSCV3OrnZP4"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center justify-center gap-2 bg-[#006a3f] hover:bg-[#005632] text-white px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 whitespace-nowrap shrink-0"
+                                className="inline-flex items-center justify-center gap-2 bg-[#1e5b53] hover:bg-[#005632] text-white px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 whitespace-nowrap shrink-0"
                             >
                                 <MapPin size={16} />
                                 Buka di Google Maps
@@ -295,7 +295,7 @@ export default function TentangKami({ apotekSettings }: Props) {
 
             {/* CTA Banner */}
             <section className="max-w-6xl mx-auto px-6 pb-16">
-                <div className="relative bg-gradient-to-br from-[#004d2e] via-[#006a3f] to-[#00854f] rounded-3xl overflow-hidden p-10 sm:p-14 text-center">
+                <div className="relative bg-gradient-to-br from-[#004d2e] via-[#1e5b53] to-[#00854f] rounded-3xl overflow-hidden p-10 sm:p-14 text-center">
                     <div className="absolute -top-12 -right-12 w-64 h-64 bg-white/5 rounded-full" />
                     <div className="absolute -bottom-8 -left-8 w-48 h-48 bg-white/5 rounded-full" />
                     <div className="relative z-10">
@@ -308,7 +308,7 @@ export default function TentangKami({ apotekSettings }: Props) {
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
                             <Link
                                 href="/catalog"
-                                className="inline-flex items-center justify-center gap-2 bg-white text-[#006a3f] hover:bg-emerald-50 font-black px-8 py-3.5 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-[15px]"
+                                className="inline-flex items-center justify-center gap-2 bg-white text-[#1e5b53] hover:bg-emerald-50 font-black px-8 py-3.5 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-[15px]"
                             >
                                 Belanja Sekarang
                                 <ChevronRight size={18} />

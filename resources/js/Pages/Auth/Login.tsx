@@ -114,7 +114,7 @@ export default function Login({
                                     className={`w-full pl-12 pr-4 py-3 bg-[#f3f4f6]/50 border ${
                                         errors.email 
                                             ? 'border-[#ef4444] focus:ring-[#ef4444]/20 focus:border-[#ef4444]' 
-                                            : 'border-transparent focus:border-[#006a3f] focus:ring-[#006a3f]/20'
+                                            : 'border-transparent focus:border-[#1e5b53] focus:ring-[#1e5b53]/20'
                                     } rounded-xl text-[14px] text-[#171d19] focus:bg-white focus:ring-2 transition-all placeholder:text-gray-400 outline-none`}
                                     onChange={(e) => setData('email', e.target.value)}
                                     required
@@ -140,7 +140,7 @@ export default function Login({
                                     className={`w-full pl-12 pr-12 py-3 bg-[#f3f4f6]/50 border ${
                                         errors.password 
                                             ? 'border-[#ef4444] focus:ring-[#ef4444]/20 focus:border-[#ef4444]' 
-                                            : 'border-transparent focus:border-[#006a3f] focus:ring-[#006a3f]/20'
+                                            : 'border-transparent focus:border-[#1e5b53] focus:ring-[#1e5b53]/20'
                                     } rounded-xl text-[14px] text-[#171d19] focus:bg-white focus:ring-2 transition-all placeholder:text-gray-400 outline-none`}
                                     onChange={(e) => setData('password', e.target.value)}
                                     required
@@ -162,7 +162,7 @@ export default function Login({
                                     type="checkbox"
                                     name="remember"
                                     checked={data.remember}
-                                    className="rounded border-gray-300 text-[#006a3f] focus:ring-[#006a3f] w-4 h-4 cursor-pointer"
+                                    className="rounded border-gray-300 text-[#1e5b53] focus:ring-[#1e5b53] w-4 h-4 cursor-pointer"
                                     onChange={(e) => setData('remember', e.target.checked)}
                                 />
                                 <span className="ms-2 text-[13px] text-[#6e7a70] select-none">
@@ -184,7 +184,7 @@ export default function Login({
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="w-full bg-[#006a3f] hover:bg-[#005632] text-white py-3.5 px-4 rounded-xl font-bold text-[15px] flex items-center justify-center gap-2 hover:shadow-[0_8px_20px_rgba(0,106,63,0.2)] transition-all duration-300 disabled:opacity-50"
+                                className="w-full bg-[#1e5b53] hover:bg-[#005632] text-white py-3.5 px-4 rounded-xl font-bold text-[15px] flex items-center justify-center gap-2 hover:shadow-[0_8px_20px_rgba(0,106,63,0.2)] transition-all duration-300 disabled:opacity-50"
                             >
                                 <span>Masuk</span>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
@@ -201,7 +201,7 @@ export default function Login({
                         <span className="text-[14px] text-[#6e7a70]">Belum punya akun? </span>
                         <Link 
                             href={route('register')} 
-                            className="text-[14px] font-bold text-[#006a3f] hover:text-[#005632] hover:underline"
+                            className="text-[14px] font-bold text-[#1e5b53] hover:text-[#005632] hover:underline"
                         >
                             Daftar Sekarang
                         </Link>

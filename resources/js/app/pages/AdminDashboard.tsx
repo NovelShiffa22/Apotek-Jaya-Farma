@@ -354,7 +354,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 <div>
                     {/* Logo Brand */}
                     <div className="flex items-center justify-center gap-3 px-4 h-16 border-b border-slate-100">
-                        <div className="w-9 h-9 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
+                        <div className="w-9 h-9 bg-gradient-to-br from-[#1e5b53] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-white">
                                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -440,7 +440,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 {/* Mobile Header */}
                 <div className="md:hidden flex items-center justify-between px-6 h-16 bg-white border-b border-slate-100 shadow-sm sticky top-0 z-40">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-lg flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 bg-gradient-to-br from-[#1e5b53] to-[#005632] rounded-lg flex items-center justify-center shrink-0">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-white">
                                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -545,7 +545,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             <div className="relative">
                                 <button
                                     onClick={() => setIsNotifOpen(!isNotifOpen)}
-                                    className="p-2.5 text-slate-400 hover:text-[#006a3f] hover:bg-slate-50 rounded-xl transition-all relative border border-[#f1f5f9] bg-white shadow-sm"
+                                    className="p-2.5 text-slate-400 hover:text-[#1e5b53] hover:bg-slate-50 rounded-xl transition-all relative border border-[#f1f5f9] bg-white shadow-sm"
                                 >
                                     <Bell size={20} />
                                     {unreadCount > 0 && (
@@ -562,7 +562,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             {unreadCount > 0 && (
                                                 <button
                                                     onClick={markAllRead}
-                                                    className="text-xs font-semibold text-[#006a3f] hover:underline"
+                                                    className="text-xs font-semibold text-[#1e5b53] hover:underline"
                                                 >
                                                     Tandai dibaca
                                                 </button>
@@ -574,7 +574,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                     <div
                                                         key={notif.id}
                                                         className={`px-4 py-3 border-b border-gray-100 last:border-0 hover:bg-[#fafaf8] transition-colors text-left cursor-pointer ${
-                                                            !notif.isRead ? 'bg-[#006a3f]/5' : ''
+                                                            !notif.isRead ? 'bg-[#1e5b53]/5' : ''
                                                         }`}
                                                         onClick={() => {
                                                             if (notif.orderId) {
@@ -609,7 +609,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             <div className="relative">
                                 <button 
                                     onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                                    className="flex items-center gap-3 rounded-xl border border-[#f1f5f9] bg-white p-2 pr-4 transition-all hover:border-[#006a3f] hover:shadow-sm"
+                                    className="flex items-center gap-3 rounded-xl border border-[#f1f5f9] bg-white p-2 pr-4 transition-all hover:border-[#1e5b53] hover:shadow-sm"
                             >
                                 <div className="text-right hidden md:block">
                                     <p className="font-['Roboto_Condensed',sans-serif] text-sm font-semibold text-[#171d19]">
@@ -630,7 +630,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                         <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-[#f1f5f9] bg-white p-2 shadow-[0_8px_24px_rgba(0,0,0,0.12)] z-50">
                                             <Link
                                                 href="/admin/settings"
-                                                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:bg-[#f9fafb] hover:text-[#006a3f]"
+                                                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] transition-all hover:bg-[#f9fafb] hover:text-[#1e5b53]"
                                             >
                                                 <UserCog size={16} />
                                                 <span>Setting Profile</span>
@@ -757,7 +757,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     <select 
                                         value={revenueFilterDays}
                                         onChange={(e) => setRevenueFilterDays(Number(e.target.value))}
-                                        className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                        className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2 font-['Inter',sans-serif] text-[13px] font-medium text-[#171d19] focus:border-[#1e5b53] focus:ring-2 focus:ring-[#1e5b53]/20 focus:outline-none"
                                     >
                                         <option value={7}>7 Hari Terakhir</option>
                                         <option value={30}>30 Hari Terakhir</option>
@@ -780,8 +780,8 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             >
                                                 <defs>
                                                     <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="#006a3f" stopOpacity={0.3}/>
-                                                        <stop offset="95%" stopColor="#006a3f" stopOpacity={0}/>
+                                                        <stop offset="5%" stopColor="#1e5b53" stopOpacity={0.3}/>
+                                                        <stop offset="95%" stopColor="#1e5b53" stopOpacity={0}/>
                                                     </linearGradient>
                                                 </defs>
                                                 <XAxis 
@@ -806,16 +806,16 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                     formatter={(value: any) => [`Rp ${value.toLocaleString('id-ID')}`, 'Pendapatan']}
                                                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                                     labelStyle={{ color: '#171d19', fontWeight: 'bold', marginBottom: '4px', fontFamily: 'Inter, sans-serif' }}
-                                                    itemStyle={{ color: '#006a3f', fontWeight: 'bold', fontFamily: 'Inter, sans-serif' }}
+                                                    itemStyle={{ color: '#1e5b53', fontWeight: 'bold', fontFamily: 'Inter, sans-serif' }}
                                                 />
                                                 <Area 
                                                     type="monotone" 
                                                     dataKey="total" 
-                                                    stroke="#006a3f" 
+                                                    stroke="#1e5b53" 
                                                     strokeWidth={3}
                                                     fillOpacity={1} 
                                                     fill="url(#colorTotal)" 
-                                                    activeDot={{ r: 6, fill: '#006a3f', stroke: '#fff', strokeWidth: 2 }}
+                                                    activeDot={{ r: 6, fill: '#1e5b53', stroke: '#fff', strokeWidth: 2 }}
                                                 />
                                             </AreaChart>
                                         </ResponsiveContainer>
@@ -837,7 +837,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                 key={product.id}
                                                 className="flex items-center gap-4"
                                             >
-                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#006a3f] to-[#005632] font-['Inter',sans-serif] text-[12px] font-semibold text-white">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#1e5b53] to-[#005632] font-['Inter',sans-serif] text-[12px] font-semibold text-white">
                                                     {idx + 1}
                                                 </div>
                                                 <div className="flex-1">
@@ -849,7 +849,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                         penjualan
                                                     </p>
                                                 </div>
-                                                <p className="font-['Roboto_Condensed',sans-serif] text-[14px] font-semibold text-[#006a3f]">
+                                                <p className="font-['Roboto_Condensed',sans-serif] text-[14px] font-semibold text-[#1e5b53]">
                                                     Rp{' '}
                                                     {(
                                                         product.harga *
@@ -919,7 +919,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             </div>
                                             <button 
                                                 onClick={() => router.visit(`/admin/products/${product.id}/edit`)}
-                                                className="w-full rounded-lg bg-[#006a3f] px-4 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-white transition-all hover:bg-[#005632] hover:shadow-lg"
+                                                className="w-full rounded-lg bg-[#1e5b53] px-4 py-2.5 font-['Inter',sans-serif] text-[13px] font-medium text-white transition-all hover:bg-[#005632] hover:shadow-lg"
                                             >
                                                 Restock Sekarang
                                             </button>
@@ -933,7 +933,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 {activeTab === 'products' && (
                     <div className="space-y-6">
                         <div>
-                            <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold text-[#006a3f]">
+                            <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold text-[#1e5b53]">
                                 Produk & Stok
                             </h2>
                             <p className="font-['Inter',sans-serif] text-[14px] text-slate-500 mt-1">
@@ -956,14 +956,14 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             setProductSearchQuery(e.target.value)
                                         }
                                         placeholder="Cari produk..."
-                                        className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-4 pl-11 font-['Inter',sans-serif] text-[14px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#006a3f] focus:bg-white focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                        className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-4 pl-11 font-['Inter',sans-serif] text-[14px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#1e5b53] focus:bg-white focus:ring-2 focus:ring-[#1e5b53]/20 focus:outline-none"
                                     />
                                 </div>
                                 {/* Dropdown Filter */}
                                 <select 
                                     value={productCategoryFilter}
                                     onChange={(e) => setProductCategoryFilter(e.target.value)}
-                                    className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2.5 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                    className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2.5 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#1e5b53] focus:ring-2 focus:ring-[#1e5b53]/20 focus:outline-none"
                                 >
                                     <option value="all">Semua Jenis Obat</option>
                                     <option value="bebas">Obat Bebas</option>
@@ -978,7 +978,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     setEditingProduct(null);
                                     setIsProductModalOpen(true);
                                 }}
-                                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-transparent bg-[#006a3f] px-6 py-2.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]"
+                                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-transparent bg-[#1e5b53] px-6 py-2.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]"
                             >
                                 <Plus size={18} />
                                 <span className="font-['Roboto_Condensed',sans-serif] text-[14px] font-medium">
@@ -1118,7 +1118,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                     >
                                                         <Edit2
                                                             size={16}
-                                                            className="text-[#171d19] opacity-60 transition-colors group-hover:text-[#006a3f] group-hover:opacity-100"
+                                                            className="text-[#171d19] opacity-60 transition-colors group-hover:text-[#1e5b53] group-hover:opacity-100"
                                                         />
                                                     </button>
                                                     <button 
@@ -1165,7 +1165,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
           {activeTab === 'orders' && (
               <div className="max-w-[1600px] mx-auto space-y-6">
                   <div>
-                      <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold text-[#006a3f]">
+                      <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold text-[#1e5b53]">
                           Manajemen Pesanan
                       </h2>
                       <p className="font-['Inter',sans-serif] text-[14px] text-slate-500 mt-1">
@@ -1463,7 +1463,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 {activeTab === 'prescriptions' && (
                     <div className="space-y-6">
                         <div>
-                            <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold text-[#006a3f]">
+                            <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold text-[#1e5b53]">
                                 Manajemen Resep
                             </h2>
                             <p className="font-['Inter',sans-serif] text-[14px] text-slate-500 mt-1">
@@ -1710,7 +1710,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 {activeTab === 'users' && (
                     <div className="space-y-6">
                         <div>
-                            <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold text-[#006a3f]">
+                            <h2 className="font-['Roboto_Condensed',sans-serif] text-[24px] font-bold text-[#1e5b53]">
                                 Manajemen User
                             </h2>
                             <p className="font-['Inter',sans-serif] text-[14px] text-slate-500 mt-1">
@@ -1794,7 +1794,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             setSearchQuery(e.target.value)
                                         }
                                         placeholder="Cari berdasarkan nama atau email..."
-                                        className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-4 pl-11 font-['Inter',sans-serif] text-[14px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#006a3f] focus:bg-white focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                        className="w-full rounded-xl border border-[#f1f5f9] bg-[#f9fafb] py-2.5 pr-4 pl-11 font-['Inter',sans-serif] text-[14px] text-[#171d19] transition-all placeholder:text-[#6e7a70] focus:border-[#1e5b53] focus:bg-white focus:ring-2 focus:ring-[#1e5b53]/20 focus:outline-none"
                                     />
                                 </div>
                                 {/* Dropdown Filter */}
@@ -1803,7 +1803,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     onChange={(e) =>
                                         setRoleFilter(e.target.value as any)
                                     }
-                                    className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2.5 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#006a3f] focus:ring-2 focus:ring-[#006a3f]/20 focus:outline-none"
+                                    className="rounded-xl border border-[#f1f5f9] bg-[#f9fafb] px-4 py-2.5 font-['Inter',sans-serif] text-[14px] font-medium text-[#171d19] transition-all focus:border-[#1e5b53] focus:ring-2 focus:ring-[#1e5b53]/20 focus:outline-none"
                                 >
                                     <option value="all">Semua Role</option>
                                     <option value="admin">Admin</option>
@@ -1818,7 +1818,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     setEditingUser(null);
                                     setIsUserModalOpen(true);
                                 }}
-                                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-transparent bg-[#006a3f] px-6 py-2.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]"
+                                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-transparent bg-[#1e5b53] px-6 py-2.5 text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#005632] hover:shadow-[0_8px_20px_rgba(0,106,63,0.3)]"
                             >
                                 <Plus size={18} />
                                 <span className="font-['Roboto_Condensed',sans-serif] text-[14px] font-medium">
@@ -1906,7 +1906,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                     </td>
                                                     <td className="px-5 py-4">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#006a3f] to-[#005632]">
+                                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#1e5b53] to-[#005632]">
                                                                 <span className="font-['Roboto_Condensed',sans-serif] text-[14px] font-semibold text-white">
                                                                     {user.name
                                                                         .split(
@@ -2017,7 +2017,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                             >
                                                                 <Edit2
                                                                     size={16}
-                                                                    className="text-[#171d19] opacity-60 transition-colors group-hover:text-[#006a3f] group-hover:opacity-100"
+                                                                    className="text-[#171d19] opacity-60 transition-colors group-hover:text-[#1e5b53] group-hover:opacity-100"
                                                                 />
                                                             </button>
                                                             <button

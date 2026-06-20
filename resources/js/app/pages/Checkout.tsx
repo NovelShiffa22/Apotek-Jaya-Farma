@@ -199,14 +199,14 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
                 <button 
                   type="button"
                   onClick={() => setIsAddressModalOpen(true)}
-                  className="text-[14px] font-bold text-[#006a3f] hover:text-[#005632] transition-colors focus:outline-none"
+                  className="text-[14px] font-bold text-[#1e5b53] hover:text-[#005632] transition-colors focus:outline-none"
                 >
                   Ubah
                 </button>
               </div>
 
               <div className={`flex items-start gap-4 p-5 rounded-xl border ${(errors?.address || isAddressEmpty) ? 'border-[#ef4444] bg-red-50/50' : 'border-gray-200 bg-[#fafaf8]'}`}>
-                <div className="mt-0.5 text-[#006a3f]">
+                <div className="mt-0.5 text-[#1e5b53]">
                   <MapPin size={24} strokeWidth={2}/>
                 </div>
                 <div>
@@ -240,12 +240,12 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
                       onClick={() => setShippingMethod(method.id)}
                       className={`relative cursor-pointer p-5 rounded-xl border transition-all ${
                         isActive 
-                          ? 'border-[#006a3f] shadow-[0_0_0_1px_rgba(0,106,63,1)] bg-white' 
-                          : 'border-gray-200 hover:border-[#006a3f]/50 bg-white'
+                          ? 'border-[#1e5b53] shadow-[0_0_0_1px_rgba(0,106,63,1)] bg-white' 
+                          : 'border-gray-200 hover:border-[#1e5b53]/50 bg-white'
                       }`}
                     >
                       {isActive && (
-                        <div className="absolute top-5 right-5 text-[#006a3f]">
+                        <div className="absolute top-5 right-5 text-[#1e5b53]">
                           <CheckCircle2 size={20} strokeWidth={2.5}/>
                         </div>
                       )}
@@ -253,7 +253,7 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
                       {method.subtitle && (
                         <p className="text-[13px] text-gray-500 mt-1">{method.subtitle}</p>
                       )}
-                      <p className={`font-bold mt-4 text-[15px] ${isActive ? 'text-[#006a3f]' : 'text-[#006a3f]'}`}>
+                      <p className={`font-bold mt-4 text-[15px] ${isActive ? 'text-[#1e5b53]' : 'text-[#1e5b53]'}`}>
                         {method.price === 0 ? 'Gratis' : `Rp ${method.price.toLocaleString('id-ID')}`}
                       </p>
                     </div>
@@ -313,14 +313,14 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
                   </div>
 
                   <div className="flex justify-between items-center text-[14px]">
-                    <span className="text-[#006a3f] font-medium">Potongan Harga</span>
-                    <span className="font-medium text-[#006a3f]">-Rp {Number(discount).toLocaleString('id-ID')}</span>
+                    <span className="text-[#1e5b53] font-medium">Potongan Harga</span>
+                    <span className="font-medium text-[#1e5b53]">-Rp {Number(discount).toLocaleString('id-ID')}</span>
                   </div>
                 </div>
 
                 <div className="border-t border-dashed border-gray-300 pt-5 mb-8 flex justify-between items-center">
                   <span className="text-[18px] font-bold text-gray-900">Total</span>
-                  <span className="text-[24px] font-black text-[#006a3f] tracking-tight">
+                  <span className="text-[24px] font-black text-[#1e5b53] tracking-tight">
                     Rp {total.toLocaleString('id-ID')}
                   </span>
                 </div>
@@ -328,7 +328,7 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
                 <button 
                   onClick={handleProcess}
                   disabled={isAddressEmpty}
-                  className={`w-full rounded-xl py-4 flex items-center justify-center font-bold text-[16px] transition-all shadow-md hover:shadow-lg ${isAddressEmpty ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#006a3f] text-white hover:bg-[#005632]'}`}
+                  className={`w-full rounded-xl py-4 flex items-center justify-center font-bold text-[16px] transition-all shadow-md hover:shadow-lg ${isAddressEmpty ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#1e5b53] text-white hover:bg-[#005632]'}`}
                 >
                   Bayar Sekarang
                 </button>
@@ -369,7 +369,7 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
                       type="text" 
                       value={formAddress.label}
                       onChange={e => setFormAddress('label', e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                       required
                     />
                   </div>
@@ -378,7 +378,7 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
                     <textarea 
                       value={formAddress.alamat_lengkap}
                       onChange={e => setFormAddress('alamat_lengkap', e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                       rows={3}
                       required
                     />
@@ -389,7 +389,7 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
                       <select 
                         value={formAddress.provinsi}
                         onChange={handleProvinceChange}
-                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all"
+                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                         required
                       >
                         <option value="">Pilih Provinsi</option>
@@ -403,7 +403,7 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
                       <select 
                         value={formAddress.kota}
                         onChange={e => setFormAddress('kota', e.target.value)}
-                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                         required
                         disabled={!formAddress.provinsi}
                       >
@@ -425,7 +425,7 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
                       }}
                       pattern="\d{5}"
                       title="Kode pos harus terdiri dari 5 digit angka"
-                      className={`w-full px-4 py-3 bg-white border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:border-[#006a3f] transition-all ${
+                      className={`w-full px-4 py-3 bg-white border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all ${
                         formAddress.kode_pos.length > 0 && formAddress.kode_pos.length < 5 ? 'border-[#ef4444]' : 'border-gray-300'
                       }`}
                       required
@@ -448,7 +448,7 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
                     <button 
                       type="submit" 
                       disabled={processingAddress || (formAddress.kode_pos.length > 0 && formAddress.kode_pos.length < 5)}
-                      className="flex-1 py-4 bg-[#006a3f] hover:bg-[#005632] text-white rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 py-4 bg-[#1e5b53] hover:bg-[#005632] text-white rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {processingAddress ? 'Menyimpan...' : 'Simpan & Gunakan'}
                     </button>
@@ -466,19 +466,19 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
                             key={addr.id}
                             onClick={() => selectExistingAddress(addr)}
                             className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                              isSelected ? 'border-[#006a3f] bg-emerald-50/30' : 'border-gray-200 bg-white hover:border-[#006a3f]/50'
+                              isSelected ? 'border-[#1e5b53] bg-emerald-50/30' : 'border-gray-200 bg-white hover:border-[#1e5b53]/50'
                             }`}
                           >
                             <div className="flex justify-between items-start mb-2">
                               <div className="flex items-center gap-2">
                                 <span className="font-bold text-gray-900">{addr.label}</span>
                                 {addr.is_default && (
-                                  <span className="text-[10px] font-bold bg-[#006a3f] text-white px-2 py-0.5 rounded-full">
+                                  <span className="text-[10px] font-bold bg-[#1e5b53] text-white px-2 py-0.5 rounded-full">
                                     Utama
                                   </span>
                                 )}
                               </div>
-                              {isSelected && <CheckCircle2 size={18} className="text-[#006a3f]" />}
+                              {isSelected && <CheckCircle2 size={18} className="text-[#1e5b53]" />}
                             </div>
                             <p className="text-gray-600 text-[13px] leading-relaxed">
                               {addr.alamat_lengkap}
@@ -502,7 +502,7 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
 
                   <button
                     onClick={() => setIsAddingNewAddress(true)}
-                    className="w-full flex items-center justify-center gap-2 py-4 mt-4 border-2 border-dashed border-[#006a3f]/30 text-[#006a3f] hover:bg-emerald-50 rounded-xl font-bold transition-all"
+                    className="w-full flex items-center justify-center gap-2 py-4 mt-4 border-2 border-dashed border-[#1e5b53]/30 text-[#1e5b53] hover:bg-emerald-50 rounded-xl font-bold transition-all"
                   >
                     <Plus size={18} strokeWidth={2.5} />
                     Tambah Alamat Baru

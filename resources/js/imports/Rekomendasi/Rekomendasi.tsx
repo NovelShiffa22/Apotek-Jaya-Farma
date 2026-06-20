@@ -32,7 +32,7 @@ function Container1() {
 
 function Background() {
   return (
-    <div className="bg-[#006a3f] content-stretch flex items-center justify-center pb-[6.5px] pt-[5.5px] relative rounded-[9999px] shrink-0 size-[32px]" data-name="Background">
+    <div className="bg-[#1e5b53] content-stretch flex items-center justify-center pb-[6.5px] pt-[5.5px] relative rounded-[9999px] shrink-0 size-[32px]" data-name="Background">
       <div className="flex flex-col font-['Inter:Bold',sans-serif] font-bold h-[20px] justify-center leading-[0] not-italic relative shrink-0 text-[14px] text-center text-white w-[6.05px]">
         <p className="leading-[20px]">1</p>
       </div>
@@ -43,7 +43,7 @@ function Background() {
 function Margin() {
   return (
     <div className="content-stretch flex flex-col items-start pl-[8px] relative shrink-0" data-name="Margin">
-      <div className="flex flex-col font-['Inter:Bold',sans-serif] font-bold h-[16px] justify-center leading-[0] not-italic relative shrink-0 text-[#006a3f] text-[12px] tracking-[0.6px] w-[51.39px]">
+      <div className="flex flex-col font-['Inter:Bold',sans-serif] font-bold h-[16px] justify-center leading-[0] not-italic relative shrink-0 text-[#1e5b53] text-[12px] tracking-[0.6px] w-[51.39px]">
         <p className="leading-[16px]">GEJALA</p>
       </div>
     </div>
@@ -775,7 +775,7 @@ function Container31() {
 
 function Button() {
   return (
-    <div className="bg-[#006a3f] content-stretch flex gap-[25.35px] items-center justify-center pl-[57.36px] pr-[40px] py-[16px] relative rounded-[8px] shrink-0" data-name="Button">
+    <div className="bg-[#1e5b53] content-stretch flex gap-[25.35px] items-center justify-center pl-[57.36px] pr-[40px] py-[16px] relative rounded-[8px] shrink-0" data-name="Button">
       <div className="absolute bg-[rgba(255,255,255,0)] inset-[0_-0.02px_0_0] rounded-[8px] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)]" data-name="Button:shadow" />
       <div className="flex flex-col font-['Manrope:Regular',sans-serif] font-normal h-[48px] justify-center leading-[0] relative shrink-0 text-[16px] text-center text-white w-[99.27px]">
         <p className="leading-[24px] mb-0">Lihat</p>
@@ -816,7 +816,7 @@ function Container33() {
     <div className="h-[20px] relative shrink-0 w-[16px]" data-name="Container">
       <svg className="absolute block inset-0 size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 16 20">
         <g id="Container">
-          <path d={svgPaths.p2e0f2ff0} fill="var(--fill-0, #006A3F)" id="Icon" />
+          <path d={svgPaths.p2e0f2ff0} fill="var(--fill-0, #1E5B53)" id="Icon" />
         </g>
       </svg>
     </div>
@@ -885,7 +885,7 @@ function Container37() {
     <div className="h-[20px] relative shrink-0 w-[18px]" data-name="Container">
       <svg className="absolute block inset-0 size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 18 20">
         <g id="Container">
-          <path d={svgPaths.p31130500} fill="var(--fill-0, #006A3F)" id="Icon" />
+          <path d={svgPaths.p31130500} fill="var(--fill-0, #1E5B53)" id="Icon" />
         </g>
       </svg>
     </div>
@@ -954,7 +954,7 @@ function Container41() {
     <div className="h-[16px] relative shrink-0 w-[19.977px]" data-name="Container">
       <svg className="absolute block inset-0 size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 19.9767 16">
         <g id="Container">
-          <path d={svgPaths.p25d5bd2c} fill="var(--fill-0, #006A3F)" id="Icon" />
+          <path d={svgPaths.p25d5bd2c} fill="var(--fill-0, #1E5B53)" id="Icon" />
         </g>
       </svg>
     </div>

@@ -72,14 +72,14 @@ export default function Header() {
       {isMinimalHeader ? (
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#1e5b53] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white w-5 h-5 sm:w-6 sm:h-6">
                 <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <h1 className="text-base sm:text-lg md:text-xl font-bold text-emerald-600 font-sans ml-1 sm:ml-2 truncate group-hover:text-emerald-700 transition-colors">
+            <h1 className="text-base sm:text-lg md:text-xl font-bold text-[#1e5b53] font-sans ml-1 sm:ml-2 truncate group-hover:text-[#15413b] transition-colors">
               Apotek Jaya Farma
             </h1>
           </Link>
@@ -106,14 +106,14 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="shrink-0 group">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#006a3f] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#1e5b53] to-[#005632] rounded-xl flex items-center justify-center shadow-[0_4px_12px_rgba(0,106,63,0.25)] shrink-0">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-white w-5 h-5 sm:w-6 sm:h-6">
                     <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
-                <h1 className="text-base sm:text-lg md:text-xl font-bold text-emerald-600 font-sans ml-1 sm:ml-2 truncate max-w-[140px] sm:max-w-none group-hover:text-emerald-700 transition-colors">
+                <h1 className="text-base sm:text-lg md:text-xl font-bold text-[#1e5b53] font-sans ml-1 sm:ml-2 truncate max-w-[140px] sm:max-w-none group-hover:text-[#15413b] transition-colors">
                   Apotek Jaya Farma
                 </h1>
               </div>
@@ -127,11 +127,11 @@ export default function Header() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Cari obat, vitamin, atau produk kesehatan..."
-                  className="w-full px-5 py-2.5 pr-12 bg-[#f9fafb] rounded-full font-['Inter',sans-serif] text-[14px] text-[#171d19] border border-[#f1f5f9] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:bg-white focus:border-[#006a3f] transition-all placeholder:text-[#6e7a70]"
+                  className="w-full px-5 py-2.5 pr-12 bg-[#f9fafb] rounded-full font-['Inter',sans-serif] text-[14px] text-[#171d19] border border-[#f1f5f9] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:bg-white focus:border-[#1e5b53] transition-all placeholder:text-[#6e7a70]"
                 />
                 <button
                   type="submit"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6e7a70] hover:text-[#006a3f] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6e7a70] hover:text-[#1e5b53] transition-colors"
                 >
                   <Search size={18} />
                 </button>
@@ -146,7 +146,7 @@ export default function Header() {
                   <Link
                     key={link.name}
                     href={link.name === 'Rekomendasi AI' && !user ? route('login') : link.href}
-                    className="font-['Inter',sans-serif] text-[14px] font-semibold text-[#3e4a41] hover:text-[#006a3f] transition-colors"
+                    className="font-['Inter',sans-serif] text-[14px] font-semibold text-[#3e4a41] hover:text-[#1e5b53] transition-colors"
                   >
                     {link.name}
                   </Link>
@@ -162,30 +162,30 @@ export default function Header() {
               {user ? (
                 <div className="flex items-center gap-1 sm:gap-2">
                   <Link href="/cart" className="relative p-2 hover:bg-[#f9fafb] rounded-xl transition-colors group" title="Keranjang">
-                    <ShoppingCart size={22} className="text-[#171d19] group-hover:text-[#006a3f] transition-colors" />
+                    <ShoppingCart size={22} className="text-[#171d19] group-hover:text-[#1e5b53] transition-colors" />
                     {cartCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-[#006a3f] text-white text-[10px] font-['Inter',sans-serif] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
+                      <span className="absolute -top-1 -right-1 bg-[#1e5b53] text-white text-[10px] font-['Inter',sans-serif] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
                         {cartCount}
                       </span>
                     )}
                   </Link>
 
                   <Link href={route('notifications.index')} className="p-2 hover:bg-[#f9fafb] rounded-xl transition-colors group relative" title="Notifikasi">
-                    <Bell size={22} className="text-[#171d19] group-hover:text-[#006a3f] transition-colors" />
+                    <Bell size={22} className="text-[#171d19] group-hover:text-[#1e5b53] transition-colors" />
                     {hasUnreadNotifs && (
                       <span className="absolute top-2.5 right-2.5 bg-red-500 w-2 h-2 rounded-full border border-white" />
                     )}
                   </Link>
 
                   <Link href="/profile" className="p-2 hover:bg-[#f9fafb] rounded-xl transition-colors group hidden sm:block" title="Profil">
-                    <User size={22} className="text-[#171d19] group-hover:text-[#006a3f] transition-colors" />
+                    <User size={22} className="text-[#171d19] group-hover:text-[#1e5b53] transition-colors" />
                   </Link>
                 </div>
               ) : (
                 <div className="hidden sm:flex items-center gap-2">
                   <Link
                     href={route('login')}
-                    className="bg-[#006a3f] hover:bg-[#005632] px-5 py-2 rounded-lg font-['Inter',sans-serif] font-bold text-[14px] text-white transition-colors"
+                    className="bg-[#1e5b53] hover:bg-[#005632] px-5 py-2 rounded-lg font-['Inter',sans-serif] font-bold text-[14px] text-white transition-colors"
                   >
                     Masuk
                   </Link>
@@ -210,7 +210,7 @@ export default function Header() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari obat, vitamin..."
-                className="w-full px-4 py-2.5 pr-10 bg-[#f9fafb] rounded-full font-['Inter',sans-serif] text-[14px] text-[#171d19] border border-[#f1f5f9] focus:outline-none focus:ring-2 focus:ring-[#006a3f]/20 focus:bg-white focus:border-[#006a3f] transition-all"
+                className="w-full px-4 py-2.5 pr-10 bg-[#f9fafb] rounded-full font-['Inter',sans-serif] text-[14px] text-[#171d19] border border-[#f1f5f9] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:bg-white focus:border-[#1e5b53] transition-all"
               />
               <button
                 type="submit"
@@ -249,7 +249,7 @@ export default function Header() {
               <div className="mt-4 pt-4 border-t border-[#f1f5f9] flex flex-col gap-2">
                 <Link
                   href={route('login')}
-                  className="w-full text-center bg-[#006a3f] py-3 rounded-xl font-['Inter',sans-serif] font-bold text-[14px] text-white"
+                  className="w-full text-center bg-[#1e5b53] py-3 rounded-xl font-['Inter',sans-serif] font-bold text-[14px] text-white"
                 >
                   Masuk
                 </Link>

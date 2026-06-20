@@ -40,7 +40,7 @@ function Container1() {
 function Button() {
   return (
     <div className="content-stretch flex flex-col items-center justify-center relative shrink-0" data-name="Button">
-      <div className="flex flex-col font-['Inter:Bold',sans-serif] font-bold h-[24px] justify-center leading-[0] not-italic relative shrink-0 text-[#006a3f] text-[16px] text-center w-[96.14px]">
+      <div className="flex flex-col font-['Inter:Bold',sans-serif] font-bold h-[24px] justify-center leading-[0] not-italic relative shrink-0 text-[#1e5b53] text-[16px] text-center w-[96.14px]">
         <p className="leading-[24px]">Lihat Semua</p>
       </div>
     </div>
@@ -61,7 +61,7 @@ function Container4() {
     <div className="relative shrink-0 size-[25px]" data-name="Container">
       <svg className="absolute block inset-0 size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 25 25">
         <g id="Container">
-          <path d={svgPaths.p20dd5d00} fill="var(--fill-0, #006A3F)" id="Icon" />
+          <path d={svgPaths.p20dd5d00} fill="var(--fill-0, #1E5B53)" id="Icon" />
         </g>
       </svg>
     </div>
@@ -431,7 +431,7 @@ function Container15() {
 
 function Button1() {
   return (
-    <div className="bg-[#006a3f] content-stretch flex gap-[8px] items-center justify-center px-[32px] py-[18px] relative rounded-[12px] shrink-0" data-name="Button">
+    <div className="bg-[#1e5b53] content-stretch flex gap-[8px] items-center justify-center px-[32px] py-[18px] relative rounded-[12px] shrink-0" data-name="Button">
       <div className="absolute bg-[rgba(255,255,255,0)] inset-[0_-0.02px_0_0] rounded-[12px] shadow-[0px_10px_15px_-3px_rgba(0,106,63,0.2),0px_4px_6px_-4px_rgba(0,106,63,0.2)]" data-name="Button:shadow" />
       <div className="flex flex-col font-['Manrope:Regular',sans-serif] font-normal h-[24px] justify-center leading-[0] relative shrink-0 text-[16px] text-center text-white w-[170.75px]">
         <p className="leading-[24px]">Cek Rekomendasi Obat</p>
@@ -770,7 +770,7 @@ function Container29() {
 
 function Background7() {
   return (
-    <div className="bg-[#006a3f] col-1 h-[200px] justify-self-stretch relative rounded-[24px] row-1 shrink-0" data-name="Background">
+    <div className="bg-[#1e5b53] col-1 h-[200px] justify-self-stretch relative rounded-[24px] row-1 shrink-0" data-name="Background">
       <div className="flex flex-row items-center overflow-clip rounded-[inherit] size-full">
         <div className="content-stretch flex items-center p-[32px] relative size-full">
           <Ab6AXuAqfCi3A9G4QEv9PUUusnEPcQMsZMxW0NWsNaU5Y4VmXums3GZl2LquImqw1DnXfJnvk7LAnySoQ8PQauts8S1WluG1MZFyQq5CyRcqADwe4FxaoUznuEsChOlGzS8Qa0HupEXo6W05WMpWn2BZw0AzfnFo4Ah69D2R0AmtifEiU9Fw5E37WLzP4Y6U1ZfL8Bh4NNNb9KOsxEdcva4EX3Xrej4Rx4Xc7Ha0EcTbpK4Uv6VqWrOmxqMeCTuTrgxjlgAaLaxAy />
@@ -1041,7 +1041,7 @@ function Container40() {
 
 function Button9() {
   return (
-    <div className="bg-[#006a3f] content-stretch flex gap-[8px] items-center justify-center py-[8px] relative rounded-[12px] shrink-0 w-full" data-name="Button">
+    <div className="bg-[#1e5b53] content-stretch flex gap-[8px] items-center justify-center py-[8px] relative rounded-[12px] shrink-0 w-full" data-name="Button">
       <Container40 />
       <div className="flex flex-col font-['Inter:Bold',sans-serif] font-bold h-[24px] justify-center leading-[0] not-italic relative shrink-0 text-[16px] text-center text-white w-[28.8px]">
         <p className="leading-[24px]">Beli</p>
@@ -1053,7 +1053,7 @@ function Button9() {
 function Container39() {
   return (
     <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full" data-name="Container">
-      <div className="flex flex-col font-['Manrope:Bold',sans-serif] font-bold h-[24px] justify-center leading-[0] relative shrink-0 text-[#006a3f] text-[18px] w-[84.88px]">
+      <div className="flex flex-col font-['Manrope:Bold',sans-serif] font-bold h-[24px] justify-center leading-[0] relative shrink-0 text-[#1e5b53] text-[18px] w-[84.88px]">
         <p className="leading-[24px]">Rp 12.500</p>
       </div>
       <Button9 />
@@ -1204,7 +1204,7 @@ function Button10() {
 function Container44() {
   return (
     <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full" data-name="Container">
-      <div className="flex flex-col font-['Manrope:Bold',sans-serif] font-bold h-[24px] justify-center leading-[0] relative shrink-0 text-[#006a3f] text-[18px] w-[89.08px]">
+      <div className="flex flex-col font-['Manrope:Bold',sans-serif] font-bold h-[24px] justify-center leading-[0] relative shrink-0 text-[#1e5b53] text-[18px] w-[89.08px]">
         <p className="leading-[24px]">Rp 45.000</p>
       </div>
       <Button10 />
@@ -1333,7 +1333,7 @@ function Container50() {
 
 function Button11() {
   return (
-    <div className="bg-[#006a3f] content-stretch flex gap-[8px] items-center justify-center py-[8px] relative rounded-[12px] shrink-0 w-full" data-name="Button">
+    <div className="bg-[#1e5b53] content-stretch flex gap-[8px] items-center justify-center py-[8px] relative rounded-[12px] shrink-0 w-full" data-name="Button">
       <Container50 />
       <div className="flex flex-col font-['Inter:Bold',sans-serif] font-bold h-[24px] justify-center leading-[0] not-italic relative shrink-0 text-[16px] text-center text-white w-[28.8px]">
         <p className="leading-[24px]">Beli</p>
@@ -1345,7 +1345,7 @@ function Button11() {
 function Container49() {
   return (
     <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full" data-name="Container">
-      <div className="flex flex-col font-['Manrope:Bold',sans-serif] font-bold h-[24px] justify-center leading-[0] relative shrink-0 text-[#006a3f] text-[18px] w-[88.48px]">
+      <div className="flex flex-col font-['Manrope:Bold',sans-serif] font-bold h-[24px] justify-center leading-[0] relative shrink-0 text-[#1e5b53] text-[18px] w-[88.48px]">
         <p className="leading-[24px]">Rp 58.900</p>
       </div>
       <Button11 />
@@ -1474,7 +1474,7 @@ function Container55() {
 
 function Button12() {
   return (
-    <div className="bg-[#006a3f] content-stretch flex gap-[8px] items-center justify-center py-[8px] relative rounded-[12px] shrink-0 w-full" data-name="Button">
+    <div className="bg-[#1e5b53] content-stretch flex gap-[8px] items-center justify-center py-[8px] relative rounded-[12px] shrink-0 w-full" data-name="Button">
       <Container55 />
       <div className="flex flex-col font-['Inter:Bold',sans-serif] font-bold h-[24px] justify-center leading-[0] not-italic relative shrink-0 text-[16px] text-center text-white w-[28.8px]">
         <p className="leading-[24px]">Beli</p>
@@ -1486,7 +1486,7 @@ function Button12() {
 function Container54() {
   return (
     <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full" data-name="Container">
-      <div className="flex flex-col font-['Manrope:Bold',sans-serif] font-bold h-[24px] justify-center leading-[0] relative shrink-0 text-[#006a3f] text-[18px] w-[88.75px]">
+      <div className="flex flex-col font-['Manrope:Bold',sans-serif] font-bold h-[24px] justify-center leading-[0] relative shrink-0 text-[#1e5b53] text-[18px] w-[88.75px]">
         <p className="leading-[24px]">Rp 32.000</p>
       </div>
       <Button12 />
@@ -1612,7 +1612,7 @@ function Container56() {
 
 function Section4() {
   return (
-    <div className="absolute bg-[#006a3f] content-stretch flex flex-col items-start left-0 overflow-clip px-[352px] py-[64px] right-0 top-[2005px]" data-name="Section">
+    <div className="absolute bg-[#1e5b53] content-stretch flex flex-col items-start left-0 overflow-clip px-[352px] py-[64px] right-0 top-[2005px]" data-name="Section">
       <div className="absolute bg-[rgba(255,255,255,0.1)] blur-[32px] right-[-80px] rounded-[9999px] size-[256px] top-[-80px]" data-name="Overlay+Blur" />
       <div className="absolute bg-[rgba(255,255,255,0.1)] blur-[32px] bottom-[-80px] left-[-80px] rounded-[9999px] size-[256px]" data-name="Overlay+Blur" />
       <Container56 />
