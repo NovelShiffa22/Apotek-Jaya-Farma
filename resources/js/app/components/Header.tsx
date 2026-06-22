@@ -68,7 +68,7 @@ export default function Header() {
 
   return (
     <>
-    <header className="fixed top-0 left-0 right-0 z-[9999] w-full bg-white/95 backdrop-blur-sm shadow-sm transition-all duration-300">
+    <header className="fixed top-0 left-0 right-0 z-[9999] w-full max-w-full overflow-x-hidden bg-white/95 backdrop-blur-sm shadow-sm transition-all duration-300">
       {isMinimalHeader ? (
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
@@ -79,7 +79,7 @@ export default function Header() {
                 <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <h1 className="text-base sm:text-lg md:text-xl font-bold text-[#1e5b53] font-sans ml-1 sm:ml-2 truncate group-hover:text-[#15413b] transition-colors">
+            <h1 className="text-sm sm:text-base md:text-xl font-bold text-[#1e5b53] font-sans ml-1 sm:ml-2 whitespace-nowrap group-hover:text-[#15413b] transition-colors">
               Apotek Jaya Farma
             </h1>
           </Link>
@@ -102,7 +102,7 @@ export default function Header() {
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between px-4 py-3">
+          <div className="w-full max-w-full overflow-hidden px-4 md:px-8 flex justify-between items-center py-3">
             {/* Logo */}
             <Link href="/" className="shrink-0 group">
               <div className="flex items-center gap-2 sm:gap-3">
@@ -113,20 +113,20 @@ export default function Header() {
                     <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
-                <h1 className="text-base sm:text-lg md:text-xl font-bold text-[#1e5b53] font-sans ml-1 sm:ml-2 truncate max-w-[140px] sm:max-w-none group-hover:text-[#15413b] transition-colors">
+                <h1 className="text-sm sm:text-base md:text-xl font-bold text-[#1e5b53] font-sans ml-1 sm:ml-2 whitespace-nowrap group-hover:text-[#15413b] transition-colors">
                   Apotek Jaya Farma
                 </h1>
               </div>
             </Link>
 
             {/* Desktop Search Bar */}
-            <form onSubmit={handleSearch} className="hidden sm:block flex-1 max-w-xl mx-4 lg:mx-8">
+            <form onSubmit={handleSearch} className="hidden sm:block flex-1 max-w-xl mx-2 md:mx-4 lg:mx-8">
               <div className="relative">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari obat, vitamin, atau produk kesehatan..."
+                  placeholder="Cari obat, vitamin..."
                   className="w-full px-5 py-2.5 pr-12 bg-[#f9fafb] rounded-full font-['Inter',sans-serif] text-[14px] text-[#171d19] border border-[#f1f5f9] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:bg-white focus:border-[#1e5b53] transition-all placeholder:text-[#6e7a70]"
                 />
                 <button
@@ -139,9 +139,9 @@ export default function Header() {
             </form>
 
             {/* Right Section */}
-            <div className="flex items-center gap-1 sm:gap-4 shrink-0">
+            <div className="flex items-center gap-2 md:gap-4 shrink-0">
               {/* Desktop Nav Links */}
-              <nav className="hidden lg:flex items-center gap-6 mr-2">
+              <nav className="hidden lg:flex flex-wrap justify-center items-center gap-2 lg:gap-4 mr-1">
                 {navLinks.map((link) => (
                   <Link
                     key={link.name}

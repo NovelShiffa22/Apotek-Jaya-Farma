@@ -1,7 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
-import { Pill, Thermometer, Heart, Stethoscope, Baby, Activity, ShieldCheck, Clock, HeartHandshake, ShoppingCart, Lightbulb } from 'lucide-react';
+import HeroSlider from '../components/HeroSlider';
+import { Pill, Thermometer, Heart, Stethoscope, Baby, Activity, ShieldCheck, Clock, HeartHandshake } from 'lucide-react';
 
 const categories = [
   {
@@ -57,50 +58,9 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
       <Header cartCount={0} />
 
       <main className="max-w-[1440px] mx-auto px-4 sm:px-8 py-6 sm:py-12">
-        {/* Hero Section - Enhanced */}
+        {/* Hero Section - Slider */}
         <section className="mb-20">
-          <div className="bg-gradient-to-r from-emerald-700 to-teal-600 rounded-2xl overflow-hidden shadow-[0_8px_24px_rgba(0,106,63,0.2)] relative">
-            <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-10">
-              <img
-                src="https://images.unsplash.com/photo-1580281657529-557a6abb6387?w=800&q=80"
-                alt="Pharmacist"
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            <div className="relative px-6 py-12 sm:px-16 sm:py-20 max-w-[650px]">
-              <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
-                <p className="font-['Inter',sans-serif] text-[12px] text-white tracking-wider uppercase font-bold">
-                  Apotek Terpercaya
-                </p>
-              </div>
-
-              <h1 className="font-['Roboto_Condensed',sans-serif] font-light text-[32px] md:text-[56px] tracking-[-1.4px] text-white leading-[1.1] mb-6">
-                Solusi Kesehatan Terpercaya Untuk Keluarga Anda
-              </h1>
-
-              <p className="font-['Inter',sans-serif] text-[16px] text-white/90 leading-relaxed mb-10 max-w-[500px]">
-                Konsultasi gratis dengan apoteker berpengalaman. Pengiriman cepat ke seluruh Indonesia.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-3 mt-6 w-full sm:w-auto">
-                <Link
-                  href="/catalog"
-                  className="bg-white text-emerald-800 font-semibold px-5 py-2.5 rounded-xl shadow-md hover:bg-gray-100 transition flex items-center w-full sm:w-auto justify-center"
-                >
-                  <ShoppingCart className="w-5 h-5 mr-2 inline-block" />
-                  Belanja Sekarang
-                </Link>
-                <Link
-                  href={!user ? route('login') : "/recommendation"}
-                  className="bg-transparent border-2 border-white text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-white/10 transition flex items-center w-full sm:w-auto justify-center"
-                >
-                  <Lightbulb className="w-5 h-5 mr-2 inline-block text-yellow-300" />
-                  Butuh Rekomendasi?
-                </Link>
-              </div>
-            </div>
-          </div>
+          <HeroSlider />
         </section>
 
         {/* Category Cards - New from Figma */}
