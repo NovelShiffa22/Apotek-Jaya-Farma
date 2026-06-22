@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
-import { User, MapPin, Package, LogOut, X, CheckCircle2, Pencil, Trash2, FileText, Plus, Clock, Truck, CheckCircle, XCircle } from 'lucide-react';
+import { User, MapPin, Package, LogOut, X, CheckCircle2, Pencil, Trash2, FileText, Plus, Clock, Truck, CheckCircle, XCircle, ShoppingBag } from 'lucide-react';
 import { usePage, Link, useForm, router } from '@inertiajs/react';
 import ConfirmModal from '../components/ConfirmModal';
 import { regions } from '../data/regions';
@@ -513,13 +513,14 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 
                 <div className="flex gap-6 mb-8 border-b border-[#f1f5f9] overflow-x-auto pb-1 whitespace-nowrap">
                   {[
-                    { id: 'Pending', label: 'Belum Bayar' },
-                    { id: 'Lunas', label: 'Diproses' },
-                    { id: 'Dikirim', label: 'Dikirim' },
-                    { id: 'Selesai', label: 'Selesai' },
-                    { id: 'Dibatalkan', label: 'Dibatalkan' }
+                    { id: 'Pending', label: 'Belum Bayar', icon: Clock },
+                    { id: 'Lunas', label: 'Diproses', icon: Package },
+                    { id: 'Dikirim', label: 'Dikirim', icon: Truck },
+                    { id: 'Selesai', label: 'Selesai', icon: CheckCircle },
+                    { id: 'Dibatalkan', label: 'Dibatalkan', icon: XCircle }
                   ].map(tab => {
                     const count = counts[tab.id] || 0;
+                    const Icon = tab.icon;
                     return (
                     <button
                       key={tab.id}
@@ -533,7 +534,10 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                           : 'border-transparent text-gray-500 hover:text-gray-800'
                       }`}
                     >
-                      <span>{tab.label}</span>
+                      <span className="flex items-center gap-1.5">
+                        <Icon size={16} className={orderTab === tab.id ? 'text-emerald-600' : 'text-gray-400'} />
+                        {tab.label}
+                      </span>
                       {count > 0 && (
                         <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold leading-none rounded-full ${
                           orderTab === tab.id ? 'bg-[#1e5b53] text-white' : 'bg-gray-200 text-gray-700'
@@ -797,12 +801,13 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
 
                 <div className="flex gap-6 mb-8 border-b border-[#f1f5f9] overflow-x-auto pb-1 whitespace-nowrap">
                   {[
-                    { id: 'Menunggu Verifikasi' as const, label: 'Menunggu Verifikasi' },
-                    { id: 'Disetujui' as const, label: 'Disetujui' },
-                    { id: 'Ditolak' as const, label: 'Ditolak' },
-                    { id: 'Telah dipesan' as const, label: 'Telah Dipesan' }
+                    { id: 'Menunggu Verifikasi' as const, label: 'Menunggu Verifikasi', icon: Clock },
+                    { id: 'Disetujui' as const, label: 'Disetujui', icon: CheckCircle2 },
+                    { id: 'Ditolak' as const, label: 'Ditolak', icon: XCircle },
+                    { id: 'Telah dipesan' as const, label: 'Telah Dipesan', icon: ShoppingBag }
                   ].map(tab => {
                     const count = prescriptionCounts[tab.id] || 0;
+                    const Icon = tab.icon;
                     
                     return (
                       <button
@@ -817,7 +822,10 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                             : 'border-transparent text-gray-500 hover:text-gray-800'
                         }`}
                       >
-                        <span>{tab.label}</span>
+                        <span className="flex items-center gap-1.5">
+                          <Icon size={16} className={prescriptionTab === tab.id ? 'text-emerald-600' : 'text-gray-400'} />
+                          {tab.label}
+                        </span>
                         {count > 0 && (
                           <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold leading-none rounded-full ${
                             prescriptionTab === tab.id ? 'bg-[#1e5b53] text-white' : 'bg-gray-200 text-gray-700'
