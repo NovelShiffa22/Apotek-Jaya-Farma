@@ -67,7 +67,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
     ? regions.find(r => r.name.toLowerCase() === formAddress.provinsi.toLowerCase())?.cities || []
     : [];
 
-  const { data: formProfile, setData: setFormProfile, patch: patchProfile, processing: processingProfile, errors: formProfileErrors } = useForm({
+  const { data: formProfile, setData: setFormProfile, patch: patchProfile, processing: processingProfile, errors: formProfileErrors, setError: setProfileError, clearErrors: clearProfileErrors } = useForm({
     name: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
@@ -81,6 +81,10 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
 
   const submitProfile = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!/^(08|628)[1-9][0-9]{7,10}$/.test(formProfile.phone)) {
+      setProfileError('phone', 'Nomor tidak valid, masukkan angka (10-13 digit) diawali 08 atau 628');
+      return;
+    }
     patchProfile(route('profile.update_info'), {
       onSuccess: () => {
         setModalConfig({
@@ -332,7 +336,15 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                     <input
                       type="tel"
                       value={formProfile.phone}
-                      onChange={e => setFormProfile('phone', e.target.value.replace(/\D/g, ''))}
+                      onChange={e => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        setFormProfile('phone', val);
+                        if (val && !/^(08|628)[1-9][0-9]{7,10}$/.test(val)) {
+                            setProfileError('phone', 'Nomor tidak valid, masukkan angka (10-13 digit) diawali 08 atau 628');
+                        } else {
+                            clearProfileErrors('phone');
+                        }
+                      }}
                       className={`w-full px-4 py-3 bg-gray-50 border rounded-xl font-['Inter',sans-serif] text-[15px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all ${
                         formProfileErrors.phone ? 'border-[#ef4444]' : 'border-gray-300'
                       }`}
@@ -340,7 +352,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                     {formProfileErrors.phone ? (
                         <p className="text-[#ef4444] text-[12px] mt-2 font-medium">{formProfileErrors.phone}</p>
                     ) : (
-                        <p className="text-[#6e7a70] text-[12px] mt-2">Hanya berupa angka (10-13 digit) diawali 08/62.</p>
+                        <p className="text-[#6e7a70] text-[12px] mt-2">Masukkan nomor WhatsApp aktif diawali 08 atau 628</p>
                     )}
                   </div>
                   <button 
@@ -391,7 +403,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                     {passwordForm.errors.password ? (
                       <p className="mt-2 text-[12px] text-[#ef4444] font-medium font-['Inter',sans-serif]">{passwordForm.errors.password}</p>
                     ) : (
-                      <p className="text-[#6e7a70] text-[12px] mt-2 font-['Inter',sans-serif]">Minimal 8 karakter, wajib kombinasi huruf besar, kecil, dan angka.</p>
+                      <p className="text-[#6e7a70] text-[12px] mt-2 font-['Inter',sans-serif]">Minimal 8 karakter</p>
                     )}
                   </div>
                   <div>

@@ -65,7 +65,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data, setData, post, processing, errors, recentlySuccessful } = useForm({
+  const { data, setData, post, processing, errors, recentlySuccessful, setError, clearErrors } = useForm({
       name: user?.name || '',
       email: user?.email || '',
       phone: user?.phone || '',
@@ -102,6 +102,12 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
   const submitProfile = (e: React.FormEvent) => {
       e.preventDefault();
+      
+      if (data.phone && !/^(08|628)[1-9][0-9]{7,10}$/.test(data.phone)) {
+          setError('phone', 'Nomor tidak valid, masukkan angka (10-13 digit) diawali 08 atau 628');
+          return;
+      }
+
       post('/pharmacist/settings/profile', {
           preserveScroll: true,
           forceFormData: true,
@@ -2534,10 +2540,22 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                     <input
                       type="text"
                       value={data.phone}
-                      onChange={e => setData('phone', e.target.value)}
+                      onChange={e => {
+                          const val = e.target.value.replace(/\D/g, '');
+                          setData('phone', val);
+                          if (val && !/^(08|628)[1-9][0-9]{7,10}$/.test(val)) {
+                              setError('phone', 'Nomor tidak valid, masukkan angka (10-13 digit) diawali 08 atau 628');
+                          } else {
+                              clearErrors('phone');
+                          }
+                      }}
                       className="w-full px-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl font-['Inter',sans-serif] text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] focus:bg-white transition-all"
                     />
-                    {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
+                    {errors.phone ? (
+                        <p className="mt-1 text-xs text-red-600">{errors.phone}</p>
+                    ) : (
+                        <p className="mt-1 text-xs text-slate-400">Masukkan nomor WhatsApp aktif diawali 08 atau 628</p>
+                    )}
                   </div>
                 </div>
 

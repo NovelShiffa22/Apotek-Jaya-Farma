@@ -297,8 +297,19 @@ class CheckoutController extends Controller
 
         $totalAmount = $subtotal > 0 ? max(0, $subtotal + $shippingCost - $discount) : 0;
         
+        $today = now()->format('ymd');
+        $lastTx = \App\Models\VirtualTransaction::where('invoice_number', 'like', "INV-{$today}-%")->orderBy('invoice_number', 'desc')->first();
+        
+        $sequence = 1;
+        if ($lastTx && $lastTx->invoice_number) {
+            $lastSequence = (int) substr($lastTx->invoice_number, -4);
+            $sequence = $lastSequence + 1;
+        }
+        $invoiceNumber = "INV-" . $today . "-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+
         $transaction = \App\Models\VirtualTransaction::create([
             'user_id' => auth()->id(),
+            'invoice_number' => $invoiceNumber,
             'prescription_id' => $prescriptionId,
             'va_number' => null,
             'bank_name' => null,

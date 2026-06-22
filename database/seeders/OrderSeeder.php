@@ -47,7 +47,7 @@ class OrderSeeder extends Seeder
         for($i=0; $i<150; $i++){ 
             $date = now()->subDays(rand(0, 89))->setTime(rand(8,20), rand(0,59)); 
             Order::create([
-                'kode_pesanan' => 'ORD-' . strtoupper(Str::random(6)), 
+                'kode_pesanan' => 'INV-' . $date->format('ymd') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT), 
                 'user_id' => $users->random(), 
                 'address_id' => 1,
                 'shipping_method_id' => 1,

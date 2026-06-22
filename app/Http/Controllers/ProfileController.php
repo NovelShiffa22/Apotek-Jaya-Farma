@@ -76,16 +76,16 @@ class ProfileController extends Controller
                 'max:255',
                 Rule::unique('users', 'email')->ignore(auth()->id()),
             ],
-            'phone' => ['required', 'numeric', 'digits_between:10,13', 'regex:/^(08|62)/'],
+            'phone' => ['required', 'regex:/^(08|628)[1-9][0-9]{7,10}$/'],
         ], [
-            'email.unique' => 'Email ini sudah terdaftar. Silakan gunakan email lain.',
-            'name.required' => 'Nama lengkap wajib diisi.',
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'phone.required' => 'Nomor telepon wajib diisi.',
-            'phone.numeric' => 'Nomor telepon harus berupa angka.',
-            'phone.digits_between' => 'Nomor telepon harus memiliki panjang 10 hingga 13 digit.',
-            'phone.regex' => 'Nomor telepon harus diawali dengan 08 atau 62.',
+            'email.unique' => 'Email ini sudah terdaftar',
+            'name.required' => 'Nama lengkap wajib diisi',
+            'email.required' => 'Email wajib diisi',
+            'email.email' => 'Format email tidak valid',
+            'phone.required' => 'Nomor telepon wajib diisi',
+            'phone.numeric' => 'Nomor telepon harus berupa angka',
+            'phone.digits_between' => 'Nomor telepon harus memiliki panjang 10 hingga 13 digit',
+            'phone.regex' => 'Nomor tidak valid, masukkan angka (10-13 digit) diawali 08 atau 628',
         ]);
 
         $user = $request->user();

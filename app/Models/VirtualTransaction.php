@@ -11,6 +11,7 @@ class VirtualTransaction extends Model
 
     protected $fillable = [
         'user_id',
+        'invoice_number',
         'prescription_id',
         'pharmacist_id',
         'va_number',

@@ -34,8 +34,18 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'phone' => ['required', 'numeric', 'digits_between:10,13', 'regex:/^(08|62)/'],
+            'phone' => ['required', 'regex:/^(08|628)[1-9][0-9]{7,10}$/'],
             'password' => ['required', 'confirmed', 'min:8'],
+        ], [
+            'name.required' => 'Nama lengkap wajib diisi',
+            'email.required' => 'Alamat email wajib diisi',
+            'email.email' => 'Format email tidak valid',
+            'email.unique' => 'Email ini sudah terdaftar',
+            'phone.required' => 'Nomor telepon wajib diisi',
+            'phone.regex' => 'Nomor tidak valid, masukkan angka (10-13 digit) diawali 08 atau 628',
+            'password.required' => 'Kata sandi wajib diisi',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok',
+            'password.min' => 'Kata sandi minimal 8 karakter',
         ]);
 
         $user = User::create([

@@ -3,7 +3,7 @@ import { User, Mail, Phone, Lock } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
 export default function Register() {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset, setError, clearErrors } = useForm({
         name: '',
         email: '',
         phone: '',
@@ -14,6 +14,12 @@ export default function Register() {
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
+        
+        if (!/^(08|628)[1-9][0-9]{7,10}$/.test(data.phone)) {
+            setError('phone', 'Nomor tidak valid, masukkan angka (10-13 digit) diawali 08 atau 628');
+            return;
+        }
+
         post(route('register'), {
             onFinish: () => reset('password', 'password_confirmation'),
         });
@@ -143,14 +149,22 @@ export default function Register() {
                                             ? 'border-[#ef4444] focus:ring-[#ef4444]/20 focus:border-[#ef4444]' 
                                             : 'border-transparent focus:border-[#1e5b53] focus:ring-[#1e5b53]/20'
                                     } rounded-xl text-[14px] text-[#171d19] focus:bg-white focus:ring-2 transition-all placeholder:text-gray-400 outline-none`}
-                                    onChange={(e) => setData('phone', e.target.value.replace(/\D/g, ''))}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/\D/g, '');
+                                        setData('phone', val);
+                                        if (val && !/^(08|628)[1-9][0-9]{7,10}$/.test(val)) {
+                                            setError('phone', 'Nomor tidak valid, masukkan angka (10-13 digit) diawali 08 atau 628');
+                                        } else {
+                                            clearErrors('phone');
+                                        }
+                                    }}
                                     required
                                 />
                             </div>
                             {errors.phone ? (
                                 <p className="text-[#ef4444] text-[11px] mt-1.5 font-medium leading-snug">{errors.phone}</p>
                             ) : (
-                                <p className="text-[#6e7a70] text-[11px] mt-1.5 leading-snug">Hanya berupa angka (10-13 digit) diawali 08/62.</p>
+                                <p className="text-[#6e7a70] text-[11px] mt-1.5 leading-snug">Masukkan nomor WhatsApp aktif diawali 08 atau 628</p>
                             )}
                         </div>
 
@@ -182,7 +196,7 @@ export default function Register() {
                                 {errors.password ? (
                                     <p className="text-[#ef4444] text-[11px] mt-1.5 font-medium leading-snug">{errors.password}</p>
                                 ) : (
-                                    <p className="text-[#6e7a70] text-[11px] mt-1.5 leading-snug">Minimal 8 karakter, wajib kombinasi huruf besar, kecil, dan angka.</p>
+                                    <p className="text-[#6e7a70] text-[11px] mt-1.5 leading-snug">Minimal 8 karakter</p>
                                 )}
                             </div>
 

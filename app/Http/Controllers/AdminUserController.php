@@ -17,9 +17,19 @@ class AdminUserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['required', 'regex:/^(08|628)[1-9][0-9]{7,10}$/'],
             'role' => 'required|string|in:admin,pharmacist,user',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'name.required' => 'Nama lengkap wajib diisi',
+            'email.required' => 'Alamat email wajib diisi',
+            'email.email' => 'Format email tidak valid',
+            'email.unique' => 'Email ini sudah terdaftar',
+            'phone.required' => 'Nomor telepon wajib diisi',
+            'phone.regex' => 'Nomor tidak valid, masukkan angka (10-13 digit) diawali 08 atau 628',
+            'role.required' => 'Peran (Role) wajib dipilih',
+            'password.required' => 'Kata sandi wajib diisi',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok',
         ]);
 
         $user = User::create([
@@ -52,7 +62,7 @@ class AdminUserController extends Controller
         $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['required', 'regex:/^(08|628)[1-9][0-9]{7,10}$/'],
             'role' => 'required|string|in:admin,pharmacist,user',
         ];
 
@@ -61,7 +71,16 @@ class AdminUserController extends Controller
             $rules['password'] = ['confirmed', Rules\Password::defaults()];
         }
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, [
+            'name.required' => 'Nama lengkap wajib diisi',
+            'email.required' => 'Alamat email wajib diisi',
+            'email.email' => 'Format email tidak valid',
+            'email.unique' => 'Email ini sudah terdaftar',
+            'phone.required' => 'Nomor telepon wajib diisi',
+            'phone.regex' => 'Nomor tidak valid, masukkan angka (10-13 digit) diawali 08 atau 628',
+            'role.required' => 'Peran (Role) wajib dipilih',
+            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok',
+        ]);
 
         $userData = [
             'name' => $validated['name'],

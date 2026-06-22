@@ -26,7 +26,7 @@ interface CreateUserProps {
 }
 
 export default function CreateUser({ isOpen, onClose, isEdit = false, initialData }: CreateUserProps) {
-    const { data, setData, post, put, errors, processing, reset } = useForm<UserFormData>({
+    const { data, setData, post, put, errors, processing, reset, setError, clearErrors } = useForm<UserFormData>({
         name: initialData?.name || '',
         email: initialData?.email || '',
         phone: initialData?.phone || '',
@@ -37,6 +37,12 @@ export default function CreateUser({ isOpen, onClose, isEdit = false, initialDat
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        if (data.phone && !/^(08|628)[1-9][0-9]{7,10}$/.test(data.phone)) {
+            setError('phone', 'Nomor tidak valid, masukkan angka (10-13 digit) diawali 08 atau 628');
+            return;
+        }
+
         const options = {
             onSuccess: () => {
                 reset();
@@ -145,14 +151,26 @@ export default function CreateUser({ isOpen, onClose, isEdit = false, initialDat
                                             <input
                                                 type="text"
                                                 value={data.phone}
-                                                onChange={(e) => setData('phone', e.target.value)}
+                                                onChange={(e) => {
+                                                    const val = e.target.value.replace(/\D/g, '');
+                                                    setData('phone', val);
+                                                    if (val && !/^(08|628)[1-9][0-9]{7,10}$/.test(val)) {
+                                                        setError('phone', 'Nomor tidak valid, masukkan angka (10-13 digit) diawali 08 atau 628');
+                                                    } else {
+                                                        clearErrors('phone');
+                                                    }
+                                                }}
                                                 placeholder="081234567890"
                                                 className="w-full rounded-xl border border-gray-200 py-2.5 pl-11 pr-4 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                             />
                                         </div>
-                                        {errors.phone && (
+                                        {errors.phone ? (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
                                                 {errors.phone}
+                                            </p>
+                                        ) : (
+                                            <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-[#6e7a70]">
+                                                Masukkan nomor WhatsApp aktif diawali 08 atau 628
                                             </p>
                                         )}
                                     </div>

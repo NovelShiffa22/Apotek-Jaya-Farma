@@ -49,7 +49,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
         };
     }, []);
 
-    const { data, setData, post, processing, errors, transform } = useForm<{ 
+    const { data, setData, post, processing, errors, transform, setError, clearErrors } = useForm<{ 
         prescription_file: File | null;
         nama_pasien: string;
         tanggal_lahir_pasien: string;
@@ -225,6 +225,10 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
 
     const handleKirimClick = (e: React.FormEvent) => {
         e.preventDefault();
+        if (!/^(08|628)[1-9][0-9]{7,10}$/.test(data.whatsapp)) {
+            setError('whatsapp', 'Nomor tidak valid, masukkan angka (10-13 digit) diawali 08 atau 628');
+            return;
+        }
         setIsSubmitModalOpen(true);
     };
 
@@ -414,11 +418,23 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                     <input 
                                         type="text" 
                                         value={data.whatsapp}
-                                        onChange={(e) => setData('whatsapp', e.target.value.replace(/\D/g, ''))}
+                                        onChange={(e) => {
+                                            const val = e.target.value.replace(/\D/g, '');
+                                            setData('whatsapp', val);
+                                            if (val && !/^(08|628)[1-9][0-9]{7,10}$/.test(val)) {
+                                                setError('whatsapp', 'Nomor tidak valid, masukkan angka (10-13 digit) diawali 08 atau 628');
+                                            } else {
+                                                clearErrors('whatsapp');
+                                            }
+                                        }}
                                         placeholder="Contoh: 08123456789" 
                                         className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl font-['Inter',sans-serif] text-[14px] text-[#171d19] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/20 focus:border-[#1e5b53] transition-all"
                                     />
-                                    {errors.whatsapp && <p className="mt-1 text-xs text-red-500 font-medium">{errors.whatsapp}</p>}
+                                    {errors.whatsapp ? (
+                                        <p className="mt-1 text-[11px] text-red-500 font-medium leading-snug">{errors.whatsapp}</p>
+                                    ) : (
+                                        <p className="mt-1 text-[11px] text-[#6e7a70] leading-snug">Masukkan nomor WhatsApp aktif diawali 08 atau 628</p>
+                                    )}
                                 </div>
                             </div>
                             <div>
