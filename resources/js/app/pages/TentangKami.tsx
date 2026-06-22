@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import Header from '../components/Header';
 import { MapPin, Clock, Phone, ChevronRight, Building2, Heart, ShieldCheck, Leaf, Star } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface Props {
     apotekSettings: {
@@ -87,7 +88,12 @@ export default function TentangKami({ apotekSettings }: Props) {
                 <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-white/5 rounded-full" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/[0.03] rounded-full" />
 
-                <div className="relative max-w-6xl mx-auto px-6 pt-12 pb-24 sm:pt-16 sm:pb-32 text-center">
+                <motion.div 
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 1.0, ease: 'easeOut' }}
+                    className="relative max-w-6xl mx-auto px-6 pt-12 pb-24 sm:pt-16 sm:pb-32 text-center"
+                >
                     {/* Icon badge - Logo Apotek */}
                     <div className="flex justify-center mb-5">
                         <div className="w-16 h-16 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
@@ -119,7 +125,7 @@ export default function TentangKami({ apotekSettings }: Props) {
                             </div>
                         ))}
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Bottom wave */}
                 <div className="absolute bottom-0 left-0 right-0">
@@ -133,7 +139,12 @@ export default function TentangKami({ apotekSettings }: Props) {
             <section className="max-w-6xl mx-auto px-6 py-16 sm:py-20">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     {/* Text */}
-                    <div>
+                    <motion.div
+                        initial={{ opacity: 0, x: -40 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 1.0, ease: 'easeOut' }}
+                        viewport={{ once: true, margin: "-50px" }}
+                    >
                         <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm font-bold px-4 py-2 rounded-full mb-6">
                             <Building2 size={14} />
                             Sejarah & Profil Kami
@@ -164,8 +175,15 @@ export default function TentangKami({ apotekSettings }: Props) {
                                 Hubungi Kami
                             </a>
                         </div>
-                    </div>                    {/* Foto Apotek Jaya Farma */}
-                    <div className="relative group">
+                    </motion.div>                    {/* Foto Apotek Jaya Farma */}
+                    {/* Foto Apotek Jaya Farma */}
+                    <motion.div 
+                        initial={{ opacity: 0, x: 40 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 1.0, ease: 'easeOut', delay: 0.2 }}
+                        viewport={{ once: true, margin: "-50px" }}
+                        className="relative group"
+                    >
                         {/* Decorative background gradients */}
                         <div className="absolute -inset-1 bg-gradient-to-r from-[#1e5b53] to-emerald-500 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
                         
@@ -193,7 +211,7 @@ export default function TentangKami({ apotekSettings }: Props) {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
             </section>
 
@@ -213,9 +231,13 @@ export default function TentangKami({ apotekSettings }: Props) {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {infoCards.map((card) => (
-                            <div
+                        {infoCards.map((card, idx) => (
+                            <motion.div
                                 key={card.label}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.8, ease: 'easeOut', delay: idx * 0.2 }}
+                                viewport={{ once: true, margin: "-50px" }}
                                 className={`rounded-2xl border ${card.border} ${card.bg} p-6 flex flex-col gap-4 hover:shadow-md transition-all duration-300 hover:-translate-y-1`}
                             >
                                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center shadow-md`}>
@@ -229,12 +251,18 @@ export default function TentangKami({ apotekSettings }: Props) {
                                         {card.value}
                                     </p>
                                 </div>
-                            </div>
+                            </motion.div>
                         ))}
                     </div>
 
                     {/* Map Embed */}
-                    <div className="mt-8 rounded-2xl overflow-hidden border border-[#f1f5f9] shadow-sm">
+                    <motion.div 
+                        initial={{ opacity: 0, y: 40 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 1.0, ease: 'easeOut', delay: 0.3 }}
+                        viewport={{ once: true, margin: "-50px" }}
+                        className="mt-8 rounded-2xl overflow-hidden border border-[#f1f5f9] shadow-sm"
+                    >
                         <div className="relative h-80 sm:h-96 w-full bg-slate-100">
                             <iframe 
                                 src="https://maps.google.com/maps?q=Apotek%20Jaya%20Farma%20Bandung&t=&z=15&ie=UTF8&iwloc=&output=embed" 
@@ -262,7 +290,7 @@ export default function TentangKami({ apotekSettings }: Props) {
                                 Buka di Google Maps
                             </a>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
             </section>
 
@@ -277,8 +305,15 @@ export default function TentangKami({ apotekSettings }: Props) {
                     </h2>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {values.map((val) => (
-                        <div key={val.title} className="bg-white rounded-2xl border border-[#f1f5f9] p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 text-center">
+                    {values.map((val, idx) => (
+                        <motion.div 
+                            key={val.title} 
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, ease: 'easeOut', delay: idx * 0.15 }}
+                            viewport={{ once: true, margin: "-50px" }}
+                            className="bg-white rounded-2xl border border-[#f1f5f9] p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 text-center"
+                        >
                             <div className={`w-14 h-14 rounded-2xl ${val.color} flex items-center justify-center mx-auto mb-4`}>
                                 <val.icon size={26} className={val.iconColor} />
                             </div>
@@ -288,14 +323,20 @@ export default function TentangKami({ apotekSettings }: Props) {
                             <p className="text-[#6e7a70] text-[13px] leading-6">
                                 {val.desc}
                             </p>
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
             </section>
 
             {/* CTA Banner */}
             <section className="max-w-6xl mx-auto px-6 pb-16">
-                <div className="relative bg-gradient-to-br from-[#004d2e] via-[#1e5b53] to-[#00854f] rounded-3xl overflow-hidden p-10 sm:p-14 text-center">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 1.0, ease: 'easeOut' }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    className="relative bg-gradient-to-br from-[#004d2e] via-[#1e5b53] to-[#00854f] rounded-3xl overflow-hidden p-10 sm:p-14 text-center"
+                >
                     <div className="absolute -top-12 -right-12 w-64 h-64 bg-white/5 rounded-full" />
                     <div className="absolute -bottom-8 -left-8 w-48 h-48 bg-white/5 rounded-full" />
                     <div className="relative z-10">
@@ -321,7 +362,7 @@ export default function TentangKami({ apotekSettings }: Props) {
                             </Link>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             </section>
         </div>
     );

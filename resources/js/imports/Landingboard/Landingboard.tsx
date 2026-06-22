@@ -1612,7 +1612,7 @@ function Container56() {
 
 function Section4() {
   return (
-    <div className="absolute bg-[#1e5b53] content-stretch flex flex-col items-start left-0 overflow-clip px-[352px] py-[64px] right-0 top-[2005px]" data-name="Section">
+    <div className="absolute content-stretch flex flex-col items-start left-0 overflow-clip px-[352px] py-[64px] right-0 top-[2005px]" data-name="Section" style={{ backgroundImage: 'linear-gradient(to top right, #0A3D2C, #0F5A41, #1B805E)' }}>
       <div className="absolute bg-[rgba(255,255,255,0.1)] blur-[32px] right-[-80px] rounded-[9999px] size-[256px] top-[-80px]" data-name="Overlay+Blur" />
       <div className="absolute bg-[rgba(255,255,255,0.1)] blur-[32px] bottom-[-80px] left-[-80px] rounded-[9999px] size-[256px]" data-name="Overlay+Blur" />
       <Container56 />
