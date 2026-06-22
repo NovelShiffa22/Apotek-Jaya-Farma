@@ -721,13 +721,16 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
               <div className="relative bg-gradient-to-r from-[#09522C] to-[#0D6A36] rounded-2xl py-6 px-8 min-h-[120px] h-auto text-white overflow-hidden shadow-sm">
                 <div className="relative z-10 max-w-2xl">
                   <h1 className="font-['Inter',sans-serif] font-bold text-2xl mb-2">
-                    Selamat Pagi, {user?.name || 'Apoteker'}
+                    {(() => {
+                      const hour = new Date().getHours();
+                      if (hour < 11) return 'Selamat Pagi';
+                      if (hour < 15) return 'Selamat Siang';
+                      if (hour < 18) return 'Selamat Sore';
+                      return 'Selamat Malam';
+                    })()}, {user?.name || 'Apoteker'} 👋
                   </h1>
                   <div className="font-['Inter',sans-serif] text-sm text-white/80 whitespace-normal break-words space-y-1">
-                    <p>Berikut adalah ringkasan aktivitas apotek Anda hari ini.</p>
-                    {analytics && Object.keys(analytics).length > 0 && (
-                      <p>Semua sistem beroperasi dengan normal.</p>
-                    )}
+                    <p>Berikut adalah ringkasan aktivitas apotek Anda hari ini</p>
                   </div>
                 </div>
                 {/* SVG Shield Watermark */}
@@ -1050,7 +1053,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                     <td className="px-5 py-4">
                                       <div className="flex flex-col gap-0.5">
                                         <span className="font-['Inter',sans-serif] text-[13px] font-bold text-slate-800">
-                                            {order.id.toString().startsWith('vt_') ? `VT-${order.id.toString().replace('vt_', '')}` : `#${String(order.id).padStart(6, '0')}`}
+                                            {order.kode_pesanan || `#${String(order.id).padStart(6, '0')}`}
                                         </span>
                                         <span className={`inline-flex items-center gap-1.5 self-start px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
                                           {cfg.icon && <cfg.icon size={12} />}

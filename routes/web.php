@@ -418,7 +418,7 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
 
             return [
                 'id' => 'vt_' . $vt->id,
-                'kode_pesanan' => $vt->va_number ?? 'VT-' . $vt->id,
+                'kode_pesanan' => $vt->invoice_number ?? $vt->va_number ?? 'VT-' . $vt->id,
                 'user' => $vt->user,
                 'products' => collect($vt->items)->map(function ($item) {
                     return [
@@ -557,7 +557,7 @@ Route::middleware(['auth', 'role:pharmacist'])->group(function () {
 
             $order = [
                 'id' => 'vt_' . $vt->id,
-                'kode_pesanan' => $vt->va_number ?? 'VT-' . $vt->id,
+                'kode_pesanan' => $vt->invoice_number ?? $vt->va_number ?? 'VT-' . $vt->id,
                 'user' => $vt->user,
                 'payment_method' => $vt->payment_method,
                 'shipping_address' => $vt->shipping_address,
@@ -861,7 +861,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
             return [
                 'id' => 'vt_' . $vt->id,
-                'kode_pesanan' => $vt->va_number ?? 'VT-' . $vt->id,
+                'kode_pesanan' => $vt->invoice_number ?? $vt->va_number ?? 'VT-' . $vt->id,
                 'user' => $vt->user,
                 'products' => collect($vt->items)->map(function ($item) {
                     return [
@@ -962,14 +962,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         $today = now()->startOfDay();
         $thisMonth = now()->startOfMonth();
 
-        $incomeToday = \App\Models\Order::where('status', 'selesai')->where('created_at', '>=', $today)->sum('total_biaya') + 
-                       \App\Models\VirtualTransaction::where('status', 'Selesai')->where('created_at', '>=', $today)->sum('total_amount');
+        $incomeToday = \App\Models\Order::whereIn('status', ['diproses', 'dikirim', 'selesai'])->where('created_at', '>=', $today)->sum('total_biaya') + 
+                       \App\Models\VirtualTransaction::whereIn('status', ['Lunas', 'Dikirim', 'Selesai'])->where('created_at', '>=', $today)->sum('total_amount');
                        
-        $incomeThisMonth = \App\Models\Order::where('status', 'selesai')->where('created_at', '>=', $thisMonth)->sum('total_biaya') + 
-                           \App\Models\VirtualTransaction::where('status', 'Selesai')->where('created_at', '>=', $thisMonth)->sum('total_amount');
+        $incomeThisMonth = \App\Models\Order::whereIn('status', ['diproses', 'dikirim', 'selesai'])->where('created_at', '>=', $thisMonth)->sum('total_biaya') + 
+                           \App\Models\VirtualTransaction::whereIn('status', ['Lunas', 'Dikirim', 'Selesai'])->where('created_at', '>=', $thisMonth)->sum('total_amount');
                            
-        $incomeAllTime = \App\Models\Order::where('status', 'selesai')->sum('total_biaya') + 
-                         \App\Models\VirtualTransaction::where('status', 'Selesai')->sum('total_amount');
+        $incomeAllTime = \App\Models\Order::whereIn('status', ['diproses', 'dikirim', 'selesai'])->sum('total_biaya') + 
+                         \App\Models\VirtualTransaction::whereIn('status', ['Lunas', 'Dikirim', 'Selesai'])->sum('total_amount');
 
         $totalPrescriptionsPending = \App\Models\Prescription::where('status_validasi', 'pending')->count();
         $totalPrescriptionsVerified = \App\Models\Prescription::where('status_validasi', 'disetujui')
@@ -992,11 +992,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             $date = $now->copy()->subDays($i);
             $dateStr = $date->format('Y-m-d');
             
-            $dayTotalOrders = \App\Models\Order::where('status', 'selesai')
+            $dayTotalOrders = \App\Models\Order::whereIn('status', ['diproses', 'dikirim', 'selesai'])
                 ->whereDate('created_at', $dateStr)
                 ->sum('total_biaya');
                 
-            $dayTotalVts = \App\Models\VirtualTransaction::where('status', 'Selesai')
+            $dayTotalVts = \App\Models\VirtualTransaction::whereIn('status', ['Lunas', 'Dikirim', 'Selesai'])
                 ->whereDate('created_at', $dateStr)
                 ->sum('total_amount');
                 
@@ -1029,6 +1029,16 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             'dibatalkan' => (clone $baseAdminOrdersQuery)->where('status', 'dibatalkan')->count() + (clone $baseAdminVtsQuery)->where('status', 'Dibatalkan')->count(),
         ];
 
+        $pesananMasukHariIni = \App\Models\Order::whereDate('created_at', today())->count() + 
+                               \App\Models\VirtualTransaction::whereDate('created_at', today())->count();
+        
+        $pesananSelesaiHariIni = \App\Models\Order::whereDate('created_at', today())->where('status', 'selesai')->count() + 
+                                 \App\Models\VirtualTransaction::whereDate('created_at', today())->where('status', 'Selesai')->count();
+
+        $resepMasukHariIni = \App\Models\Prescription::whereDate('created_at', today())->count();
+        $resepDiverifikasiHariIni = \App\Models\Prescription::whereDate('created_at', today())->where('status_validasi', 'disetujui')->count();
+        $resepDitolakHariIni = \App\Models\Prescription::whereDate('created_at', today())->where('status_validasi', 'ditolak')->count();
+
         $analytics = [
             'income_today' => $incomeToday,
             'income_this_month' => $incomeThisMonth,
@@ -1039,7 +1049,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             'prescriptions_dipesan' => $totalPrescriptionsDipesan,
             'revenue_chart_data' => $revenueChartData,
             'top_products' => $topProducts,
-            'order_counts' => $orderCounts
+            'order_counts' => $orderCounts,
+            'daily_metrics' => [
+                'pesanan_masuk' => $pesananMasukHariIni,
+                'pesanan_selesai' => $pesananSelesaiHariIni,
+                'resep_masuk' => $resepMasukHariIni,
+                'resep_diverifikasi' => $resepDiverifikasiHariIni,
+                'resep_ditolak' => $resepDitolakHariIni,
+            ]
         ];
         
         $userCount = \App\Models\User::count();
@@ -1092,7 +1109,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
             $order = [
                 'id' => 'vt_' . $vt->id,
-                'kode_pesanan' => $vt->va_number ?? 'VT-' . $vt->id,
+                'kode_pesanan' => $vt->invoice_number ?? $vt->va_number ?? 'VT-' . $vt->id,
                 'user' => $vt->user,
                 'payment_method' => $vt->payment_method,
                 'shipping_address' => $vt->shipping_address,

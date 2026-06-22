@@ -752,25 +752,10 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                 {stockHistories.length > 0 ? (
                                     stockHistories.map((history, idx) => {
                                         const isAdd = history.type === 'inbound_purchase' || history.type === 'adjustment_add' || history.type === 'inbound';
-                                        let typeLabel = '';
-                                        let typeColor = '';
-                                        
-                                        if (history.type === 'inbound_purchase' || history.type === 'inbound') {
-                                            typeLabel = 'Stok Masuk';
-                                            typeColor = 'bg-blue-50 text-blue-700 border-blue-200';
-                                        } else if (history.type === 'adjustment_damaged') {
-                                            typeLabel = 'Koreksi (Rusak)';
-                                            typeColor = 'bg-red-50 text-red-700 border-red-200';
-                                        } else if (history.type === 'adjustment_lost') {
-                                            typeLabel = 'Koreksi (Hilang)';
-                                            typeColor = 'bg-orange-50 text-orange-700 border-orange-200';
-                                        } else if (history.type === 'adjustment_add') {
-                                            typeLabel = 'Koreksi (+)';
-                                            typeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                                        } else {
-                                            typeLabel = 'Koreksi (-)';
-                                            typeColor = 'bg-red-50 text-red-700 border-red-200';
-                                        }
+                                        const typeLabel = isAdd ? '(+) Stok Masuk' : '(-) Stok Keluar';
+                                        const typeColor = isAdd 
+                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                            : 'bg-red-50 text-red-700 border-red-200';
 
                                         return (
                                             <tr key={history.id} className="border-b border-gray-50 transition-colors last:border-0 hover:bg-gray-50/50">
@@ -831,9 +816,9 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
             {showAdjustStockModal && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm transition-all">
                     <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white shadow-2xl overflow-hidden">
-                        <div className="bg-emerald-600 px-6 py-4 flex justify-between items-center">
+                        <div className="bg-[#1e5b53] px-6 py-4 flex justify-between items-center">
                             <h3 className="font-['Poppins',sans-serif] text-[16px] font-semibold text-white">
-                                Penyesuaian Stok Khusus
+                                Penyesuaian Stok
                             </h3>
                             <button onClick={() => setShowAdjustStockModal(false)} className="text-white/80 hover:text-white">
                                 <X size={20} />
@@ -852,9 +837,8 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                                     onChange={e => adjustStockForm.setData('action', e.target.value)}
                                     className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/10"
                                 >
-                                    <option value="inbound_purchase">Stok Masuk (Pembelian Baru)</option>
-                                    <option value="adjustment_damaged">Koreksi Stok (Barang Rusak)</option>
-                                    <option value="adjustment_lost">Koreksi Stok (Barang Hilang)</option>
+                                    <option value="inbound_purchase">(+) Stok Masuk</option>
+                                    <option value="adjustment_damaged">(-) Stok Keluar</option>
                                 </select>
                             </div>
                             
@@ -922,7 +906,7 @@ export default function EditProduct({ initialData, categories = [], symptoms = [
                             <button
                                 type="submit"
                                 disabled={adjustStockForm.processing}
-                                className="w-full rounded-xl bg-emerald-600 py-3 font-['Poppins',sans-serif] text-[14px] font-medium text-white shadow-lg shadow-emerald-600/20 transition-all hover:bg-emerald-700 disabled:opacity-50"
+                                className="w-full rounded-xl bg-[#1e5b53] py-3 font-['Poppins',sans-serif] text-[14px] font-medium text-white shadow-lg shadow-[#1e5b53]/20 transition-all hover:bg-[#15453f] disabled:opacity-50"
                             >
                                 {adjustStockForm.processing ? 'Menyimpan...' : 'Simpan Penyesuaian Stok'}
                             </button>
