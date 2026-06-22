@@ -10,7 +10,25 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $guarded = ['id'];
+    protected $fillable = [
+        'nama_obat',
+        'product_code',
+        'satuan',
+        'category_id',
+        'deskripsi',
+        'jenis_obat',
+        'indikasi',
+        'aturan_pakai',
+        'efek_samping',
+        'komposisi',
+        'kontraindikasi',
+        'harga',
+        'stok',
+        'stok_minimum',
+        'gambar',
+        'is_active',
+        'slug',
+    ];
 
     /**
      * Relasi Many-to-One ke tabel categories.

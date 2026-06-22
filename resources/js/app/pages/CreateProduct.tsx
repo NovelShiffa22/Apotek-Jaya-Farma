@@ -26,6 +26,8 @@ interface Symptom {
 
 interface ProductFormData {
     nama_obat: string;
+    product_code: string;
+    satuan: string;
     category_id: string;
     deskripsi: string;
     jenis_obat: string;
@@ -77,6 +79,8 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
 
     const { data, setData, post, errors, processing } = useForm<ProductFormData>({
         nama_obat: initialData?.nama_obat || '',
+        product_code: initialData?.product_code || '',
+        satuan: initialData?.satuan || '',
         category_id: initialData?.category_id || '',
         deskripsi: initialData?.deskripsi || '',
         jenis_obat: initialData?.jenis_obat || '',
@@ -96,6 +100,12 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
 
     // Calculate completion percentage
     const calculateProgress = () => {
+
+    const generateProductCode = (nama: string, satuan: string) => {
+        if (!nama || !satuan) return '';
+        const namePart = nama.replace(/\s+/g, '').substring(0, 3).toUpperCase();
+        return `PRD-${namePart}-${satuan}`;
+    };
         const fields = [
             data.nama_obat,
             data.jenis_obat,
@@ -200,6 +210,8 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
     const handleReset = () => {
         setData({
             nama_obat: '',
+            product_code: '',
+            satuan: '',
             category_id: '',
             deskripsi: '',
             jenis_obat: '',
@@ -272,15 +284,39 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                         <input
                                             type="text"
                                             value={data.nama_obat}
-                                            onChange={(e) =>
-                                                setData('nama_obat', e.target.value)
-                                            }
+                                            onChange={(e) => {
+                                                const newName = e.target.value;
+                                                setData((prev) => ({
+                                                    ...prev,
+                                                    nama_obat: newName,
+                                                    product_code: generateProductCode(newName, prev.satuan)
+                                                }));
+                                            }}
                                             placeholder="Masukkan nama obat"
                                             className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
                                         />
                                         {errors.nama_obat && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
                                                 {errors.nama_obat}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Kode Produk */}
+                                    <div>
+                                        <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
+                                            Kode Produk / SKU
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.product_code}
+                                            readOnly
+                                            placeholder="Terisi otomatis (PRD-XXX-SAT)"
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] bg-gray-50 text-gray-500 cursor-not-allowed focus:outline-none"
+                                        />
+                                        {errors.product_code && (
+                                            <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
+                                                {errors.product_code}
                                             </p>
                                         )}
                                     </div>
@@ -314,6 +350,41 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                         {errors.jenis_obat && (
                                             <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
                                                 {errors.jenis_obat}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Satuan / Kemasan Jual */}
+                                    <div>
+                                        <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
+                                            Satuan / Kemasan Jual
+                                        </label>
+                                        <select
+                                            value={data.satuan}
+                                            onChange={(e) => {
+                                                const newSatuan = e.target.value;
+                                                setData(prev => ({
+                                                    ...prev,
+                                                    satuan: newSatuan,
+                                                    product_code: generateProductCode(prev.nama_obat, newSatuan)
+                                                }));
+                                            }}
+                                            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 font-['Poppins',sans-serif] text-[14px] focus:border-[#1e5b53] focus:outline-none focus:ring-2 focus:ring-[#1e5b53]/10 transition-all"
+                                        >
+                                            <option value="">Pilih satuan</option>
+                                            <option value="TAB">Tablet (TAB)</option>
+                                            <option value="KPL">Kaplet (KPL)</option>
+                                            <option value="BTL">Botol / Sirup (BTL)</option>
+                                            <option value="STP">Strip (STP)</option>
+                                            <option value="SC">Sachet (SC)</option>
+                                            <option value="DUS">Dus / Box (DUS)</option>
+                                            <option value="TUB">Tube / Salep (TUB)</option>
+                                            <option value="PCS">Pieces / Pcs (PCS)</option>
+                                            <option value="UNT">Unit (UNT)</option>
+                                        </select>
+                                        {errors.satuan && (
+                                            <p className="mt-1 font-['Poppins',sans-serif] text-[12px] text-red-600">
+                                                {errors.satuan}
                                             </p>
                                         )}
                                     </div>

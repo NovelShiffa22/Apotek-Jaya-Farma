@@ -102,9 +102,11 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'nama_obat' => 'required|string|max:150',
+            'product_code' => 'required|string|max:50|unique:products,product_code',
             'category_id' => 'nullable|exists:categories,id',
             'deskripsi' => 'nullable|string',
             'jenis_obat' => 'required|in:bebas,keras,terbatas',
+            'satuan' => 'required|string|max:50',
             'indikasi' => 'required|string',
             'aturan_pakai' => 'required|string',
             'efek_samping' => 'nullable|string',
@@ -184,9 +186,11 @@ class ProductController extends Controller
 
         $validated = $request->validate([
             'nama_obat' => 'required|string|max:150',
+            'product_code' => 'required|string|max:50|unique:products,product_code,' . $id,
             'category_id' => 'nullable|exists:categories,id',
             'deskripsi' => 'nullable|string',
             'jenis_obat' => 'required|in:bebas,keras,terbatas',
+            'satuan' => 'required|string|max:50',
             'indikasi' => 'required|string',
             'aturan_pakai' => 'required|string',
             'efek_samping' => 'nullable|string',

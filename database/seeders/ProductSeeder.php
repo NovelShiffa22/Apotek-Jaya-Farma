@@ -16,6 +16,7 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
+        $usedCodes = [];
 
         $now = now();
 
@@ -1118,10 +1119,35 @@ class ProductSeeder extends Seeder
                 $kontraindikasi = null;
             }
 
+            $rawUnit = strtoupper(trim($row[1]));
+            if ($rawUnit === 'BT' || $rawUnit === 'BH') {
+                $finalSatuan = 'BTL';
+            } elseif ($rawUnit === 'BOX') {
+                $finalSatuan = 'DUS';
+            } elseif ($rawUnit === 'PC') {
+                $finalSatuan = 'PCS';
+            } elseif (in_array($rawUnit, ['TAB', 'KPL', 'TUB', 'DUS', 'SC', 'UNT'])) {
+                $finalSatuan = $rawUnit;
+            } else {
+                $finalSatuan = 'PCS'; 
+            }
+
+            $cleanName = strtoupper(str_replace(' ', '', substr($row[0], 0, 3)));
+            $generatedCode = "PRD-" . $cleanName . "-" . $finalSatuan;
+
+            $counter = 1;
+            $originalCode = $generatedCode;
+            while (isset($usedCodes[$generatedCode])) {
+                $generatedCode = $originalCode . "-" . $counter;
+                $counter++;
+            }
+            $usedCodes[$generatedCode] = true;
+
             $productData[] = [
                 'id' => $productIdCounter, // Explicit ID for pivot
                 'category_id' => $catId,
                 'nama_obat' => $row[0],
+                'product_code' => $generatedCode,
                 'slug' => Str::slug($row[0]),
                 'deskripsi' => $deskripsi,
                 'jenis_obat' => $isPrescriptionRequired ? 'keras' : 'bebas',
@@ -1132,7 +1158,7 @@ class ProductSeeder extends Seeder
                 'komposisi' => $komposisi,
                 'kontraindikasi' => $kontraindikasi,
                 'harga' => $row[2],
-                'unit' => $row[1],
+                'satuan' => $finalSatuan,
                 'stok' => rand(20, 100),
                 'stok_minimum' => 5,
                 'gambar' => $imageMap[$catName] ?? $imageMap['Obat-Obatan'],

@@ -995,6 +995,9 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     <tr className="bg-gradient-to-r from-[#f8fafc] to-[#f1f5f9] border-b border-[#E2E8F0]">
                                         <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase w-12">No.</th>
                                         <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+                                            KODE PRODUK
+                                        </th>
+                                        <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
                                             Produk
                                         </th>
                                         <th className="px-5 py-4 font-['Inter',sans-serif] text-[11px] font-bold tracking-widest text-slate-400 uppercase">
@@ -1030,6 +1033,11 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                         >
                                             <td className="px-5 py-4">
                                                 <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-400">{startIndex + index + 1}</span>
+                                            </td>
+                                            <td className="px-5 py-4">
+                                                <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-600">
+                                                    {product.product_code || '-'}
+                                                </span>
                                             </td>
                                             <td className="px-5 py-4">
                                                 <div className="flex items-center gap-4">
