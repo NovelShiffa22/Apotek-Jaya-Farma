@@ -31,34 +31,30 @@ export default function Login({
             <Head title="Masuk" />
 
             {/* Left Pane - Image backdrop */}
-            <div 
-                className="auth-left-pane"
-                style={{ backgroundImage: "url('/images/latar_auth.png')" }}
-            >
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-0" />
+            <div className="relative w-full h-full overflow-hidden auth-left-pane">
+                <img src="/images/apoteker_baru.png" className="absolute inset-0 w-full h-full object-cover z-0" alt="Latar Apotek" />
+                <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/95 via-neutral-900/60 to-transparent z-10" />
 
-                <div className="relative z-10 max-w-[480px]">
-                    {/* Brand/Logo */}
-                    <div className="flex items-center gap-3 mb-6">
+                <div className="absolute left-8 right-8 bottom-16 z-20 flex flex-col items-start text-left">
+                    <div className="flex items-center gap-2 mb-2">
+                        {/* Logika badge Apotek Jaya Farma Anda */}
                         <div className="w-10 h-10 bg-[#3e4a41]/70 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10 shadow-lg">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-white">
                                 <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                         </div>
-                        <span className="font-['Roboto_Condensed',sans-serif] text-[22px] tracking-[-0.5px] font-semibold text-white">
-                            Apotek Jaya Farma
-                        </span>
+                        <span className="text-white font-medium">Apotek Jaya Farma</span>
                     </div>
-
-                    {/* Headline */}
-                    <h2 className="font-['Roboto_Condensed',sans-serif] text-[40px] xl:text-[46px] font-bold leading-[1.15] text-white mb-4">
-                        Your Health, Our Priority.
-                    </h2>
-
-                    {/* Description */}
-                    <p className="text-[14px] xl:text-[15px] text-white/80 leading-relaxed font-light">
-                        Berkomitmen untuk menyediakan perawatan farmasi yang andal dan obat-obatan otentik kepada masyarakat selama lebih dari dua dekade.
+                    
+                    <h1 className="text-xl md:text-2xl lg:text-3xl font-medium tracking-tight text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
+                        Sistem Digital Terintegrasi untuk Efisiensi Pelayanan Apotek
+                    </h1>
+                    
+                    <p className="text-xs md:text-sm font-normal text-white/95 leading-relaxed mt-4 text-left drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">
+                        Selamat datang di platform digital Apotek Jaya Farma 👋🏻
+                        <br />
+                        <br />
+                        Masuk untuk mengakses ruang kerja manajemen, sistem pemrosesan resep medis, hingga pusat pemenuhan kebutuhan obat harian Anda secara instan dan akurat.
                     </p>
                 </div>
             </div>

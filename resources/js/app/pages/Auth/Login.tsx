@@ -33,14 +33,14 @@ export default function Login({
             {/* Left Pane - Image backdrop */}
             <div className="relative w-1/2 h-full flex flex-col justify-end p-8 text-white overflow-hidden">
                 <img 
-                    src="/images/latar_auth.png" 
+                    src="/images/apoteker_baru.png" 
                     alt="Latar Apotek" 
                     className="absolute inset-0 w-full h-full object-cover z-0" 
                 />
                 {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10" />
+                <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/90 via-neutral-950/40 to-transparent z-10" />
 
-                <div className="relative z-20 max-w-[480px]">
+                <div className="relative z-20 max-w-[480px] mb-16 md:mb-20">
                     {/* Brand/Logo */}
                     <div className="flex items-center gap-3 mb-6">
                         <div className="w-10 h-10 bg-[#3e4a41]/70 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10 shadow-lg">
@@ -54,13 +54,13 @@ export default function Login({
                     </div>
 
                     {/* Headline */}
-                    <h2 className="font-['Roboto_Condensed',sans-serif] text-[40px] xl:text-[46px] font-bold leading-[1.15] text-white mb-4">
-                        Your Health, Our Priority.
-                    </h2>
+                    <h1 className="text-xl md:text-2xl lg:text-3xl font-medium tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+                        Sistem Digital Terintegrasi untuk Efisiensi Pelayanan Apotek
+                    </h1>
 
                     {/* Description */}
-                    <p className="text-[14px] xl:text-[15px] text-white/80 leading-relaxed font-light">
-                        Berkomitmen untuk menyediakan perawatan farmasi yang andal dan obat-obatan otentik kepada masyarakat selama lebih dari dua dekade.
+                    <p className="text-xs md:text-sm font-normal text-white/90 leading-relaxed mt-2 text-left drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+                        Selamat datang di platform digital Apotek Jaya Farma 👋🏻 <br /><br /> Masuk untuk mengakses ruang kerja manajemen, sistem pemrosesan resep medis, hingga pusat pemenuhan kebutuhan obat harian Anda secara instan dan akurat.
                     </p>
                 </div>
             </div>
