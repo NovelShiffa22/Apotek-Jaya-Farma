@@ -50,7 +50,7 @@ const SLIDES = [
 const AUTOPLAY_MS = 8000;
 
 export default function HeroSlider() {
-  const { auth } = usePage().props as any;
+  const { auth, whatsapp_number = '6281315324311' } = usePage().props as any;
   const user = auth?.user;
 
   const [current, setCurrent] = useState(0);
@@ -147,7 +147,7 @@ export default function HeroSlider() {
                     )}
 
                     {s.id === 4 && (
-                      <a href="https://wa.me/6281315324311" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-white text-[#1e5b53] font-bold px-4 py-2 md:px-5 md:py-2.5 rounded-lg shadow-lg hover:bg-gray-50 hover:scale-105 transition-all text-[11px] md:text-sm">
+                      <a href={`https://wa.me/${whatsapp_number}?text=Halo%20Apoteker%20Jaya%20Farma,%20saya%20ingin%20berkonsultasi%20mengenai...`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-white text-[#1e5b53] font-bold px-4 py-2 md:px-5 md:py-2.5 rounded-lg shadow-lg hover:bg-gray-50 hover:scale-105 transition-all text-[11px] md:text-sm">
                         <WhatsAppIcon className="w-3.5 h-3.5 md:w-5 md:h-5 text-[#25D366]" />
                         Konsultasi Sekarang
                       </a>

@@ -57,7 +57,7 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
 );
 
 export default function Home({ featuredProducts = [] }: { featuredProducts?: any[] }) {
-  const { auth } = usePage().props as any;
+  const { auth, whatsapp_number = '6281315324311' } = usePage().props as any;
   const user = auth?.user;
 
   return (
@@ -268,7 +268,7 @@ export default function Home({ featuredProducts = [] }: { featuredProducts?: any
               </p>
               
               <a
-                href="https://wa.me/6281315324311"
+                href={`https://wa.me/${whatsapp_number}?text=Halo%20Apoteker%20Jaya%20Farma,%20saya%20ingin%20berkonsultasi%20mengenai...`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 bg-[#25D366] px-8 py-4 sm:px-12 sm:py-5 rounded-full font-['Roboto_Condensed',sans-serif] text-[16px] sm:text-[18px] tracking-[0.5px] text-white shadow-[0_12px_32px_rgba(37,211,102,0.4)] hover:bg-[#19D373] transition-all duration-300 hover:shadow-[0_0_20px_rgba(34,197,94,0.5)] hover:-translate-y-1 font-bold group"

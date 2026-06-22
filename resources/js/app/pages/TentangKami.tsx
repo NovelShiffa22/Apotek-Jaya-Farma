@@ -14,6 +14,7 @@ interface Props {
 
 export default function TentangKami({ apotekSettings }: Props) {
     const { deskripsi, alamat, jam_operasional, kontak } = apotekSettings;
+    const { whatsapp_number = '6281315324311' } = usePage().props as any;
 
     const infoCards = [
         {
@@ -167,7 +168,7 @@ export default function TentangKami({ apotekSettings }: Props) {
                                 <ChevronRight size={18} />
                             </Link>
                             <a
-                                href={`https://wa.me/${kontak.replace(/[^0-9]/g, '').replace(/^0/, '62')}`}
+                                href={`https://wa.me/${whatsapp_number}?text=Halo%20Apoteker%20Jaya%20Farma,%20saya%20ingin%20berkonsultasi%20mengenai...`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center justify-center gap-2 border-2 border-[#1e5b53] text-[#1e5b53] hover:bg-emerald-50 font-bold px-6 py-3 rounded-xl transition-all"

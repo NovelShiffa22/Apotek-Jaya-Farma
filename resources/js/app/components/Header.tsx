@@ -7,7 +7,7 @@ export default function Header() {
   const { cartCount: initialCartCount = 0 } = usePage().props as { cartCount?: number };
   const [searchQuery, setSearchQuery] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { auth } = usePage().props as any;
+  const { auth, whatsapp_number = '6281315324311' } = usePage().props as any;
   const user = auth?.user;
   const { url } = usePage();
   const [cartCount, setCartCount] = useState(initialCartCount);
@@ -284,7 +284,7 @@ export default function Header() {
 
     {/* Floating WhatsApp Contact Button */}
     <a
-      href="https://wa.me/628111230705"
+      href={`https://wa.me/${whatsapp_number}?text=Halo%20Apoteker%20Jaya%20Farma,%20saya%20ingin%20berkonsultasi%20mengenai...`}
       target="_blank"
       rel="noopener noreferrer"
       className="group fixed bottom-6 right-6 z-[9999] flex items-center justify-end rounded-full bg-[#25D366] text-white p-3 shadow-[0_4px_16px_rgba(37,211,102,0.3)] hover:shadow-[0_8px_24px_rgba(37,211,102,0.4)] transition-all duration-300 ease-in-out hover:-translate-y-1 hover:max-w-xs cursor-pointer"

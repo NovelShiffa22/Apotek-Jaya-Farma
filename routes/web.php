@@ -1186,6 +1186,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
             );
         }
 
+        \App\Models\Setting::updateOrCreate(
+            ['key' => 'whatsapp_number'],
+            ['value' => $request->input('kontak', '')]
+        );
+
         return back()->with('success', 'Informasi Apotek berhasil disimpan.');
     })->name('admin.pharmacy-info.save');
 

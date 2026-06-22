@@ -45,6 +45,7 @@ class HandleInertiaRequests extends Middleware
             'cartCount' => function () {
                 return count(session()->get('cart', []));
             },
+            'whatsapp_number' => \App\Models\Setting::where('key', 'whatsapp_number')->value('value') ?? '6281315324311',
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, FileText, FileImage, User, Calendar, MapPin, Phone, Info, AlertTriangle, CheckCircle2, Copy, Check, Clock, ShoppingCart, ZoomIn, BriefcaseMedical, UploadCloud, Headset, Pill, Syringe, Tablets, XCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -6,6 +6,7 @@ import Header from '../../components/Header';
 import ConfirmModal from '../../components/ConfirmModal';
 
 export default function PrescriptionDetail({ prescription, user }: { prescription: any, user: any }) {
+    const { whatsapp_number = '6281315324311' } = usePage().props as any;
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -439,9 +440,14 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                     <UploadCloud size={20} />
                                     Unggah Ulang Resep
                                 </Link>
-                                <button className="w-full flex items-center justify-center gap-2 rounded-xl border border-[#1e5b53] py-4 font-['Poppins',sans-serif] text-[15px] font-bold text-[#1e5b53] transition-all hover:bg-emerald-50 bg-white">
+                                <a 
+                                    href={`https://wa.me/${whatsapp_number}?text=Halo%20Apoteker%20Jaya%20Farma,%20saya%20ingin%20bertanya%20terkait%20pengajuan%20resep%20saya%20dengan%20ID%20${prescription.kode_resep || prescription.id}%20yang%20ditolak%20dengan%20alasan:%20${prescription.rejection_reason}.`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full flex items-center justify-center gap-2 rounded-xl border border-[#1e5b53] py-4 font-['Poppins',sans-serif] text-[15px] font-bold text-[#1e5b53] transition-all hover:bg-emerald-50 bg-white"
+                                >
                                     Hubungi Layanan Bantuan
-                                </button>
+                                </a>
                             </div>
                         )}
                     </div>
