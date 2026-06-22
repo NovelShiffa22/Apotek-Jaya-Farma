@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import Header from '../components/Header';
 import { MapPin, Clock, Phone, ChevronRight, Building2, Heart, ShieldCheck, Leaf, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
