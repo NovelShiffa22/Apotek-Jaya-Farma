@@ -242,7 +242,7 @@ export default function Invoice({ transaction }: Props) {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-8 mb-8 gap-6">
                 <div>
                   <h1 className="text-3xl font-black text-gray-900 tracking-tight">NOTA</h1>
-                  <p className="text-gray-500 text-sm mt-1">No. Pesanan: {transaction.id.toString().padStart(6, '0')}</p>
+                  <p className="text-gray-500 text-sm mt-1">No. Pesanan: {transaction.invoice_number || transaction.kode_pesanan || transaction.id.toString().padStart(6, '0')}</p>
                 </div>
                 <div className="inline-flex items-center gap-2 bg-emerald-50 text-[#1e5b53] px-5 py-2.5 rounded-full border border-emerald-100 font-bold shadow-sm self-start sm:self-auto">
                   <CheckCircle size={20} />

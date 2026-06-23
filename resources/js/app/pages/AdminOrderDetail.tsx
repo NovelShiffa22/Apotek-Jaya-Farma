@@ -110,7 +110,7 @@ export default function AdminOrderDetail({ order, auth }: any) {
                         <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <h1 className="font-['Roboto_Condensed',sans-serif] text-3xl font-bold text-slate-800">
-                                    Pesanan {order.id.toString().startsWith('vt_') ? `VT-${order.id.toString().replace('vt_', '')}` : `#${String(order.id).padStart(6, '0')}`}
+                                    Pesanan {order.kode_pesanan || `#${String(order.id).padStart(6, '0')}`}
                                 </h1>
                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
                                     <StatusIcon size={14} />

@@ -327,7 +327,7 @@ class CheckoutController extends Controller
             \App\Models\UserActivity::create([
                 'user_id' => auth()->id(),
                 'action' => 'create_virtual_transaction',
-                'description' => 'User membuat pesanan virtual #' . ($transaction->va_number ?? 'VT-' . $transaction->id),
+                'description' => 'User membuat pesanan virtual #' . ($transaction->invoice_number ?? 'VT-' . $transaction->id),
                 'ip_address' => $request->ip(),
             ]);
         }

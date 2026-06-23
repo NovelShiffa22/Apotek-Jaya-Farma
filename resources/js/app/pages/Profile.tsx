@@ -587,7 +587,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                           <div>
                             <div className="flex items-center gap-3 mb-1">
                               <p className="font-['Roboto_Condensed',sans-serif] text-[20px] text-[#171d19] font-semibold">
-                                No. Pesanan: {order.id.toString().padStart(6, '0')}
+                                No. Pesanan: {order.invoice_number || order.kode_pesanan || order.id.toString().padStart(6, '0')}
                               </p>
                               {order.prescription_id && (
                                 <span className="bg-teal-50 text-teal-700 border border-teal-200 text-[11px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shadow-sm">
@@ -1058,7 +1058,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
           <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all scale-100 flex flex-col max-h-[90vh]">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-bold text-[#171d19]">
-                Rincian Pesanan #{selectedOrder.id.toString().padStart(6, '0')}
+                Rincian Pesanan #{selectedOrder.invoice_number || selectedOrder.kode_pesanan || selectedOrder.id.toString().padStart(6, '0')}
               </h3>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors p-1">
                 <X size={22} strokeWidth={2.5} />

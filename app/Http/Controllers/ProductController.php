@@ -320,7 +320,7 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
         $validated = $request->validate([
-            'action' => 'required|in:inbound_purchase,adjustment_damaged,adjustment_lost',
+            'action' => 'required|in:inbound_purchase,adjustment_damaged',
             'quantity' => 'required|integer|min:1',
             'reason' => 'required|string|max:255',
             'supplier' => 'nullable|required_if:action,inbound_purchase|string|max:255',
@@ -331,21 +331,15 @@ class ProductController extends Controller
             $type = $validated['action'];
             
             if ($type === 'inbound_purchase') {
-                $product->stok += $validated['quantity'];
-                if (isset($validated['buy_price']) && $validated['buy_price'] > 0) {
-                    // Update the product's selling price if necessary, or just track it in history.
-                    // $product->harga = max($product->harga, $validated['buy_price']); 
-                }
+                $product->increment('stok', $validated['quantity']);
             } else {
-                // For damaged or lost
                 if ($product->stok < $validated['quantity']) {
                     throw \Illuminate\Validation\ValidationException::withMessages([
                         'quantity' => 'Stok tidak cukup untuk dikurangi sebesar itu.'
                     ]);
                 }
-                $product->stok -= $validated['quantity'];
+                $product->decrement('stok', $validated['quantity']);
             }
-            $product->save();
 
             \App\Models\ProductStockHistory::create([
                 'product_id' => $product->id,

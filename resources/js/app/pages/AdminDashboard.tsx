@@ -35,6 +35,7 @@ import {
     CheckCircle,
     XCircle,
     Building2,
+    Check,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import CreateProduct from './CreateProduct';
@@ -673,75 +674,87 @@ export default function AdminDashboard({ products = [], categories = [], users =
 
                                 return [
                                     {
-                                        label: 'Pendapatan Hari Ini',
-                                        value: formatCurrency(analytics.income_today || 0),
-                                        change: 'Hari Ini',
-                                        trend: 'up',
+                                        label: 'Total Pendapatan',
+                                        value: formatCurrency(analytics.income_this_month || 0),
+                                        subtext: (
+                                            <div className="flex flex-col gap-2">
+                                                <div className="self-start inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Rekap</div>
+                                                <div className="flex flex-col gap-1.5 leading-none text-emerald-700 font-medium">
+                                                    <span className="flex items-center gap-1.5"><Calendar size={14} /> Hari ini: {formatCurrency(analytics.income_today || 0)}</span>
+                                                    <span className="flex items-center gap-1.5"><TrendingUp size={14} /> Bulan ini: {formatCurrency(analytics.income_this_month || 0)}</span>
+                                                </div>
+                                            </div>
+                                        ),
                                         icon: DollarSign,
                                         color: 'from-emerald-500 to-emerald-600',
                                     },
                                     {
-                                        label: 'Pendapatan Bulan Ini',
-                                        value: formatCurrency(analytics.income_this_month || 0),
-                                        change: 'Bulan Ini',
-                                        trend: 'up',
-                                        icon: TrendingUp,
+                                        label: 'Pesanan Diproses',
+                                        value: analytics.order_counts?.diproses || 0,
+                                        subtext: (
+                                            <div className="flex flex-col gap-2">
+                                                <div className="self-start inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 uppercase tracking-wider">Hari ini</div>
+                                                <div className="flex flex-col gap-1.5 leading-none text-blue-700 font-medium">
+                                                    <span className="flex items-center gap-1.5"><Package size={14} /> Pesanan masuk: {analytics.daily_metrics?.pesanan_masuk || 0}</span>
+                                                    <span className="flex items-center gap-1.5"><CheckCircle size={14} /> Pesanan selesai: {analytics.daily_metrics?.pesanan_selesai || 0}</span>
+                                                </div>
+                                            </div>
+                                        ),
+                                        icon: Package,
                                         color: 'from-blue-500 to-blue-600',
                                     },
                                     {
-                                        label: 'Total Pendapatan',
-                                        value: formatCurrency(analytics.income_all_time || 0),
-                                        change: 'Seluruh Waktu',
-                                        trend: 'up',
-                                        icon: Package,
-                                        color: 'from-purple-500 to-purple-600',
-                                    },
-                                    {
-                                        label: 'Total Resep (Verif / Tolak)',
-                                        value: `${analytics.prescriptions_verified || 0} / ${analytics.prescriptions_rejected || 0}`,
-                                        change: 'Resep',
-                                        trend: 'up',
+                                        label: 'Resep Menunggu Verifikasi',
+                                        value: analytics.prescriptions_pending || 0,
+                                        subtext: (
+                                            <div className="flex flex-col gap-2">
+                                                <div className="self-start inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 uppercase tracking-wider">Hari ini</div>
+                                                <div className="flex flex-col gap-1.5 leading-none text-amber-700 font-medium">
+                                                    <span className="flex items-center gap-1.5"><FileText size={14} /> Resep masuk: {analytics.daily_metrics?.resep_masuk || 0}</span>
+                                                    <div className="grid grid-cols-2 gap-2 w-full mt-0.5">
+                                                        <span className="flex items-center gap-1.5"><Check size={14} /> Disetujui: {analytics.daily_metrics?.resep_diverifikasi || 0}</span>
+                                                        <span className="flex items-center gap-1.5"><XCircle size={14} /> Ditolak: {analytics.daily_metrics?.resep_ditolak || 0}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ),
                                         icon: FileText,
                                         color: 'from-amber-500 to-amber-600',
+                                    },
+                                    {
+                                        label: 'Peringatan Stok Kritis',
+                                        value: analytics.critical_stock_products?.length || 0,
+                                        subtext: <span className="flex items-center gap-1.5 mt-1 text-red-700 font-medium"><AlertTriangle size={14} /> Segera lakukan pengadaan obat</span>,
+                                        icon: AlertCircle,
+                                        color: 'from-red-500 to-red-600',
                                     },
                                 ];
                             })().map((stat, idx) => (
                                 <div
                                     key={idx}
-                                    className="rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
+                                    className="rounded-2xl border border-[#f1f5f9] bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] flex flex-col justify-between"
                                 >
-                                    <div className="mb-4 flex items-start justify-between">
-                                        <div
-                                            className={`h-12 w-12 bg-gradient-to-br ${stat.color} flex items-center justify-center rounded-xl shadow-lg`}
-                                        >
-                                            <stat.icon
-                                                className="text-white"
-                                                size={22}
-                                            />
+                                    <div>
+                                        <div className="mb-4 flex items-start justify-between">
+                                            <div
+                                                className={`h-12 w-12 bg-gradient-to-br ${stat.color} flex items-center justify-center rounded-xl shadow-lg`}
+                                            >
+                                                <stat.icon
+                                                    className="text-white"
+                                                    size={22}
+                                                />
+                                            </div>
                                         </div>
-                                        <div
-                                            className={`flex items-center gap-1 rounded-md px-2 py-1 ${
-                                                stat.trend === 'up'
-                                                    ? 'bg-emerald-50 text-emerald-700'
-                                                    : 'bg-red-50 text-red-700'
-                                            }`}
-                                        >
-                                            {stat.trend === 'up' ? (
-                                                <TrendingUp size={12} />
-                                            ) : (
-                                                <TrendingDown size={12} />
-                                            )}
-                                            <span className="font-['Inter',sans-serif] text-[11px] font-semibold">
-                                                {stat.change}
-                                            </span>
-                                        </div>
+                                        <p className="mb-2 font-['Inter',sans-serif] text-base font-bold tracking-wide text-[#6e7a70] uppercase">
+                                            {stat.label}
+                                        </p>
+                                        <p className="font-['Roboto_Condensed',sans-serif] text-[32px] font-semibold tracking-tight text-[#171d19]">
+                                            {stat.value}
+                                        </p>
                                     </div>
-                                    <p className="mb-2 font-['Inter',sans-serif] text-[12px] font-bold tracking-wider text-[#6e7a70] uppercase">
-                                        {stat.label}
-                                    </p>
-                                    <p className="font-['Roboto_Condensed',sans-serif] text-[32px] font-semibold tracking-tight text-[#171d19]">
-                                        {stat.value}
-                                    </p>
+                                    <div className="mt-3 font-['Inter',sans-serif] text-[13px] text-slate-500 font-medium">
+                                        {stat.subtext}
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -1343,7 +1356,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                     <td className="px-5 py-4">
                                       <div className="flex flex-col gap-0.5">
                                         <span className="font-['Inter',sans-serif] text-[13px] font-bold text-slate-800">
-                                            {order.id.toString().startsWith('vt_') ? `VT-${order.id.toString().replace('vt_', '')}` : `#${String(order.id).padStart(6, '0')}`}
+                                            {order.kode_pesanan || `#${String(order.id).padStart(6, '0')}`}
                                         </span>
                                         <span className={`inline-flex items-center gap-1.5 self-start px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
                                             {cfg.icon && <cfg.icon size={12} />}
