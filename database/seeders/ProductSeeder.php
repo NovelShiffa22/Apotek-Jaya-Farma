@@ -361,11 +361,11 @@ class ProductSeeder extends Seeder
             // 22. ZZNUTRIMAX URICARE CAP@60
             // Suplemen kesehatan ginjal
             [
-                'ZZNUTRIMAX URICARE CAP@60',
+                'NUTRIMAX URICARE CAP@60',
                 'BT',
                 413726,
                 'Vitamin & Suplement',
-                'ZZ Nutrimax Uricare adalah suplemen kesehatan yang diformulasikan untuk mendukung kesehatan saluran kemih dan ginjal. Mengandung kombinasi ekstrak herbal dan nutrisi yang membantu menjaga fungsi ginjal optimal dan mencegah infeksi saluran kemih.',
+                'Nutrimax Uricare adalah suplemen kesehatan yang diformulasikan untuk mendukung kesehatan saluran kemih dan ginjal. Mengandung kombinasi ekstrak herbal dan nutrisi yang membantu menjaga fungsi ginjal optimal dan mencegah infeksi saluran kemih.',
                 'Mendukung kesehatan ginjal dan saluran kemih, membantu mencegah infeksi saluran kemih berulang, dan memelihara fungsi ginjal.',
                 [],
                 'Cranberry Extract, D-Mannose, Vitamin C, Zinc (lihat kemasan untuk detail komposisi lengkap)',

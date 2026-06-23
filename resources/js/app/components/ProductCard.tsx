@@ -46,7 +46,7 @@ export default function ProductCard(props: ProductCardProps) {
       <Link href={`/products/${id}`} className="block relative aspect-square bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9] overflow-hidden rounded-xl">
         {productImage ? (
           <img
-            src={productImage}
+            src={productImage.startsWith('http') ? productImage : (productImage.startsWith('storage/') || productImage.startsWith('/storage/') ? (productImage.startsWith('/') ? productImage : `/${productImage}`) : `/storage/${productImage}`)}
             alt={productName}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />

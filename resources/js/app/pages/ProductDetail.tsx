@@ -72,7 +72,7 @@ export default function ProductDetail({ product }: { product: any }) {
             <div className="bg-gradient-to-br from-[#f5f7f6] to-[#e8ede9] rounded-2xl aspect-square flex items-center justify-center border border-[#e8e8e6] p-12 shadow-[0_8px_24px_rgba(0,0,0,0.06)] overflow-hidden group">
               {product.gambar ? (
                 <img
-                  src={product.gambar}
+                  src={product.gambar.startsWith('http') ? product.gambar : (product.gambar.startsWith('storage/') || product.gambar.startsWith('/storage/') ? (product.gambar.startsWith('/') ? product.gambar : `/${product.gambar}`) : `/storage/${product.gambar}`)}
                   alt={product.nama_obat}
                   className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-700"
                 />
