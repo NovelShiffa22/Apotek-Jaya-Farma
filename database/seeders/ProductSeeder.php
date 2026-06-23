@@ -201,11 +201,11 @@ class ProductSeeder extends Seeder
             // Krim untuk varises/memar - komposisi tidak berhasil ditemukan secara spesifik
             // Berdasarkan nama "Haemoven", kemungkinan mengandung heparinoid/troxerutin untuk varises
             [
-                'HAEMOVEN CR 10GR',
+                'HEMOVEN CR 10GR',
                 'TUB',
                 2876,
                 'Obat-Obatan',
-                'Haemoven Krim adalah sediaan topikal yang digunakan untuk membantu meredakan gejala varises ringan, memar, dan gangguan sirkulasi superfisial. Bekerja secara lokal pada pembuluh darah di bawah kulit.',
+                'Hemoven Krim adalah sediaan topikal yang digunakan untuk membantu meredakan gejala varises ringan, memar, dan gangguan sirkulasi superfisial. Bekerja secara lokal pada pembuluh darah di bawah kulit.',
                 'Meredakan memar, lebam, dan gejala varises ringan (pembengkakan, rasa berat, nyeri pada tungkai).',
                 ['Luka', 'Nyeri'],
                 'Heparin sodium / Heparinoid (lihat kemasan untuk detail komposisi lengkap)',
@@ -708,8 +708,8 @@ class ProductSeeder extends Seeder
                 '1 tablet, 1-2x sehari sesudah makan.',
                 'Mual, diare jika dosis tinggi, iritasi lambung.',
                 'Batu ginjal (riwayat), konsumsi > 1000mg/hari jangka panjang.'],
-            // 38. PRITASMA TAB@100 INHEALTH
-            ['PRITASMA TAB@100 INHEALTH', 'TAB', 24100, 'Obat-Obatan',
+            // 38. PRITASMA TAB@100 
+            ['PRITASMA TAB@100', 'TAB', 24100, 'Obat-Obatan',
                 'Tablet kombinasi untuk melebarkan saluran napas pada asma ringan.',
                 'Meringankan dan mencegah serangan asma bronkial ringan serta bronkospasme.',
                 ['Sesak Napas', 'Asma'],
@@ -1105,6 +1105,7 @@ class ProductSeeder extends Seeder
                 'XEPADERGIN 1MG TAB@100',
                 'ZADITEN 1MG DROP 10ML',
                 'COMTUSI CAP@30',
+                'HEMOVEN CR 10GR',
             ]);
 
             if ($hasFullData) {

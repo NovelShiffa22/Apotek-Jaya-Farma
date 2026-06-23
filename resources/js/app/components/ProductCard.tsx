@@ -33,6 +33,14 @@ export default function ProductCard(props: ProductCardProps) {
   const unit = props.unit;
   const isPrescriptionRequired = props.is_prescription_required || false;
 
+  const MEDICINE_CATEGORIES = [
+    'Obat Batuk & Pilek',
+    'Analgesik & Antipiretik',
+    'Obat-Obatan',
+    'Obat Tradisional / Herbal'
+  ];
+  const isMedicine = !!(kategoriNama && MEDICINE_CATEGORIES.includes(kategoriNama));
+
   const categoryConfig = {
     bebas: { label: 'Obat Bebas', bgColor: 'bg-emerald-50', textColor: 'text-emerald-700', dot: 'bg-emerald-500' },
     keras: { label: 'Obat Keras', bgColor: 'bg-red-50', textColor: 'text-red-700', dot: 'bg-red-500' },
@@ -57,14 +65,27 @@ export default function ProductCard(props: ProductCardProps) {
         )}
 
         {/* Category Badge - Top Right */}
-        <div className="absolute top-3 right-3">
-          <div className={`flex items-center gap-1.5 ${config.bgColor} ${config.textColor} px-3 py-1.5 rounded-full backdrop-blur-sm`}>
-            <div className={`w-1.5 h-1.5 ${config.dot} rounded-full`} />
-            <span className="font-['Inter',sans-serif] text-[11px] font-bold tracking-wider uppercase">
-              {config.label}
-            </span>
+        {isMedicine && (
+          <div className="absolute top-3 right-3">
+            {productCategory === 'keras' ? (
+              <div className="flex items-center gap-1.5 bg-red-50 text-red-700 px-2.5 py-1 rounded-full border border-red-200 backdrop-blur-sm shadow-sm font-semibold">
+                <div className="w-5 h-5 rounded-full bg-red-600 border border-black flex items-center justify-center text-white text-[10px] font-black font-sans shrink-0">
+                  K
+                </div>
+                <span className="font-['Inter',sans-serif] text-[11px] font-bold tracking-wider uppercase">
+                  Obat Keras
+                </span>
+              </div>
+            ) : (
+              <div className={`flex items-center gap-1.5 ${config.bgColor} ${config.textColor} px-3 py-1.5 rounded-full backdrop-blur-sm`}>
+                <div className={`w-1.5 h-1.5 ${config.dot} rounded-full`} />
+                <span className="font-['Inter',sans-serif] text-[11px] font-bold tracking-wider uppercase">
+                  {config.label}
+                </span>
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </Link>
 
       {/* Product Info */}
