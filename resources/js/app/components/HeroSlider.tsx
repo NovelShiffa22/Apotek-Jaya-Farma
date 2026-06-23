@@ -69,12 +69,12 @@ export default function HeroSlider() {
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
-      setCurrent(prev => (prev + 1) % SLIDES.length);
+      goNext();
     }, AUTOPLAY_MS);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, []);
+  }, [goNext]);
 
   return (
     <div className="relative w-full flex items-center justify-center">

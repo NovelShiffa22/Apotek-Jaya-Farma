@@ -1037,6 +1037,10 @@ class ProductSeeder extends Seeder
         DB::table('products')->truncate();
         \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
 
+        $customProductImages = [
+            'PARAMEX FLU & BATUK TAB@100' => 'https://lh3.googleusercontent.com/d/1ZIp3CBeL07OmwJ2butxDIwpZS0UY2Uff',
+        ];
+
         $productData = [];
         $pivotData = [];
         $productIdCounter = 1;
@@ -1161,7 +1165,7 @@ class ProductSeeder extends Seeder
                 'satuan' => $finalSatuan,
                 'stok' => rand(20, 100),
                 'stok_minimum' => 5,
-                'gambar' => $imageMap[$catName] ?? $imageMap['Obat-Obatan'],
+                'gambar' => $customProductImages[$row[0]] ?? ($imageMap[$catName] ?? $imageMap['Obat-Obatan']),
                 'is_active' => true,
                 'created_at' => $now,
                 'updated_at' => $now,
