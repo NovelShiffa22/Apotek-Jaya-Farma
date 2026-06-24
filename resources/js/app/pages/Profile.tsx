@@ -16,6 +16,15 @@ const formatPaymentMethod = (order: any) => {
   return `Virtual Account ${bName}`.trim();
 };
 
+const getImageUrl = (path?: string | null) => {
+  if (!path) return '';
+  return path.startsWith('http') 
+    ? path 
+    : (path.startsWith('storage/') || path.startsWith('/storage/') 
+        ? (path.startsWith('/') ? path : `/${path}`) 
+        : `/storage/${path}`);
+};
+
 export default function Profile({ user, orders = { data: [], links: [] }, counts = {}, prescriptionCounts = {}, addresses = [], prescriptions = { data: [], links: [] } }: any) {
   const { apotekInfo } = usePage<any>().props;
   const jamOp = apotekInfo?.jam_operasional || '08.00 - 18.00 WIB';
@@ -637,7 +646,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                                 <div className="w-16 h-16 bg-gray-50 rounded-xl border border-gray-300 flex-shrink-0 flex items-center justify-center overflow-hidden">
                                   {order.items[0].foto || order.items[0].image ? (
                                     <img 
-                                      src={order.items[0].foto || order.items[0].image} 
+                                      src={getImageUrl(order.items[0].foto || order.items[0].image)} 
                                       alt={order.items[0].nama || order.items[0].name} 
                                       className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-1" 
                                     />
@@ -683,7 +692,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                                       <div className="w-16 h-16 bg-gray-50 rounded-xl border border-gray-300 flex-shrink-0 flex items-center justify-center overflow-hidden">
                                         {item.foto || item.image ? (
                                           <img 
-                                            src={item.foto || item.image} 
+                                            src={getImageUrl(item.foto || item.image)} 
                                             alt={item.nama || item.name} 
                                             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 p-1" 
                                           />

@@ -28,6 +28,15 @@ interface CartProps {
   frequentlyBought: FrequentlyBought[];
 }
 
+const getImageUrl = (path?: string | null) => {
+  if (!path) return '';
+  return path.startsWith('http') 
+    ? path 
+    : (path.startsWith('storage/') || path.startsWith('/storage/') 
+        ? (path.startsWith('/') ? path : `/${path}`) 
+        : `/storage/${path}`);
+};
+
 export default function Cart({ cartItems, shippingCost, discount, frequentlyBought }: CartProps) {
   // State for checked items (store array of item IDs)
   const [checkedItems, setCheckedItems] = useState<number[]>(cartItems.map(item => item.id));
@@ -182,7 +191,7 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
 
                       <div className="w-[100px] h-[100px] bg-gray-50 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100 flex items-center justify-center p-2">
                         {item.foto ? (
-                          <img src={item.foto} alt={item.nama} className="w-full h-full object-contain" />
+                          <img src={getImageUrl(item.foto)} alt={item.nama} className="w-full h-full object-contain" />
                         ) : (
                           <div className="text-gray-300 flex flex-col items-center">
                             <span className="text-[10px] font-medium mt-1">Tidak ada gambar</span>
@@ -240,7 +249,7 @@ export default function Cart({ cartItems, shippingCost, discount, frequentlyBoug
                     <div key={product.id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-all">
                       <div className="w-[70px] h-[70px] bg-gray-50 rounded-lg overflow-hidden border border-gray-100 flex-shrink-0 p-1">
                         {product.foto ? (
-                          <img src={product.foto} alt={product.nama} className="w-full h-full object-contain" />
+                          <img src={getImageUrl(product.foto)} alt={product.nama} className="w-full h-full object-contain" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-xs text-gray-300">Gambar</div>
                         )}

@@ -47,6 +47,15 @@ interface Props {
   prescriptionId?: number | null;
 }
 
+const getImageUrl = (path?: string | null) => {
+  if (!path) return '';
+  return path.startsWith('http') 
+    ? path 
+    : (path.startsWith('storage/') || path.startsWith('/storage/') 
+        ? (path.startsWith('/') ? path : `/${path}`) 
+        : `/storage/${path}`);
+};
+
 export default function Checkout({ cartItems = [], address, addresses = [], shippingMethods = [], discount = 0, isBuyNow = false, prescriptionId = null }: Props) {
   const { auth, errors } = usePage().props as any;
   const [shippingMethod, setShippingMethod] = useState<string>(shippingMethods[0]?.id || '');
@@ -283,7 +292,7 @@ export default function Checkout({ cartItems = [], address, addresses = [], ship
                     <div key={item.id} className="flex items-center justify-between gap-3">
                       <div className="w-12 h-12 bg-gray-50 rounded-lg overflow-hidden border border-gray-100 flex-shrink-0 p-1 flex items-center justify-center">
                         {item.foto ? (
-                          <img src={item.foto} alt={item.nama} className="w-full h-full object-contain" />
+                          <img src={getImageUrl(item.foto)} alt={item.nama} className="w-full h-full object-contain" />
                         ) : (
                           <span className="text-[9px] text-gray-400 font-medium">Tidak Ada Gambar</span>
                         )}
