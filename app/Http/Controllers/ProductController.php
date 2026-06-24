@@ -34,6 +34,30 @@ class ProductController extends Controller
                 $catArray = array_filter($catArray, function ($slug) {
                     return $slug !== 'all';
                 });
+                
+                // Jika filter 'obat-obatan' dipilih, sertakan juga semua sub-kategori spesifiknya
+                if (in_array('obat-obatan', $catArray)) {
+                    $subCategories = [
+                        'analgesik',
+                        'antipiretik',
+                        'antihistamin',
+                        'antitusif',
+                        'ekspektoran',
+                        'mukolitik',
+                        'bronkodilator',
+                        'antiasma',
+                        'antiemetik',
+                        'kortikosteroid',
+                        'preparat-dermatologi',
+                        'obat-tetes-mata',
+                        'imunosupresan',
+                        'hormon-dan-kontrasepsi',
+                        'vitamin-dan-mineral',
+                        'nutrisi-enteral-dan-parenteral'
+                    ];
+                    $catArray = array_unique(array_merge($catArray, $subCategories));
+                }
+
                 if (!empty($catArray)) {
                     $q->whereHas('category', function ($q) use ($catArray) {
                         $q->whereIn('slug', $catArray);

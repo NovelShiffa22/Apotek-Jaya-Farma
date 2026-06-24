@@ -27,7 +27,7 @@ class ProductSeeder extends Seeder
                 'PROTHYRA 5MG TAB@30',
                 'TAB',
                 2350,
-                'Obat-Obatan',
+                'Hormon dan kontrasepsi',
                 'Prothyra merupakan obat yang mengandung Medroxyprogesterone Acetate (hormon progesteron sintetis). Digunakan untuk mengatasi berbagai gangguan pada sistem reproduksi wanita seperti amenore sekunder, perdarahan rahim disfungsional, dan endometriosis.',
                 'Amenore (tidak haid) sekunder, perdarahan uterus disfungsional akibat ketidakseimbangan hormonal, endometriosis, penundaan haid, dan terapi hormon pengganti.',
                 ['Nyeri', 'Lemas'],
@@ -91,7 +91,7 @@ class ProductSeeder extends Seeder
                 'HEPA-MERZ GRANUL@10',
                 'SC',
                 57997,
-                'Obat-Obatan',
+                'Nutrisi enteral dan parenteral',
                 'Hepa-Merz Granul adalah obat hepatoprotektor yang mengandung L-Ornithine L-Aspartate (LOLA). Bekerja dengan mendetoksifikasi amonia dalam darah pada penderita penyakit hati kronis seperti sirosis dan hepatitis, sehingga membantu mencegah ensefalopati hepatik.',
                 'Terapi hyperammonemia (kadar amonia tinggi) pada penyakit hati akut dan kronis, ensefalopati hepatik (pra-koma dan koma hepatik), serta detoksifikasi pada sirosis hati dan perlemakan hati.',
                 ['Mual'],
@@ -139,7 +139,7 @@ class ProductSeeder extends Seeder
                 'MOLACORT 0.75MG TAB@200 MOL',
                 'TAB',
                 277,
-                'Obat-Obatan',
+                'Kortikosteroid',
                 'Molacort mengandung Dexamethasone, kortikosteroid sintetis golongan glukokortikoid yang memiliki aktivitas anti-inflamasi dan imunosupresif kuat. Bekerja dengan menstabilkan membran lisosom leukosit sehingga mencegah pelepasan mediator peradangan.',
                 'Kondisi yang membutuhkan terapi kortikosteroid: alergi berat, peradangan akut dan kronis (asma bronkial, artritis reumatoid), penyakit autoimun (lupus, psoriasis), penyakit kulit inflamasi, gangguan kelenjar adrenal.',
                 ['Alergi', 'Sesak Napas'],
@@ -364,7 +364,7 @@ class ProductSeeder extends Seeder
                 'NUTRIMAX URICARE CAP@60',
                 'BT',
                 413726,
-                'Vitamin & Suplement',
+                'Suplemen & Vitamin',
                 'Nutrimax Uricare adalah suplemen kesehatan yang diformulasikan untuk mendukung kesehatan saluran kemih dan ginjal. Mengandung kombinasi ekstrak herbal dan nutrisi yang membantu menjaga fungsi ginjal optimal dan mencegah infeksi saluran kemih.',
                 'Mendukung kesehatan ginjal dan saluran kemih, membantu mencegah infeksi saluran kemih berulang, dan memelihara fungsi ginjal.',
                 [],
@@ -430,7 +430,7 @@ class ProductSeeder extends Seeder
                 'Mengantuk, mual, gangguan lambung ringan.',
                 'Gangguan hati, anak <12 tahun.'],
             // 7. IBUPROFEN 200MG TAB
-            ['IBUPROFEN 200MG TAB', 'TAB', 47700, 'Obat-Obatan',
+            ['IBUPROFEN 200MG TAB', 'TAB', 47700, 'Analgesik',
                 'Anti-inflamasi non-steroid untuk demam, nyeri, and peradangan ringan-sedang.',
                 'Meredakan nyeri ringan hingga sedang (sakit kepala, nyeri gigi, nyeri haid, nyeri otot), menurunkan demam, dan mengurangi peradangan.',
                 ['Demam', 'Nyeri', 'Nyeri Otot'],
@@ -439,7 +439,7 @@ class ProductSeeder extends Seeder
                 'Nyeri lambung, mual, diare, pusing, rasa tidak enak di perut.',
                 'Tukak lambung, gangguan ginjal, hamil trimester 3, anak <12 tahun.'],
             // 8. BODREX MIGRA
-            ['BODREX MIGRA', 'TUB', 23500, 'Obat-Obatan',
+            ['BODREX MIGRA', 'TUB', 23500, 'Antipiretik',
                 'Membantu meringankan rasa sakit kepala pada migrain.',
                 'Meringankan rasa sakit kepala terutama pada kondisi migrain.',
                 ['Nyeri', 'Demam', 'Pusing'],
@@ -565,7 +565,7 @@ class ProductSeeder extends Seeder
                 'Umumnya aman. Jarang: mual ringan.',
                 'Alergi komponen herbal.'],
             // 22. ANTIMO DEWASA TAB
-            ['ANTIMO DEWASA TAB', 'TAB', 13500, 'Obat-Obatan',
+            ['ANTIMO DEWASA TAB', 'TAB', 13500, 'Antiemetik',
                 'Mencegah dan mengatasi mual, muntah, dan pusing akibat mabuk perjalanan.',
                 'Mencegah dan mengobati mual, muntah, dan pusing akibat mabuk perjalanan (motion sickness) pada dewasa.',
                 ['Pusing', 'Mual', 'Mabuk Perjalanan'],
@@ -574,7 +574,7 @@ class ProductSeeder extends Seeder
                 'Kantuk, mulut kering, penglihatan kabur, konstipasi.',
                 'Glaukoma, hipertrofi prostat, asma, anak <2 th.'],
             // 23. ANTIMO ANAK STRAWBERRY@10
-            ['ANTIMO ANAK STRAWBERRY@10', 'PC', 19100, 'Obat-Obatan',
+            ['ANTIMO ANAK STRAWBERRY@10', 'PC', 19100, 'Antiemetik',
                 'Tablet kunyah rasa stroberi khusus anak untuk mencegah mabuk perjalanan.',
                 'Mencegah dan mengobati mual, pusing, dan muntah akibat mabuk perjalanan pada anak usia 2–12 tahun.',
                 ['Pusing', 'Mual', 'Mabuk Perjalanan'],
@@ -583,7 +583,7 @@ class ProductSeeder extends Seeder
                 'Kantuk, mulut kering.',
                 'Anak <2 tahun.'],
             // 24. ANTIMO ANAK JERUK SACH @10
-            ['ANTIMO ANAK JERUK SACH @10', 'DUS', 15400, 'Obat-Obatan',
+            ['ANTIMO ANAK JERUK SACH @10', 'DUS', 15400, 'Antiemetik',
                 'Serbuk sachet rasa jeruk untuk anak mencegah mabuk perjalanan.',
                 'Mencegah dan mengobati mual, pusing, dan muntah akibat mabuk perjalanan pada anak usia 2–12 tahun.',
                 ['Pusing', 'Mual', 'Mabuk Perjalanan'],
@@ -592,7 +592,7 @@ class ProductSeeder extends Seeder
                 'Kantuk ringan, mulut kering.',
                 'Anak <2 tahun.'],
             // 25. DIMENHYDRINATE 50 MG (BTL 100 TAB)
-            ['DIMENHYDRINATE 50 MG (BTL 100 TAB)', 'TAB', 31200, 'Obat-Obatan',
+            ['DIMENHYDRINATE 50 MG (BTL 100 TAB)', 'TAB', 31200, 'Antiemetik',
                 'Generik Antimo. Mencegah mual, muntah, dan pusing karena mabuk perjalanan atau vertigo ringan.',
                 'Mencegah dan mengobati mual, muntah, dan pusing akibat mabuk perjalanan serta vertigo ringan.',
                 ['Pusing', 'Mual', 'Mabuk Perjalanan'],
@@ -601,16 +601,16 @@ class ProductSeeder extends Seeder
                 'Kantuk, mulut kering, penglihatan kabur.',
                 'Glaukoma, hipertrofi prostat, anak <2 th.'],
             // 26. COUNTERPAIN COOL 15 GRAM
-            ['COUNTERPAIN COOL 15 GRAM', 'TUB', 30500, 'Obat-Obatan',
+            ['COUNTERPAIN COOL 15 GRAM', 'TUB', 30500, 'Analgesik',
                 'Krim oles analgesik dengan sensasi dingin untuk nyeri otot dan sendi.',
                 'Meredakan nyeri otot, pegal linu, kekakuan sendi, memar, dan keseleo secara topikal dengan sensasi dingin.',
                 ['Nyeri Otot', 'Pegal', 'Keseleo'],
                 'Methyl Salicylate, Menthol, Eugenol',
                 'Oleskan tipis pada area yang sakit, 3-4x sehari. Pijat lembut.',
                 'Iritasi kulit, rasa panas/dingin berlebih pada kulit sensitif.',
-                'Luka terbuka, kulit rusak, anak <2 th. Hindari kontak mata dan mukosa.'],
+                'Luka terbuka, kulit rusak, anak <2 th. Hindari kontak mata and mukosa.'],
             // 27. COUNTERPAIN CR 15GR
-            ['COUNTERPAIN CR 15GR', 'TUB', 6500, 'Obat-Obatan',
+            ['COUNTERPAIN CR 15GR', 'TUB', 6500, 'Analgesik',
                 'Versi krim Counterpain tanpa efek dingin berlebih.',
                 'Meredakan nyeri otot, pegal-pegal, kekakuan sendi, dan keseleo secara topikal.',
                 ['Nyeri Otot', 'Pegal'],
@@ -628,7 +628,7 @@ class ProductSeeder extends Seeder
                 'Umumnya aman. Kadang: rasa hangat di tenggorokan, mual ringan.',
                 'Maag akut, hamil.'],
             // 29. REFLEXOR CR 30GR
-            ['REFLEXOR CR 30GR', 'TUB', 49500, 'Obat-Obatan',
+            ['REFLEXOR CR 30GR', 'TUB', 49500, 'Analgesik',
                 'Krim hangat untuk meredakan nyeri otot, pegal, dan keseleo.',
                 'Meredakan nyeri otot, pegal-pegal, keseleo, dan kekakuan sendi secara topikal.',
                 ['Nyeri Otot', 'Pegal'],
@@ -637,7 +637,7 @@ class ProductSeeder extends Seeder
                 'Iritasi atau kemerahan kulit.',
                 'Luka terbuka, kulit iritasi, anak <2 th.'],
             // 30. FLEXAMINE CR 30GR
-            ['FLEXAMINE CR 30GR', 'TUB', 20300, 'Obat-Obatan',
+            ['FLEXAMINE CR 30GR', 'TUB', 20300, 'Analgesik',
                 'Krim analgesik topikal untuk nyeri otot dan pegal.',
                 'Meredakan nyeri otot and pegal-pegal secara topikal.',
                 ['Nyeri Otot', 'Pegal'],
@@ -646,7 +646,7 @@ class ProductSeeder extends Seeder
                 'Iritasi kulit ringan.',
                 'Luka terbuka, alergi salicylate.'],
             // 31. BALSAMEX OINT 20GR
-            ['BALSAMEX OINT 20GR', 'TUB', 29000, 'Obat-Obatan',
+            ['BALSAMEX OINT 20GR', 'TUB', 29000, 'Analgesik',
                 'Balsam untuk nyeri otot, pegal, dan melegakan pernapasan.',
                 'Meredakan nyeri otot, pegal linu, dan membantu melegakan pernapasan (hidung tersumbat) serta meredakan gejala masuk angin.',
                 ['Nyeri Otot', 'Pegal', 'Hidung Tersumbat'],
@@ -709,7 +709,7 @@ class ProductSeeder extends Seeder
                 'Mual, diare jika dosis tinggi, iritasi lambung.',
                 'Batu ginjal (riwayat), konsumsi > 1000mg/hari jangka panjang.'],
             // 38. PRITASMA TAB@100 
-            ['PRITASMA TAB@100', 'TAB', 24100, 'Obat-Obatan',
+            ['PRITASMA TAB@100', 'TAB', 24100, 'Antiasma',
                 'Tablet kombinasi untuk melebarkan saluran napas pada asma ringan.',
                 'Meringankan dan mencegah serangan asma bronkial ringan serta bronkospasme.',
                 ['Sesak Napas', 'Asma'],
@@ -718,7 +718,7 @@ class ProductSeeder extends Seeder
                 'Jantung berdebar, mual, insomnia, sakit kepala, gemetar.',
                 'Aritmia, hipertensi berat, anak <6 th, hamil.'],
             // 39. ASMASOLON TABLET @ 100 (UN)
-            ['ASMASOLON TABLET @ 100 (UN)', 'BT', 29500, 'Obat-Obatan',
+            ['ASMASOLON TABLET @ 100 (UN)', 'BT', 29500, 'Antiasma',
                 'Tablet bronkodilator untuk melegakan napas pada serangan asma ringan.',
                 'Meringankan sesak napas and gejala asma bronkial ringan, serta bronkitis dengan komponen bronkospasme.',
                 ['Sesak Napas', 'Asma'],
@@ -727,7 +727,7 @@ class ProductSeeder extends Seeder
                 'Jantung berdebar, gelisah, insomnia, mual.',
                 'Aritmia, hipertiroid, hipertensi, hamil.'],
             // 40. BRICASMA SYR 100ML
-            ['BRICASMA SYR 100ML', 'BT', 46500, 'Obat-Obatan',
+            ['BRICASMA SYR 100ML', 'BT', 46500, 'Antiasma',
                 'Sirup bronkodilator untuk melebarkan saluran napas pada asma dan bronkitis.',
                 'Mencegah dan mengobati bronkospasme pada asma bronkial, bronkitis kronis, dan emfisema.',
                 ['Sesak Napas', 'Asma', 'Mengi'],
@@ -736,7 +736,7 @@ class ProductSeeder extends Seeder
                 'Tremor, jantung berdebar, sakit kepala, pusing.',
                 'Aritmia, hipertensi berat. Hati-hati pada diabetes.'],
             // 41. REGIT DROP 10ML
-            ['REGIT DROP 10ML', 'BT', 67300, 'Obat-Obatan',
+            ['REGIT DROP 10ML', 'BT', 67300, 'Antiemetik',
                 'Tetes antiemetik untuk mual dan muntah pada bayi/anak.',
                 'Mencegah dan mengobati mual serta muntah pada bayi dan anak, termasuk mual akibat gangguan motilitas lambung.',
                 ['Mual', 'Muntah'],
@@ -745,7 +745,7 @@ class ProductSeeder extends Seeder
                 'Kantuk, sakit kepala, mulut kering.',
                 'Gangguan hati, perdarahan GI, anak <1 th (hati-hati).'],
             // 42. NORVOM 10MG TAB@100
-            ['NORVOM 10MG TAB@100', 'TAB', 38200, 'Obat-Obatan',
+            ['NORVOM 10MG TAB@100', 'TAB', 38200, 'Antiemetik',
                 'Tablet untuk mengatasi mual dan muntah serta mempercepat pengosongan lambung.',
                 'Mengobati mual dan muntah, serta mempercepat pengosongan lambung pada dispepsia fungsional.',
                 ['Mual', 'Muntah'],
@@ -754,7 +754,7 @@ class ProductSeeder extends Seeder
                 'Sakit kepala, mulut kering, diare, kantuk.',
                 'Gangguan hati berat, perdarahan saluran cerna.'],
             // 43. NORVOM SYR 60ML
-            ['NORVOM SYR 60ML', 'BT', 12200, 'Obat-Obatan',
+            ['NORVOM SYR 60ML', 'BT', 12200, 'Antiemetik',
                 'Sirup antiemetik untuk anak dengan mual dan muntah.',
                 'Mengobati mual dan muntah pada anak, termasuk mual akibat gangguan motilitas lambung.',
                 ['Mual', 'Muntah'],
@@ -772,7 +772,7 @@ class ProductSeeder extends Seeder
                 'Umumnya aman. Rasa hangat di lambung.',
                 'Maag akut.'],
             // 45. ASAM MEFENAMAT 500MG TAB GHX
-            ['ASAM MEFENAMAT 500MG TAB GHX', 'TAB', 75900, 'Obat-Obatan',
+            ['ASAM MEFENAMAT 500MG TAB GHX', 'TAB', 75900, 'Analgesik',
                 'Anti-inflamasi dan analgesik untuk nyeri ringan-sedang, terutama nyeri haid dan gigi.',
                 'Meredakan nyeri ringan hingga sedang seperti nyeri haid (dismenore), sakit gigi, sakit kepala, nyeri pasca operasi, dan nyeri otot.',
                 ['Nyeri', 'Nyeri Haid', 'Nyeri Gigi'],
@@ -781,7 +781,7 @@ class ProductSeeder extends Seeder
                 'Nyeri lambung, mual, diare, pusing, mengantuk.',
                 'Tukak lambung, gangguan ginjal/hati, hamil trimester 3, anak <14 th.'],
             // 46. GORALGIN TAB @ 100 (GDN)
-            ['GORALGIN TAB @ 100 (GDN)', 'TAB', 38800, 'Obat-Obatan',
+            ['GORALGIN TAB @ 100 (GDN)', 'TAB', 38800, 'Analgesik',
                 'Analgesik dan antispasmodik untuk nyeri kolik dan nyeri ringan-sedang.',
                 'Meredakan nyeri kolik (saluran kemih, saluran empedu, usus) dan nyeri ringan-sedang lainnya.',
                 ['Nyeri', 'Demam'],
@@ -844,7 +844,7 @@ class ProductSeeder extends Seeder
                 'Bersin setelah pemakaian (wajar).',
                 'Tidak ada kontraindikasi signifikan.'],
             // 53. INSTO MOIST 7.5 ML
-            ['INSTO MOIST 7.5 ML', 'BT', 46300, 'Obat-Obatan',
+            ['INSTO MOIST 7.5 ML', 'BT', 46300, 'Obat tetes mata',
                 'Tetes mata dan hidung untuk melembabkan membran mukosa yang kering akibat pilek.',
                 'Melembabkan dan meringankan iritasi mata kering akibat penggunaan lensa kontak, lingkungan kering, atau terlalu lama menatap layar.',
                 ['Pilek', 'Mata Kering', 'Iritasi'],
@@ -853,7 +853,7 @@ class ProductSeeder extends Seeder
                 'Penglihatan kabur sementara (jika digunakan di mata).',
                 'Alergi komponen.'],
             // 54. INSTO COOL 7.5 ML
-            ['INSTO COOL 7.5 ML', 'BT', 47300, 'Obat-Obatan',
+            ['INSTO COOL 7.5 ML', 'BT', 47300, 'Obat tetes mata',
                 'Tetes mata untuk mengatasi mata merah dan iritasi dengan sensasi dingin.',
                 'Meredakan mata merah, iritasi mata ringan, dan rasa tidak nyaman pada mata akibat debu, asap, atau kelelahan.',
                 ['Pilek', 'Mata Merah', 'Iritasi Mata'],
@@ -871,7 +871,7 @@ class ProductSeeder extends Seeder
                 'Bersin ringan.',
                 'Tidak ada.'],
             // 56. CETIRIZINE 10 MG (DUS 30 TAB)
-            ['CETIRIZINE 10 MG (DUS 30 TAB)', 'TAB', 305, 'Obat-Obatan',
+            ['CETIRIZINE 10 MG (DUS 30 TAB)', 'TAB', 305, 'Antihistamin',
                 'Antihistamin generasi 2 untuk alergi, urtikaria, dan rhinitis alergi. Efek kantuk minimal.',
                 'Meredakan gejala alergi seperti bersin, hidung berair (rhinitis alergi), gatal-gatal, urtikaria (biduran), dan konjungtivitis alergi.',
                 ['Alergi', 'Pilek Alergi', 'Gatal'],
@@ -880,7 +880,7 @@ class ProductSeeder extends Seeder
                 'Kantuk ringan, mulut kering, sakit kepala.',
                 'Gangguan ginjal berat, anak <2 th.'],
             // 57. TELFAST 120MG OTC TAB@10
-            ['TELFAST 120MG OTC TAB@10', 'TAB', 37900, 'Obat-Obatan',
+            ['TELFAST 120MG OTC TAB@10', 'TAB', 37900, 'Antihistamin',
                 'Antihistamin generasi 3, non-sedatif untuk rhinitis alergi musiman.',
                 'Meredakan gejala rhinitis alergi musiman seperti bersin, hidung berair, mata berair and gatal, serta urtikaria idiopatik kronis.',
                 ['Alergi', 'Rhinitis Alergi', 'Biduran'],
@@ -889,7 +889,7 @@ class ProductSeeder extends Seeder
                 'Sakit kepala, mual, pusing. Sangat jarang kantuk.',
                 'Gangguan ginjal berat.'],
             // 58. INCIDAL OD 10MG CAP@50
-            ['INCIDAL OD 10MG CAP@50', 'BT', 26200, 'Obat-Obatan',
+            ['INCIDAL OD 10MG CAP@50', 'BT', 26200, 'Antihistamin',
                 'Kapsul antihistamin once-daily untuk alergi dan gatal.',
                 'Meredakan gejala alergi seperti rhinitis alergi, gatal-gatal, dan urtikaria (biduran).',
                 ['Alergi', 'Gatal', 'Urtikaria'],
@@ -898,7 +898,7 @@ class ProductSeeder extends Seeder
                 'Kantuk ringan, mulut kering.',
                 'Anak <6 th, gangguan ginjal berat.'],
             // 59. SANOLERGIC 120MG KPL@100
-            ['SANOLERGIC 120MG KPL@100', 'TAB', 23400, 'Obat-Obatan',
+            ['SANOLERGIC 120MG KPL@100', 'TAB', 23400, 'Antihistamin',
                 'Antihistamin non-sedatif untuk rhinitis alergi.',
                 'Meredakan gejala rhinitis alergi musiman (bersin, hidung berair, hidung gatal, mata berair) dan urtikaria idiopatik kronis.',
                 ['Alergi', 'Rhinitis Alergi'],
@@ -907,7 +907,7 @@ class ProductSeeder extends Seeder
                 'Sakit kepala, mual.',
                 'Gangguan ginjal berat.'],
             // 60. XEPADERGIN 1MG TAB@100
-            ['XEPADERGIN 1MG TAB@100', 'TAB', 38900, 'Obat-Obatan',
+            ['XEPADERGIN 1MG TAB@100', 'TAB', 38900, 'Antihistamin',
                 'Antihistamin dengan efek stabilisasi sel mast untuk alergi kronis.',
                 'Pencegahan dan pengobatan alergi kronis, urtikaria, konjungtivitis alergi, dan eksim alergi. Sebagai terapi tambahan pada asma bronkial.',
                 ['Alergi', 'Gatal', 'Urtikaria'],
@@ -917,7 +917,7 @@ class ProductSeeder extends Seeder
                 'Ketotifen Fumarate 1mg',
                 'Anak <3 th, hamil trimester 1.'],
             // 61. ZADITEN 1MG DROP 10ML
-            ['ZADITEN 1MG DROP 10ML', 'BT', 20500, 'Obat-Obatan',
+            ['ZADITEN 1MG DROP 10ML', 'BT', 20500, 'Antihistamin',
                 'Tetes antihistamin untuk anak dengan alergi and kecenderungan asma.',
                 'Pencegahan dan pengobatan reaksi alergi, konjungtivitis alergi, dan sebagai terapi tambahan pada asma bronkial alergi pada anak.',
                 ['Alergi', 'Asma Alergi'],
@@ -926,7 +926,7 @@ class ProductSeeder extends Seeder
                 'Kantuk, mulut kering.',
                 'Anak <6 bulan.'],
             // 62. MEBO OINT 40GR
-            ['MEBO OINT 40GR', 'TUB', 144300, 'Obat-Obatan',
+            ['MEBO OINT 40GR', 'TUB', 144300, 'Preparat dermatologi',
                 'Salep herbal untuk penyembuhan luka bakar dan lecet ringan.',
                 'Membantu penyembuhan luka bakar derajat I dan II, luka lecet, dan luka kulit superfisial.',
                 ['Luka Bakar', 'Luka Lecet'],
@@ -971,7 +971,7 @@ class ProductSeeder extends Seeder
                 'Iritasi ringan saat melepas.',
                 'Alergi plester, luka infeksi/dalam.'],
             // 67. NEO RHEUMACYL NEURO STR10.S@12
-            ['NEO RHEUMACYL NEURO STR10.S@12', 'PC', 23800, 'Obat-Obatan',
+            ['NEO RHEUMACYL NEURO STR10.S@12', 'PC', 23800, 'Analgesik',
                 'Kombinasi NSAID dan vitamin B untuk pegal linu, nyeri sendi, dan rematik.',
                 'Meringankan nyeri sendi, pegal linu, nyeri otot, rematik, serta membantu memenuhi kebutuhan vitamin B untuk kesehatan saraf.',
                 ['Pegal', 'Nyeri Sendi', 'Rematik'],
@@ -1012,6 +1012,22 @@ class ProductSeeder extends Seeder
             'Perawatan Tubuh' => 'fa-bath',
             'Obat Tradisional / Herbal' => 'fa-leaf',
             'Vitamin & Suplement' => 'fa-capsules',
+            'Analgesik' => 'fa-pills',
+            'Antipiretik' => 'fa-thermometer-half',
+            'Antihistamin' => 'fa-capsules',
+            'Antitusif' => 'fa-head-side-cough',
+            'Ekspektoran' => 'fa-head-side-cough',
+            'Mukolitik' => 'fa-head-side-cough',
+            'Bronkodilator' => 'fa-lungs',
+            'Antiasma' => 'fa-lungs',
+            'Antiemetik' => 'fa-pills',
+            'Kortikosteroid' => 'fa-pills',
+            'Preparat dermatologi' => 'fa-hand-holding-medical',
+            'Obat tetes mata' => 'fa-eye',
+            'Imunosupresan' => 'fa-shield-virus',
+            'Hormon dan kontrasepsi' => 'fa-venus-mars',
+            'Vitamin dan mineral' => 'fa-apple-alt',
+            'Nutrisi enteral dan parenteral' => 'fa-mortar-pestle',
         ];
 
         // 2. Prepare Images
@@ -1026,6 +1042,22 @@ class ProductSeeder extends Seeder
             'Perawatan Tubuh' => 'https://images.unsplash.com/photo-1608248593842-8d76d4949397?q=80&w=400',
             'Obat Tradisional / Herbal' => 'https://images.unsplash.com/photo-1628771065518-0d82f1938462?q=80&w=400',
             'Vitamin & Suplement' => 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=400',
+            'Analgesik' => 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=400',
+            'Antipiretik' => 'https://images.unsplash.com/photo-1631549916768-4119b2e5f926?q=80&w=400',
+            'Antihistamin' => 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=400',
+            'Antitusif' => 'https://images.unsplash.com/photo-1584362917165-526a968579e8?q=80&w=400',
+            'Ekspektoran' => 'https://images.unsplash.com/photo-1584362917165-526a968579e8?q=80&w=400',
+            'Mukolitik' => 'https://images.unsplash.com/photo-1584362917165-526a968579e8?q=80&w=400',
+            'Bronkodilator' => 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=400',
+            'Antiasma' => 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=400',
+            'Antiemetik' => 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=400',
+            'Kortikosteroid' => 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=400',
+            'Preparat dermatologi' => 'https://images.unsplash.com/photo-1608248593842-8d76d4949397?q=80&w=400',
+            'Obat tetes mata' => 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=400',
+            'Imunosupresan' => 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=400',
+            'Hormon dan kontrasepsi' => 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=400',
+            'Vitamin dan mineral' => 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=400',
+            'Nutrisi enteral dan parenteral' => 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?q=80&w=400',
         ];
 
         // 3. Prepare Symptoms
@@ -1040,6 +1072,14 @@ class ProductSeeder extends Seeder
         $customProductImages = [
             'PARAMEX FLU & BATUK TAB@100' => 'https://lh3.googleusercontent.com/d/1ZIp3CBeL07OmwJ2butxDIwpZS0UY2Uff',
         ];
+
+        $imageDir = resource_path('Gambar');
+        $files = [];
+        if (is_dir($imageDir)) {
+            $files = array_filter(scandir($imageDir), function($f) use ($imageDir) {
+                return is_file("$imageDir/$f") && $f !== '.' && $f !== '..';
+            });
+        }
 
         $productData = [];
         $pivotData = [];
@@ -1166,7 +1206,19 @@ class ProductSeeder extends Seeder
                 'satuan' => $finalSatuan,
                 'stok' => rand(20, 100),
                 'stok_minimum' => 5,
-                'gambar' => $customProductImages[$row[0]] ?? ($imageMap[$catName] ?? $imageMap['Obat-Obatan']),
+                'gambar' => (function() use ($row, $files, $customProductImages, $imageMap, $catName) {
+                    $bestMatch = $this->findBestMatch($row[0], $files);
+                    if ($bestMatch) {
+                        $srcPath = resource_path("Gambar/$bestMatch");
+                        $dstDir = storage_path("app/public/products");
+                        if (!is_dir($dstDir)) {
+                            mkdir($dstDir, 0755, true);
+                        }
+                        copy($srcPath, "$dstDir/$bestMatch");
+                        return "products/$bestMatch";
+                    }
+                    return $customProductImages[$row[0]] ?? ($imageMap[$catName] ?? $imageMap['Obat-Obatan']);
+                })(),
                 'is_active' => true,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -1177,5 +1229,62 @@ class ProductSeeder extends Seeder
         
         DB::table('products')->insert($productData);
         DB::table('product_symptoms')->insert($pivotData);
+    }
+
+    private function cleanForMatch($str) {
+        $str = strtolower($str);
+        $str = str_replace('haemoven', 'hemoven', $str);
+        $str = str_replace('amp', '', $str);
+        $str = preg_replace('/[^a-z0-9]/', '', $str);
+        return $str;
+    }
+
+    private function findBestMatch($productName, $files) {
+        $cleanProduct = $this->cleanForMatch($productName);
+        
+        $words = preg_split('/[^a-z]/', strtolower($productName));
+        $words = array_filter($words, function($w) {
+            return strlen($w) > 2 
+                && !in_array($w, ['tab', 'syr', 'sachet', 'capsule', 'cap', 'kpl', 'pcs', 'gr', 'ml', 'mg', 'pack', 'dusk', 'dus', 'plus']);
+        });
+        
+        $bestMatch = null;
+        $bestScore = 0;
+        
+        foreach ($files as $file) {
+            $filename = pathinfo($file, PATHINFO_FILENAME);
+            $cleanFile = $this->cleanForMatch($filename);
+            $cleanFileNoNumber = preg_replace('/^\d+/', '', $cleanFile);
+            
+            $score = 0;
+            
+            if ($cleanFileNoNumber === $cleanProduct) {
+                $score = 100000;
+            }
+            elseif ($cleanFileNoNumber !== '' && strpos($cleanProduct, $cleanFileNoNumber) !== false) {
+                $score = 50000 + strlen($cleanFileNoNumber);
+            }
+            elseif ($cleanFileNoNumber !== '' && strpos($cleanFileNoNumber, $cleanProduct) !== false) {
+                $score = 40000 + strlen($cleanProduct);
+            }
+            else {
+                $matchedScore = 0;
+                foreach ($words as $word) {
+                    if (strpos($cleanFile, $word) !== false) {
+                        $matchedScore += strlen($word) * 100;
+                    }
+                }
+                if ($matchedScore > 0) {
+                    $score = $matchedScore;
+                }
+            }
+            
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $bestMatch = $file;
+            }
+        }
+        
+        return $bestScore >= 100 ? $bestMatch : null;
     }
 }

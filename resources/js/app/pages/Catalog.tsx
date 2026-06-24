@@ -32,7 +32,23 @@ export default function Catalog({
     'obat-batuk-pilek',
     'analgesik-antipiretik',
     'obat-obatan',
-    'obat-tradisional-herbal'
+    'obat-tradisional-herbal',
+    'analgesik',
+    'antipiretik',
+    'antihistamin',
+    'antitusif',
+    'ekspektoran',
+    'mukolitik',
+    'bronkodilator',
+    'antiasma',
+    'antiemetik',
+    'kortikosteroid',
+    'preparat-dermatologi',
+    'obat-tetes-mata',
+    'imunosupresan',
+    'hormon-dan-kontrasepsi',
+    'vitamin-dan-mineral',
+    'nutrisi-enteral-dan-parenteral'
   ];
 
   const isSymptomDisabled = selectedCategories.length > 0 && 

@@ -14,7 +14,23 @@ export default function ProductDetail({ product }: { product: any }) {
     'Obat Batuk & Pilek',
     'Analgesik & Antipiretik',
     'Obat-Obatan',
-    'Obat Tradisional / Herbal'
+    'Obat Tradisional / Herbal',
+    'Analgesik',
+    'Antipiretik',
+    'Antihistamin',
+    'Antitusif',
+    'Ekspektoran',
+    'Mukolitik',
+    'Bronkodilator',
+    'Antiasma',
+    'Antiemetik',
+    'Kortikosteroid',
+    'Preparat dermatologi',
+    'Obat tetes mata',
+    'Imunosupresan',
+    'Hormon dan kontrasepsi',
+    'Vitamin dan mineral',
+    'Nutrisi enteral dan parenteral'
   ];
   const isMedicine = !!(product.category?.nama_kategori && MEDICINE_CATEGORIES.includes(product.category.nama_kategori));
   const isCimantin = !!(product.nama_obat && product.nama_obat.toUpperCase().includes('CIMANTIN'));

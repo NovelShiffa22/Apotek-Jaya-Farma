@@ -37,7 +37,23 @@ export default function ProductCard(props: ProductCardProps) {
     'Obat Batuk & Pilek',
     'Analgesik & Antipiretik',
     'Obat-Obatan',
-    'Obat Tradisional / Herbal'
+    'Obat Tradisional / Herbal',
+    'Analgesik',
+    'Antipiretik',
+    'Antihistamin',
+    'Antitusif',
+    'Ekspektoran',
+    'Mukolitik',
+    'Bronkodilator',
+    'Antiasma',
+    'Antiemetik',
+    'Kortikosteroid',
+    'Preparat dermatologi',
+    'Obat tetes mata',
+    'Imunosupresan',
+    'Hormon dan kontrasepsi',
+    'Vitamin dan mineral',
+    'Nutrisi enteral dan parenteral'
   ];
   const isMedicine = !!(kategoriNama && MEDICINE_CATEGORIES.includes(kategoriNama));
 

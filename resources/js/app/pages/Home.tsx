@@ -21,7 +21,7 @@ const categories = [
     iconColor: 'text-[#2d5f9f]'
   },
   {
-    id: 'vitamin-suplement',
+    id: 'suplemen-vitamin',
     name: 'Vitamin',
     icon: Heart,
     color: 'bg-[#fef2f2]',
