@@ -10,6 +10,15 @@ export default function ProductDetail({ product }: { product: any }) {
   const isRestricted = product.is_prescription_required;
   const [qty, setQty] = useState<number | string>(1);
 
+  const MEDICINE_CATEGORIES = [
+    'Obat Batuk & Pilek',
+    'Analgesik & Antipiretik',
+    'Obat-Obatan',
+    'Obat Tradisional / Herbal'
+  ];
+  const isMedicine = !!(product.category?.nama_kategori && MEDICINE_CATEGORIES.includes(product.category.nama_kategori));
+  const isCimantin = !!(product.nama_obat && product.nama_obat.toUpperCase().includes('CIMANTIN'));
+
   const handleQtyChange = (newQty: number) => {
     if (newQty >= 1 && newQty <= product.stok) {
       setQty(newQty);
@@ -104,20 +113,33 @@ export default function ProductDetail({ product }: { product: any }) {
           <div>
             <div className="mb-8">
               <div className="flex flex-wrap items-center gap-3 mb-6">
-                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
-                  product.jenis_obat === 'bebas' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                  product.jenis_obat === 'keras' ? 'bg-red-50 text-red-700 border border-red-200' :
-                  'bg-amber-50 text-amber-700 border border-amber-200'
-                }`}>
-                  <div className={`w-2 h-2 rounded-full ${
-                    product.jenis_obat === 'bebas' ? 'bg-emerald-500' :
-                    product.jenis_obat === 'keras' ? 'bg-red-500' :
-                    'bg-amber-500'
-                  }`} />
-                  <p className="font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase">
-                    {product.jenis_obat === 'bebas' ? 'Obat Bebas' : product.jenis_obat === 'keras' ? 'Obat Keras' : 'Obat Terbatas'}
-                  </p>
-                </div>
+                {isMedicine && (
+                  <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
+                    product.jenis_obat === 'bebas' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                    product.jenis_obat === 'keras' ? 'bg-red-50 text-red-700 border border-red-200' :
+                    'bg-amber-50 text-amber-700 border border-amber-200'
+                  }`}>
+                    {product.jenis_obat === 'keras' ? (
+                      <div className="w-5 h-5 rounded-full bg-red-600 border border-black flex items-center justify-center text-white text-[10px] font-black font-sans shrink-0">
+                        K
+                      </div>
+                    ) : (
+                      <div className={`w-2 h-2 rounded-full ${
+                        product.jenis_obat === 'bebas' ? 'bg-emerald-500' : 'bg-amber-500'
+                      }`} />
+                    )}
+                    <p className="font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase">
+                      {product.jenis_obat === 'bebas' ? 'Obat Bebas' : product.jenis_obat === 'keras' ? 'Obat Keras' : 'Obat Terbatas'}
+                    </p>
+                  </div>
+                )}
+                {isCimantin && (
+                  <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                    <p className="font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase">
+                      Obat Alzheimer
+                    </p>
+                  </div>
+                )}
                 {product.category?.nama_kategori && (
                   <div className="inline-flex items-center px-4 py-2 rounded-full bg-slate-50 text-slate-600 border border-slate-200">
                     <p className="font-['Inter',sans-serif] text-[12px] font-bold tracking-wider uppercase">

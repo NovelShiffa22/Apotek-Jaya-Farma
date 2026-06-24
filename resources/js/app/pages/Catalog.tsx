@@ -28,6 +28,17 @@ export default function Catalog({
   const [priceMin, setPriceMin] = useState<string>(initialPriceMin);
   const [priceMax, setPriceMax] = useState<string>(initialPriceMax);
 
+  const MEDICINE_SLUGS = [
+    'obat-batuk-pilek',
+    'analgesik-antipiretik',
+    'obat-obatan',
+    'obat-tradisional-herbal'
+  ];
+
+  const isSymptomDisabled = selectedCategories.length > 0 && 
+    !selectedCategories.includes('all') && 
+    selectedCategories.every(c => !MEDICINE_SLUGS.includes(c));
+
   // Dynamic categories mapped from backend
   const categories = [
     { id: 'all', label: 'Semua Produk' },
@@ -50,21 +61,42 @@ export default function Catalog({
   };
 
   const toggleCategory = (categoryId: string) => {
-    let newCats: string[];
     if (categoryId === 'all') {
-      newCats = ['all'];
+      setSelectedCategories(['all']);
+      setSelectedSymptoms([]);
+      updateFilters(['all'], [], true);
+      return;
+    }
+
+    const isCategoryMedicine = MEDICINE_SLUGS.includes(categoryId);
+    let newCats: string[];
+
+    if (selectedCategories.includes(categoryId)) {
+      newCats = selectedCategories.filter(c => c !== categoryId && c !== 'all');
+      if (newCats.length === 0) {
+        newCats = ['all'];
+      }
     } else {
-      if (selectedCategories.includes(categoryId)) {
-        newCats = selectedCategories.filter(c => c !== categoryId && c !== 'all');
-        if (newCats.length === 0) {
-          newCats = ['all'];
-        }
+      const currentCatsWithoutAll = selectedCategories.filter(c => c !== 'all');
+      
+      if (isCategoryMedicine) {
+        // Clear non-medicine categories
+        const filtered = currentCatsWithoutAll.filter(c => MEDICINE_SLUGS.includes(c));
+        newCats = [...filtered, categoryId];
       } else {
-        newCats = [...selectedCategories.filter(c => c !== 'all'), categoryId];
+        // Clear medicine categories and symptoms
+        const filtered = currentCatsWithoutAll.filter(c => !MEDICINE_SLUGS.includes(c));
+        newCats = [...filtered, categoryId];
+        setSelectedSymptoms([]);
       }
     }
+
     setSelectedCategories(newCats);
-    updateFilters(newCats, selectedSymptoms, true); // True to reset search
+
+    const hasMedicine = newCats.some(c => MEDICINE_SLUGS.includes(c)) || newCats.includes('all');
+    const symsToApply = hasMedicine ? selectedSymptoms : [];
+
+    updateFilters(newCats, symsToApply, true);
   };
 
   const resetAllFilters = () => {
@@ -76,6 +108,8 @@ export default function Catalog({
   };
 
   const toggleSymptom = (symptom: string) => {
+    if (isSymptomDisabled) return;
+
     // Find symptom slug to send to backend instead of label
     const symObj = masterSymptoms.find(s => s.nama_gejala === symptom);
     const symSlug = symObj ? symObj.slug : symptom;
@@ -101,7 +135,18 @@ export default function Catalog({
         <div className="flex items-center justify-between mb-10">
           <div>
             <h1 className="font-['Roboto_Condensed',sans-serif] font-light text-[48px] tracking-[-1.2px] text-[#171d19] mb-2">
-              Katalog Obat
+              {(() => {
+                if (selectedCategories.includes('all') || selectedCategories.length === 0) {
+                  return 'Katalog Semua Produk';
+                }
+                const activeLabels = selectedCategories
+                  .map(slug => categories.find(c => c.id === slug)?.label)
+                  .filter(Boolean);
+                if (activeLabels.length === 0) {
+                  return 'Katalog Semua Produk';
+                }
+                return `Katalog ${activeLabels.join(', ')}`;
+              })()}
             </h1>
             {searchQuery && (
               <div className="mt-2">
@@ -192,10 +237,11 @@ export default function Catalog({
                 <p className="font-['Inter',sans-serif] text-[12px] font-bold text-[#6e7a70] tracking-wider uppercase mb-4">
                   GEJALA
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className={`flex flex-wrap gap-2 ${isSymptomDisabled ? 'opacity-40 cursor-not-allowed pointer-events-none select-none' : ''}`}>
                   {symptoms.map(symptom => (
                     <button
                       key={symptom}
+                      disabled={isSymptomDisabled}
                       onClick={() => toggleSymptom(symptom)}
                       className={`px-3 py-1.5 rounded-full font-['Inter',sans-serif] text-[14px] transition-all ${
                         selectedSymptoms.includes(masterSymptoms.find(s => s.nama_gejala === symptom)?.slug || symptom)
@@ -207,6 +253,11 @@ export default function Catalog({
                     </button>
                   ))}
                 </div>
+                {isSymptomDisabled && (
+                  <p className="font-['Inter',sans-serif] text-[11px] text-amber-600 mt-2 font-medium">
+                    * Gejala hanya tersedia untuk kategori obat.
+                  </p>
+                )}
               </div>
 
               <div className="h-px bg-[#e5e7eb] mb-8" />
