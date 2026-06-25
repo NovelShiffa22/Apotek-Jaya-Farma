@@ -28,6 +28,7 @@ class VirtualTransaction extends Model
 
     protected $casts = [
         'items' => 'array',
+        'shipping_address' => 'array',
     ];
 
     public function user()

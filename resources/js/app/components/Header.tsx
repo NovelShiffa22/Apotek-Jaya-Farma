@@ -11,7 +11,7 @@ export default function Header() {
   const user = auth?.user;
   const { url } = usePage();
   const [cartCount, setCartCount] = useState(initialCartCount);
-  const [hasUnreadNotifs, setHasUnreadNotifs] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
   const isUploadFlow = url.startsWith('/prescriptions/upload');
@@ -21,27 +21,38 @@ export default function Header() {
     const handleCartUpdate = (e: any) => setCartCount(e.detail);
     window.addEventListener('cartUpdated', handleCartUpdate);
     
-    const checkUnreadNotifs = () => {
-      const savedReadStatus = typeof window !== 'undefined' ? localStorage.getItem('readNotifications') : null;
-      if (savedReadStatus) {
-        const readIds = JSON.parse(savedReadStatus);
-        // initialNotifications in Notifications.tsx has id 1 as unread initially.
-        if (readIds.includes(1)) {
-          setHasUnreadNotifs(false);
-          return;
-        }
+    const fetchUnreadCount = () => {
+      if (user) {
+        // Optimistic check, replace with actual API
+        fetch('/api/notifications')
+          .then(res => res.json())
+          .then(data => {
+            const count = data.filter((n: any) => n.read_at === null).length;
+            setUnreadCount(count);
+          })
+          .catch(e => console.error(e));
       }
-      setHasUnreadNotifs(true);
     };
 
-    checkUnreadNotifs();
-    window.addEventListener('notificationsUpdated', checkUnreadNotifs);
+    fetchUnreadCount();
+    window.addEventListener('notificationsUpdated', fetchUnreadCount);
+    
+    // Set up Echo listener for header specifically to increment counter
+    if (window.Echo && user) {
+        window.Echo.private(`App.Models.User.${user.id}`)
+            .notification((notification: any) => {
+                setUnreadCount(prev => prev + 1);
+            });
+    }
 
     return () => {
       window.removeEventListener('cartUpdated', handleCartUpdate);
-      window.removeEventListener('notificationsUpdated', checkUnreadNotifs);
+      window.removeEventListener('notificationsUpdated', fetchUnreadCount);
+      if (window.Echo && user) {
+          window.Echo.leave(`App.Models.User.${user.id}`);
+      }
     };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     setCartCount(initialCartCount);
@@ -172,8 +183,10 @@ export default function Header() {
 
                   <Link href={route('notifications.index')} className="p-2 hover:bg-[#f9fafb] rounded-xl transition-colors group relative" title="Notifikasi">
                     <Bell size={22} className="text-[#171d19] group-hover:text-[#1e5b53] transition-colors" />
-                    {hasUnreadNotifs && (
-                      <span className="absolute top-2.5 right-2.5 bg-red-500 w-2 h-2 rounded-full border border-white" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border border-white">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
                     )}
                   </Link>
 

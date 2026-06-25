@@ -11,9 +11,18 @@ class PrescriptionController extends Controller
 {
     public function show($id)
     {
-        $prescription = Prescription::with(['items.product.category', 'validator', 'virtualTransactions' => function($q) {
-            $q->latest();
-        }])->where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+        $prescription = Prescription::with([
+            'items.product.category',
+            'validator',
+            'virtualTransactions' => function($q) {
+                $q->latest();
+            },
+            'orders' => function($q) {
+                $q->latest()->with(['statusHistories' => function($sq) {
+                    $sq->orderBy('created_at', 'asc');
+                }]);
+            }
+        ])->where('id', $id)->where('user_id', Auth::id())->firstOrFail();
 
         return Inertia::render('Prescriptions/Detail', [
             'prescription' => $prescription,
@@ -90,6 +99,9 @@ class PrescriptionController extends Controller
                 'ip_address' => $request->ip(),
             ]);
         }
+
+        $admins = \App\Models\User::whereIn('role', ['admin', 'apoteker'])->get();
+        \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\PrescriptionSubmitted($kodeResep));
 
         return redirect('/profile?tab=prescriptions&prescription_status=Menunggu Verifikasi')->with('success', 'Resep berhasil diunggah! Mohon tunggu proses verifikasi dari apoteker.');
     }

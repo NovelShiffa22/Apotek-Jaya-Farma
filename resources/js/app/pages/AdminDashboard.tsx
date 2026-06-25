@@ -1,4 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
+import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { id as localeID } from 'date-fns/locale';
@@ -77,73 +78,98 @@ interface AdminDashboardProps {
     stockHistories?: any[];
     analytics?: any;
     prescriptions?: any;
+    defaultTab?: string;
 }
 
-export default function AdminDashboard({ products = [], categories = [], users = [], symptoms = [], orders = [], statusChanges = [], stockHistories = [], analytics = {}, prescriptions = [] }: AdminDashboardProps) {
+export default function AdminDashboard({ products = [], categories = [], users = [], symptoms = [], orders = [], statusChanges = [], stockHistories = [], analytics = {}, prescriptions = [], defaultTab }: AdminDashboardProps) {
     const { auth } = usePage<any>().props;
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isNotifOpen, setIsNotifOpen] = useState(false);
-    const [notifications, setNotifications] = useState<any[]>([]);
+    const [notifications, setNotifications] = useState<any[]>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('adminNotifications');
+            return saved ? JSON.parse(saved) : [];
+        }
+        return [];
+    });
 
     useEffect(() => {
-        if (statusChanges && statusChanges.length > 0) {
-            const lastReadTime = localStorage.getItem('admin_notif_last_read') || '0';
-            const readTimeMs = parseInt(lastReadTime, 10);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('adminNotifications', JSON.stringify(notifications));
+        }
+    }, [notifications]);
 
-            const mapped = statusChanges.map((sc: any) => {
-                const timeMs = new Date(sc.created_at).getTime();
-                const pharmacistName = sc.changed_by_user?.name || 'Apoteker';
-                const isSelf = sc.changed_by === auth?.user?.id;
-                
-                let text = '';
-                const statusLabels: Record<string, string> = {
-                    menunggu_pembayaran: 'Menunggu Pembayaran',
-                    diproses: 'Diproses',
-                    dikirim: 'Dikirim',
-                    selesai: 'Selesai',
-                    dibatalkan: 'Dibatalkan',
-                };
+    useEffect(() => {
+        if (!auth?.user?.id) return;
 
-                const displayStatus = statusLabels[sc.status_sesudah] || sc.status_sesudah;
-
-                if (isSelf) {
-                    text = `Anda mengubah status Pesanan #${sc.order?.kode_pesanan || sc.order_id} menjadi "${displayStatus}"`;
-                } else {
-                    text = `${pharmacistName} mengubah status Pesanan #${sc.order?.kode_pesanan || sc.order_id} menjadi "${displayStatus}"`;
-                }
-
-                const dateObj = new Date(sc.created_at);
-                const timeFormatted = dateObj.toLocaleDateString('id-ID', {
+        axios.get('/api/notifications').then((res) => {
+            const mappedNotifs = res.data.map((n: any) => ({
+                id: n.id,
+                type: n.data.type || n.type,
+                title: n.data.title || 'Notifikasi Baru',
+                text: n.data.message,
+                time: new Date(n.created_at).toLocaleString('id-ID', {
                     day: 'numeric',
                     month: 'short',
                     hour: '2-digit',
                     minute: '2-digit'
-                });
-
-                return {
-                    id: sc.id,
-                    text,
-                    time: timeFormatted,
-                    isRead: timeMs <= readTimeMs,
-                    orderId: sc.order_id,
-                    timeMs
-                };
-            });
-
-            setNotifications(mapped);
-        }
-    }, [statusChanges, auth?.user?.id]);
+                }),
+                isRead: n.read_at !== null,
+                orderId: n.data.order_id || n.data.invoice_number || null,
+                prescriptionId: n.data.prescription_id || null,
+                timeMs: new Date(n.created_at).getTime(),
+                data: n.data
+            }));
+            setNotifications(mappedNotifs);
+        }).catch(err => console.error(err));
+    }, [auth?.user?.id]);
 
     const unreadCount = notifications.filter(n => !n.isRead).length;
 
-    const markAllRead = () => {
-        const maxTimeMs = Math.max(...notifications.map(n => n.timeMs), 0);
-        localStorage.setItem('admin_notif_last_read', maxTimeMs.toString());
-        setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+    const markAllRead = async () => {
+        const unreadNotifs = notifications.filter(n => !n.isRead);
+        if (unreadNotifs.length === 0) return;
+        
+        try {
+            // Optimistic update
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            window.dispatchEvent(new CustomEvent('notificationsUpdated'));
+            
+            // Send requests
+            await Promise.all(unreadNotifs.map(n => axios.patch(`/api/notifications/${n.id}/read`)));
+        } catch (e) {
+            console.error("Failed to mark all as read", e);
+        }
     };
+
+    // Listen to realtime broadcast notifications
+    useEffect(() => {
+        if (window.Echo && auth?.user?.id) {
+            window.Echo.private(`App.Models.User.${auth.user.id}`)
+                .notification((notification: any) => {
+                    setNotifications(prev => [{
+                        id: notification.id || Date.now(),
+                        title: notification.title || 'Notifikasi Baru',
+                        text: notification.message,
+                        time: 'Baru saja',
+                        isRead: false,
+                        orderId: notification.order_id || notification.invoice_number || null,
+                        prescriptionId: notification.prescription_id || null,
+                        timeMs: Date.now(),
+                        data: notification
+                    }, ...prev]);
+                    window.dispatchEvent(new CustomEvent('notificationsUpdated'));
+                });
+        }
+        return () => {
+            if (window.Echo && auth?.user?.id) {
+                window.Echo.leave(`App.Models.User.${auth.user.id}`);
+            }
+        };
+    }, [auth?.user?.id]);
 
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -205,27 +231,34 @@ export default function AdminDashboard({ products = [], categories = [], users =
     };
 
     const [activeTab, setActiveTab] = useState<
-        'analytics' | 'products' | 'orders' | 'users' | 'prescriptions'
+        'analytics' | 'products' | 'orders' | 'users' | 'prescriptions' | 'notifications'
     >(() => {
+        if (defaultTab) return defaultTab as any;
+        const validTabs = ['analytics', 'products', 'orders', 'users', 'prescriptions', 'notifications'];
+        const urlTab = new URLSearchParams(window.location.search).get('tab');
+        if (urlTab && validTabs.includes(urlTab)) return urlTab as any;
         return (localStorage.getItem('adminDashboardTab') as any) || 'analytics';
     });
 
     useEffect(() => {
         localStorage.setItem('adminDashboardTab', activeTab);
     }, [activeTab]);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [roleFilter, setRoleFilter] = useState<
-        'all' | 'admin' | 'pharmacist' | 'user'
-    >('all');
-    const [productSearchQuery, setProductSearchQuery] = useState('');
-    const [productCategoryFilter, setProductCategoryFilter] = useState('all');
-    const [orderSearchQuery, setOrderSearchQuery] = useState('');
-    const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    const [searchQuery, setSearchQuery] = useState(urlParams.get('user_search') || '');
+    const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'pharmacist' | 'user'>(
+        (urlParams.get('user_role') as any) || 'all'
+    );
+
+    const [productSearchQuery, setProductSearchQuery] = useState(urlParams.get('product_search') || '');
+    const [productCategoryFilter, setProductCategoryFilter] = useState(urlParams.get('product_category') || 'all');
+    const [orderSearchQuery, setOrderSearchQuery] = useState(urlParams.get('order_search') || '');
+    const [orderStatusFilter, setOrderStatusFilter] = useState(urlParams.get('order_status') || 'all');
     const [orderStartDate, setOrderStartDate] = useState<Date | null>(null);
     const [orderEndDate, setOrderEndDate] = useState<Date | null>(null);
     const [revenueFilterDays, setRevenueFilterDays] = useState(7);
-    const [prescriptionSearchQuery, setPrescriptionSearchQuery] = useState('');
-    const [prescriptionStatusFilter, setPrescriptionStatusFilter] = useState('menunggu');
+    const [prescriptionSearchQuery, setPrescriptionSearchQuery] = useState(urlParams.get('prescription_search') || '');
+    const [prescriptionStatusFilter, setPrescriptionStatusFilter] = useState(urlParams.get('prescription_status') || 'menunggu');
     const [prescriptionStartDate, setPrescriptionStartDate] = useState<Date | null>(null);
     const [prescriptionEndDate, setPrescriptionEndDate] = useState<Date | null>(null);
 
@@ -283,7 +316,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
-                only: ['users', 'orders', 'products', 'prescriptions']
+                only: ['users', 'orders', 'products', 'prescriptions', 'analytics']
             });
         }, 300);
 
@@ -437,7 +470,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
             </aside>
 
             {/* Main Content Area */}
-            <div className={`flex-1 min-h-screen w-full bg-slate-50 flex flex-col min-w-0 transition-all duration-300 max-w-full overflow-x-hidden ${isCollapsed ? 'md:pl-20' : 'md:pl-64'}`}>
+            <div className={`flex-1 h-screen overflow-y-auto w-full bg-slate-50 flex flex-col min-w-0 transition-all duration-300 max-w-full overflow-x-hidden ${isCollapsed ? 'md:pl-20' : 'md:pl-64'}`}>
                 {/* Mobile Header */}
                 <div className="md:hidden flex items-center justify-between px-6 h-16 bg-white border-b border-slate-100 shadow-sm sticky top-0 z-40">
                     <div className="flex items-center gap-3">
@@ -544,66 +577,17 @@ export default function AdminDashboard({ products = [], categories = [], users =
                         {/* Notification Bell */}
                         <div className="flex items-center gap-4">
                             <div className="relative">
-                                <button
-                                    onClick={() => setIsNotifOpen(!isNotifOpen)}
-                                    className="p-2.5 text-slate-400 hover:text-[#1e5b53] hover:bg-slate-50 rounded-xl transition-all relative border border-[#f1f5f9] bg-white shadow-sm"
+                                <Link
+                                    href="/admin/notifications"
+                                    className="p-2.5 text-slate-400 hover:text-[#1e5b53] hover:bg-slate-50 rounded-xl transition-all relative border border-[#f1f5f9] bg-white shadow-sm flex items-center justify-center"
                                 >
                                     <Bell size={20} />
                                     {unreadCount > 0 && (
                                         <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse">
-                                            {unreadCount}
+                                            {unreadCount > 99 ? '99+' : unreadCount}
                                         </span>
                                     )}
-                                </button>
-
-                                {isNotifOpen && (
-                                    <div className="absolute right-0 mt-3 w-80 bg-white border border-[#f1f5f9] rounded-2xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] z-50 overflow-hidden py-1">
-                                        <div className="px-4 py-3 border-b border-[#f1f5f9] flex justify-between items-center bg-[#f9fafb]">
-                                            <span className="font-['Inter',sans-serif] font-bold text-sm text-slate-800">Notifikasi</span>
-                                            {unreadCount > 0 && (
-                                                <button
-                                                    onClick={markAllRead}
-                                                    className="text-xs font-semibold text-[#1e5b53] hover:underline"
-                                                >
-                                                    Tandai dibaca
-                                                </button>
-                                            )}
-                                        </div>
-                                        <div className="max-h-72 overflow-y-auto">
-                                            {notifications.length > 0 ? (
-                                                notifications.map((notif: any) => (
-                                                    <div
-                                                        key={notif.id}
-                                                        className={`px-4 py-3 border-b border-gray-100 last:border-0 hover:bg-[#fafaf8] transition-colors text-left cursor-pointer ${
-                                                            !notif.isRead ? 'bg-[#1e5b53]/5' : ''
-                                                        }`}
-                                                        onClick={() => {
-                                                            if (notif.orderId) {
-                                                                const ord = orders.find((o: any) => o.id === notif.orderId);
-                                                                if (ord) {
-                                                                    router.visit(`/admin/orders/${ord.id}`);
-                                                                }
-                                                            }
-                                                            setNotifications(notifications.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
-                                                            setIsNotifOpen(false);
-                                                        }}
-                                                    >
-                                                        <p className="font-['Inter',sans-serif] text-xs text-slate-800 font-medium leading-relaxed">
-                                                            {notif.text}
-                                                        </p>
-                                                        <span className="text-[10px] text-slate-400 mt-1 block">
-                                                            {notif.time}
-                                                        </span>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="px-4 py-6 text-center text-slate-400 font-['Inter',sans-serif] text-xs">
-                                                    Tidak ada notifikasi baru
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
+                                </Link>
                             </div>
 
                             {/* Profile Dropdown */}
@@ -652,6 +636,87 @@ export default function AdminDashboard({ products = [], categories = [], users =
                 </header>
 
                 <main className="p-8 overflow-x-hidden">
+
+                {activeTab === 'notifications' && (
+                    <div className="space-y-6 max-w-4xl mx-auto">
+                        <div className="flex items-center justify-between mb-8">
+                            <h1 className="font-['Poppins',sans-serif] text-[28px] font-bold text-[#171d19] tracking-tight">
+                                Rekap Notifikasi Admin
+                            </h1>
+                            <button 
+                                onClick={markAllRead}
+                                disabled={notifications.length === 0 || !notifications.some(n => !n.isRead)}
+                                className={`font-['Poppins',sans-serif] text-[14px] font-bold transition-opacity ${
+                                    notifications.length === 0 || !notifications.some(n => !n.isRead) 
+                                        ? 'text-gray-400 cursor-not-allowed opacity-50' 
+                                        : 'text-[#1e5b53] hover:underline'
+                                }`}
+                            >
+                                Tandai semua telah dibaca
+                            </button>
+                        </div>
+
+                        {notifications.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-20 opacity-80">
+                                <Bell className="text-gray-300 w-20 h-20 mb-4" />
+                                <p className="text-gray-500 font-['Poppins',sans-serif] text-lg text-center">Kotak masukmu bersih! Belum ada tugas atau peringatan stok baru saat ini</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {notifications.map(notif => (
+                                    <Link 
+                                        href={notif.data?.url || '#'}
+                                        key={notif.id} 
+                                        onClick={() => {
+                                            if (!notif.isRead) {
+                                                axios.patch(`/api/notifications/${notif.id}/read`).catch(console.error);
+                                                setNotifications(notifications.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
+                                                window.dispatchEvent(new CustomEvent('notificationsUpdated'));
+                                            }
+                                        }}
+                                        className={`relative flex items-start gap-6 p-6 rounded-2xl border cursor-pointer transition-all duration-300 ${
+                                            !notif.isRead 
+                                                ? 'border-transparent bg-white shadow-sm hover:shadow-md' 
+                                                : 'border-gray-200 bg-gray-50 opacity-80 hover:opacity-100'
+                                        }`}
+                                    >
+                                        {!notif.isRead && (
+                                            <div className="absolute left-0 top-6 bottom-6 w-1 bg-[#1e5b53] rounded-r-md"></div>
+                                        )}
+
+                                        <div className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 ${
+                                            !notif.isRead ? 'bg-emerald-50 text-[#1e5b53]' : 'bg-gray-200 text-gray-500'
+                                        }`}>
+                                            <FileText size={24} className="text-current" />
+                                        </div>
+
+                                        <div className="flex-1 pt-1">
+                                            <h3 className={`font-['Poppins',sans-serif] font-bold text-[18px] mb-1 ${
+                                                !notif.isRead ? 'text-[#171d19]' : 'text-gray-600'
+                                            }`}>
+                                                {notif.title}
+                                            </h3>
+                                            <p className={`font-['Poppins',sans-serif] text-[14px] mb-2 leading-relaxed ${
+                                                !notif.isRead ? 'text-gray-600' : 'text-gray-500'
+                                            }`}>
+                                                {notif.text}
+                                            </p>
+                                            <span className={`font-['Poppins',sans-serif] text-[12px] font-medium ${
+                                                !notif.isRead ? 'text-[#1e5b53]' : 'text-gray-400'
+                                            }`}>
+                                                {notif.time}
+                                            </span>
+                                        </div>
+
+                                        {!notif.isRead && (
+                                            <div className="w-2.5 h-2.5 rounded-full bg-[#1e5b53] mt-2 shadow-[0_0_8px_rgba(30,91,83,0.6)]"></div>
+                                        )}
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {activeTab === 'analytics' && (
                     <div className="space-y-8">
@@ -760,9 +825,9 @@ export default function AdminDashboard({ products = [], categories = [], users =
                         </div>
 
                         {/* Charts Row */}
-                        <div className="grid grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                             {/* Revenue Chart */}
-                            <div className="rounded-2xl border border-[#f1f5f9] bg-white p-8 shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+                            <div className="xl:col-span-2 rounded-2xl border border-[#f1f5f9] bg-white p-8 shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
                                 <div className="mb-6 flex items-center justify-between">
                                     <h3 className="font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
                                         Tren Pendapatan
@@ -837,7 +902,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                             </div>
 
                             {/* Top Products */}
-                            <div className="rounded-2xl border border-[#f1f5f9] bg-white p-8 shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+                            <div className="xl:col-span-1 rounded-2xl border border-[#f1f5f9] bg-white p-8 shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
                                 <h3 className="mb-6 font-['Roboto_Condensed',sans-serif] text-[20px] font-semibold text-[#171d19]">
                                     Produk Terlaris
                                 </h3>
@@ -1362,6 +1427,11 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                             {cfg.icon && <cfg.icon size={12} />}
                                             {statusLabels[order.status] || order.status}
                                         </span>
+                                        {hasPrescription && order.prescription?.kode_resep && (
+                                            <div className="text-[10px] text-slate-400 font-medium mt-1 truncate">
+                                                ID Resep: {order.prescription.kode_resep}
+                                            </div>
+                                        )}
                                       </div>
                                     </td>
                                     <td className="px-5 py-4">
@@ -1369,9 +1439,16 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                         <div className="w-8 h-8 rounded-full bg-[#E7F5EC] text-[#0D6A36] flex items-center justify-center font-bold text-xs shrink-0">
                                           {(order.user?.name || 'G').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
                                         </div>
-                                        <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-800 truncate max-w-[130px]">
-                                          {order.user?.name || 'Guest'}
-                                        </span>
+                                        <div className="flex flex-col">
+                                          <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-800 truncate max-w-[130px]">
+                                            {order.user?.name || 'Guest'}
+                                          </span>
+                                          {order.user?.email && (
+                                            <span className="font-['Inter',sans-serif] text-[10px] text-slate-400 truncate max-w-[130px] mt-0.5">
+                                                {order.user.email}
+                                            </span>
+                                          )}
+                                        </div>
                                       </div>
                                     </td>
                                     <td className="px-5 py-4">
@@ -1418,7 +1495,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                       )}
                                     </td>
                                     <td className="px-5 py-4 text-center">
-                                        {(order.shippingMethod?.nama === 'ambil_apotek' || order.shipping_method === 'ambil_apotek' || order.shippingMethod?.nama === 'Ambil di Apotek') ? (
+                                        {['ambil_apotek', 'ambil_sendiri', 'ambil di apotek'].includes(String(order.shipping_method?.nama_metode || order.shippingMethod?.nama_metode || order.shippingMethod?.nama || (typeof order.shipping_method === 'string' ? order.shipping_method : '')).toLowerCase()) ? (
                                             <span className="inline-flex items-center px-2 py-1 rounded-md bg-amber-50 text-amber-600 font-bold text-[10px] uppercase tracking-widest border border-amber-200">
                                                 Ambil di Apotek
                                             </span>
@@ -1496,6 +1573,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                         <div className="mb-6 border-b border-[#E2E8F0]">
                             <div className="flex gap-10 overflow-x-auto scrollbar-hide">
                                 {[
+                                    { id: 'semua' as const, label: 'Semua', icon: List, count: (analytics?.prescriptions_pending || 0) + (analytics?.prescriptions_verified || 0) + (analytics?.prescriptions_rejected || 0) + (analytics?.prescriptions_dipesan || 0) },
                                     { id: 'menunggu' as const, label: 'Menunggu Verifikasi', icon: Clock, count: analytics?.prescriptions_pending || 0 },
                                     { id: 'disetujui' as const, label: 'Disetujui', icon: CheckCircle, count: analytics?.prescriptions_verified || 0 },
                                     { id: 'ditolak' as const, label: 'Ditolak', icon: XCircle, count: analytics?.prescriptions_rejected || 0 },
@@ -1625,11 +1703,16 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                     <td className="px-5 py-4">
                                                         <div className="flex flex-col gap-0.5">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="font-['Inter',sans-serif] text-[13px] font-bold text-slate-800">#{rx.kode_resep || rx.id}</span>
+                                                                <span className="font-['Inter',sans-serif] text-[13px] font-bold text-slate-800">{rx.kode_resep || rx.id}</span>
                                                                 {rx.is_urgent && (
                                                                     <span className="inline-flex items-center self-start px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border border-red-200 bg-red-50 text-red-700">Urgent</span>
                                                                 )}
                                                             </div>
+                                                            {((rx.virtual_transactions && rx.virtual_transactions.length > 0 && rx.virtual_transactions[0].invoice_number) || (rx.orders && rx.orders.length > 0 && rx.orders[0].kode_pesanan)) && (
+                                                                <div className="text-[10px] text-slate-400 font-medium mt-1 truncate">
+                                                                    ID Pesanan: {(rx.virtual_transactions && rx.virtual_transactions.length > 0 && rx.virtual_transactions[0].invoice_number) ? rx.virtual_transactions[0].invoice_number : rx.orders[0].kode_pesanan}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </td>
                                                     <td className="px-5 py-4 text-center">
@@ -1658,9 +1741,16 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                             <div className="w-8 h-8 rounded-full bg-[#E7F5EC] text-[#0D6A36] flex items-center justify-center font-bold text-xs shrink-0">
                                                                 {(rx.nama_pasien || rx.user?.name || rx.customer || 'P').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
                                                             </div>
-                                                            <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-800 truncate max-w-[150px]">
-                                                                {rx.nama_pasien || rx.user?.name || rx.customer || 'Pasien Anonim'}
-                                                            </span>
+                                                            <div className="flex flex-col">
+                                                                <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-800 truncate max-w-[150px]">
+                                                                    {rx.nama_pasien || rx.user?.name || rx.customer || 'Pasien Anonim'}
+                                                                </span>
+                                                                {rx.user?.email && (
+                                                                    <span className="font-['Inter',sans-serif] text-[10px] text-slate-400 truncate max-w-[150px] mt-0.5">
+                                                                        {rx.user.email}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-5 py-4">
@@ -1674,7 +1764,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                                         </div>
                                                     </td>
                                                     <td className="px-5 py-4 text-center">
-                                                        {rx.shipping_method === 'kurir' ? (
+                                                        {(rx.shipping_method === 'kurir' || rx.shipping_method === 'Kirim via Kurir') ? (
                                                             <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-600 font-bold text-[10px] uppercase tracking-widest border border-blue-200">
                                                                 Kirim via Kurir
                                                             </span>

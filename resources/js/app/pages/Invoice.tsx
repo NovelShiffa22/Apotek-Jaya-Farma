@@ -3,6 +3,8 @@ import { Head, router, Link, usePage } from '@inertiajs/react';
 import { CheckCircle, Clock, Copy, ArrowRight, ShieldCheck, ArrowLeft, Receipt, Package, Lock, AlertCircle } from 'lucide-react';
 import Header from '../components/Header';
 import ConfirmModal from '../components/ConfirmModal';
+import { formatAddress } from '../utils/formatAddress';
+import { toPng } from 'html-to-image';
 
 interface Transaction {
   id: number;
@@ -205,6 +207,35 @@ export default function Invoice({ transaction }: Props) {
     });
   };
 
+  const handleDownloadReceipt = async () => {
+    const element = document.getElementById('nota-container');
+    if (!element) return;
+
+    // Sembunyikan tombol aksi saat mengambil gambar
+    const actionButtons = document.getElementById('invoice-actions');
+    if (actionButtons) actionButtons.style.display = 'none';
+
+    try {
+        const dataUrl = await toPng(element, { 
+            cacheBust: true,
+            backgroundColor: '#ffffff',
+            pixelRatio: 2
+        });
+        
+        const link = document.createElement('a');
+        const orderNo = transaction.invoice_number || transaction.kode_pesanan || transaction.id;
+        link.download = `Nota-${orderNo}.png`;
+        link.href = dataUrl;
+        link.click();
+    } catch (err: any) {
+        console.error('Gagal membuat nota:', err);
+        alert('Error rendering: ' + (err.message || err));
+    } finally {
+        // Tampilkan kembali tombol
+        if (actionButtons) actionButtons.style.display = 'block';
+    }
+  };
+
   if (isRedirecting) {
     return (
       <div className="min-h-screen bg-[#fafaf8] font-['Poppins',sans-serif] flex flex-col items-center justify-center">
@@ -231,7 +262,7 @@ export default function Invoice({ transaction }: Props) {
 
         {isLunasState ? (
           // SUKSES UI - NOTA RESMI
-          <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-xl border border-gray-100 max-w-3xl mx-auto transform transition-all animate-fade-in-up relative overflow-hidden">
+          <div id="nota-container" className="bg-white rounded-3xl p-8 sm:p-12 shadow-xl border border-gray-100 max-w-3xl mx-auto relative overflow-hidden">
             {/* Dekorasi Nota */}
             <div className="absolute top-0 left-0 w-full h-3 bg-[#1e5b53]"></div>
             <div className="absolute top-8 right-8 text-emerald-100 opacity-50">
@@ -296,7 +327,7 @@ export default function Invoice({ transaction }: Props) {
                   </p>
                   <p className="text-[13px] font-medium text-gray-800 leading-snug p-3 bg-gray-50 rounded-lg border border-gray-100">
                     <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Alamat Pengiriman:</span>
-                    {transaction.shipping_address || 'Alamat belum diatur'}
+                    {formatAddress(transaction.shipping_address)}
                   </p>
                   {(new Date().getHours() < 8 || new Date().getHours() >= 18) && (
                     <span className="text-amber-600 text-xs mt-3 block italic font-medium max-w-xs">
@@ -331,7 +362,7 @@ export default function Invoice({ transaction }: Props) {
                 const displayShipping = transaction.shipping_method ? Number(transaction.shipping_cost || 0) : calculatedShipping;
                 const displayMethod = (transaction.shipping_method === 'kurir_toko' || transaction.shipping_method === 'Kirim via Kurir') 
                   ? (transaction.prescription_id ? 'Kirim via Kurir (Kota Bandung)' : 'Kirim via Kurir') 
-                  : (transaction.shipping_method === 'ambil_apotek' 
+                  : (transaction.shipping_method === 'ambil_apotek' || transaction.shipping_method === 'ambil_sendiri' 
                       ? 'Ambil di Apotek' 
                       : (displayShipping > 0 ? 'Kirim via Kurir' : 'Ambil di Apotek'));
 
@@ -364,10 +395,16 @@ export default function Invoice({ transaction }: Props) {
                 );
               })()}
 
-              <div className="mt-10">
+              <div id="invoice-actions" className="mt-10">
+                <button
+                  onClick={handleDownloadReceipt}
+                  className="flex items-center justify-center gap-2 bg-white text-[#1e5b53] border border-[#1e5b53] hover:bg-[#f0f0f0] font-bold rounded-xl py-4 px-6 transition-colors shadow-md w-full"
+                >
+                  📥 Unduh Nota (.png)
+                </button>
                 <button 
                   onClick={() => router.get('/profile', { tab: 'orders', status: 'Diproses' })}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl py-4 px-6 text-center w-full block transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl py-4 px-6 text-center w-full block transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2 mt-4"
                 >
                   Kembali ke Riwayat Pesanan
                   <ArrowRight size={18} />
@@ -472,3 +509,4 @@ export default function Invoice({ transaction }: Props) {
     </div>
   );
 }
+

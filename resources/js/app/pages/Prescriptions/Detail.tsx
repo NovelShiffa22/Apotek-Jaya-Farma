@@ -41,6 +41,11 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
         (t: any) => ['Pending', 'Belum Bayar', 'menunggu_pembayaran'].includes(t.status)
     );
 
+    // Transaksi yang sudah lunas/diproses/dikirim/selesai — tampilkan nota, bukan tombol bayar
+    const completedTransaction = prescription.virtual_transactions?.find(
+        (t: any) => ['Lunas', 'Diproses', 'Dikirim', 'Selesai'].includes(t.status)
+    );
+
     const executeProcess = async () => {
         setIsConfirmModalOpen(false);
         setIsProcessing(true);
@@ -130,20 +135,15 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                         <div>
                             <h4 className="font-['Poppins',sans-serif] font-bold text-red-800 text-[16px]">Alasan Penolakan</h4>
                             <p className="font-['Poppins',sans-serif] text-[14px] text-red-700 mt-1 leading-relaxed">
-                                ❌ Pengajuan Resep Ditolak oleh Apoteker. Alasan: {prescription.rejection_reason || 'Foto resep tidak terbaca jelas atau tidak sesuai ketentuan.'}
+                                ❌ Apoteker: Apt. {prescription.pharmacist?.name || prescription.validator?.name || 'Apoteker'}. Alasan: {prescription.rejection_reason || prescription.catatan_apoteker || 'Foto resep tidak terbaca jelas atau tidak sesuai ketentuan.'}
                             </p>
-                            {prescription.verifier_name && (
-                                <p className="font-['Poppins',sans-serif] text-[13px] font-semibold text-red-800 mt-2">
-                                    Ditinjau/Ditolak oleh: {prescription.verifier_name}
-                                </p>
-                            )}
                         </div>
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Col: Prescription Preview & Daftar Obat */}
-                    <div className="md:col-span-3 space-y-6">
+                    <div className="lg:col-span-2 space-y-6">
                         {/* Pratinjau Resep */}
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                             <div className="flex items-center justify-between mb-4">
@@ -211,14 +211,13 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                 </div>
                             </div>
                         )}
-                    </div>
 
-                    {/* Right Col: Payment, Details & Actions */}
-                    <div className="md:col-span-2 space-y-6">
                         {/* Ringkasan Pembayaran (Only if Disetujui or Telah Dipesan) */}
                         {(status === 'Disetujui' || status === 'Telah Dipesan') && (
                             <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
-                                <h3 className="font-['Poppins',sans-serif] font-bold text-[18px] text-[#171d19] mb-8">Ringkasan Pembayaran</h3>
+                                <h3 className="font-['Poppins',sans-serif] font-bold text-[18px] text-[#171d19] mb-8">
+                                    {(status === 'Telah Dipesan' || prescription.order_id) ? 'Detail Pembelian Resep' : 'Ringkasan Pembayaran'}
+                                </h3>
                                 
                                 <div className="space-y-5 mb-8">
                                     <div className="flex justify-between text-[14px] font-['Poppins',sans-serif] text-gray-500">
@@ -238,7 +237,14 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                     </span>
                                 </div>
 
-                                {activeTransaction ? (
+                                {(status === 'Telah Dipesan' || prescription.order_id || completedTransaction) ? (
+                                    <button 
+                                        onClick={() => router.visit(prescription.order_id ? route('order.invoice', { id: prescription.order_id }) : route('order.invoice', { id: completedTransaction?.id || prescription.virtual_transactions?.[0]?.id }))}
+                                        className="w-full flex items-center justify-center rounded-xl bg-white border-2 border-[#1e5b53] py-4 font-['Poppins',sans-serif] text-[15px] font-bold text-[#1e5b53] transition-all hover:bg-emerald-50 shadow-sm"
+                                    >
+                                        📄 Lihat Nota Pembayaran
+                                    </button>
+                                ) : activeTransaction ? (
                                     <div className="space-y-3">
                                         <div className="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-xl text-sm font-['Poppins',sans-serif]">
                                             ⚠️ Terdapat tagihan pembayaran yang belum diselesaikan untuk resep ini.
@@ -253,31 +259,94 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                 ) : (
                                     <button 
                                         onClick={() => setIsConfirmModalOpen(true)}
-                                        disabled={isProcessing || status === 'Telah Dipesan'}
+                                        disabled={isProcessing}
                                         className="w-full flex items-center justify-center rounded-xl bg-[#1e5b53] py-4 font-['Poppins',sans-serif] text-[15px] font-bold text-white transition-all hover:bg-[#005632] shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
                                     >
-                                        {status === 'Telah Dipesan' ? 'Sudah Dibayar' : (isProcessing ? 'Memproses...' : 'Bayar Sekarang')}
+                                        {isProcessing ? 'Memproses...' : 'Bayar Sekarang'}
                                     </button>
                                 )}
                             </div>
                         )}
+                    </div>
 
-                        {/* Timeline Tracking Log (Only if Telah Dipesan) */}
-                        {status === 'Telah Dipesan' && prescription.virtual_transactions && prescription.virtual_transactions.length > 0 && (
+                    {/* Right Col: Timeline, Details & Actions */}
+                    <div className="space-y-6">
+                        {/* Timeline Tracking Log (Only if Disetujui or Telah Dipesan) */}
+                        {(status === 'Disetujui' || status === 'Telah Dipesan') && prescription.virtual_transactions && prescription.virtual_transactions.length > 0 && (
                             <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-[#1e5b53]">
                                 <h3 className="font-['Poppins',sans-serif] font-bold text-[18px] text-[#1e5b53] mb-6 flex items-center gap-2">
                                     <Clock size={20} />
-                                    Tabel Log Status Pesanan
+                                    Riwayat Status Pesanan
                                 </h3>
                                 
                                 {(() => {
-                                    const vt = prescription.virtual_transactions[0];
-                                    const vtStatus = vt.status || 'Pending';
-                                    
+                                    const vt = prescription.virtual_transactions?.[0];
+                                    const vtStatus = vt?.status || 'Pending';
+                                    // Ambil history dari Order yang terhubung ke resep ini (sumber data nyata)
+                                    const histories = prescription.orders?.[0]?.status_histories
+                                        ?? vt?.status_histories;
+
+                                    const statusLabels: Record<string, string> = {
+                                        menunggu_pembayaran: 'Menunggu Pembayaran',
+                                        Pending: 'Menunggu Pembayaran',
+                                        'Belum Bayar': 'Menunggu Pembayaran',
+                                        Lunas: 'Diproses',
+                                        diproses: 'Diproses',
+                                        Diproses: 'Diproses',
+                                        dikirim: 'Dikirim',
+                                        Dikirim: 'Dikirim',
+                                        selesai: 'Selesai',
+                                        Selesai: 'Selesai',
+                                        dibatalkan: 'Dibatalkan',
+                                        Dibatalkan: 'Dibatalkan',
+                                    };
+
+                                    const dotColor: Record<string, string> = {
+                                        menunggu_pembayaran: 'bg-amber-500',
+                                        Pending: 'bg-amber-500',
+                                        'Belum Bayar': 'bg-amber-500',
+                                        Lunas: 'bg-blue-500',
+                                        diproses: 'bg-blue-500',
+                                        Diproses: 'bg-blue-500',
+                                        dikirim: 'bg-purple-500',
+                                        Dikirim: 'bg-purple-500',
+                                        selesai: 'bg-emerald-500',
+                                        Selesai: 'bg-emerald-500',
+                                        dibatalkan: 'bg-red-500',
+                                        Dibatalkan: 'bg-red-500',
+                                    };
+
+                                    if (histories && histories.length > 0) {
+                                        return (
+                                            <div className="relative border-l-2 border-gray-100 ml-3 space-y-6">
+                                                {[...histories].reverse().map((h: any, idx: number) => (
+                                                    <div key={idx} className="relative pl-6">
+                                                        <div className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-4 border-white ${dotColor[h.status_sesudah] || 'bg-slate-400'}`} />
+                                                        <p className="font-['Inter',sans-serif] text-[14px] font-bold text-slate-800">
+                                                            {h.status_sebelum
+                                                                ? `${statusLabels[h.status_sebelum] || h.status_sebelum} → ${statusLabels[h.status_sesudah] || h.status_sesudah}`
+                                                                : statusLabels[h.status_sesudah] || h.status_sesudah
+                                                            }
+                                                        </p>
+                                                        <p className="text-[12px] text-slate-500 mt-1 font-medium font-['Inter',sans-serif]">
+                                                            {new Date(h.created_at).toLocaleString('id-ID', {
+                                                                day: 'numeric',
+                                                                month: 'short',
+                                                                year: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+                                    }
+
+                                    // Fallback: static dot view jika belum ada status_histories
                                     return (
                                         <div className="relative">
                                             <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-                                            
                                             {/* Menunggu Pembayaran */}
                                             <div className="relative flex items-start mb-6">
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 shrink-0 ${
@@ -381,35 +450,70 @@ export default function PrescriptionDetail({ prescription, user }: { prescriptio
                                     <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{prescription.tanggal_lahir_pasien || user.dob || '-'}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
+                                    <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Umur</span>
+                                    <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">
+                                        {(() => {
+                                            const dob = prescription.tanggal_lahir_pasien || user.dob;
+                                            if (!dob) return '-';
+                                            const birthDate = new Date(dob);
+                                            const today = new Date();
+                                            let age = today.getFullYear() - birthDate.getFullYear();
+                                            const m = today.getMonth() - birthDate.getMonth();
+                                            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                                                age--;
+                                            }
+                                            return `${age} Tahun`;
+                                        })()}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
                                     <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Nomor Telepon</span>
                                     <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{prescription.whatsapp || user.phone || '-'}</span>
                                 </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Metode Pengiriman</span>
+                                    <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">
+                                        {prescription.shipping_method === 'kurir' || prescription.shipping_method === 'kurir_toko' || prescription.shipping_method === 'Kirim via Kurir' ? 'Kirim via Kurir' : 'Ambil di Apotek'}
+                                    </span>
+                                </div>
                                 <div className="flex justify-between items-start gap-4 pt-2 border-t border-gray-50">
                                     <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500 whitespace-nowrap">Alamat Pengiriman</span>
-                                    <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19] text-right">{prescription.shipping_address || '-'}</span>
+                                    <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19] text-right">
+                                        {(prescription.shipping_method === 'kurir' || prescription.shipping_method === 'kurir_toko' || prescription.shipping_method === 'Kirim via Kurir')
+                                            ? (typeof prescription.shipping_address === 'object' && prescription.shipping_address !== null
+                                                ? `${prescription.shipping_address.alamat_lengkap || ''}, ${prescription.shipping_address.kota || ''}, ${prescription.shipping_address.provinsi || ''}`
+                                                : typeof prescription.shipping_address === 'string' && prescription.shipping_address.trim() !== ''
+                                                ? (prescription.shipping_address.includes('{') 
+                                                    ? (() => { try { const p = JSON.parse(prescription.shipping_address); return `${p.alamat_lengkap || ''}, ${p.kota || ''}, ${p.provinsi || ''}`; } catch(e) { return prescription.shipping_address } })()
+                                                    : prescription.shipping_address)
+                                                : '-')
+                                            : <span className="text-emerald-600 font-semibold italic text-[13px]">Pasien akan mengambil pesanan langsung di Apotek</span>}
+                                    </span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Detail Dokter */}
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                            <div className="flex items-center gap-4 mb-6 border-b border-gray-100 pb-4">
-                                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
-                                    <BriefcaseMedical size={24} />
+                        {status !== 'Verifikasi' && (
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                                <div className="flex items-center gap-4 mb-6 border-b border-gray-100 pb-4">
+                                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
+                                        <BriefcaseMedical size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-['Poppins',sans-serif] font-bold text-[16px] text-[#171d19]">Detail Dokter</h3>
+                                        <p className="font-['Poppins',sans-serif] text-[11px] text-gray-400 uppercase tracking-wider font-semibold">Pemberi Resep</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="font-['Poppins',sans-serif] font-bold text-[16px] text-[#171d19]">Detail Dokter</h3>
-                                    <p className="font-['Poppins',sans-serif] text-[11px] text-gray-400 uppercase tracking-wider font-semibold">Pemberi Resep</p>
+                                
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Nama Dokter</span>
+                                        <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{prescription.nama_dokter || '-'}</span>
+                                    </div>
                                 </div>
                             </div>
-                            
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <span className="font-['Poppins',sans-serif] text-[13px] text-gray-500">Nama Dokter</span>
-                                    <span className="font-['Poppins',sans-serif] text-[14px] font-bold text-[#171d19]">{prescription.nama_dokter || '-'}</span>
-                                </div>
-                            </div>
-                        </div>
+                        )}
 
                         {/* Catatan Pasien */}
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">

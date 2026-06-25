@@ -12,6 +12,10 @@ class Order extends Model
     // Melindungi field 'id' agar tidak bisa diisi sembarangan melalui mass-assignment, sisanya aman
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'shipping_address' => 'array',
+    ];
+
     /**
      * Relasi Many-to-Many ke tabel products melalui tabel pivot order_items.
      * Merekam detail setiap produk di dalam pesanan ini beserta metrik transaksinya.

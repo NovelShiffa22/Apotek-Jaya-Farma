@@ -332,7 +332,7 @@ export default function Catalog({
 
                 {/* Pagination */}
                 {!Array.isArray(products) && products.links && products.links.length > 3 && (
-                  <div className="flex items-center justify-center gap-2 mt-4 mb-8">
+                  <div className="w-full overflow-x-auto whitespace-nowrap py-2 flex justify-start md:justify-center gap-2 mt-4 mb-8">
                     {products.links.map((link: any, i: number) => {
                       const url = link.url ? new URL(link.url, window.location.origin) : null;
                       const finalUrl = url ? url.toString().replace(window.location.origin, '') : null;

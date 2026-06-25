@@ -118,15 +118,12 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
 
     // Initialize selectedAddress
     useEffect(() => {
-        if (defaultAddress && isKotaBandung(defaultAddress)) {
+        if (defaultAddress) {
             setSelectedAddress(defaultAddress);
+        } else if (addresses.length > 0) {
+            setSelectedAddress(addresses[0]);
         } else {
-            const firstValid = addresses.find((addr: any) => isKotaBandung(addr));
-            if (firstValid) {
-                setSelectedAddress(firstValid);
-            } else {
-                setSelectedAddress(null);
-            }
+            setSelectedAddress(null);
         }
     }, [defaultAddress, addresses]);
 
@@ -137,10 +134,8 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
     }, [selectedAddress]);
 
     useEffect(() => {
-        if (!isKotaBandungValid) {
-            if (data.shipping_method === 'kurir') {
-                setData('shipping_method', 'ambil_sendiri');
-            }
+        if (!isKotaBandungValid && data.shipping_method === 'kurir') {
+            setData('shipping_method', 'ambil_sendiri');
         }
     }, [isKotaBandungValid, data.shipping_method]);
 
@@ -216,12 +211,14 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
 
     // Update data.shipping_address when selectedAddress changes
     useEffect(() => {
-        if (selectedAddress) {
+        if (data.shipping_method === 'ambil_sendiri') {
+            setData('shipping_address', 'Diambil di Apotek');
+        } else if (selectedAddress) {
             setData('shipping_address', `${selectedAddress.alamat_lengkap}, ${selectedAddress.kota}, ${selectedAddress.provinsi} ${selectedAddress.kode_pos}`);
         } else {
             setData('shipping_address', '');
         }
-    }, [selectedAddress]);
+    }, [selectedAddress, data.shipping_method]);
 
     const handleKirimClick = (e: React.FormEvent) => {
         e.preventDefault();
@@ -344,6 +341,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                         Unggah resep Anda dan biarkan apoteker profesional kami menangani sisanya. Verifikasi cepat dan pengiriman langsung ke alamat Anda.
                                     </p>
                                     <button 
+                                        type="button"
                                         onClick={() => fileInputRef.current?.click()}
                                         className="flex items-center gap-2 rounded-lg bg-[#1e5b53] px-6 py-3 font-['Poppins',sans-serif] text-[14px] font-semibold text-white transition-all hover:bg-[#005632]"
                                     >
@@ -487,7 +485,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                         </div>
                                     </div>
                                 </div>
-                                {(!isKotaBandungValid) && (
+                                {(!isKotaBandungValid && data.shipping_method === 'kurir') && (
                                     <p className="mt-2 text-xs font-bold text-red-500">Alamat Anda di luar jangkauan kurir kami. Silakan pilih Ambil di Apotek.</p>
                                 )}
                                 <p className="mt-2 text-[11px] text-gray-400 font-['Inter',sans-serif] italic">*) Pengiriman via kurir hanya berlaku jika alamat utama Anda berada di wilayah Kota Bandung.</p>
@@ -557,6 +555,12 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                             )}
                         </div>
 
+                        {!isKotaBandungValid && selectedAddress && (
+                            <div className="text-xs text-red-600 mt-2 font-medium bg-red-50 p-2 rounded border border-red-200 text-left">
+                                ⚠️ Alamat di luar jangkauan kurir. Silakan pilih metode Ambil di Apotek atau gunakan alamat di wilayah Kota Bandung agar tetap bisa menebus resep
+                            </div>
+                        )}
+
                         {/* Order Detail Card */}
                         <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                             <h3 className="mb-4 font-['Poppins',sans-serif] text-[11px] font-bold uppercase tracking-wider text-[#1e5b53]">
@@ -588,8 +592,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                         !data.tanggal_lahir_pasien || 
                                         !data.whatsapp || 
                                         !data.is_legal_agreed ||
-                                        !selectedAddress ||
-                                        !isKotaBandung(selectedAddress)
+                                        (data.shipping_method === 'kurir' && (!selectedAddress || !isKotaBandung(selectedAddress)))
                                     }
                                     className="block w-full rounded-xl bg-[#1e5b53] py-3.5 text-center font-['Poppins',sans-serif] text-[14px] font-bold text-white transition-all hover:bg-[#005632] hover:shadow-lg disabled:!bg-gray-300 disabled:!text-gray-500 disabled:cursor-not-allowed disabled:hover:shadow-none"
                                 >
@@ -666,13 +669,11 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                                 return (
                                                     <div 
                                                         key={addr.id} 
-                                                        onClick={() => isValid && handleSelectAddress(addr)}
+                                                        onClick={() => handleSelectAddress(addr)}
                                                         className={`p-5 rounded-xl border transition-all flex justify-between items-center gap-4 ${
-                                                            !isValid
-                                                                ? 'opacity-60 bg-gray-50 border-gray-200 cursor-not-allowed select-none'
-                                                                : isSelected 
-                                                                    ? 'border-[#1e5b53] bg-[#1e5b53]/[0.02] shadow-sm cursor-pointer' 
-                                                                    : 'border-gray-200 hover:border-[#1e5b53]/50 hover:bg-gray-50/30'
+                                                            isSelected 
+                                                                ? 'border-[#1e5b53] bg-[#1e5b53]/[0.02] shadow-sm cursor-pointer' 
+                                                                : 'border-gray-200 hover:border-[#1e5b53]/50 hover:bg-gray-50/30 cursor-pointer'
                                                         }`}
                                                     >
                                                         <div className="space-y-2 text-left flex-1">
@@ -694,7 +695,7 @@ export default function UploadStep2({ defaultAddress, addresses = [] }: any) {
                                                             )}
                                                         </div>
                                                         
-                                                        {isSelected && isValid && (
+                                                        {isSelected && (
                                                             <div className="text-[#1e5b53] shrink-0 pr-1">
                                                                 <CheckCircle2 size={22} strokeWidth={2.5} />
                                                             </div>

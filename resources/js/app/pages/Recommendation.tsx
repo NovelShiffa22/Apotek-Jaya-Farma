@@ -186,7 +186,7 @@ export default function Recommendation({ masterSymptoms = [] }: { masterSymptoms
               </div>
 
               {/* Icon Grid */}
-              <div className="grid grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 mb-8">
                 {displaySymptoms.length > 0 ? displaySymptoms.map((symptom: any) => {
                   const Icon = (symptom.slug && iconMap[symptom.slug]) ? iconMap[symptom.slug] : Activity;
                   const symptomId = symptom.id;

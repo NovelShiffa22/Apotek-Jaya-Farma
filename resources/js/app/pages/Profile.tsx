@@ -1006,12 +1006,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                               <button 
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    if (latestOrder) {
-                                        setSelectedOrder(latestOrder);
-                                        setIsModalOpen(true);
-                                    } else {
-                                        router.get(route('prescriptions.detail', { id: p.id }));
-                                    }
+                                    router.get(route('prescriptions.detail', { id: p.id }));
                                 }}
                                 className="text-[13px] font-bold text-center bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-xl hover:bg-gray-50 hover:text-[#1e5b53] hover:border-[#1e5b53] transition-all font-['Inter',sans-serif] shadow-sm cursor-pointer"
                               >
@@ -1202,7 +1197,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                 )}
                 <div className="flex justify-between items-start pt-2 border-t border-gray-50">
                   <span className="font-['Inter',sans-serif] text-[14px] text-gray-500 min-w-[120px]">Alamat Pengiriman</span>
-                  <span className="font-['Inter',sans-serif] text-[13px] font-medium text-gray-800 text-right">{selectedOrder.shipping_address || 'Alamat belum diatur'}</span>
+                  <span className="font-['Inter',sans-serif] text-[13px] font-medium text-gray-800 text-right">{typeof selectedOrder.shipping_address === 'object' && selectedOrder.shipping_address !== null ? (selectedOrder.shipping_address.alamat_lengkap ? `${selectedOrder.shipping_address.alamat_lengkap}, ${selectedOrder.shipping_address.kota}` : 'Alamat lengkap') : (selectedOrder.shipping_address || 'Alamat belum diatur')}</span>
                 </div>
                 {(() => {
                   const subtotal = selectedOrder.items?.reduce((sum: number, item: any) => sum + ((item.harga || item.price || 0) * (item.quantity || 1)), 0) || 0;
@@ -1211,7 +1206,7 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
                   const displayShipping = selectedOrder.shipping_method ? Number(selectedOrder.shipping_cost || 0) : calculatedShipping;
                   const displayMethod = (selectedOrder.shipping_method === 'kurir_toko' || selectedOrder.shipping_method === 'Kirim via Kurir') 
                     ? (selectedOrder.prescription_id ? 'Kirim via Kurir (Kota Bandung)' : 'Kirim via Kurir') 
-                    : (selectedOrder.shipping_method === 'ambil_apotek' 
+                    : (selectedOrder.shipping_method === 'ambil_apotek' || selectedOrder.shipping_method === 'ambil_sendiri' || selectedOrder.shippingMethod?.nama_metode === 'ambil_sendiri' 
                         ? 'Ambil di Apotek' 
                         : (displayShipping > 0 ? 'Kirim via Kurir' : 'Ambil di Apotek'));
 
@@ -1369,4 +1364,5 @@ export default function Profile({ user, orders = { data: [], links: [] }, counts
     </div>
   );
 }
+
 

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import { ChevronLeft, Package, User, FileText, CheckCircle, Clock, Truck, XCircle, FileImage } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Package, User, FileText, CheckCircle, Clock, Truck, XCircle, FileImage } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import { formatAddress } from '../utils/formatAddress';
 
 export default function AdminOrderDetail({ order, auth }: any) {
     const [isUpdating, setIsUpdating] = useState(false);
@@ -91,6 +92,15 @@ export default function AdminOrderDetail({ order, auth }: any) {
 
     const isVirtual = order.id.toString().startsWith('vt_');
 
+    const displayItems = hasPrescription && order.prescription?.items?.length > 0 
+        ? order.prescription.items.map((i: any) => ({
+            nama_obat: i.product_name || i.product?.nama_obat || 'Obat Resep',
+            gambar: i.product?.gambar,
+            stok: i.product?.stok,
+            pivot: { kuantitas: i.kuantitas_ambil || i.kuantitas_resep, harga_satuan: i.harga_satuan }
+        }))
+        : order.products;
+
     return (
         <div className="min-h-screen bg-[#F8FAFC]">
             <Head title={`Detail Pesanan ${order.kode_pesanan} - Apotek Jaya Farma`} />
@@ -125,11 +135,11 @@ export default function AdminOrderDetail({ order, auth }: any) {
                         <div className="text-left md:text-right bg-white p-4 rounded-xl border border-slate-200 shadow-sm min-w-[320px]">
                             <div className="flex flex-wrap justify-between items-center gap-4 mb-1.5">
                                 <span className="font-['Inter',sans-serif] text-xs text-slate-500">Subtotal Produk</span>
-                                <span className="font-['Inter',sans-serif] text-xs font-semibold text-slate-700">Rp {parseFloat(order.total_biaya - (order.shippingMethod?.biaya || 0)).toLocaleString('id-ID')}</span>
+                                <span className="font-['Inter',sans-serif] text-xs font-semibold text-slate-700">Rp {parseFloat(order.subtotal_produk || 0).toLocaleString('id-ID')}</span>
                             </div>
                             <div className="flex flex-wrap justify-between items-center gap-4 mb-3 pb-3 border-b border-slate-100">
                                 <span className="font-['Inter',sans-serif] text-xs text-slate-500">Biaya Pengiriman</span>
-                                <span className="font-['Inter',sans-serif] text-xs font-semibold text-slate-700">Rp {parseFloat(order.shippingMethod?.biaya || 0).toLocaleString('id-ID')}</span>
+                                <span className="font-['Inter',sans-serif] text-xs font-semibold text-slate-700">Rp {parseFloat(order.biaya_pengiriman || 0).toLocaleString('id-ID')}</span>
                             </div>
                             <div className="flex flex-wrap justify-between items-center gap-4 pt-1">
                                 <p className="font-['Inter',sans-serif] text-sm text-slate-500 font-medium">Total Pembayaran</p>
@@ -152,7 +162,7 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                 </h2>
                             </div>
                             <div className="divide-y divide-slate-100">
-                                {order.products?.map((item: any, idx: number) => (
+                                {displayItems?.map((item: any, idx: number) => (
                                     <div key={idx} className="p-6 flex items-start gap-4">
                                         <div className="w-16 h-16 rounded-xl border border-slate-100 overflow-hidden shrink-0 bg-slate-50">
                                             {item.gambar ? (
@@ -282,7 +292,7 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                     </div>
                                 ) : order.status_histories && order.status_histories.length > 0 ? (
                                     <div className="relative border-l-2 border-slate-100 ml-3 space-y-8">
-                                        {order.status_histories.map((history: any, idx: number) => (
+                                        {[...order.status_histories].reverse().map((history: any, idx: number) => (
                                             <div key={idx} className="relative pl-6">
                                                 <div className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-4 border-white ${statusConfig[history.status_sesudah]?.bg.replace('bg-', 'bg-').replace('-50', '-500') || 'bg-slate-400'}`} />
                                                 <div>
@@ -318,7 +328,11 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                 </h2>
                             </div>
                             <div className="p-6 space-y-4">
-                                {isVirtual && order.status === 'diproses' && !penanggungJawab ? (
+                                {penanggungJawab && penanggungJawab !== auth?.user?.name ? (
+                                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                                        <span className="font-['Inter',sans-serif] text-sm text-amber-700 font-medium">Pesanan ini sudah ditangani oleh penanggung jawab ({penanggungJawab}). Anda tidak dapat mengubah status pesanan yang telah diambil alih.</span>
+                                    </div>
+                                ) : isVirtual && order.status === 'diproses' && !penanggungJawab ? (
                                     <div className="space-y-3">
                                         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800 font-['Inter',sans-serif]">
                                             Pesanan online ini sudah otomatis terbayar. Silakan klaim pesanan ini sebelum menyiapkan obat.
@@ -349,19 +363,26 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                             )}
                                         </div>
 
-                                        {order.status !== 'selesai' && order.status !== 'dibatalkan' && (
+                                        {order.status === 'menunggu_pembayaran' && (
+                                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+                                                <span className="font-['Inter',sans-serif] text-sm text-slate-500 font-medium">Sistem sedang menunggu pelanggan menyelesaikan pembayaran secara otomatis.</span>
+                                            </div>
+                                        )}
+
+                                        {order.status !== 'selesai' && order.status !== 'dibatalkan' && order.status !== 'menunggu_pembayaran' && (
                                             <div>
                                                 <label className="block font-['Inter',sans-serif] text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Pilih Status Baru</label>
                                                 <div className="grid grid-cols-1 gap-2">
-                                                    {order.status === 'menunggu_pembayaran' && !isVirtual && (
-                                                        <button onClick={() => confirmUpdateStatus('diproses', 'Tandai Diproses?', 'Yakin ingin menandai pesanan ini sedang diproses?')} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-sm transition-colors">
-                                                            Tandai Sedang Diproses
-                                                        </button>
-                                                    )}
                                                     {order.status === 'diproses' && (
-                                                        <button onClick={() => confirmUpdateStatus('dikirim', 'Kirim Pesanan?', 'Yakin ingin mengirim pesanan ini?')} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-sm transition-colors">
-                                                            Kirim Pesanan
-                                                        </button>
+                                                        penanggungJawab === auth?.user?.name ? (
+                                                            <button onClick={() => confirmUpdateStatus('dikirim', 'Kirim Pesanan?', 'Yakin ingin mengirim pesanan ini?')} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-[#0D6A36]/20 bg-white hover:bg-[#0D6A36]/5 text-[#0D6A36] font-bold text-sm transition-colors">
+                                                                Kirim Pesanan
+                                                            </button>
+                                                        ) : (
+                                                            <button onClick={() => confirmUpdateStatus('diproses', 'Ambil Alih Pesanan?', 'Yakin ingin mengambil alih pesanan ini sebagai penanggung jawab?')} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-[#0D6A36] bg-[#0D6A36] hover:bg-[#0b5c2f] text-white font-bold text-sm transition-colors shadow-sm">
+                                                                Ambil Alih Pesanan
+                                                            </button>
+                                                        )
                                                     )}
                                                     {order.status === 'dikirim' && (
                                                         <button onClick={() => confirmUpdateStatus('selesai', 'Selesaikan Pesanan?', 'Yakin ingin menyelesaikan pesanan ini?')} disabled={isUpdating} className="w-full text-left px-4 py-3 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-700 font-bold text-sm transition-colors">
@@ -414,10 +435,10 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                 <div>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Metode Pengiriman</p>
                                     <p className="text-sm font-medium text-slate-800">
-                                        {(order.shippingMethod?.nama || order.shipping_method || 'Reguler').replace(/_/g, ' ').toUpperCase()}
+                                        {String(order.shipping_method?.nama_metode || order.shippingMethod?.nama_metode || order.shippingMethod?.nama || (typeof order.shipping_method === 'string' ? order.shipping_method : null) || 'Kirim via Kurir').replace(/_/g, ' ').toUpperCase()}
                                     </p>
                                 </div>
-                                {(order.shippingMethod?.nama === 'ambil_apotek' || order.shipping_method === 'ambil_apotek' || order.shippingMethod?.nama === 'Ambil di Apotek') ? (
+                                {(order.shipping_method?.nama_metode === 'Ambil di Apotek' || order.shippingMethod?.nama_metode === 'ambil_apotek' || order.shippingMethod?.nama === 'ambil_apotek' || order.shipping_method === 'ambil_apotek' || order.shipping_method === 'ambil_sendiri' || order.shippingMethod?.nama_metode === 'ambil_sendiri' || order.shippingMethod?.nama === 'Ambil di Apotek') ? (
                                     <div>
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Alamat Pengiriman</p>
                                         <p className="text-sm font-medium text-amber-600 leading-relaxed italic">
@@ -427,7 +448,9 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                 ) : (
                                     <div>
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Alamat Pengiriman</p>
-                                        <p className="text-sm font-medium text-slate-800">{order.shipping_address || 'Alamat belum diatur'}</p>
+                                        <p className="text-sm font-medium text-slate-800">
+                                            {formatAddress(order.shipping_address)}
+                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -459,6 +482,16 @@ export default function AdminOrderDetail({ order, auth }: any) {
                                     ) : (
                                         <p className="text-sm text-slate-400 italic">File resep tidak tersedia.</p>
                                     )}
+
+                                    {order.prescription?.id && (
+                                        <Link
+                                            href={`/admin/prescriptions/${order.prescription.id}`}
+                                            className="w-full flex items-center justify-between px-4 py-3 mt-3 rounded-xl bg-[#0D6A36] text-white hover:bg-[#0b5c2f] font-['Inter',sans-serif] text-sm font-bold tracking-wide transition-all shadow-sm"
+                                        >
+                                            Lihat Detail Resep
+                                            <ChevronRight size={16} />
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -470,3 +503,4 @@ export default function AdminOrderDetail({ order, auth }: any) {
         </div>
     );
 }
+

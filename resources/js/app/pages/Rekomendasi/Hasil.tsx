@@ -93,9 +93,9 @@ const RecommendationCard = ({ product, isTopRecommendation, onShowModal }: { pro
     <div key={product.id} className={`flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl border border-gray-100 gap-4 mb-3 last:mb-0 shadow-sm hover:shadow-md transition-shadow ${isNotRecommended ? 'bg-red-50' : 'bg-white'}`}>
         
         {/* SISI KIRI: Ikon Gambar & Detail Informasi Obat */}
-        <div className="flex items-start gap-4 flex-1 w-full">
+        <div className="flex flex-col sm:flex-row items-start gap-4 flex-1 w-full">
             {/* Placeholder Gambar Obat */}
-            <div className="w-14 h-14 flex-shrink-0 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center text-gray-400 overflow-hidden">
+            <div className="w-full sm:w-16 h-40 sm:h-16 flex-shrink-0 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-center text-gray-400 overflow-hidden">
                 {product.gambar ? (
                   <img src={getImageUrl(product.gambar)} alt={product.nama_obat} className="w-full h-full object-cover" />
                 ) : (
@@ -106,7 +106,7 @@ const RecommendationCard = ({ product, isTopRecommendation, onShowModal }: { pro
             {/* Teks Informasi Detail Obat */}
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-gray-900 text-base truncate">{product.nama_obat}</h4>
+                  <h4 className="font-bold text-gray-900 text-base break-words whitespace-normal">{product.nama_obat}</h4>
                   {isTopRecommendation && (
                     <span className="bg-[#1e5b53] text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm">
                       Terbaik

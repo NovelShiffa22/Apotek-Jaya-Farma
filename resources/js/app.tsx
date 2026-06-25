@@ -79,6 +79,9 @@ const GlobalBFCacheHandler = ({ children }: { children: React.ReactNode }) => {
 
 import { router } from '@inertiajs/react';
 
+
+
+
 router.on('invalid', (event) => {
     event.preventDefault();
     const status = event.detail?.response?.status;

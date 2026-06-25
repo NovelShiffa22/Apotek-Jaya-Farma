@@ -25,7 +25,9 @@ import {
   Eye,
   List,
   Loader,
-  Truck
+  Truck,
+  Printer,
+  ArrowLeft
 } from 'lucide-react';
 import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
 import axios from 'axios';
@@ -59,7 +61,7 @@ const DynamicPlaceholderInput = React.forwardRef(({ defaultPlaceholder, formatPl
     );
 });
 
-export default function PharmacistDashboard({ prescriptions = [], products = [], orders = [], statusChanges = [], analytics = {} }: any) {
+export default function PharmacistDashboard({ prescriptions = [], products = [], orders = [], statusChanges = [], analytics = {}, defaultTab }: any) {
   const { auth } = usePage().props as any;
   const user = auth?.user;
 
@@ -153,8 +155,12 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
     }
   }, [isCollapsed]);
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'prescriptions' | 'settings' | 'products'>(() => {
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'prescriptions' | 'settings' | 'products' | 'notifications'>(() => {
+    if (defaultTab) return defaultTab;
     if (typeof window !== 'undefined') {
+      const validTabs = ['dashboard', 'orders', 'prescriptions', 'settings', 'products', 'notifications'];
+      const urlTab = new URLSearchParams(window.location.search).get('tab');
+      if (urlTab && validTabs.includes(urlTab)) return urlTab as any;
       return (localStorage.getItem('pharmacistActiveTab') as any) || 'dashboard';
     }
     return 'dashboard';
@@ -166,14 +172,33 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
     }
   }, [activeTab]);
 
-  const [activeSubTab, setActiveSubTab] = useState<'menunggu' | 'disetujui' | 'ditolak' | 'pembayaran'>('menunggu');
+  const [activeSubTab, setActiveSubTab] = useState<'menunggu' | 'disetujui' | 'ditolak' | 'pembayaran'>(() => {
+    const validSubTabs = ['menunggu', 'disetujui', 'ditolak', 'pembayaran'];
+    const paramStatus = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('prescription_status') : null;
+    return (validSubTabs.includes(paramStatus ?? '') ? paramStatus : 'menunggu') as 'menunggu' | 'disetujui' | 'ditolak' | 'pembayaran';
+  });
   const [selectedPrescription, setSelectedPrescription] = useState<any>(null);
-
+  
+  const urlParams = new URLSearchParams(window.location.search);
+    
   // States for 'products' tab
-  const [productSearchQuery, setProductSearchQuery] = useState('');
-  const [productCategoryFilter, setProductCategoryFilter] = useState('all');
+  const [productSearchQuery, setProductSearchQuery] = useState(urlParams.get('product_search') || '');
+  const [productCategoryFilter, setProductCategoryFilter] = useState(urlParams.get('product_category') || 'all');
   const [viewingProductDetail, setViewingProductDetail] = useState<any>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  // States for 'orders' tab
+  const [orderSearchQuery, setOrderSearchQuery] = useState(urlParams.get('order_search') || '');
+  const [orderStatusFilter, setOrderStatusFilter] = useState(urlParams.get('order_status') || 'all');
+  const [orderStartDate, setOrderStartDate] = useState<Date | null>(null);
+  const [orderEndDate, setOrderEndDate] = useState<Date | null>(null);
+
+  // States for 'prescriptions' tab
+  const [prescriptionView, setPrescriptionView] = useState<'list' | 'detail'>('list');
+  const [searchQuery, setSearchQuery] = useState(urlParams.get('prescription_search') || '');
+  const [prescriptionStartDate, setPrescriptionStartDate] = useState<Date | null>(null);
+  const [prescriptionEndDate, setPrescriptionEndDate] = useState<Date | null>(null);
+  const [validationNotes, setValidationNotes] = useState('');
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -193,17 +218,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
     return () => clearTimeout(handler);
   }, [productSearchQuery, productCategoryFilter, activeTab]);
-  const [prescriptionView, setPrescriptionView] = useState<'list' | 'detail'>('list');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [prescriptionStartDate, setPrescriptionStartDate] = useState<Date | null>(null);
-  const [prescriptionEndDate, setPrescriptionEndDate] = useState<Date | null>(null);
-  const [validationNotes, setValidationNotes] = useState('');
-  
-  // Order states
-  const [orderSearchQuery, setOrderSearchQuery] = useState('');
-  const [orderStartDate, setOrderStartDate] = useState<Date | null>(null);
-  const [orderEndDate, setOrderEndDate] = useState<Date | null>(null);
-  const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+    // Removed duplicate state declarations
 
   const [modalConfig, setModalConfig] = useState<{
       isOpen: boolean;
@@ -281,69 +296,94 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
   // Notification States
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pharmacistNotifications');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
 
   useEffect(() => {
-    if (statusChanges && statusChanges.length > 0) {
-      const lastReadTime = localStorage.getItem('pharmacist_notif_last_read') || '0';
-      const readTimeMs = parseInt(lastReadTime, 10);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pharmacistNotifications', JSON.stringify(notifications));
+    }
+  }, [notifications]);
 
-      const mapped = statusChanges.map((sc: any) => {
-        const timeMs = new Date(sc.created_at).getTime();
-        const pharmacistName = sc.changed_by_user?.name || 'Apoteker';
-        const isSelf = sc.changed_by === user?.id;
-        
-        let text = '';
-        const statusLabels: Record<string, string> = {
-          menunggu_pembayaran: 'Menunggu Pembayaran',
-          diproses: 'Diproses',
-          dikirim: 'Dikirim',
-          selesai: 'Selesai',
-          dibatalkan: 'Dibatalkan',
-        };
+  useEffect(() => {
+    if (!user?.id) return;
 
-        const displayStatus = statusLabels[sc.status_sesudah] || sc.status_sesudah;
-
-        if (isSelf) {
-          text = `Anda mengubah status Pesanan #${sc.order?.kode_pesanan || sc.order_id} menjadi "${displayStatus}"`;
-        } else {
-          text = `${pharmacistName} mengubah status Pesanan #${sc.order?.kode_pesanan || sc.order_id} menjadi "${displayStatus}"`;
-        }
-
-        const dateObj = new Date(sc.created_at);
-        const timeFormatted = dateObj.toLocaleDateString('id-ID', {
+    axios.get('/api/notifications').then((res) => {
+      const mappedNotifs = res.data.map((n: any) => ({
+        id: n.id,
+        type: n.data.type || n.type,
+        title: n.data.title || 'Notifikasi Baru',
+        text: n.data.message,
+        time: new Date(n.created_at).toLocaleString('id-ID', {
           day: 'numeric',
           month: 'short',
           hour: '2-digit',
           minute: '2-digit'
-        });
-
-        return {
-          id: sc.id,
-          text,
-          time: timeFormatted,
-          isRead: timeMs <= readTimeMs,
-          orderId: sc.order_id,
-          timeMs
-        };
-      });
-
-      setNotifications(mapped);
-    }
-  }, [statusChanges, user?.id]);
+        }),
+        isRead: n.read_at !== null,
+        orderId: n.data.order_id || n.data.invoice_number || null,
+        prescriptionId: n.data.prescription_id || null,
+        timeMs: new Date(n.created_at).getTime(),
+        data: n.data
+      }));
+      setNotifications(mappedNotifs);
+    }).catch(err => console.error(err));
+  }, [user?.id]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  const markAllRead = () => {
-    const maxTimeMs = Math.max(...notifications.map(n => n.timeMs), 0);
-    localStorage.setItem('pharmacist_notif_last_read', maxTimeMs.toString());
-    setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+  const markAllRead = async () => {
+    const unreadNotifs = notifications.filter(n => !n.isRead);
+    if (unreadNotifs.length === 0) return;
+    
+    try {
+      // Optimistic update
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      window.dispatchEvent(new CustomEvent('notificationsUpdated'));
+      
+      // Send requests
+      await Promise.all(unreadNotifs.map(n => axios.patch(`/api/notifications/${n.id}/read`)));
+    } catch (e) {
+      console.error("Failed to mark all as read", e);
+    }
   };
+
+  // Listen to realtime broadcast notifications
+  useEffect(() => {
+    if (window.Echo && user?.id) {
+      window.Echo.private(`App.Models.User.${user.id}`)
+        .notification((notification: any) => {
+          setNotifications(prev => [{
+            id: notification.id || Date.now(),
+            title: notification.title || 'Notifikasi Baru',
+            text: notification.message,
+            time: 'Baru saja',
+            isRead: false,
+            orderId: notification.order_id || notification.invoice_number || null,
+            prescriptionId: notification.prescription_id || null,
+            timeMs: Date.now(),
+            data: notification
+          }, ...prev]);
+          window.dispatchEvent(new CustomEvent('notificationsUpdated'));
+        });
+    }
+    return () => {
+      if (window.Echo && user?.id) {
+        window.Echo.leave(`App.Models.User.${user.id}`);
+      }
+    };
+  }, [user?.id]);
 
   // Doctor detail state (Mockup 3)
   const [doctorName, setDoctorName] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [doctorPoli, setDoctorPoli] = useState('');
   const [doctorPPK, setDoctorPPK] = useState('Puskesmas Tebet');
   const [doctorAlamat, setDoctorAlamat] = useState('Jl. Raya Kemerdekaan No. 10, Jakarta Selatan');
@@ -428,20 +468,26 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
     setSelectedPrescription(rx);
     setPrescriptionView('detail');
     setValidationNotes(rx.catatan_apoteker || '');
-    if (rx.doctor_name) setDoctorName(rx.doctor_name);
-    else setDoctorName('');
-    if (rx.doctor_poli) setDoctorPoli(rx.doctor_poli);
-    if (rx.doctor_ppk) setDoctorPPK(rx.doctor_ppk);
+    
+    setDoctorName(rx.doctor_name || rx.nama_dokter || '');
+    setDoctorPoli(rx.doctor_poli || '');
+    setDoctorPPK(rx.doctor_ppk || '');
     setDoctorAlamat(rx.doctor_alamat || '');
-    setRejectionReason('');
-    setShowRejectForm(false);
-    setNikKtp(rx.nik || rx.nik_ktp || '');
-    setJenisKelamin(rx.jenis_kelamin || rx.gender || '');
     setPrescriptionDate(rx.tanggal_resep || '');
     setSipDokter(rx.sip_dokter || '');
     
+    setRejectionReason('');
+    setShowRejectForm(false);
+    
+    setNikKtp(rx.nik || rx.nik_ktp || '');
+    setJenisKelamin(rx.jenis_kelamin || rx.gender || '');
+    
     if (rx.items && rx.items.length > 0) {
-      setPrescriptionItems(rx.items);
+      const itemsWithSubtotal = rx.items.map((item: any) => ({
+        ...item,
+        subtotal: Number(item.subtotal) || ((item.harga_satuan || 0) * (item.kuantitas_ambil || 0))
+      }));
+      setPrescriptionItems(itemsWithSubtotal);
     } else {
       setPrescriptionItems([]);
     }
@@ -469,7 +515,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
-                only: ['prescriptions']
+                only: ['prescriptions', 'analytics']
             });
         } else if (activeTab === 'orders') {
             params.order_status = orderStatusFilter;
@@ -489,7 +535,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
-                only: ['orders']
+                only: ['orders', 'analytics']
             });
         } else if (activeTab === 'dashboard') {
             params.verifikasi_days = verifikasiFilterDays;
@@ -510,12 +556,16 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
   const activeFilteredList = prescriptions?.data || [];
 
   // Calculate Grand Total from dynamic items
-  const totalHargaVal = prescriptionItems.reduce((acc, item) => acc + Number(item.subtotal || 0), 0);
+  const totalHargaVal = prescriptionItems.reduce((acc, item) => {
+    const computedSubtotal = (item.harga_satuan || 0) * (item.kuantitas_ambil || 0);
+    const val = Number(item.subtotal) || computedSubtotal;
+    return acc + val;
+  }, 0);
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] w-full max-w-full overflow-x-hidden">
+    <div className="flex min-h-screen bg-[#F8FAFC] w-full max-w-full overflow-x-hidden print:min-h-0">
       {/* Sidebar Navigation */}
-      <aside className={`hidden md:flex fixed left-0 top-0 h-screen z-40 bg-white border-r border-slate-100 flex-col justify-between transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
+      <aside className={`hidden md:flex fixed left-0 top-0 h-screen z-40 bg-white border-r border-slate-100 flex-col justify-between transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'} print:hidden`}>
         <div>
           {/* Logo Brand */}
           <div className={`flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-center gap-3 px-4'} h-16 border-b border-slate-100`}>
@@ -605,10 +655,10 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
       </aside>
 
       {/* Main Content Workspace */}
-      <div className={`flex-1 min-h-screen w-full bg-slate-50 flex flex-col min-w-0 transition-all duration-300 max-w-full overflow-x-hidden ${isCollapsed ? 'md:pl-20' : 'md:pl-64'}`}>
+      <div className={`flex-1 h-screen overflow-y-auto w-full bg-slate-50 flex flex-col min-w-0 transition-all duration-300 max-w-full overflow-x-hidden ${isCollapsed ? 'md:pl-20' : 'md:pl-64'} print:h-auto print:overflow-visible print:pl-0 print:bg-white`}>
         
         {/* Dynamic Header */}
-        <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-20 shadow-sm transition-all duration-300">
+        <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-20 shadow-sm transition-all duration-300 print:hidden">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsMobileSidebarOpen(true)}
@@ -631,61 +681,17 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
           <div className="flex items-center gap-6">
             {/* Bell Notification Icon */}
             <div className="relative">
-              <button
-                onClick={() => setIsNotifOpen(!isNotifOpen)}
-                className="p-2.5 text-slate-400 hover:text-[#0D6A36] hover:bg-[#E7F5EC] rounded-xl transition-all relative"
+              <Link
+                href="/pharmacist/notifications"
+                className="p-2.5 text-slate-400 hover:text-[#0D6A36] hover:bg-[#E7F5EC] rounded-xl transition-all relative flex items-center justify-center"
               >
                 <Bell size={20} />
                 {unreadCount > 0 && (
                   <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white animate-pulse">
-                    {unreadCount}
+                    {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
-              </button>
-
-              {isNotifOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-[#E2E8F0] rounded-2xl shadow-xl z-50 overflow-hidden py-1">
-                  <div className="px-4 py-3 border-b border-[#E2E8F0] flex justify-between items-center">
-                    <span className="font-['Inter',sans-serif] font-bold text-sm text-slate-800">Notifikasi</span>
-                    {unreadCount > 0 && (
-                      <button
-                        onClick={markAllRead}
-                        className="text-xs font-semibold text-[#0D6A36] hover:underline"
-                      >
-                        Tandai dibaca
-                      </button>
-                    )}
-                  </div>
-                  <div className="max-h-72 overflow-y-auto">
-                    {notifications.length > 0 ? (
-                      notifications.map((notif: any) => (
-                        <div
-                          key={notif.id}
-                          className={`px-4 py-3 border-b border-[#F1F5F9] last:border-0 hover:bg-[#F8FAFC] transition-colors text-left cursor-pointer ${
-                            !notif.isRead ? 'bg-[#E7F5EC]/30' : ''
-                          }`}
-                          onClick={() => {
-                            // Mark this one as read in local state
-                            setNotifications(notifications.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
-                            setIsNotifOpen(false);
-                          }}
-                        >
-                          <p className="font-['Inter',sans-serif] text-xs text-slate-800 font-medium leading-relaxed">
-                            {notif.text}
-                          </p>
-                          <span className="text-[10px] text-slate-400 mt-1 block">
-                            {notif.time}
-                          </span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="px-4 py-6 text-center text-slate-400 font-['Inter',sans-serif] text-xs">
-                        Tidak ada notifikasi baru
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              </Link>
             </div>
 
             <div className="flex items-center gap-3">
@@ -713,7 +719,88 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
         </header>
 
         {/* Workspace Body */}
-        <main className="p-8 flex-1 overflow-y-auto overflow-x-hidden">
+        <main className="p-8 flex-1 overflow-y-auto overflow-x-hidden print:h-auto print:overflow-visible print:p-0">
+          {activeTab === 'notifications' && (
+              <div className="space-y-6 max-w-4xl mx-auto">
+                  <div className="flex items-center justify-between mb-8">
+                      <h1 className="font-['Poppins',sans-serif] text-[28px] font-bold text-[#171d19] tracking-tight">
+                          Rekap Notifikasi Apoteker
+                      </h1>
+                      <button 
+                          onClick={markAllRead}
+                          disabled={notifications.length === 0 || !notifications.some(n => !n.isRead)}
+                          className={`font-['Poppins',sans-serif] text-[14px] font-bold transition-opacity ${
+                              notifications.length === 0 || !notifications.some(n => !n.isRead) 
+                                  ? 'text-gray-400 cursor-not-allowed opacity-50' 
+                                  : 'text-[#0D6A36] hover:underline'
+                          }`}
+                      >
+                          Tandai semua telah dibaca
+                      </button>
+                  </div>
+
+                  {notifications.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-20 opacity-80">
+                          <Bell className="text-gray-300 w-20 h-20 mb-4" />
+                          <p className="text-gray-500 font-['Poppins',sans-serif] text-lg text-center">Kerja bagus! Semua antrean resep dan verifikasi pesanan sudah selesai diproses</p>
+                      </div>
+                  ) : (
+                      <div className="space-y-4">
+                          {notifications.map(notif => (
+                              <Link 
+                                  href={notif.data?.url || '#'}
+                                  key={notif.id} 
+                                  onClick={() => {
+                                      if (!notif.isRead) {
+                                          axios.patch(`/api/notifications/${notif.id}/read`).catch(console.error);
+                                          setNotifications(notifications.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
+                                          window.dispatchEvent(new CustomEvent('notificationsUpdated'));
+                                      }
+                                  }}
+                                  className={`relative flex items-start gap-6 p-6 rounded-2xl border cursor-pointer transition-all duration-300 ${
+                                      !notif.isRead 
+                                          ? 'border-transparent bg-white shadow-sm hover:shadow-md' 
+                                          : 'border-gray-200 bg-gray-50 opacity-80 hover:opacity-100'
+                                  }`}
+                              >
+                                  {!notif.isRead && (
+                                      <div className="absolute left-0 top-6 bottom-6 w-1 bg-[#0D6A36] rounded-r-md"></div>
+                                  )}
+
+                                  <div className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 ${
+                                      !notif.isRead ? 'bg-emerald-50 text-[#0D6A36]' : 'bg-gray-200 text-gray-500'
+                                  }`}>
+                                      <FileText size={24} className="text-current" />
+                                  </div>
+
+                                  <div className="flex-1 pt-1">
+                                      <h3 className={`font-['Poppins',sans-serif] font-bold text-[18px] mb-1 ${
+                                          !notif.isRead ? 'text-[#171d19]' : 'text-gray-600'
+                                      }`}>
+                                          {notif.title}
+                                      </h3>
+                                      <p className={`font-['Poppins',sans-serif] text-[14px] mb-2 leading-relaxed ${
+                                          !notif.isRead ? 'text-gray-600' : 'text-gray-500'
+                                      }`}>
+                                          {notif.text}
+                                      </p>
+                                      <span className={`font-['Poppins',sans-serif] text-[12px] font-medium ${
+                                          !notif.isRead ? 'text-[#0D6A36]' : 'text-gray-400'
+                                      }`}>
+                                          {notif.time}
+                                      </span>
+                                  </div>
+
+                                  {!notif.isRead && (
+                                      <div className="w-2.5 h-2.5 rounded-full bg-[#0D6A36] mt-2 shadow-[0_0_8px_rgba(13,106,54,0.6)]"></div>
+                                  )}
+                              </Link>
+                          ))}
+                      </div>
+                  )}
+              </div>
+          )}
+
           {activeTab === 'dashboard' && (
             <div className="space-y-8 max-w-[1600px] mx-auto">
               
@@ -896,6 +983,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                       <div className="flex gap-10 overflow-x-auto scrollbar-hide">
                           {[
                             { id: 'all', label: 'Semua', icon: List },
+                            { id: 'menunggu_pembayaran', label: 'Menunggu Pembayaran', icon: Clock },
                             { id: 'diproses', label: 'Diproses', icon: Loader },
                             { id: 'dikirim', label: 'Dikirim', icon: Truck },
                             { id: 'selesai', label: 'Selesai', icon: CheckCircle },
@@ -1059,6 +1147,11 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                           {cfg.icon && <cfg.icon size={12} />}
                                           {statusLabels[order.status] || order.status}
                                         </span>
+                                        {hasPrescription && order.prescription?.kode_resep && (
+                                            <div className="text-[10px] text-slate-400 font-medium mt-1 truncate">
+                                                ID Resep: {order.prescription.kode_resep}
+                                            </div>
+                                        )}
                                       </div>
                                     </td>
                                     <td className="px-5 py-4">
@@ -1066,9 +1159,16 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                         <div className="w-8 h-8 rounded-full bg-[#E7F5EC] text-[#0D6A36] flex items-center justify-center font-bold text-xs shrink-0">
                                           {(order.user?.name || 'G').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
                                         </div>
-                                        <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-800 truncate max-w-[130px]">
-                                          {order.user?.name || 'Guest'}
-                                        </span>
+                                        <div className="flex flex-col">
+                                          <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-800 truncate max-w-[130px]">
+                                            {order.user?.name || 'Guest'}
+                                          </span>
+                                          {order.user?.email && (
+                                            <span className="font-['Inter',sans-serif] text-[10px] text-slate-400 truncate max-w-[130px] mt-0.5">
+                                                {order.user.email}
+                                            </span>
+                                          )}
+                                        </div>
                                       </div>
                                     </td>
                                     <td className="px-5 py-4">
@@ -1111,7 +1211,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                       )}
                                     </td>
                                     <td className="px-5 py-4 text-center">
-                                        {(order.shippingMethod?.nama === 'ambil_apotek' || order.shipping_method === 'ambil_apotek' || order.shippingMethod?.nama === 'Ambil di Apotek') ? (
+                                        {['ambil_apotek', 'ambil_sendiri', 'ambil di apotek'].includes(String(order.shipping_method?.nama_metode || order.shippingMethod?.nama_metode || order.shippingMethod?.nama || (typeof order.shipping_method === 'string' ? order.shipping_method : '')).toLowerCase()) ? (
                                             <span className="inline-flex items-center px-2 py-1 rounded-md bg-amber-50 text-amber-600 font-bold text-[10px] uppercase tracking-widest border border-amber-200">
                                                 Ambil di Apotek
                                             </span>
@@ -1176,54 +1276,59 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
           {activeTab === 'prescriptions' && (
             <div className="max-w-[1600px] mx-auto">
-              <div className="mb-6">
-                  <h2 className="font-['Inter',sans-serif] text-2xl font-bold text-[#0D6A36] capitalize">
-                      Verifikasi Resep
-                  </h2>
-                  <p className="font-['Inter',sans-serif] text-sm text-slate-400 mt-1">
-                      Daftar resep yang baru masuk dan memerlukan verifikasi apoteker.
-                  </p>
-              </div>
-
-              {/* Sub Navigation Tabs */}
-              <div className="mb-6 border-b border-[#E2E8F0]">
-                  <div className="flex gap-10 overflow-x-auto scrollbar-hide">
-                      {[
-                        { id: 'menunggu' as const, label: 'Menunggu Verifikasi', icon: Clock, count: pendingCount },
-                        { id: 'disetujui' as const, label: 'Disetujui', icon: CheckCircle, count: approvedCount },
-                        { id: 'ditolak' as const, label: 'Ditolak', icon: XCircle, count: rejectedCount },
-                        { id: 'pembayaran' as const, label: 'Telah Dipesan', icon: ShoppingBag, count: analytics?.telah_dipesan_count || 0 }
-                      ].map((tab) => {
-                        const isActive = activeSubTab === tab.id;
-                        const Icon = tab.icon;
-                        return (
-                          <button
-                            key={tab.id}
-                            onClick={() => {
-                              setActiveSubTab(tab.id);
-                              setPrescriptionView('list');
-                              setSearchQuery('');
-                            }}
-                            className={`font-['Inter',sans-serif] text-sm font-medium pb-4 relative transition-all whitespace-nowrap flex items-center gap-2.5 ${
-                              isActive
-                                ? 'text-[#0D6A36] border-b-2 border-[#0D6A36]'
-                                : 'text-slate-400 hover:text-slate-600 border-b-2 border-transparent'
-                            }`}
-                          >
-                            <Icon size={16} className={isActive ? "text-[#0D6A36]" : "text-slate-400"} />
-                            <span>{tab.label}</span>
-                            {tab.count > 0 && (
-                              <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold leading-none rounded-full ${
-                                isActive ? 'bg-[#0D6A36] text-white' : 'bg-slate-200 text-slate-700'
-                              }`}>
-                                {tab.count}
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
+              {prescriptionView === 'list' && (
+                <>
+                  <div className="mb-6">
+                      <h2 className="font-['Inter',sans-serif] text-2xl font-bold text-[#0D6A36] capitalize">
+                          Verifikasi Resep
+                      </h2>
+                      <p className="font-['Inter',sans-serif] text-sm text-slate-400 mt-1">
+                          Daftar resep yang baru masuk dan memerlukan verifikasi apoteker.
+                      </p>
                   </div>
-              </div>
+
+                  {/* Sub Navigation Tabs */}
+                  <div className="mb-6 border-b border-[#E2E8F0]">
+                      <div className="flex gap-10 overflow-x-auto scrollbar-hide">
+                          {[
+                            { id: 'semua' as const, label: 'Semua', icon: List, count: pendingCount + approvedCount + rejectedCount + (analytics?.telah_dipesan_count || 0) },
+                            { id: 'menunggu' as const, label: 'Menunggu Verifikasi', icon: Clock, count: pendingCount },
+                            { id: 'disetujui' as const, label: 'Disetujui', icon: CheckCircle, count: approvedCount },
+                            { id: 'ditolak' as const, label: 'Ditolak', icon: XCircle, count: rejectedCount },
+                            { id: 'pembayaran' as const, label: 'Telah Dipesan', icon: ShoppingBag, count: analytics?.telah_dipesan_count || 0 }
+                          ].map((tab) => {
+                            const isActive = activeSubTab === tab.id;
+                            const Icon = tab.icon;
+                            return (
+                              <button
+                                key={tab.id}
+                                onClick={() => {
+                                  setActiveSubTab(tab.id);
+                                  setPrescriptionView('list');
+                                  setSearchQuery('');
+                                }}
+                                className={`font-['Inter',sans-serif] text-sm font-medium pb-4 relative transition-all whitespace-nowrap flex items-center gap-2.5 ${
+                                  isActive
+                                    ? 'text-[#0D6A36] border-b-2 border-[#0D6A36]'
+                                    : 'text-slate-400 hover:text-slate-600 border-b-2 border-transparent'
+                                }`}
+                              >
+                                <Icon size={16} className={isActive ? "text-[#0D6A36]" : "text-slate-400"} />
+                                <span>{tab.label}</span>
+                                {tab.count > 0 && (
+                                  <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold leading-none rounded-full ${
+                                    isActive ? 'bg-[#0D6A36] text-white' : 'bg-slate-200 text-slate-700'
+                                  }`}>
+                                    {tab.count}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                      </div>
+                  </div>
+                </>
+              )}
               
               
               <div>
@@ -1315,21 +1420,27 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                               </tr>
                                           ) : activeFilteredList.map((rx: any, index: number) => {
                                               const startIndex = ((prescriptions.current_page || 1) - 1) * (prescriptions.per_page || 10);
-                                              const config = rx.status_validasi === 'pending' ? { bg: 'bg-amber-50', color: 'text-amber-700', border: 'border-amber-200', text: 'Menunggu' } :
-                                                           rx.status_validasi === 'disetujui' ? { bg: 'bg-emerald-50', color: 'text-emerald-700', border: 'border-emerald-200', text: 'Disetujui' } :
-                                                           rx.status_validasi === 'ditolak' ? { bg: 'bg-red-50', color: 'text-red-700', border: 'border-red-200', text: 'Ditolak' } :
-                                                           { bg: 'bg-gray-50', color: 'text-gray-700', border: 'border-gray-200', text: rx.status_validasi || 'Menunggu' };
+                                              const config = (rx.status_validasi === 'pending' || rx.status_validasi === 'menunggu') ? { bg: 'bg-amber-50', color: 'text-amber-700', border: 'border-amber-300', text: 'Menunggu' } :
+                                                           rx.status_validasi === 'disetujui' ? { bg: 'bg-emerald-50', color: 'text-emerald-700', border: 'border-emerald-300', text: 'Disetujui' } :
+                                                           rx.status_validasi === 'ditolak' ? { bg: 'bg-red-50', color: 'text-red-700', border: 'border-red-300', text: 'Ditolak' } :
+                                                           rx.status_validasi === 'telah_dipesan' ? { bg: 'bg-blue-50', color: 'text-blue-700', border: 'border-blue-300', text: 'Telah Dipesan' } :
+                                                           { bg: 'bg-amber-50', color: 'text-amber-700', border: 'border-amber-300', text: 'Menunggu' };
                                                            
                                               return (
                                                   <tr key={rx.id} className="group transition-colors hover:bg-[#f8fafc]">
                                                       <td className="px-5 py-4">
                                                           <div className="flex flex-col gap-0.5">
                                                               <div className="flex items-center gap-2">
-                                                                  <span className="font-['Inter',sans-serif] text-[13px] font-bold text-slate-800">#{rx.kode_resep || rx.id}</span>
+                                                                  <span className="font-['Inter',sans-serif] text-[13px] font-bold text-slate-800">{rx.kode_resep || rx.id}</span>
                                                                   {rx.is_urgent && (
                                                                       <span className="inline-flex items-center self-start px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border border-red-200 bg-red-50 text-red-700">Urgent</span>
                                                                   )}
                                                               </div>
+                                                              {((rx.virtual_transactions && rx.virtual_transactions.length > 0 && rx.virtual_transactions[0].invoice_number) || (rx.orders && rx.orders.length > 0 && rx.orders[0].kode_pesanan)) && (
+                                                                  <div className="text-[10px] text-slate-400 font-medium mt-1 truncate">
+                                                                      ID Pesanan: {(rx.virtual_transactions && rx.virtual_transactions.length > 0 && rx.virtual_transactions[0].invoice_number) ? rx.virtual_transactions[0].invoice_number : rx.orders[0].kode_pesanan}
+                                                                  </div>
+                                                              )}
                                                           </div>
                                                       </td>
                                                       <td className="px-5 py-4 text-center">
@@ -1358,9 +1469,16 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                                               <div className="w-8 h-8 rounded-full bg-[#E7F5EC] text-[#0D6A36] flex items-center justify-center font-bold text-xs shrink-0">
                                                                   {(rx.nama_pasien || rx.user?.name || rx.customer || 'P').split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
                                                               </div>
-                                                              <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-800 truncate max-w-[150px]">
-                                                                  {rx.nama_pasien || rx.user?.name || rx.customer || 'Pasien Anonim'}
-                                                              </span>
+                                                              <div className="flex flex-col">
+                                                                  <span className="font-['Inter',sans-serif] text-[13px] font-semibold text-slate-800 truncate max-w-[150px]">
+                                                                      {rx.nama_pasien || rx.user?.name || rx.customer || 'Pasien Anonim'}
+                                                                  </span>
+                                                                  {rx.user?.email && (
+                                                                      <span className="font-['Inter',sans-serif] text-[10px] text-slate-400 truncate max-w-[150px] mt-0.5">
+                                                                          {rx.user.email}
+                                                                      </span>
+                                                                  )}
+                                                              </div>
                                                           </div>
                                                       </td>
                                                       <td className="px-5 py-4">
@@ -1374,7 +1492,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                                           </div>
                                                       </td>
                                                       <td className="px-5 py-4 text-center">
-                                                            {rx.shipping_method === 'kurir' ? (
+                                                            {(rx.shipping_method === 'kurir' || rx.shipping_method === 'Kirim via Kurir') ? (
                                                                 <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-600 font-bold text-[10px] uppercase tracking-widest border border-blue-200">
                                                                     Kirim via Kurir
                                                                 </span>
@@ -1447,24 +1565,60 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                     </div>
                   ) : (
                     /* Detailed Medical Prescription Validation view (Mockup 3) */
-                    <div className="space-y-6">
-                      
-                      {/* Back button link */}
-                      <button
-                        onClick={() => setPrescriptionView('list')}
-                        className="flex items-center gap-2 text-slate-500 hover:text-slate-700 font-semibold text-sm transition-colors group mb-4"
-                      >
-                        <svg className="w-4 h-4 transform group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        <span>Kembali ke Daftar Resep</span>
-                      </button>
+                    <div className="fixed inset-0 z-[100] bg-[#f8fafc] flex flex-col overflow-hidden animate-fadeIn print:static print:h-auto print:overflow-visible print:bg-white print:block">
+                       {/* Top Navbar overlay */}
+                       <div className="bg-white border-b border-[#E2E8F0] px-8 py-4 flex items-center justify-between sticky top-0 z-40 print:hidden">
+                           <div className="flex items-center gap-4">
+                               <button
+                                 onClick={() => {
+                                     if (selectedPrescription?.status_validasi === 'pending') {
+                                         setShowCancelModal(true);
+                                     } else {
+                                         setPrescriptionView('list');
+                                     }
+                                 }}
+                                 className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition-all"
+                               >
+                                 <ArrowLeft size={20} />
+                               </button>
+                               <h1 className="font-['Poppins',sans-serif] text-[20px] font-bold text-[#171d19]">
+                                   Detail Resep: <span className="text-[#1e5b53]">{selectedPrescription?.kode_resep || selectedPrescription?.id}</span>
+                               </h1>
+                           </div>
+
+                           {selectedPrescription?.status_validasi === 'pending' ? (
+                               <button
+                                 onClick={() => setShowCancelModal(true)}
+                                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 text-white font-['Inter',sans-serif] text-[14px] font-semibold transition-all hover:bg-red-700 hover:shadow-lg print:hidden"
+                               >
+                                 <X size={18} /> Batal Verifikasi
+                               </button>
+                           ) : (
+                               <button
+                                 onClick={() => window.print()}
+                                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#1e5b53] text-white font-['Inter',sans-serif] text-[14px] font-semibold transition-all hover:bg-[#005632] hover:shadow-lg print:hidden"
+                               >
+                                 <Printer size={18} /> Cetak Dokumen
+                               </button>
+                           )}
+                       </div>
+
+                       {/* Scrollable Content */}
+                       <div className="flex-1 overflow-y-auto p-6 md:p-8 print:overflow-visible print:h-auto print:p-0 print:block">
+                         
+                         {/* Print Header */}
+                         <div className="hidden print:block mb-8 text-center border-b-2 border-slate-800 pb-4 px-8 pt-6">
+                             <h1 className="font-['Poppins',sans-serif] text-[24px] font-bold text-slate-900">APOTEK JAYA FARMA</h1>
+                             <p className="font-['Inter',sans-serif] text-slate-600 text-[14px]">Dokumen Rekam Resep {selectedPrescription?.kode_resep || selectedPrescription?.id}</p>
+                         </div>
+
+                         <div className="max-w-[1600px] mx-auto space-y-6">
 
                       {/* Detail Container Card Layout */}
                       <div className="grid grid-cols-12 gap-6">
                         
                         {/* Left wider column with form fields */}
-                        <div className="col-span-12 lg:col-span-9 space-y-6">
+                        <div className="col-span-12 lg:col-span-9 space-y-6 print:col-span-12">
                           
                           {/* Alert Banner for Rejected Prescriptions */}
                           {selectedPrescription.status_validasi === 'ditolak' && (
@@ -1482,29 +1636,39 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                               selectedPrescription.status_validasi === 'pending' ? 'bg-white border-slate-200' : 'bg-[#F4FDF8] border-[#0D6A36]/20'
                           }`}>
                               <div className="flex items-center gap-4">
-                                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shrink-0 ${
-                                      selectedPrescription.status_validasi === 'pending' ? 'bg-slate-100 text-slate-400' : 'bg-[#0D6A36]/10 text-[#0D6A36]'
+                                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl ${
+                                      selectedPrescription.status_validasi === 'pending' ? 'bg-slate-100 text-slate-400' : 'bg-[#E5F5EB] text-[#0D6A36]'
                                   }`}>
                                       {selectedPrescription.status_validasi === 'pending' ? '?' : (selectedPrescription.verifier_name || selectedPrescription.validator?.name || 'A').substring(0, 1).toUpperCase()}
                                   </div>
                                   <div>
-                                      <p className="font-['Inter',sans-serif] text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">
                                           Penanggung Jawab Verifikasi
                                       </p>
-                                      <p className={`font-['Inter',sans-serif] text-[15px] font-bold ${
-                                          selectedPrescription.status_validasi === 'pending' ? 'text-slate-400 italic' : 'text-[#0D6A36]'
-                                      }`}>
-                                          {selectedPrescription.status_validasi === 'pending' ? 'Belum Ditentukan' : (selectedPrescription.verifier_name || selectedPrescription.validator?.name || 'Apoteker Sistem')}
-                                      </p>
+                                      {selectedPrescription.status_validasi === 'pending' ? (
+                                        <p className="font-bold text-slate-400 italic">Belum diverifikasi</p>
+                                      ) : (
+                                        <>
+                                            <p className="font-bold text-[#0D6A36] text-sm">
+                                                {selectedPrescription.verifier_name || selectedPrescription.validator?.name || 'Apoteker Sistem'}
+                                            </p>
+                                            <p className="text-xs text-slate-500 font-medium mt-0.5">Diverifikasi pada: {selectedPrescription.waktu_validasi ? new Date(selectedPrescription.waktu_validasi).toLocaleString('id-ID') : new Date(selectedPrescription.updated_at).toLocaleString('id-ID')}</p>
+                                        </>
+                                      )}
                                   </div>
                               </div>
                               <div className="hidden sm:block text-right">
-                                  <span className={`inline-flex items-center justify-center px-3 py-1.5 rounded-md text-[11px] font-bold tracking-wider uppercase border ${
-                                      selectedPrescription.status_validasi === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                      selectedPrescription.status_validasi === 'disetujui' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                      'bg-red-50 text-red-700 border-red-200'
+                                  <span className={`inline-flex px-3 py-1.5 rounded-lg text-xs font-bold border tracking-wider uppercase shadow-sm ${
+                                      selectedPrescription.status_validasi === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-300' :
+                                      selectedPrescription.status_validasi === 'disetujui' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' :
+                                      selectedPrescription.status_validasi === 'telah_dipesan' ? 'bg-blue-50 text-blue-700 border-blue-300' :
+                                      selectedPrescription.status_validasi === 'ditolak' ? 'bg-red-50 text-red-700 border-red-300' :
+                                      'bg-amber-50 text-amber-700 border-amber-300'
                                   }`}>
-                                      Status: {selectedPrescription.status_validasi === 'pending' ? 'Menunggu Verifikasi' : selectedPrescription.status_validasi.toUpperCase()}
+                                      {selectedPrescription.status_validasi === 'pending' ? 'Menunggu' :
+                                       selectedPrescription.status_validasi === 'disetujui' ? 'Disetujui' :
+                                       selectedPrescription.status_validasi === 'telah_dipesan' ? 'Telah Dipesan' :
+                                       selectedPrescription.status_validasi === 'ditolak' ? 'Ditolak' : 'Menunggu'}
                                   </span>
                               </div>
                           </div>
@@ -1551,24 +1715,46 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                 </div>
                               </div>
 
-                              {/* Baris 2: Alamat */}
-                              <div className="w-full mb-4">
-                                <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Alamat</p>
-                                <p className="font-bold text-slate-800 text-xs leading-relaxed">
-                                  {(() => {
-                                    const userAddress = selectedPrescription.user?.addresses?.find((addr: any) => addr.is_default) || selectedPrescription.user?.addresses?.[0];
-                                    return userAddress 
-                                      ? `${userAddress.alamat_lengkap}, ${userAddress.kota}, ${userAddress.provinsi} ${userAddress.kode_pos}`
-                                      : (selectedPrescription.alamat || 'Tidak disebutkan');
-                                  })()}
-                                </p>
+                              {/* Baris 2: Metode Pengiriman & Alamat */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Metode Pengiriman</p>
+                                    <p className="font-bold text-slate-800 text-xs">
+                                        {selectedPrescription.shipping_method === 'kurir' || selectedPrescription.shipping_method === 'Kirim via Kurir' ? (
+                                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-600 font-bold text-[10px] uppercase tracking-widest border border-blue-200">
+                                                Kirim via Kurir
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center px-2 py-1 rounded-md bg-amber-50 text-amber-600 font-bold text-[10px] uppercase tracking-widest border border-amber-200">
+                                                Ambil di Apotek
+                                            </span>
+                                        )}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Alamat Lengkap</p>
+                                    {selectedPrescription.shipping_method === 'ambil_sendiri' || selectedPrescription.shipping_method === 'Ambil di Apotek' ? (
+                                        <p className="font-medium text-slate-400 text-xs italic">
+                                            (Pasien akan mengambil pesanan di Apotek)
+                                        </p>
+                                    ) : (
+                                        <p className="font-bold text-slate-800 text-xs leading-relaxed">
+                                          {(() => {
+                                            const userAddress = selectedPrescription.user?.addresses?.find((addr: any) => addr.is_default) || selectedPrescription.user?.addresses?.[0];
+                                            return userAddress 
+                                              ? `${userAddress.alamat_lengkap}, ${userAddress.kota}, ${userAddress.provinsi} ${userAddress.kode_pos}`
+                                              : (selectedPrescription.shipping_address || selectedPrescription.alamat || 'Tidak disebutkan');
+                                          })()}
+                                        </p>
+                                    )}
+                                </div>
                               </div>
 
                               {/* Baris 3: NIK & Jenis Kelamin (Input) */}
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">NIK KTP {selectedPrescription.status_validasi === 'pending' && <span className="text-red-500">*</span>}</p>
-                                  {activeSubTab === 'menunggu' ? (
+                                  {selectedPrescription.status_validasi === 'pending' ? (
                                     <input 
                                       type="text" 
                                       value={nikKtp} 
@@ -1582,7 +1768,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                 </div>
                                 <div>
                                   <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px] mb-1">Jenis Kelamin {selectedPrescription.status_validasi === 'pending' && <span className="text-red-500">*</span>}</p>
-                                  {activeSubTab === 'menunggu' ? (
+                                  {selectedPrescription.status_validasi === 'pending' ? (
                                     <select 
                                       value={jenisKelamin} 
                                       onChange={(e) => setJenisKelamin(e.target.value)} 
@@ -1687,7 +1873,7 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                     disabled={selectedPrescription.status_validasi !== 'pending'}
                                     value={doctorPPK}
                                     onChange={(e) => setDoctorPPK(e.target.value)}
-                                    placeholder="Puskesmas / RS Asal"
+                                    placeholder="Contoh: Puskesmas Tebet"
                                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 font-semibold focus:outline-none focus:ring-1 focus:ring-[#0D6A36] focus:border-[#0D6A36]"
                                   />
                                 </div>
@@ -1707,20 +1893,410 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                           </div>
                           )}
 
-                          {/* Timeline Tracking Log (Only if Telah Dipesan) */}
-                          {selectedPrescription.status_validasi === 'telah_dipesan' && selectedPrescription.virtual_transactions && selectedPrescription.virtual_transactions.length > 0 && (
-                            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-[#1e5b53]">
-                                <h3 className="font-['Poppins',sans-serif] font-bold text-[18px] text-[#1e5b53] mb-6 flex items-center gap-2">
-                                    <Clock size={20} />
-                                    Tabel Log Status Pesanan
-                                </h3>
+
+                          {/* Detail Resep Card */}
+                          {selectedPrescription.status_validasi !== 'ditolak' && (
+                            <div className="overflow-hidden rounded-xl shadow-sm border border-slate-200">
+                              <div className="bg-[#0D6A36] text-white px-6 py-3.5 font-bold text-sm">
+                              Detail Resep
+                            </div>
+                            <div className="bg-white p-6 space-y-6">
+                              
+                              {/* non-racik drug section */}
+                              <div>
+                                <div className="flex items-center justify-between mb-4">
+                                  <h4 className="font-bold text-[#0D6A36] font-['Inter',sans-serif] text-xs uppercase tracking-wider flex items-center gap-1.5">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2" />
+                                    </svg>
+                                    <span>Obat Non-Racik</span>
+                                  </h4>
+                                  {selectedPrescription.status_validasi === 'pending' && (
+                                    <button onClick={addNonRacikanItem} className="bg-[#0D6A36] hover:bg-[#0a542b] text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
+                                      <span>+ Tambah Obat</span>
+                                    </button>
+                                  )}
+                                </div>
+
+                                <div className="border border-slate-100 rounded-xl">
+                                  <table className="w-full text-left text-xs border-collapse">
+                                    <thead>
+                                      <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold">
+                                        <th className="p-3 w-64">NAMA OBAT</th>
+                                        <th className="p-3 text-center">SATUAN</th>
+                                        <th className="p-3 text-right">HARGA SATUAN</th>
+                                        <th className="p-3 text-center w-20">JML RESEP</th>
+                                        <th className="p-3 text-center w-20">JML AMBIL</th>
+                                        <th className="p-3 text-center w-24">SIGNA</th>
+                                        <th className="p-3 text-right">SUBTOTAL</th>
+                                        {selectedPrescription.status_validasi === 'pending' && <th className="p-3 text-center w-10"></th>}
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                      {prescriptionItems.filter(item => !item.is_racikan).map((item, idx) => {
+                                        const globalIndex = prescriptionItems.indexOf(item);
+                                        return (
+                                        <tr key={globalIndex}>
+                                          <td className="p-3">
+                                            {selectedPrescription.status_validasi === 'pending' ? (
+                                              <div className="relative">
+                                                <input 
+                                                  type="text"
+                                                  value={item.product_name}
+                                                  onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    updateItem(globalIndex, 'product_name', val);
+                                                    setActiveDropdownIndex(globalIndex);
+                                                  }}
+                                                  onFocus={() => setActiveDropdownIndex(globalIndex)}
+                                                  onBlur={() => setTimeout(() => setActiveDropdownIndex(null), 200)}
+                                                  placeholder="Ketik untuk cari obat..."
+                                                  className="w-full py-1.5 px-2 border border-slate-200 rounded-lg text-slate-700 text-sm font-normal placeholder:text-sm placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:border-[#0D6A36]"
+                                                />
+                                                {activeDropdownIndex === globalIndex && (
+                                                  <div className="absolute z-50 left-0 w-full bg-white shadow-xl rounded-xl border border-slate-100 mt-1 max-h-48 overflow-y-auto">
+                                                    {(products?.data || [])
+                                                      .filter((p: any) => !p.is_racikan_only && (p.name || p.nama_obat).toLowerCase().includes((item.product_name || '').toLowerCase()))
+                                                      .map((p: any) => (
+                                                        <div 
+                                                          key={p.id} 
+                                                          className="px-3 py-2 hover:bg-[#E7F5EC] cursor-pointer flex justify-between items-center border-b border-slate-50 last:border-0"
+                                                          onMouseDown={() => {
+                                                            const newItems = [...prescriptionItems];
+                                                            newItems[globalIndex].product_id = p.id;
+                                                            newItems[globalIndex].product_name = p.name || p.nama_obat;
+                                                            newItems[globalIndex].harga_satuan = p.harga || p.price || 0;
+                                                            newItems[globalIndex].satuan = p.unit || 'Tablet';
+                                                            newItems[globalIndex].subtotal = calculateSubtotal(newItems[globalIndex]);
+                                                            setPrescriptionItems(newItems);
+                                                            setActiveDropdownIndex(null);
+                                                          }}
+                                                        >
+                                                          <span className="font-semibold text-[11px] truncate max-w-[140px] text-slate-700">{p.name || p.nama_obat}</span>
+                                                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0 ${
+                                                            p.jenis_obat === 'keras' ? 'bg-red-100 text-red-600' : 
+                                                            p.jenis_obat === 'terbatas' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-[#0D6A36]'
+                                                          }`}>
+                                                            {p.jenis_obat === 'keras' ? 'Keras' : p.jenis_obat === 'terbatas' ? 'Terbatas' : 'Bebas'}
+                                                          </span>
+                                                        </div>
+                                                    ))}
+                                                    {(products?.data || []).filter((p: any) => !p.is_racikan_only && (p.name || p.nama_obat).toLowerCase().includes((item.product_name || '').toLowerCase())).length === 0 && (
+                                                      <div className="px-3 py-2 text-[10px] text-slate-400 italic">Tidak ada obat ditemukan</div>
+                                                    )}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            ) : (
+                                              <span className="font-bold text-slate-800">{item.product_name || item.product?.name}</span>
+                                            )}
+                                          </td>
+                                          <td className="p-3 text-center text-slate-500 font-semibold">{item.satuan}</td>
+                                          <td className="p-3 text-right text-slate-500 font-semibold">Rp {(item.harga_satuan || 0).toLocaleString('id-ID')}</td>
+                                          <td className="p-3 text-center">
+                                            {selectedPrescription.status_validasi === 'pending' ? (
+                                              <input
+                                                type="number"
+                                                value={item.kuantitas_resep === 0 ? '' : Number(item.kuantitas_resep)}
+                                                onChange={(e) => updateItem(globalIndex, 'kuantitas_resep', Math.max(0, parseInt(e.target.value) || 0))}
+                                                className="w-14 text-center py-1 border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none"
+                                              />
+                                            ) : (
+                                              <span className="font-bold">{item.kuantitas_resep}</span>
+                                            )}
+                                          </td>
+                                          <td className="p-3 text-center">
+                                            {selectedPrescription.status_validasi === 'pending' ? (
+                                              <input
+                                                type="number"
+                                                value={item.kuantitas_ambil === 0 ? '' : Number(item.kuantitas_ambil)}
+                                                onChange={(e) => updateItem(globalIndex, 'kuantitas_ambil', Math.max(0, parseInt(e.target.value) || 0))}
+                                                className="w-14 text-center py-1 border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none"
+                                              />
+                                            ) : (
+                                              <span className="font-bold text-[#0D6A36]">{item.kuantitas_ambil}</span>
+                                            )}
+                                          </td>
+                                          <td className="p-3 text-center">
+                                            {selectedPrescription.status_validasi === 'pending' ? (
+                                              <input
+                                                type="text"
+                                                value={item.signa}
+                                                onChange={(e) => updateItem(globalIndex, 'signa', e.target.value)}
+                                                className="w-full text-center py-1 px-2 border border-slate-200 rounded-lg text-slate-700 font-semibold focus:outline-none"
+                                                placeholder="3x1"
+                                              />
+                                            ) : (
+                                              <span className="font-bold">{item.signa}</span>
+                                            )}
+                                          </td>
+                                          <td className="p-3 text-right font-bold text-slate-800">
+                                            Rp {(Number(item.subtotal) || ((item.harga_satuan || 0) * (item.kuantitas_ambil || 0))).toLocaleString('id-ID')}
+                                          </td>
+                                          {selectedPrescription.status_validasi === 'pending' && (
+                                            <td className="p-3 text-center text-red-500 hover:text-red-750 cursor-pointer" onClick={() => removeItem(globalIndex)}>
+                                              <X size={16} className="mx-auto" strokeWidth={2.5} />
+                                            </td>
+                                          )}
+                                        </tr>
+                                      )})}
+                                      {prescriptionItems.filter(item => !item.is_racikan).length === 0 && (
+                                        <tr>
+                                          <td colSpan={selectedPrescription.status_validasi === 'pending' ? 8 : 7} className="p-4 text-center text-slate-400 font-medium italic">Belum ada obat non-racik.</td>
+                                        </tr>
+                                      )}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+
+                              {/* racik drug section */}
+                              <div className="pt-6 border-t border-slate-100">
+                                <div className="flex items-center justify-between mb-4">
+                                  <h4 className="font-bold text-[#0D6A36] font-['Inter',sans-serif] text-xs uppercase tracking-wider flex items-center gap-1.5">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                    </svg>
+                                    <span>Obat Racik</span>
+                                  </h4>
+                                  {selectedPrescription.status_validasi === 'pending' && (
+                                    <button onClick={addRacikanItem} className="border border-[#0D6A36] text-[#0D6A36] hover:bg-emerald-50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
+                                      <span>+ Tambah Racikan Baru</span>
+                                    </button>
+                                  )}
+                                </div>
+
+                                {prescriptionItems.filter(item => item.is_racikan).map((item, idx) => {
+                                  const globalIndex = prescriptionItems.indexOf(item);
+                                  return (
+                                  <div key={globalIndex} className="border border-slate-200 border-dashed rounded-xl p-5 mb-4 space-y-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
+                                      <div className="sm:col-span-4">
+                                        <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5">Nama Racikan</label>
+                                        {selectedPrescription.status_validasi === 'pending' ? (
+                                          <input
+                                            type="text"
+                                            value={item.product_name}
+                                            onChange={(e) => updateItem(globalIndex, 'product_name', e.target.value)}
+                                            placeholder="Contoh: Racikan Batuk Dewasa"
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 font-bold focus:outline-none"
+                                          />
+                                        ) : (
+                                          <div className="font-bold text-slate-800 text-xs mt-2">{item.product_name || item.product?.name}</div>
+                                        )}
+                                      </div>
+                                      <div className="sm:col-span-2">
+                                        <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5 text-center">Jml Diresepkan</label>
+                                        {selectedPrescription.status_validasi === 'pending' ? (
+                                          <input
+                                            type="number"
+                                            value={item.kuantitas_resep}
+                                            onChange={(e) => updateItem(globalIndex, 'kuantitas_resep', Math.max(0, parseInt(e.target.value) || 0))}
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-750 font-bold text-center focus:outline-none"
+                                          />
+                                        ) : (
+                                          <div className="font-bold text-slate-700 text-center text-xs mt-2">{item.kuantitas_resep}</div>
+                                        )}
+                                      </div>
+                                      <div className="sm:col-span-2">
+                                        <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5 text-center">Jml Diambil</label>
+                                        {selectedPrescription.status_validasi === 'pending' ? (
+                                          <input
+                                            type="number"
+                                            value={item.kuantitas_ambil}
+                                            onChange={(e) => updateItem(globalIndex, 'kuantitas_ambil', Math.max(0, parseInt(e.target.value) || 0))}
+                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs text-[#0D6A36] font-bold text-center focus:outline-none"
+                                          />
+                                        ) : (
+                                          <div className="font-bold text-[#0D6A36] text-center text-xs mt-2">{item.kuantitas_ambil}</div>
+                                        )}
+                                      </div>
+                                      <div className="sm:col-span-2 text-center">
+                                        <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5">Signa & Satuan</label>
+                                        {selectedPrescription.status_validasi === 'pending' ? (
+                                          <div className="flex gap-1">
+                                            <input
+                                              type="text"
+                                              value={item.signa}
+                                              onChange={(e) => updateItem(globalIndex, 'signa', e.target.value)}
+                                              placeholder="3x1"
+                                              className="w-full px-2 py-2 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none"
+                                            />
+                                            <select
+                                              value={item.satuan}
+                                              onChange={(e) => updateItem(globalIndex, 'satuan', e.target.value)}
+                                              className="w-full px-1 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 font-bold bg-white focus:outline-none"
+                                            >
+                                              <option value="Puyer">Puyer</option>
+                                              <option value="Kapsul">Kapsul</option>
+                                              <option value="Bungkus">Bungkus</option>
+                                            </select>
+                                          </div>
+                                        ) : (
+                                          <div className="font-bold text-slate-700 text-center text-xs mt-2">{item.signa} {item.satuan}</div>
+                                        )}
+                                      </div>
+                                      
+                                      {selectedPrescription.status_validasi === 'pending' && (
+                                        <div className="sm:col-span-2 text-right">
+                                          <button onClick={() => removeItem(globalIndex)} className="text-red-500 hover:text-red-750 text-[10px] font-bold pb-2.5 uppercase">
+                                            Hapus
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Racikan Subtotal and Price Override */}
+                                    <div className="flex justify-between items-center pt-2 mt-4 border-t border-slate-100">
+                                      <div className="text-xs text-slate-500 italic">
+                                        *Harga dan komponen racikan dapat disesuaikan pada sistem kasir atau input manual.
+                                      </div>
+                                      <div className="flex items-center gap-4 text-xs">
+                                        <div className="flex items-center gap-2 text-slate-700 font-bold">
+                                          <span>Harga Satuan:</span>
+                                          {selectedPrescription.status_validasi === 'pending' ? (
+                                            <div className="flex items-center">
+                                              <span className="mr-1">Rp</span>
+                                              <input 
+                                                type="number"
+                                                value={item.harga_satuan}
+                                                onChange={(e) => updateItem(globalIndex, 'harga_satuan', Math.max(0, parseInt(e.target.value) || 0))}
+                                                className="w-24 text-right py-1 px-2 border border-slate-200 rounded text-slate-700 focus:outline-none"
+                                              />
+                                            </div>
+                                          ) : (
+                                            <span>Rp {(item.harga_satuan || 0).toLocaleString('id-ID')}</span>
+                                          )}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[#0D6A36] font-bold text-sm">
+                                          <span>Subtotal Racikan:</span>
+                                          <span>Rp {(Number(item.subtotal) || ((item.harga_satuan || 0) * (item.kuantitas_ambil || 0))).toLocaleString('id-ID')}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )})}
+                                {prescriptionItems.filter(item => item.is_racikan).length === 0 && (
+                                  <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl">
+                                    <p className="text-slate-400 font-medium italic text-sm">Belum ada obat racikan.</p>
+                                  </div>
+                                )}
+                              </div>
+
+                            </div>
+                          </div>
+                          )}
+
+                          {/* Catatan Farmasi */}
+                          {selectedPrescription.status_validasi !== 'ditolak' && (
+                          <div>
+                            <p className="font-['Inter',sans-serif] font-bold text-[10px] text-slate-400 tracking-wider uppercase mb-2">CATATAN FARMASI</p>
+                            <textarea
+                              rows={3}
+                              disabled={selectedPrescription.status_validasi !== 'pending'}
+                              value={validationNotes}
+                              onChange={(e) => setValidationNotes(e.target.value)}
+                              placeholder="Tambahkan instruksi khusus untuk pasien atau keterangan farmasi..."
+                              className="w-full p-4 bg-white border border-slate-200 rounded-xl font-['Inter',sans-serif] text-xs text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] resize-none shadow-sm transition-all"
+                            />
+                          </div>
+                          )}
+
+                        </div>
+
+                        {/* Right column with thumbnail file of prescription & total price block */}
+                        <div className="col-span-12 lg:col-span-3 space-y-6 print:hidden">
+                          
+                          {/* Resep Document Card */}
+                          <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+                            <div className="bg-[#0D6A36] text-white px-4 py-2.5 font-bold text-xs flex justify-between items-center">
+                              <span>Resep</span>
+                              <Search size={14} className="cursor-pointer" onClick={() => setShowImageModal(true)} />
+                            </div>
+                            <div className="bg-white p-4">
+                              {(() => {
+                                const rawUrl = selectedPrescription.file_foto || "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&q=80&w=400";
+                                const fileUrl = rawUrl.startsWith('http') ? rawUrl : (rawUrl.startsWith('storage/') || rawUrl.startsWith('/storage/') ? (rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`) : `/storage/${rawUrl}`);
+                                const isPdf = fileUrl.toLowerCase().includes('.pdf');
+                                
+                                return isPdf ? (
+                                  <div 
+                                      className="relative group overflow-hidden rounded-lg aspect-[3/4] border border-slate-100 cursor-pointer flex flex-col items-center justify-center bg-red-50 hover:bg-red-100 transition-all"
+                                      onClick={() => window.open(fileUrl, '_blank')}
+                                  >
+                                      <FileText size={48} className="text-red-500" />
+                                      <span className="font-bold mt-3 tracking-widest text-sm text-red-600">DOKUMEN PDF</span>
+                                      <div className="absolute inset-0 bg-slate-900/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                        <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow flex items-center gap-1.5 text-red-600 font-bold text-[10px]">
+                                          <ZoomIn size={14} /> Buka Tab Baru
+                                        </div>
+                                      </div>
+                                  </div>
+                                ) : (
+                                  <div className="relative group overflow-hidden rounded-lg aspect-[3/4] border border-slate-100 cursor-zoom-in" onClick={() => setShowImageModal(true)}>
+                                    <img
+                                      src={fileUrl}
+                                      alt="Surat Resep Asli"
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                      }}
+                                    />
+                                    <div className="absolute inset-0 bg-slate-900/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                      <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow">
+                                        <ZoomIn size={18} className="text-[#0D6A36]" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          </div>
+
+
+
+                          {/* Total Harga Summary Card */}
+                          <div className="bg-white rounded-xl p-5 border border-slate-200 flex flex-col shadow-sm">
+                            <div className="flex justify-between items-center mb-3">
+                              <p className="text-[10px] text-slate-500 font-semibold">Subtotal Produk</p>
+                              <p className="text-[11px] text-slate-700 font-bold">Rp {totalHargaVal.toLocaleString('id-ID')}</p>
+                            </div>
+                            <div className="flex justify-between items-center mb-4 pb-4 border-b border-slate-100">
+                              <p className="text-[10px] text-slate-500 font-semibold">Biaya Pengiriman</p>
+                              <p className="text-[11px] text-slate-700 font-bold">Rp {((selectedPrescription.shipping_method === 'kurir' || selectedPrescription.shipping_method === 'Kirim via Kurir' || selectedPrescription.shipping_method === 'kurir_toko') ? 12000 : 0).toLocaleString('id-ID')}</p>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">TOTAL PEMBAYARAN</p>
+                              <div className="text-right">
+                                <p className="text-[9px] text-[#0D6A36] font-bold uppercase tracking-wider mb-0.5">IDR</p>
+                                <p className="text-xl font-bold text-[#0D6A36]">
+                                  {(totalHargaVal + ((selectedPrescription.shipping_method === 'kurir' || selectedPrescription.shipping_method === 'Kirim via Kurir' || selectedPrescription.shipping_method === 'kurir_toko') ? 12000 : 0)).toLocaleString('id-ID')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Timeline Tracking Log (Only if Telah Dipesan or Disetujui with VT) */}
+                          {(selectedPrescription.status_validasi === 'telah_dipesan' || selectedPrescription.status_validasi === 'disetujui') && selectedPrescription.virtual_transactions && selectedPrescription.virtual_transactions.length > 0 && (
+                            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-[#1e5b53] mt-6 print:hidden">
+                                <div className="mb-6">
+                                    <h3 className="font-['Poppins',sans-serif] font-bold text-[18px] text-[#1e5b53] flex items-center gap-2 mb-2">
+                                        <Clock size={22} />
+                                        Log Status Pesanan
+                                    </h3>
+                                    <span className="inline-block bg-[#1e5b53] text-white text-[10px] font-bold px-2 py-1 rounded-md ml-8">
+                                        {selectedPrescription.orders?.[0]?.kode_pesanan || `vt_${selectedPrescription.virtual_transactions[0].id}`}
+                                    </span>
+                                </div>
                                 
                                 {(() => {
                                     const vt = selectedPrescription.virtual_transactions[0];
                                     const vtStatus = vt.status || 'Pending';
                                     
                                     return (
-                                        <div className="relative">
+                                        <>
+                                            <div className="relative">
                                             <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
                                             
                                             {/* Menunggu Pembayaran */}
@@ -1798,386 +2374,23 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                                                     )}
                                                 </div>
                                             </div>
-                                        </div>
+
+                                            </div>
+
+                                            <div className="mt-8 pt-6 border-t border-gray-100">
+                                                <Link 
+                                                    href={`/pharmacist/orders/${selectedPrescription.orders?.[0]?.id || 'vt_' + vt.id}`}
+                                                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-['Inter',sans-serif] text-[13px] font-bold text-white bg-[#0D6A36] hover:bg-[#0a522a] transition-all"
+                                                >
+                                                    Lihat Detail Pesanan
+                                                    <ChevronRight size={16} />
+                                                </Link>
+                                            </div>
+                                        </>
                                     );
                                 })()}
                             </div>
                           )}
-
-                          {/* Detail Resep Card */}
-                          {selectedPrescription.status_validasi !== 'ditolak' && (
-                            <div className="overflow-hidden rounded-xl shadow-sm border border-slate-200">
-                              <div className="bg-[#0D6A36] text-white px-6 py-3.5 font-bold text-sm">
-                              Detail Resep
-                            </div>
-                            <div className="bg-white p-6 space-y-6">
-                              
-                              {/* non-racik drug section */}
-                              <div>
-                                <div className="flex items-center justify-between mb-4">
-                                  <h4 className="font-bold text-[#0D6A36] font-['Inter',sans-serif] text-xs uppercase tracking-wider flex items-center gap-1.5">
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2" />
-                                    </svg>
-                                    <span>Obat Non-Racik</span>
-                                  </h4>
-                                  {activeSubTab === 'menunggu' && (
-                                    <button onClick={addNonRacikanItem} className="bg-[#0D6A36] hover:bg-[#0a542b] text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
-                                      <span>+ Tambah Obat</span>
-                                    </button>
-                                  )}
-                                </div>
-
-                                <div className="border border-slate-100 rounded-xl">
-                                  <table className="w-full text-left text-xs border-collapse">
-                                    <thead>
-                                      <tr className="bg-slate-50 border-b border-slate-100 text-slate-400 font-bold">
-                                        <th className="p-3 w-64">NAMA OBAT</th>
-                                        <th className="p-3 text-center">SATUAN</th>
-                                        <th className="p-3 text-right">HARGA SATUAN</th>
-                                        <th className="p-3 text-center w-20">JML RESEP</th>
-                                        <th className="p-3 text-center w-20">JML AMBIL</th>
-                                        <th className="p-3 text-center w-24">SIGNA</th>
-                                        <th className="p-3 text-right">SUBTOTAL</th>
-                                        {activeSubTab === 'menunggu' && <th className="p-3 text-center w-10"></th>}
-                                      </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-50">
-                                      {prescriptionItems.filter(item => !item.is_racikan).map((item, idx) => {
-                                        const globalIndex = prescriptionItems.indexOf(item);
-                                        return (
-                                        <tr key={globalIndex}>
-                                          <td className="p-3">
-                                            {activeSubTab === 'menunggu' ? (
-                                              <div className="relative">
-                                                <input 
-                                                  type="text"
-                                                  value={item.product_name}
-                                                  onChange={(e) => {
-                                                    const val = e.target.value;
-                                                    updateItem(globalIndex, 'product_name', val);
-                                                    setActiveDropdownIndex(globalIndex);
-                                                  }}
-                                                  onFocus={() => setActiveDropdownIndex(globalIndex)}
-                                                  onBlur={() => setTimeout(() => setActiveDropdownIndex(null), 200)}
-                                                  placeholder="Ketik untuk cari obat..."
-                                                  className="w-full py-1.5 px-2 border border-slate-200 rounded-lg text-slate-700 text-sm font-normal placeholder:text-sm placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:border-[#0D6A36]"
-                                                />
-                                                {activeDropdownIndex === globalIndex && (
-                                                  <div className="absolute z-50 left-0 w-full bg-white shadow-xl rounded-xl border border-slate-100 mt-1 max-h-48 overflow-y-auto">
-                                                    {(products?.data || [])
-                                                      .filter((p: any) => !p.is_racikan_only && (p.name || p.nama_obat).toLowerCase().includes((item.product_name || '').toLowerCase()))
-                                                      .map((p: any) => (
-                                                        <div 
-                                                          key={p.id} 
-                                                          className="px-3 py-2 hover:bg-[#E7F5EC] cursor-pointer flex justify-between items-center border-b border-slate-50 last:border-0"
-                                                          onMouseDown={() => {
-                                                            const newItems = [...prescriptionItems];
-                                                            newItems[globalIndex].product_id = p.id;
-                                                            newItems[globalIndex].product_name = p.name || p.nama_obat;
-                                                            newItems[globalIndex].harga_satuan = p.harga || p.price || 0;
-                                                            newItems[globalIndex].satuan = p.unit || 'Tablet';
-                                                            newItems[globalIndex].subtotal = calculateSubtotal(newItems[globalIndex]);
-                                                            setPrescriptionItems(newItems);
-                                                            setActiveDropdownIndex(null);
-                                                          }}
-                                                        >
-                                                          <span className="font-semibold text-[11px] truncate max-w-[140px] text-slate-700">{p.name || p.nama_obat}</span>
-                                                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0 ${
-                                                            p.jenis_obat === 'keras' ? 'bg-red-100 text-red-600' : 
-                                                            p.jenis_obat === 'terbatas' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-[#0D6A36]'
-                                                          }`}>
-                                                            {p.jenis_obat === 'keras' ? 'Keras' : p.jenis_obat === 'terbatas' ? 'Terbatas' : 'Bebas'}
-                                                          </span>
-                                                        </div>
-                                                    ))}
-                                                    {(products?.data || []).filter((p: any) => !p.is_racikan_only && (p.name || p.nama_obat).toLowerCase().includes((item.product_name || '').toLowerCase())).length === 0 && (
-                                                      <div className="px-3 py-2 text-[10px] text-slate-400 italic">Tidak ada obat ditemukan</div>
-                                                    )}
-                                                  </div>
-                                                )}
-                                              </div>
-                                            ) : (
-                                              <span className="font-bold text-slate-800">{item.product_name || item.product?.name}</span>
-                                            )}
-                                          </td>
-                                          <td className="p-3 text-center text-slate-500 font-semibold">{item.satuan}</td>
-                                          <td className="p-3 text-right text-slate-500 font-semibold">Rp {(item.harga_satuan || 0).toLocaleString('id-ID')}</td>
-                                          <td className="p-3 text-center">
-                                            {activeSubTab === 'menunggu' ? (
-                                              <input
-                                                type="number"
-                                                value={item.kuantitas_resep === 0 ? '' : Number(item.kuantitas_resep)}
-                                                onChange={(e) => updateItem(globalIndex, 'kuantitas_resep', Math.max(0, parseInt(e.target.value) || 0))}
-                                                className="w-14 text-center py-1 border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none"
-                                              />
-                                            ) : (
-                                              <span className="font-bold">{item.kuantitas_resep}</span>
-                                            )}
-                                          </td>
-                                          <td className="p-3 text-center">
-                                            {activeSubTab === 'menunggu' ? (
-                                              <input
-                                                type="number"
-                                                value={item.kuantitas_ambil === 0 ? '' : Number(item.kuantitas_ambil)}
-                                                onChange={(e) => updateItem(globalIndex, 'kuantitas_ambil', Math.max(0, parseInt(e.target.value) || 0))}
-                                                className="w-14 text-center py-1 border border-slate-200 rounded-lg text-slate-700 font-bold focus:outline-none"
-                                              />
-                                            ) : (
-                                              <span className="font-bold text-[#0D6A36]">{item.kuantitas_ambil}</span>
-                                            )}
-                                          </td>
-                                          <td className="p-3 text-center">
-                                            {activeSubTab === 'menunggu' ? (
-                                              <input
-                                                type="text"
-                                                value={item.signa}
-                                                onChange={(e) => updateItem(globalIndex, 'signa', e.target.value)}
-                                                className="w-full text-center py-1 px-2 border border-slate-200 rounded-lg text-slate-700 font-semibold focus:outline-none"
-                                                placeholder="3x1"
-                                              />
-                                            ) : (
-                                              <span className="font-bold">{item.signa}</span>
-                                            )}
-                                          </td>
-                                          <td className="p-3 text-right font-bold text-slate-800">
-                                            Rp {(item.subtotal || 0).toLocaleString('id-ID')}
-                                          </td>
-                                          {activeSubTab === 'menunggu' && (
-                                            <td className="p-3 text-center text-red-500 hover:text-red-750 cursor-pointer" onClick={() => removeItem(globalIndex)}>
-                                              <X size={16} className="mx-auto" strokeWidth={2.5} />
-                                            </td>
-                                          )}
-                                        </tr>
-                                      )})}
-                                      {prescriptionItems.filter(item => !item.is_racikan).length === 0 && (
-                                        <tr>
-                                          <td colSpan={activeSubTab === 'menunggu' ? 8 : 7} className="p-4 text-center text-slate-400 font-medium italic">Belum ada obat non-racik.</td>
-                                        </tr>
-                                      )}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              </div>
-
-                              {/* racik drug section */}
-                              <div className="pt-6 border-t border-slate-100">
-                                <div className="flex items-center justify-between mb-4">
-                                  <h4 className="font-bold text-[#0D6A36] font-['Inter',sans-serif] text-xs uppercase tracking-wider flex items-center gap-1.5">
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                                    </svg>
-                                    <span>Obat Racik</span>
-                                  </h4>
-                                  {activeSubTab === 'menunggu' && (
-                                    <button onClick={addRacikanItem} className="border border-[#0D6A36] text-[#0D6A36] hover:bg-emerald-50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors">
-                                      <span>+ Tambah Racikan Baru</span>
-                                    </button>
-                                  )}
-                                </div>
-
-                                {prescriptionItems.filter(item => item.is_racikan).map((item, idx) => {
-                                  const globalIndex = prescriptionItems.indexOf(item);
-                                  return (
-                                  <div key={globalIndex} className="border border-slate-200 border-dashed rounded-xl p-5 mb-4 space-y-4">
-                                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
-                                      <div className="sm:col-span-4">
-                                        <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5">Nama Racikan</label>
-                                        {activeSubTab === 'menunggu' ? (
-                                          <input
-                                            type="text"
-                                            value={item.product_name}
-                                            onChange={(e) => updateItem(globalIndex, 'product_name', e.target.value)}
-                                            placeholder="Contoh: Racikan Batuk Dewasa"
-                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 font-bold focus:outline-none"
-                                          />
-                                        ) : (
-                                          <div className="font-bold text-slate-800 text-sm mt-2">{item.product_name || item.product?.name}</div>
-                                        )}
-                                      </div>
-                                      <div className="sm:col-span-2">
-                                        <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5 text-center">Jml Diresepkan</label>
-                                        {activeSubTab === 'menunggu' ? (
-                                          <input
-                                            type="number"
-                                            value={item.kuantitas_resep}
-                                            onChange={(e) => updateItem(globalIndex, 'kuantitas_resep', Math.max(0, parseInt(e.target.value) || 0))}
-                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs text-slate-750 font-bold text-center focus:outline-none"
-                                          />
-                                        ) : (
-                                          <div className="font-bold text-slate-700 text-center mt-2">{item.kuantitas_resep}</div>
-                                        )}
-                                      </div>
-                                      <div className="sm:col-span-2">
-                                        <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5 text-center">Jml Diambil</label>
-                                        {activeSubTab === 'menunggu' ? (
-                                          <input
-                                            type="number"
-                                            value={item.kuantitas_ambil}
-                                            onChange={(e) => updateItem(globalIndex, 'kuantitas_ambil', Math.max(0, parseInt(e.target.value) || 0))}
-                                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs text-[#0D6A36] font-bold text-center focus:outline-none"
-                                          />
-                                        ) : (
-                                          <div className="font-bold text-[#0D6A36] text-center mt-2">{item.kuantitas_ambil}</div>
-                                        )}
-                                      </div>
-                                      <div className="sm:col-span-2 text-center">
-                                        <label className="block text-slate-400 font-bold text-[9px] uppercase tracking-wider mb-1.5">Signa & Satuan</label>
-                                        {activeSubTab === 'menunggu' ? (
-                                          <div className="flex gap-1">
-                                            <input
-                                              type="text"
-                                              value={item.signa}
-                                              onChange={(e) => updateItem(globalIndex, 'signa', e.target.value)}
-                                              placeholder="3x1"
-                                              className="w-full px-2 py-2 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none"
-                                            />
-                                            <select
-                                              value={item.satuan}
-                                              onChange={(e) => updateItem(globalIndex, 'satuan', e.target.value)}
-                                              className="w-full px-1 py-2 border border-slate-200 rounded-lg text-xs text-slate-700 font-bold bg-white focus:outline-none"
-                                            >
-                                              <option value="Puyer">Puyer</option>
-                                              <option value="Kapsul">Kapsul</option>
-                                              <option value="Bungkus">Bungkus</option>
-                                            </select>
-                                          </div>
-                                        ) : (
-                                          <div className="font-bold text-slate-700 text-center mt-2">{item.signa} {item.satuan}</div>
-                                        )}
-                                      </div>
-                                      
-                                      {activeSubTab === 'menunggu' && (
-                                        <div className="sm:col-span-2 text-right">
-                                          <button onClick={() => removeItem(globalIndex)} className="text-red-500 hover:text-red-750 text-[10px] font-bold pb-2.5 uppercase">
-                                            Hapus
-                                          </button>
-                                        </div>
-                                      )}
-                                    </div>
-
-                                    {/* Racikan Subtotal and Price Override */}
-                                    <div className="flex justify-between items-center pt-2 mt-4 border-t border-slate-100">
-                                      <div className="text-xs text-slate-500 italic">
-                                        *Harga dan komponen racikan dapat disesuaikan pada sistem kasir atau input manual.
-                                      </div>
-                                      <div className="flex items-center gap-4 text-xs">
-                                        <div className="flex items-center gap-2 text-slate-700 font-bold">
-                                          <span>Harga Satuan:</span>
-                                          {activeSubTab === 'menunggu' ? (
-                                            <div className="flex items-center">
-                                              <span className="mr-1">Rp</span>
-                                              <input 
-                                                type="number"
-                                                value={item.harga_satuan}
-                                                onChange={(e) => updateItem(globalIndex, 'harga_satuan', Math.max(0, parseInt(e.target.value) || 0))}
-                                                className="w-24 text-right py-1 px-2 border border-slate-200 rounded text-slate-700 focus:outline-none"
-                                              />
-                                            </div>
-                                          ) : (
-                                            <span>Rp {(item.harga_satuan || 0).toLocaleString('id-ID')}</span>
-                                          )}
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[#0D6A36] font-bold text-sm">
-                                          <span>Subtotal Racikan:</span>
-                                          <span>Rp {(item.subtotal || 0).toLocaleString('id-ID')}</span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )})}
-                                {prescriptionItems.filter(item => item.is_racikan).length === 0 && (
-                                  <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl">
-                                    <p className="text-slate-400 font-medium italic text-sm">Belum ada obat racikan.</p>
-                                  </div>
-                                )}
-                              </div>
-
-                            </div>
-                          </div>
-                          )}
-
-                          {/* Catatan Farmasi */}
-                          {selectedPrescription.status_validasi !== 'ditolak' && (
-                          <div>
-                            <p className="font-['Inter',sans-serif] font-bold text-[10px] text-slate-400 tracking-wider uppercase mb-2">CATATAN FARMASI</p>
-                            <textarea
-                              rows={3}
-                              disabled={selectedPrescription.status_validasi !== 'pending'}
-                              value={validationNotes}
-                              onChange={(e) => setValidationNotes(e.target.value)}
-                              placeholder="Tambahkan instruksi khusus untuk pasien atau keterangan farmasi..."
-                              className="w-full p-4 bg-white border border-slate-200 rounded-xl font-['Inter',sans-serif] text-xs text-slate-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#0D6A36]/20 focus:border-[#0D6A36] resize-none shadow-sm transition-all"
-                            />
-                          </div>
-                          )}
-
-                        </div>
-
-                        {/* Right column with thumbnail file of prescription & total price block */}
-                        <div className="col-span-12 lg:col-span-3 space-y-6">
-                          
-                          {/* Resep Document Card */}
-                          <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
-                            <div className="bg-[#0D6A36] text-white px-4 py-2.5 font-bold text-xs flex justify-between items-center">
-                              <span>Resep</span>
-                              <Search size={14} className="cursor-pointer" onClick={() => setShowImageModal(true)} />
-                            </div>
-                            <div className="bg-white p-4">
-                              {(() => {
-                                const rawUrl = selectedPrescription.file_foto || "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&q=80&w=400";
-                                const fileUrl = rawUrl.startsWith('http') ? rawUrl : (rawUrl.startsWith('storage/') || rawUrl.startsWith('/storage/') ? (rawUrl.startsWith('/') ? rawUrl : `/${rawUrl}`) : `/storage/${rawUrl}`);
-                                const isPdf = fileUrl.toLowerCase().includes('.pdf');
-                                
-                                return isPdf ? (
-                                  <div 
-                                      className="relative group overflow-hidden rounded-lg aspect-[3/4] border border-slate-100 cursor-pointer flex flex-col items-center justify-center bg-red-50 hover:bg-red-100 transition-all"
-                                      onClick={() => window.open(fileUrl, '_blank')}
-                                  >
-                                      <FileText size={48} className="text-red-500" />
-                                      <span className="font-bold mt-3 tracking-widest text-sm text-red-600">DOKUMEN PDF</span>
-                                      <div className="absolute inset-0 bg-slate-900/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                        <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow flex items-center gap-1.5 text-red-600 font-bold text-[10px]">
-                                          <ZoomIn size={14} /> Buka Tab Baru
-                                        </div>
-                                      </div>
-                                  </div>
-                                ) : (
-                                  <div className="relative group overflow-hidden rounded-lg aspect-[3/4] border border-slate-100 cursor-zoom-in" onClick={() => setShowImageModal(true)}>
-                                    <img
-                                      src={fileUrl}
-                                      alt="Surat Resep Asli"
-                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                      onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.style.display = 'none';
-                                      }}
-                                    />
-                                    <div className="absolute inset-0 bg-slate-900/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                                      <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow">
-                                        <ZoomIn size={18} className="text-[#0D6A36]" />
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })()}
-                            </div>
-                          </div>
-
-
-
-                          {/* Total Harga Summary Card */}
-                          <div className="bg-white rounded-xl p-5 border border-slate-200 flex items-center justify-between text-right shadow-sm">
-                            <div className="text-left">
-                              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">TOTAL HARGA</p>
-                            </div>
-                            <div>
-                              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider text-right">IDR</p>
-                              <p className="text-2xl font-bold text-[#0D6A36] mt-0.5">
-                                {totalHargaVal.toLocaleString('id-ID')}
-                              </p>
-                            </div>
-                          </div>
 
                           {/* Validation CTA Buttons */}
                           {selectedPrescription.status_validasi === 'pending' && (
@@ -2229,6 +2442,12 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
                               <XCircle size={15} />
                               <span>{showRejectForm ? 'KONFIRMASI TOLAK' : 'TOLAK'}</span>
                             </button>
+                            <button 
+                              onClick={() => setShowCancelModal(true)}
+                              className="w-full bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 border border-transparent hover:border-red-200 py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all"
+                            >
+                              <span>BATAL VERIFIKASI</span>
+                            </button>
                             {showRejectForm && (
                               <div className="pt-2 animate-fadeIn">
                                 <p className="text-[9px] text-red-500 font-bold uppercase tracking-wider mb-1">ALASAN PENOLAKAN</p>
@@ -2249,6 +2468,42 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
 
                       </div>
 
+                        </div>
+                      </div>
+
+                      {/* Cancel Validation Modal */}
+                      {showCancelModal && (
+                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[99] flex items-center justify-center p-4 animate-fadeIn">
+                          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
+                            <div className="p-6 text-center">
+                              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <AlertCircle size={32} className="text-red-600" />
+                              </div>
+                              <h3 className="font-['Inter',sans-serif] text-xl font-bold text-slate-800 mb-2">Batalkan Verifikasi?</h3>
+                              <p className="text-slate-500 text-sm leading-relaxed mb-8">
+                                Apakah Anda yakin ingin keluar dari halaman verifikasi ini? Data yang sudah Anda masukkan untuk resep ini <b>belum tersimpan</b> dan akan hilang.
+                              </p>
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => {
+                                    setShowCancelModal(false);
+                                    setPrescriptionView('list');
+                                  }}
+                                  className="flex-1 py-3 px-4 rounded-xl font-bold text-sm text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors"
+                                >
+                                  Ya, Batalkan
+                                </button>
+                                <button
+                                  onClick={() => setShowCancelModal(false)}
+                                  className="flex-1 py-3 px-4 rounded-xl font-bold text-sm text-white bg-[#0D6A36] hover:bg-[#0a542b] transition-colors shadow-[0_4px_12px_rgba(13,106,54,0.2)] hover:shadow-lg"
+                                >
+                                  Lanjutkan
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -3013,3 +3268,4 @@ export default function PharmacistDashboard({ prescriptions = [], products = [],
     </div>
   );
 }
+

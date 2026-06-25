@@ -170,7 +170,7 @@ export default function AdminPharmacyInfo({ apotekSettings, globalDiscount }: Ad
             </aside>
 
             {/* Main Content Area */}
-            <div className="flex-1 w-full bg-slate-50 flex flex-col min-w-0">
+            <div className="flex-1 h-screen overflow-y-auto w-full bg-slate-50 flex flex-col min-w-0">
                 {/* Mobile Header */}
                 <div className="md:hidden flex items-center justify-between px-6 h-20 bg-white border-b border-[#E2E8F0] sticky top-0 z-40">
                     <div className="flex items-center gap-3">

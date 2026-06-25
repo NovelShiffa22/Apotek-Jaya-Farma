@@ -27,11 +27,11 @@ export default function Login({
     const hasErrors = Object.keys(errors).length > 0;
 
     return (
-        <div className="w-full h-screen min-h-screen flex flex-row overflow-hidden bg-white">
+        <div className="w-full min-h-screen grid grid-cols-1 lg:grid-cols-2 overflow-hidden bg-white">
             <Head title="Masuk" />
 
             {/* Left Pane - Image backdrop */}
-            <div className="relative w-1/2 h-full flex flex-col justify-end p-8 text-white overflow-hidden">
+            <div className="relative hidden lg:flex h-full flex-col justify-end p-8 text-white overflow-hidden">
                 <img 
                     src="/images/apoteker_baru.png" 
                     alt="Latar Apotek" 
@@ -66,7 +66,7 @@ export default function Login({
             </div>
 
             {/* Right Pane - Form */}
-            <div className="w-1/2 h-full flex flex-col justify-center items-center bg-white p-8 relative overflow-y-auto">
+            <div className="w-full lg:w-full h-full flex flex-col justify-center items-center bg-white p-6 sm:p-8 relative overflow-y-auto">
                 <div className="w-full max-w-[420px]">
                     <div className="mb-8">
                         <h1 className="font-['Roboto_Condensed',sans-serif] text-[36px] xl:text-[40px] font-bold text-[#171d19] tracking-tight mb-2">
@@ -158,7 +158,7 @@ export default function Login({
                         </div>
 
                         {/* Remember Me & Forgot Password */}
-                        <div className="flex items-center justify-between pt-1">
+                        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                             <label className="flex items-center cursor-pointer">
                                 <input
                                     type="checkbox"

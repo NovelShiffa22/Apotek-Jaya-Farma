@@ -170,13 +170,20 @@ class CheckoutController extends Controller
             'payment_method' => 'required|string',
         ]);
 
-        $shippingAddress = $request->input('shipping_address');
-        if (empty($shippingAddress) || $shippingAddress === 'Alamat belum diatur') {
-            return redirect()->back()->withErrors(['address' => 'Alamat pengiriman wajib diisi dan tidak boleh kosong sebelum memilih kurir!']);
-        }
-
         $shippingMethod = $request->input('shipping_method');
+        $shippingAddress = $request->input('shipping_address');
         $prescriptionId = $request->input('prescription_id');
+
+        if (in_array($shippingMethod, ['kurir', 'kurir_toko', 'Kirim via Kurir'])) {
+            if (empty($shippingAddress) || $shippingAddress === 'Alamat belum diatur') {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'message' => 'Untuk pengiriman via kurir, alamat pengiriman wajib diisi lengkap.'
+                    ], 422);
+                }
+                return redirect()->back()->withErrors(['address' => 'Alamat pengiriman wajib diisi dan tidak boleh kosong sebelum memilih kurir!']);
+            }
+        }
 
         $isKotaBandung = stripos($shippingAddress, 'Bandung') !== false && 
                          stripos($shippingAddress, 'Kabupaten') === false && 
@@ -200,6 +207,11 @@ class CheckoutController extends Controller
 
             if ($shippingMethod === 'kurir_toko' || $shippingMethod === 'Kirim via Kurir') {
                 if (!$isKotaBandung) {
+                    if ($request->wantsJson()) {
+                        return response()->json([
+                            'message' => 'Layanan kurir toko untuk pesanan resep saat ini hanya mencakup wilayah Kota Bandung. Alamat luar kota tidak didukung.'
+                        ], 422);
+                    }
                     return redirect()->back()->withErrors(['shipping_method' => 'Layanan kurir toko untuk pesanan resep saat ini hanya mencakup wilayah Kota Bandung. Alamat luar kota tidak didukung.']);
                 }
             }
@@ -339,6 +351,10 @@ class CheckoutController extends Controller
                 $product = \App\Models\Product::find($productId);
                 if ($product) {
                     $product->decrement('stok', $item['quantity'] ?? 1);
+                    if ($product->stok <= 5) {
+                        $admins = \App\Models\User::where('role', 'admin')->get();
+                        \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\StockCritical($product->nama_obat, $product->id, $product->stok));
+                    }
                 }
             }
         }
@@ -464,10 +480,6 @@ class CheckoutController extends Controller
 
                 if ($status->transaction_status == 'settlement' || $status->transaction_status == 'capture') {
                     $transaction->update(['status' => 'Lunas']);
-                    if ($transaction->prescription_id) {
-                        \App\Models\Prescription::where('id', $transaction->prescription_id)
-                            ->update(['status_validasi' => 'telah_dipesan']);
-                    }
                 } else if ($status->transaction_status == 'expire') {
                     $transaction->update(['status' => 'Expired']);
                 } else if ($status->transaction_status == 'cancel' || $status->transaction_status == 'deny') {
@@ -540,10 +552,8 @@ class CheckoutController extends Controller
             'status' => 'Lunas'
         ]);
 
-        if ($transaction->prescription_id) {
-            \App\Models\Prescription::where('id', $transaction->prescription_id)
-                ->update(['status_validasi' => 'telah_dipesan']);
-        }
+        $admins = \App\Models\User::whereIn('role', ['admin', 'apoteker'])->get();
+        \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\OrderEntered($transaction->invoice_number ?? $transaction->id));
 
         return redirect()->back()->with('success', 'Pembayaran berhasil diverifikasi!');
     }
@@ -584,10 +594,8 @@ class CheckoutController extends Controller
             
             $transaction->save();
 
-            if ($transaction->prescription_id) {
-                \App\Models\Prescription::where('id', $transaction->prescription_id)
-                    ->update(['status_validasi' => 'telah_dipesan']);
-            }
+            $admins = \App\Models\User::whereIn('role', ['admin', 'apoteker'])->get();
+            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\OrderEntered($transaction->invoice_number ?? $transaction->id));
         }
         
         return redirect()->back();

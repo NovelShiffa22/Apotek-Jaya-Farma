@@ -42,6 +42,8 @@ class MidtransController extends Controller
                         \App\Models\Prescription::where('id', $transaction->prescription_id)
                             ->update(['status_validasi' => 'telah_dipesan']);
                     }
+                    $admins = \App\Models\User::whereIn('role', ['admin', 'apoteker'])->get();
+                    \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\OrderEntered($transaction->invoice_number ?? $transaction->id));
                 } else if ($request->transaction_status == 'expire') {
                     $transaction->status = 'Expired';
                 } else if ($request->transaction_status == 'cancel' || $request->transaction_status == 'deny') {

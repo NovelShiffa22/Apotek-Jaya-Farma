@@ -1,0 +1,78 @@
+﻿
+                                        className="w-full h-full object-cover group-hover:scale-105 
+transition-transform duration-300"
+                                        onError={(e) => {
+                                          const target = e.target as HTMLImageElement;
+                                          target.style.display = 'none';
+                                        }}
+                                      />
+                                      <div className="absolute inset-0 bg-slate-900/10 flex items-center 
+justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                        <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow">
+                                          <ZoomIn size={18} className="text-[#0D6A36]" />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+  
+  
+  
+                            {/* Total Harga Summary Card */}
+                            <div className="bg-white rounded-xl p-5 border border-slate-200 flex flex-col shadow-sm">
+                              <div className="flex justify-between items-center mb-3">
+                                <p className="text-[10px] text-slate-500 font-semibold">Subtotal Produk</p>
+                                <p className="text-[11px] text-slate-700 font-bold">Rp 
+{totalHargaVal.toLocaleString('id-ID')}</p>
+                              </div>
+                              <div className="flex justify-between items-center mb-4 pb-4 border-b border-slate-100">
+                                <p className="text-[10px] text-slate-500 font-semibold">Biaya Pengiriman</p>
+                                <p className="text-[11px] text-slate-700 font-bold">Rp 
+{((selectedPrescription.shipping_method === 'kurir' || selectedPrescription.shipping_method === 'Kirim via Kurir' || 
+selectedPrescription.shipping_method === 'kurir_toko') ? 12000 : 0).toLocaleString('id-ID')}</p>
+                              </div>
+                              <div className="flex justify-between items-center">
+>                               <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">TOTAL 
+PEMBAYARAN</p>
+                                <div className="text-right">
+                                  <p className="text-[9px] text-[#0D6A36] font-bold uppercase tracking-wider 
+mb-0.5">IDR</p>
+                                  <p className="text-xl font-bold text-[#0D6A36]">
+                                    {(totalHargaVal + ((selectedPrescription.shipping_method === 'kurir' || 
+selectedPrescription.shipping_method === 'Kirim via Kurir' || selectedPrescription.shipping_method === 'kurir_toko') ? 
+12000 : 0)).toLocaleString('id-ID')}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+  
+                            {/* Timeline Tracking Log (Only if Telah Dipesan or Disetujui with VT) */}
+                            {(selectedPrescription.status_validasi === 'telah_dipesan' || 
+selectedPrescription.status_validasi === 'disetujui') && selectedPrescription.virtual_transactions && 
+selectedPrescription.virtual_transactions.length > 0 && (
+                              <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-[#1e5b53] mt-6">
+                                  <div className="mb-6">
+                                      <h3 className="font-['Poppins',sans-serif] font-bold text-[18px] text-[#1e5b53] 
+flex items-center gap-2 mb-2">
+                                          <Clock size={22} />
+                                          Log Status Pesanan
+                                      </h3>
+                                      <span className="inline-block bg-[#1e5b53] text-white text-[10px] font-bold px-2 
+py-1 rounded-md ml-8">
+                                          {selectedPrescription.orders?.[0]?.kode_pesanan || 
+`vt_${selectedPrescription.virtual_transactions[0].id}`}
+                                      </span>
+                                  </div>
+                                  
+                                  {(() => {
+                                      const vt = selectedPrescription.virtual_transactions[0];
+                                      const vtStatus = vt.status || 'Pending';
+                                      
+                                      return (
+                                          <>
+                                              <div className="relative">
+                                              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+
+
