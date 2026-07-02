@@ -740,7 +740,7 @@ export default function AdminDashboard({ products = [], categories = [], users =
                                 return [
                                     {
                                         label: 'Total Pendapatan',
-                                        value: formatCurrency(analytics.income_this_month || 0),
+                                        value: formatCurrency(analytics.income_all_time || 0),
                                         subtext: (
                                             <div className="flex flex-col gap-2">
                                                 <div className="self-start inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Rekap</div>

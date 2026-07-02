@@ -11,6 +11,10 @@ class Category extends Model
 
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'is_drug' => 'boolean',
+    ];
+
     /**
      * Relasi One-to-Many ke tabel products.
      * Kategori ini bisa memiliki banyak produk obat.

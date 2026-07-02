@@ -16,6 +16,7 @@ Route::get('/', function () {
     // Menggunakan subquery untuk menghitung total penjualan berdasarkan transaksi riil
     // Subquery mencegah error ONLY_FULL_GROUP_BY pada mode strict Laravel/MySQL
     $featuredProducts = \App\Models\Product::with(['category', 'symptoms'])
+        ->where('is_active', true)
         ->select('products.*')
         ->selectRaw('(SELECT COALESCE(SUM(order_items.kuantitas), 0) FROM order_items JOIN orders ON orders.id = order_items.order_id WHERE order_items.product_id = products.id AND orders.status IN ("diproses", "dikirim", "selesai")) as total_sold')
         ->orderBy('total_sold', 'desc')

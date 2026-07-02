@@ -17,6 +17,7 @@ import ConfirmModal from '../components/ConfirmModal';
 interface Category {
     id: number;
     nama_kategori: string;
+    is_drug?: boolean;
 }
 
 interface Symptom {
@@ -98,24 +99,37 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
         delete_gambar: false,
     });
 
-    // Calculate completion percentage
-    const calculateProgress = () => {
-
     const generateProductCode = (nama: string, satuan: string) => {
         if (!nama || !satuan) return '';
         const namePart = nama.replace(/\s+/g, '').substring(0, 3).toUpperCase();
         return `PRD-${namePart}-${satuan}`;
     };
-        const fields = [
+
+    // Check if selected category is a drug
+    const selectedCategory = categories.find(c => c.id.toString() === data.category_id);
+    const isDrug = selectedCategory?.is_drug ?? false;
+
+    // Calculate completion percentage
+    const calculateProgress = () => {
+        const requiredFields = [
             data.nama_obat,
+            data.product_code,
+            data.category_id,
             data.jenis_obat,
-            data.harga,
-            data.stok,
+            data.satuan,
             data.indikasi,
             data.aturan_pakai,
+            data.harga,
+            data.stok,
+            data.stok_minimum,
         ];
-        const completedFields = fields.filter((field) => field !== '').length;
-        return Math.round((completedFields / fields.length) * 100);
+
+        if (isDrug) {
+            requiredFields.push(data.efek_samping, data.komposisi, data.kontraindikasi);
+        }
+
+        const completedFields = requiredFields.filter((field) => field !== '' && field !== null && field !== undefined).length;
+        return Math.round((completedFields / requiredFields.length) * 100);
     };
 
     const handleDrag = (e: React.DragEvent) => {
@@ -279,7 +293,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                     {/* Nama Obat */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Nama Obat
+                                            Nama Obat <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="text"
@@ -325,7 +339,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                     {/* Jenis Obat */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Jenis Obat
+                                            Jenis Obat <span className="text-red-500">*</span>
                                         </label>
                                         <select
                                             value={data.jenis_obat}
@@ -357,7 +371,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                     {/* Satuan / Kemasan Jual */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Satuan / Kemasan Jual
+                                            Satuan / Kemasan Jual <span className="text-red-500">*</span>
                                         </label>
                                         <select
                                             value={data.satuan}
@@ -392,7 +406,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                     {/* Kategori Induk */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Kategori Induk
+                                            Kategori Produk <span className="text-red-500">*</span>
                                         </label>
                                         <select
                                             value={data.category_id}
@@ -449,7 +463,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                     {/* Harga Jual */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Harga
+                                            Harga <span className="text-red-500">*</span>
                                         </label>
                                         <div className="relative">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 font-['Poppins',sans-serif] text-[14px] font-medium text-[#6e7a70]">
@@ -475,7 +489,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                     {/* Stok Saat Ini */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Stok
+                                            Stok <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="number"
@@ -496,7 +510,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                     {/* Stok Minimum */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Stok Minimum
+                                            Stok Minimum <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="number"
@@ -532,7 +546,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                     {/* Indikasi */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Indikasi (Kegunaan)
+                                            Indikasi (Kegunaan) <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="text"
@@ -553,7 +567,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                     {/* Aturan Pakai */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Aturan Pakai
+                                            Aturan Pakai <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="text"
@@ -574,7 +588,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                     {/* Efek Samping */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Efek Samping
+                                            Efek Samping {isDrug && <span className="text-red-500">*</span>}
                                         </label>
                                         <input
                                             type="text"
@@ -595,7 +609,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                     {/* Kandungan Utama / Komposisi */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Kandungan Utama / Komposisi
+                                            Kandungan Utama / Komposisi {isDrug && <span className="text-red-500">*</span>}
                                         </label>
                                         <input
                                             type="text"
@@ -616,7 +630,7 @@ export default function CreateProduct({ isOpen, onClose, isEdit = false, initial
                                     {/* Kontraindikasi */}
                                     <div>
                                         <label className="block font-['Poppins',sans-serif] text-[13px] font-medium text-[#6e7a70] mb-2">
-                                            Kontraindikasi
+                                            Kontraindikasi {isDrug && <span className="text-red-500">*</span>}
                                         </label>
                                         <input
                                             type="text"

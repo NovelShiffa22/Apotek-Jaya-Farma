@@ -27,6 +27,7 @@ class ProductController extends Controller
         $priceMax = $request->input('price_max');
 
         $products = Product::with(['category', 'symptoms'])
+            ->where('is_active', true)
             ->select('products.*')
             ->selectRaw('(SELECT COALESCE(SUM(order_items.kuantitas), 0) FROM order_items JOIN orders ON orders.id = order_items.order_id WHERE order_items.product_id = products.id AND orders.status IN ("diproses", "dikirim", "selesai")) as total_sold')
             ->when($catQuery && $catQuery !== 'all', function ($q) use ($catQuery) {
@@ -124,18 +125,27 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        $isDrug = false;
+        if ($request->category_id) {
+            $category = \App\Models\Category::find($request->category_id);
+            if ($category && $category->is_drug) {
+                $isDrug = true;
+            }
+        }
+        $medRule = $isDrug ? 'required|string' : 'nullable|string';
+
         $validated = $request->validate([
             'nama_obat' => 'required|string|max:150',
             'product_code' => 'required|string|max:50|unique:products,product_code',
-            'category_id' => 'nullable|exists:categories,id',
+            'category_id' => 'required|exists:categories,id',
             'deskripsi' => 'nullable|string',
             'jenis_obat' => 'required|in:bebas,keras,terbatas',
             'satuan' => 'required|string|max:50',
             'indikasi' => 'required|string',
             'aturan_pakai' => 'required|string',
-            'efek_samping' => 'nullable|string',
-            'komposisi' => 'nullable|string',
-            'kontraindikasi' => 'nullable|string',
+            'efek_samping' => $medRule,
+            'komposisi' => $medRule,
+            'kontraindikasi' => $medRule,
             'harga' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
             'stok_minimum' => 'required|integer|min:0',
@@ -143,6 +153,37 @@ class ProductController extends Controller
             'is_active' => 'boolean',
             'symptom_ids' => 'nullable|array',
             'symptom_ids.*' => 'exists:symptoms,id',
+        ], [
+            'required' => 'Kolom :attribute wajib diisi.',
+            'string' => 'Kolom :attribute harus berupa teks.',
+            'max' => 'Kolom :attribute maksimal :max karakter.',
+            'unique' => ':attribute sudah terdaftar.',
+            'in' => 'Pilihan :attribute tidak valid.',
+            'numeric' => 'Kolom :attribute harus berupa angka.',
+            'integer' => 'Kolom :attribute harus berupa bilangan bulat.',
+            'min' => 'Kolom :attribute minimal bernilai :min.',
+            'image' => 'Kolom :attribute harus berupa file gambar.',
+            'mimes' => 'Format gambar harus jpeg, png, jpg, gif, atau webp.',
+            'exists' => 'Pilihan :attribute tidak valid.',
+            'array' => 'Kolom :attribute harus berupa array.',
+        ], [
+            'nama_obat' => 'Nama Obat',
+            'product_code' => 'Kode Produk / SKU',
+            'category_id' => 'Kategori Induk',
+            'deskripsi' => 'Deskripsi',
+            'jenis_obat' => 'Jenis Obat',
+            'satuan' => 'Satuan / Kemasan',
+            'indikasi' => 'Indikasi (Kegunaan)',
+            'aturan_pakai' => 'Aturan Pakai',
+            'efek_samping' => 'Efek Samping',
+            'komposisi' => 'Kandungan / Komposisi',
+            'kontraindikasi' => 'Kontraindikasi',
+            'harga' => 'Harga',
+            'stok' => 'Stok',
+            'stok_minimum' => 'Stok Minimum',
+            'gambar' => 'Foto Produk',
+            'is_active' => 'Status Aktif',
+            'symptom_ids' => 'Kategori Gejala',
         ]);
 
         $validated['slug'] = Str::slug($request->nama_obat) . '-' . time();
@@ -208,25 +249,63 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
+        $isDrug = false;
+        if ($request->category_id) {
+            $category = \App\Models\Category::find($request->category_id);
+            if ($category && $category->is_drug) {
+                $isDrug = true;
+            }
+        }
+        $medRule = $isDrug ? 'required|string' : 'nullable|string';
+
         $validated = $request->validate([
             'nama_obat' => 'required|string|max:150',
             'product_code' => 'required|string|max:50|unique:products,product_code,' . $id,
-            'category_id' => 'nullable|exists:categories,id',
+            'category_id' => 'required|exists:categories,id',
             'deskripsi' => 'nullable|string',
             'jenis_obat' => 'required|in:bebas,keras,terbatas',
             'satuan' => 'required|string|max:50',
             'indikasi' => 'required|string',
             'aturan_pakai' => 'required|string',
-            'efek_samping' => 'nullable|string',
-            'komposisi' => 'nullable|string',
-            'kontraindikasi' => 'nullable|string',
+            'efek_samping' => $medRule,
+            'komposisi' => $medRule,
+            'kontraindikasi' => $medRule,
             'harga' => 'required|numeric|min:0',
-            'stok' => 'required|integer|min:0',
             'stok_minimum' => 'required|integer|min:0',
             'is_active' => 'boolean',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'symptom_ids' => 'nullable|array',
             'symptom_ids.*' => 'exists:symptoms,id',
+        ], [
+            'required' => 'Kolom :attribute wajib diisi.',
+            'string' => 'Kolom :attribute harus berupa teks.',
+            'max' => 'Kolom :attribute maksimal :max karakter.',
+            'unique' => ':attribute sudah terdaftar.',
+            'in' => 'Pilihan :attribute tidak valid.',
+            'numeric' => 'Kolom :attribute harus berupa angka.',
+            'integer' => 'Kolom :attribute harus berupa bilangan bulat.',
+            'min' => 'Kolom :attribute minimal bernilai :min.',
+            'image' => 'Kolom :attribute harus berupa file gambar.',
+            'mimes' => 'Format gambar harus jpeg, png, jpg, gif, atau webp.',
+            'exists' => 'Pilihan :attribute tidak valid.',
+            'array' => 'Kolom :attribute harus berupa array.',
+        ], [
+            'nama_obat' => 'Nama Obat',
+            'product_code' => 'Kode Produk / SKU',
+            'category_id' => 'Kategori Induk',
+            'deskripsi' => 'Deskripsi',
+            'jenis_obat' => 'Jenis Obat',
+            'satuan' => 'Satuan / Kemasan',
+            'indikasi' => 'Indikasi (Kegunaan)',
+            'aturan_pakai' => 'Aturan Pakai',
+            'efek_samping' => 'Efek Samping',
+            'komposisi' => 'Kandungan / Komposisi',
+            'kontraindikasi' => 'Kontraindikasi',
+            'harga' => 'Harga',
+            'stok_minimum' => 'Stok Minimum',
+            'gambar' => 'Foto Produk',
+            'is_active' => 'Status Aktif',
+            'symptom_ids' => 'Kategori Gejala',
         ]);
 
         // Cek jika nama berubah, update slug
@@ -255,7 +334,7 @@ class ProductController extends Controller
 
         $validated['is_active'] = $request->has('is_active') ? $request->boolean('is_active') : $product->is_active;
 
-        $product->update(collect($validated)->except('symptom_ids')->toArray());
+        $product->update(collect($validated)->except(['symptom_ids', 'stok'])->toArray());
 
         if ($request->has('symptom_ids')) {
             $syncData = [];
